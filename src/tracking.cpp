@@ -1,6 +1,6 @@
 #include "common.h"
 #include "tracking.h"
-#include "ANN.h"
+#include <ANN/ANN.h>
 #include "file_reader.h"
 #include <ctime>
 #include "hdf5.h"
