@@ -87,25 +87,23 @@ SET(ARCHITECTURE ux64)
 
 
 # pass information about the revision number to the compilation
-FIND_PROGRAM(HG_EXECUTABLE hg DOC "mercurial command line client")
-EXECUTE_PROCESS(COMMAND ${HG_EXECUTABLE} --debug tip OUTPUT_VARIABLE hginfo OUTPUT_STRIP_TRAILING_WHITESPACE)
+#FIND_PROGRAM(HG_EXECUTABLE hg DOC "mercurial command line client")
+#EXECUTE_PROCESS(COMMAND ${HG_EXECUTABLE} --debug tip OUTPUT_VARIABLE hginfo OUTPUT_STRIP_TRAILING_WHITESPACE)
 #STRING(REGEX REPLACE "^(.*\n)?changeset:([ ]+)([^\n]+).*" "\\3" ProjectRevision ${hginfo})
 #STRING(REGEX REPLACE "^(.*\n)?user:([ ]+)([^\n]+).*" "\\3" LastChangedAuthor ${hginfo})
 #STRING(REGEX REPLACE "^(.*\n)?date:([ ]+)([^\n]+).*" "\\3" LastChangedDate ${hginfo})
 
-CONFIGURE_FILE(
-  "${PROJECT_SOURCE_DIR}/include/tracking.h.in"
-  "${PROJECT_BINARY_DIR}/include/tracking.h"
-)
+#CONFIGURE_FILE(
+#  "${PROJECT_SOURCE_DIR}/include/tracking.h.in"
+#  "${PROJECT_BINARY_DIR}/include/tracking.h"
+#)
 
 INCLUDE_DIRECTORIES(
   "${PROJECT_SOURCE_DIR}/include/" 
-  "${PROJECT_SOURCE_DIR}/../3rd_party/include"
-  "${PROJECT_BINARY_DIR}/include/"
 )
-LINK_DIRECTORIES( 
-  ${PROJECT_SOURCE_DIR}/../3rd_party/lib
-)
+#LINK_DIRECTORIES( 
+#  ${PROJECT_SOURCE_DIR}/../3rd_party/lib
+#)
 
 
 
