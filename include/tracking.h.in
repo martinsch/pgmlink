@@ -1,0 +1,131 @@
+#ifndef TRACKING_H
+#define TRACKING_H
+
+#include <string>
+#include <vector>
+#include <boost/shared_array.hpp>
+#include "matching_pars.h"
+#include "ilp_solver.h"
+#include "hdf5.h"
+#include <iostream>
+
+namespace Tracking {
+
+const int VERSION = @VERSION@ ; // Version of program
+const int SUBVERSION = @SUBVERSION@ ; // Subversion of program
+const std::string DATE_STRING = "@LastChangedDate@" ; // Date of current version
+const std::string AUTHOR_STRING = "@LastChangedAuthor@" ; // Author(s) of current version
+const std::string REVISION_STRING = "@ProjectRevision@" ; // Project revision number
+
+enum ReturnCode { SUCCESSFUL, READING_ERROR, COMPUTATION_ERROR, WRITING_ERROR };
+
+/* Write the outputs of the linear program (moves and splits, cell deaths,
+   cell appearances, the total cost and the return flag of the linear 
+   program) to an existing HDF5 file 
+
+   fileName - name of the output file where the results shall be written
+   pars - matching parameters that were used
+   moves - vector of length 2*nMoves, with moves[2*i] and moves[2*i+1] being the
+           indices of a mother cell and of its associated daughter
+   splits - vector of length 3*nSplits, with splits[3*i] being the index of a 
+            splitting cell and splits[3*i+1] and splits[3*i+2] the indices of the
+            associated daughters
+   deaths - vector of length nDeath containing the indices of disappearing cells
+   appears - vector of length nAppears containing the indices of newly appearing
+             cells
+   totCost - total costs of the association
+   solveFlag - output flag of the ILP solver
+   solveString - human-readable string explaining the output flag of the solver
+   matchingTime - time required for the matching process (in seconds)
+*/
+int writeOutputs( const std::string& fileName, const MatchingPars& pars,
+                  const std::vector<int>& moves, const std::vector<int>& splits, 
+                  const std::vector<int>& deaths, const std::vector<int>& appears,
+                  double totCost, int solveFlag, const std::string& solveString,
+                  const std::string& solverName, double matchingTime );
+
+/* Run a tracking job on two subsequent files, and store the results in the second
+   file. 
+
+   Inputs:
+   file1 - file name of the first file containing the "mother" cells
+   file2 - file name of the second file containing the "daughter" cells
+   pars - parameters to be used for this matching
+   solver - integer linear programming solver to be used
+  
+   Output: return code specifying the success of the operation
+*/
+ReturnCode runJob( const std::string& file1, const std::string& file2,
+                   const MatchingPars& pars, IlpSolver& solver );
+
+/*
+   Compute the optimum matching by optimizing a linear integer program.
+  
+   The inputs are usually acquired by the readInputs() function and the
+   MatchingPars::readOptions() function.
+
+   nCells1 : number of cells in the first time frame
+   feats1 : features of these cells, nCells1 * nFeats matrix
+   validLabels1 : numbers labeling these cells (since we might have
+                  invalid cells that are discarded beforehand, these
+                  are not necessarily the numbers 1, ..., nCells1
+   nCells2 / feats2 / validLabels2 : correspondingly
+   nFeats : number of features used
+   problemString : string identifying the problem (for error messages and
+                   logging)
+   pars : Matching parameters
+   solver : ILP solver to be used
+
+   Upon successful completion, nMoves / nSplits / nDeaths / nAppears
+   denote the numbers of motion / mitosis / death or disappearance /
+   appearance events.
+  
+   moves : nMoves * 2 matrix with cell indices in the first and second
+           slice
+   splits : nSplits * 3 matrix, with the cell indices of the mother cells in
+            the first row, and the indices of the daughter cells in the 
+            second and third row
+   deaths : nDeaths * 1 matrix, with the indices of the disappearing cells
+            from the first time slice
+   appears : nAppears * 1 matrix, with the indices of the appearing cells
+             from the second time slice
+  
+   All matrices are vectorized in row-major order (as usual in C).
+   
+   totCost holds the total costs of the optimum matching.
+   
+   solveFlag shows the output value of the used MIP solver (e.g. LP_SOLVE
+     or CPLEX), and is solver-spcific.
+  
+   solverString explains this return value in a human-readable form.
+*/
+
+int computeMatch( int nCells1, boost::shared_array<double> feats1, 
+                  const std::vector<int>& validLabels1,
+                  int nCells2, boost::shared_array<double> feats2,
+                  const std::vector<int>& validLabels2,
+                  int nFeats, const std::string& problemString, 
+                  const MatchingPars& pars, IlpSolver& solver,
+                  std::vector<int>& moves, std::vector<int>& splits,
+                  std::vector<int>& deaths, std::vector<int>& appears,
+                  double& totCost, int& solveFlag, std::string& solverString);
+
+/* Find the HDF5 datatype that must be used in order to write data of a given
+   C++ type (corresponding to the template parameter) to an HDF5 file.
+
+   By default, this template raises an error and stops the program: it has to
+   be explicitly specialized for the types of data that shall be used.
+*/
+template<typename T>
+hid_t correspondingType(){
+  std::cerr << "Attempt to use a type for which the corresponding HDF5 "
+    "identifier has not been specified" << std::endl;
+  exit(EXIT_FAILURE); /* Programming error = brute-force abort */
+  return H5T_NATIVE_INT; /* just to avoid compiler warnings */
+}
+
+
+}
+
+#endif /* TRACKING_H */
+
