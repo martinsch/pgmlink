@@ -30,7 +30,7 @@ int main()
     std::cout << "****Computing the Context****" << std::endl << context << std::endl << std::endl;
 
     // load the configuration
-    HypothesisSpace space("../data/event-configuration-cell.ini");
+    HypothesisSpace space("event-configuration-cell.ini");
     EventConfiguration conf = space.configuration();
 
     // create singlets/muliplets and extract object features
@@ -41,7 +41,7 @@ int main()
     SingletsGenerator singletsGenerator;
     MultipletsGenerator multipletsGenerator(conf.k(), conf.d_max());
     ObjectFeatureExtractor extractor(conf.get_feature_names(), context);
-    for (int32 indT = 0; indT < images.size(); indT ++) {
+    for (int32 indT = 0; indT < static_cast<int32>(images.size()); indT ++) {
         // generate singlets and multiplets
         Singlets singlets = singletsGenerator(images[indT], segmentations[indT]);
         Multiplets multiplets = multipletsGenerator(images[indT], segmentations[indT], singlets);
