@@ -7,6 +7,14 @@
 
 namespace Tracking {
 
+class BotEnergy {
+ public:
+  double appearance( const Traxel& ) const;
+  double disappearance( const Traxel& ) const;
+  double move( const Traxel&, const Traxel& ) const;
+  double division( const Traxel&, const Traxel&, const Traxel& ) const;
+};
+
 class GeometryDivision2 {
     public:
     GeometryDivision2(double mean_div_dist, double min_angle) : mean_div_dist_(mean_div_dist), min_angle_(min_angle) {};
@@ -17,7 +25,7 @@ class GeometryDivision2 {
     double mean_div_dist_, min_angle_;
 };
 
- class KasterDivision2 {
+class KasterDivision2 {
  public:
  KasterDivision2(double weight, double div_cost) : w_(weight), div_cost_(div_cost) {};
     double operator()(const Traxel& ancestor,
