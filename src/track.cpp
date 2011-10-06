@@ -24,40 +24,6 @@ using boost::shared_array;
 
 namespace Tracking {
 ////
-//// class MultiTrack
-////
-  MultiTrack::MultiTrack() {
-    division_ = new ConstantEnergy(100);
-    move_ = new ConstantEnergy(50);
-    mismove_ = new ConstantEnergy(75);
-    detection_ = new ConstantEnergy(0);
-    misdetection_ = new ConstantEnergy(100);
-  }
-
-  MultiTrack::~MultiTrack() {
-    delete division_;
-    delete move_;
-    delete mismove_;
-    delete detection_;
-    delete misdetection_;
-  }
-
-  vector<vector<Event> > MultiTrack::operator()(const TraxelStore& ts) {
-    vector<vector<Traxel> > input = nested_vec_from(ts);
-    shared_ptr<GraphicalModel> gm = GraphicalModel::from(input,
-							 *division_,
-							 *move_,
-							 *mismove_,
-							 *detection_,
-							 *misdetection_
-							 );
-    gm->infer();
-    return *(gm->events());
-  }
-
-
-
-////
 //// class MrfTracking
 ////
 vector<vector<Event> > MrfTracking::operator()(TraxelStore& ts) {

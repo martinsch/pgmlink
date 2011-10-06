@@ -10,22 +10,6 @@
 #include "traxels.h"
 
 namespace Tracking {
-  /**
-   * Track several timesteps at once.
-   */
-  class MultiTrack {
-  public:
-    MultiTrack();
-    ~MultiTrack();
-    std::vector< std::vector<Event> > operator()(const TraxelStore&);
-  private:
-    TertiaryEnergy* division_;
-    BinaryEnergy* move_;
-    BinaryEnergy* mismove_;
-    UnaryEnergy* detection_;
-    UnaryEnergy* misdetection_;
-  };
-
   class MrfTracking {
   public:
     MrfTracking(const std::string& random_forest_filename = "none",
