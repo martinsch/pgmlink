@@ -109,7 +109,7 @@ BOOST_PYTHON_MODULE( ctracking )
     class_<BotTracking>("BotTracking", 
 			init<double,double,double>(
 								      args("detection", "misdetection", "opportunity_cost")))
-	.def("__call__", &MrfTracking::operator())
+	.def("__call__", &BotTracking::operator())
     ;
 
     class_<MrfTracking>("MrfTracking", 
