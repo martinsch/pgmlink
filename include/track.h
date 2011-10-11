@@ -10,6 +10,18 @@
 #include "traxels.h"
 
 namespace Tracking {
+  class BotTracking {
+  public:
+    BotTracking(double detection = 10,
+	      double misdetection = 500,
+	      double opportunity_cost = 0) : det_(detection), mis_(misdetection), opportunity_cost_(opportunity_cost) {}
+    std::vector< std::vector<Event> > operator()(TraxelStore&);
+    
+  private:
+    double det_, mis_;
+    double opportunity_cost_;
+  };
+
   class MrfTracking {
   public:
     MrfTracking(const std::string& random_forest_filename = "none",

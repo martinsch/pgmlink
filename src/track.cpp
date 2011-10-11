@@ -24,6 +24,53 @@ using boost::shared_array;
 
 namespace Tracking {
 ////
+//// class BotTracking
+////
+vector<vector<Event> > BotTracking::operator()(TraxelStore& ts) {
+    cout << "-> building energy functions " << endl;
+    BotMove move;
+    BotAppearance appearance;
+    BotDisappearance disappearance;
+    BotDivision division;
+    Traxels empty;
+    boost::function<double (const Traxel&)> detection, misdetection;
+    detection = bind<double>(ConstantEnergy(det_), _1, empty, empty);
+    misdetection = bind<double>(ConstantEnergy(mis_), _1, empty, empty);;
+
+    cout << "-> building hypotheses" << endl;
+    SingleTimestepTraxel_HypothesesBuilder hyp_builder(&ts);
+    HypothesesGraph* graph = hyp_builder.build();
+
+    cout << "-> init reasoner" << endl;
+    SingleTimestepTraxelMrf mrf(detection,
+			        misdetection,
+			        appearance,
+			        disappearance,
+				move,
+				division,
+				opportunity_cost_
+			       );
+
+    cout << "-> formulate" << endl;        
+    mrf.formulate(*graph);
+    
+    cout << "-> infer" << endl;
+    mrf.infer();
+    
+    cout << "-> conclude" << endl;
+    mrf.conclude(*graph);
+
+    cout << "-> pruning inactive hypotheses" << endl;
+    prune_inactive(*graph);
+
+    cout << "-> constructing events" << endl;
+    
+    return *events(*graph);
+}
+
+
+
+////
 //// class MrfTracking
 ////
 vector<vector<Event> > MrfTracking::operator()(TraxelStore& ts) {
@@ -95,7 +142,7 @@ vector<vector<Event> > MrfTracking::operator()(TraxelStore& ts) {
     cout << "-> constructing events" << endl;
     
     return *events(*graph);
-  }
+}
 
 
 

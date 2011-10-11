@@ -6,27 +6,6 @@
 using namespace std;
 
 namespace Tracking {
-  ////
-  //// class BotEnergy
-  ////
-  double BotEnergy::appearance( const Traxel& ) const {
-    return 1000;
-  }
-
-  double BotEnergy::disappearance( const Traxel& ) const {
-    return 1000;
-  }
-
-  double BotEnergy::move( const Traxel&, const Traxel& ) const {
-    return 10;
-  }
-
-  double BotEnergy::division( const Traxel&, const Traxel&, const Traxel& ) const {
-    return 100;
-  }
-
-
-
 ////
 //// class DivisionEner
 ////
