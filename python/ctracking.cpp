@@ -106,6 +106,12 @@ BOOST_PYTHON_MODULE( ctracking )
 	.def(vector_indexing_suite<vector<vector<Event> > >())
     ;
 
+    class_<BotTracking>("BotTracking", 
+			init<double,double,double>(
+								      args("detection", "misdetection", "opportunity_cost")))
+	.def("__call__", &MrfTracking::operator())
+    ;
+
     class_<MrfTracking>("MrfTracking", 
 			init<string,double,double,double,double,bool,double,double,double>(
 								      args("random_forest_filename", "appearance", "disappearance", "detection", "misdetection", "use_random_forest", "opportunity_cost", "mean_div_dist", "min_angle")))
