@@ -150,9 +150,9 @@ void SingleTimestepTraxelMrf::add_constraints( const HypothesesGraph& g) {
     LOG(logDEBUG) << "SingleTimestepTraxelMrf::add_constraints: entered";
     typedef opengm::LPCplex<OpengmMrf::ogmGraphicalModel, OpengmMrf::ogmAccumulator> cplex;
     ////
-    //// incoming transitions
+    //// outgoing transitions
     ////
-    LOG(logDEBUG) << "SingleTimestepTraxelMrf::add_constraints: incoming transitions";
+    LOG(logDEBUG) << "SingleTimestepTraxelMrf::add_constraints: outgoing transitions";
     for(HypothesesGraph::NodeIt n(g); n!=lemon::INVALID; ++n) {
 	// couple detection and transitions
 	for(HypothesesGraph::OutArcIt a(g, n); a!=lemon::INVALID; ++a) {
@@ -169,9 +169,9 @@ void SingleTimestepTraxelMrf::add_constraints( const HypothesesGraph& g) {
     }
 
     ////
-    //// outgoing transitions
+    //// incoming transitions
     ////
-    LOG(logDEBUG) << "SingleTimestepTraxelMrf::add_constraints: outgoing transitions";
+    LOG(logDEBUG) << "SingleTimestepTraxelMrf::add_constraints: incoming transitions";
     for(HypothesesGraph::NodeIt n(g); n!=lemon::INVALID; ++n) {
 	// couple detection and transitions
 	for(HypothesesGraph::InArcIt a(g, n); a!=lemon::INVALID; ++a) {
@@ -318,7 +318,7 @@ void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::
     table_t::iterator element(table);
     
     //
-    // the costs for incoming moves are consider in the outgoing factors
+    // the costs for incoming moves are considered in the outgoing factors
     //
 
     // appearance configuration
