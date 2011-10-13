@@ -121,7 +121,6 @@ TARGET_LINK_LIBRARIES(track_lib hdf5 hdf5_hl ann cplex ilocplex pthread concert 
 if(WITH_TESTS)
   enable_testing()
   add_subdirectory(tests/)
-  add_subdirectory(system_tests/)
 endif()
 
 # Python

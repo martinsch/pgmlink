@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE( checkCreateFeatureVector )
 BOOST_AUTO_TEST_CASE( checkGetRandomForest )
 {
     // Read a Random Forest from the file "xorforest.h5"
-    vigra::RandomForest<Tracking::RF::RF_LABEL_TYPE> rf ( Tracking::RF::getRandomForest("xorforest.h5"));
+    vigra::RandomForest<Tracking::RF::RF_LABEL_TYPE> rf ( Tracking::RF::getRandomForest("@PROJECT_SOURCE_DIR@/tests/xorforest.h5"));
 
     // Only two classes
     BOOST_CHECK_EQUAL( rf.class_count(), 2 );
@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE( checkGetRandomForest )
 BOOST_AUTO_TEST_CASE( checkGetProbabilities )
 {
     // Read a Random Forest from the file "xorforest.h5"
-    vigra::RandomForest<Tracking::RF::RF_LABEL_TYPE> rf ( Tracking::RF::getRandomForest("xorforest.h5"));
+    vigra::RandomForest<Tracking::RF::RF_LABEL_TYPE> rf ( Tracking::RF::getRandomForest("@PROJECT_SOURCE_DIR@/tests/xorforest.h5"));
 
     // Only two classes
     BOOST_CHECK_EQUAL( rf.class_count(), 2 );
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE( checkPredictTracklets)
 
 
     // Read a Random Forest from the file "xorforest.h5"
-    vigra::RandomForest<Tracking::RF::RF_LABEL_TYPE> rf ( Tracking::RF::getRandomForest("xorforest.h5"));
+    vigra::RandomForest<Tracking::RF::RF_LABEL_TYPE> rf ( Tracking::RF::getRandomForest("@PROJECT_SOURCE_DIR@/tests/xorforest.h5"));
 
     // Only two classes
     BOOST_CHECK_EQUAL( rf.class_count(), 2 );
@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE( checkPredictTracklets)
 BOOST_AUTO_TEST_CASE( checkLoadTracklets )
 {
     // load the sample hdf5 file
-    std::string filename = "loadtest.h5";
+    std::string filename = "@PROJECT_SOURCE_DIR@/tests/loadtest.h5";
 
     Tracking::Traxels ts = Tracking::RF::loadTracklets(filename);
 

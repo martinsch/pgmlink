@@ -1,2 +1,0 @@
-add_executable(fully_connected_graph fully_connected_graph.cpp)
-target_link_libraries(fully_connected_graph track_lib)
