@@ -15,6 +15,7 @@ if(Boost_FOUND)
     ${PROJECT_SOURCE_DIR}/../../3rd_party/lib
   )
 
+  configure_file(randomforest_test.cpp randomforest_test.cpp)
 
   add_executable(ilp_construction_test ilp_construction_test.cpp)
   target_link_libraries(ilp_construction_test track_lib ${Boost_LIBRARIES} ann)
@@ -43,7 +44,7 @@ if(Boost_FOUND)
   # assume by default that HDF5 is installed. Set definition for vigra random forest
   ADD_DEFINITIONS(-DHasHDF5)
 
-  add_executable(randomforest_test randomforest_test.cpp)
+  add_executable(randomforest_test ${PROJECT_BINARY_DIR}/tests/randomforest_test.cpp)
   target_link_libraries(randomforest_test track_lib ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} hdf5 hdf5_hl vigraimpex)
 
   add_test(hypotheses hypotheses_test)
