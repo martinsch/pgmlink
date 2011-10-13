@@ -44,23 +44,6 @@ void print_events(std::vector< std::vector<Event> > events) {
 
 
 
-BOOST_AUTO_TEST_CASE( multitrack_operator )
-{
-  TraxelStore ts;
-  add(ts, mk_traxel(0,0,0,1,0));
-  add(ts, mk_traxel(0,0,1,1,1));
-  add(ts, mk_traxel(0,0,2,1,2));
-  add(ts, mk_traxel(0,0,0,2,0));
-  add(ts, mk_traxel(0,1,0,2,1));
-  add(ts, mk_traxel(0,2,0,2,2));
-
-  MultiTrack track;
-  vector<vector<Event> > output;
-  output = track(ts);
-  print_events(output);
-}
-
-
 BOOST_AUTO_TEST_CASE( same_energy__different_objects )
 {
   shared_ptr<const ConstantEnergy> div(new ConstantEnergy(99));
