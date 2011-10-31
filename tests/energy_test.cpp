@@ -11,54 +11,6 @@ using namespace Tracking;
 using namespace std;
 using namespace boost;
 
-BOOST_AUTO_TEST_CASE( FixedEnergy_operator )
-{
-  Traxel trs[]={Traxel(), Traxel()};
-    FixedEnergy e(23);
-    BOOST_CHECK_EQUAL(e(trs, trs+2), 23);
-
-    e.set(17);
-    BOOST_CHECK_EQUAL(e(trs, trs+2), 17);
-}
-
-BOOST_AUTO_TEST_CASE( ln_of_decorator )
-{
-  Traxel trs[]={Traxel(), Traxel()};
-    neg_ln_of<FixedEnergy> e;
-    e.set(10);
-    BOOST_CHECK_CLOSE(e(trs, trs+2), -2.30, 1.);
-}
-
-BOOST_AUTO_TEST_CASE( complementary_event_decorator )
-{
-  Traxel trs[]={Traxel(), Traxel()};
-    complementary_event<FixedEnergy> e;
-    e.set(0.3);
-    BOOST_CHECK_EQUAL(e(trs, trs+2), 0.7);
-}
-
-BOOST_AUTO_TEST_CASE( multiply_by_decorator )
-{
-  Traxel trs[]={Traxel(), Traxel()};
-    multiply_by<3, FixedEnergy> e;
-    e.set(2);
-    BOOST_CHECK_EQUAL(e(trs, trs+2), 6);
-}
-
-BOOST_AUTO_TEST_CASE( decorator_chaining )
-{
-  Traxel trs[]={Traxel(), Traxel()};
-    multiply_by<5, neg_ln_of<complementary_event<FixedEnergy> > > e;
-    e.set(0.1);
-    BOOST_CHECK_CLOSE(e(trs, trs+2), 0.5268, 1);
-}
-
-BOOST_AUTO_TEST_CASE( binarify_adaptor )
-{
-    binarify<FixedEnergy> e;
-    e(Traxel(), Traxel());
-}
-
 BOOST_AUTO_TEST_CASE( GeometryDivision_operator )
 {
     // perpare mock objects
