@@ -6,6 +6,7 @@
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/map_indexing_suite.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#include <boost/python/return_arg.hpp>
 
 #include <vigra/numpy_array.hxx>
 #include <vigra/numpy_array_converters.hxx>
@@ -72,12 +73,25 @@ BOOST_PYTHON_MODULE( ctracking )
     // traxels.h
     class_< feature_array >("feature_array");
 
+    class_< ComLocator >("ComLocator")
+      .def_readwrite("x_scale", &ComLocator::x_scale)
+      .def_readwrite("y_scale", &ComLocator::y_scale)
+      .def_readwrite("z_scale", &ComLocator::z_scale)
+    ;
+
+    class_< IntmaxposLocator >("IntmaxposLocator")
+      .def_readwrite("x_scale", &ComLocator::x_scale)
+      .def_readwrite("y_scale", &ComLocator::y_scale)
+      .def_readwrite("z_scale", &ComLocator::z_scale)
+    ;
+
     class_< std::map<std::string,feature_array> >("FeatureMap")
 	.def(map_indexing_suite<std::map<std::string,feature_array> >())
     ;
     class_<Traxel>("Traxel")
 	.def_readwrite("Id", &Traxel::Id)
 	.def_readwrite("Timestep", &Traxel::Timestep)
+        .def("set_locator", &Traxel::set_locator, return_self<>())
         .def("X", &Traxel::X)
         .def("Y", &Traxel::Y)
         .def("Z", &Traxel::Z)

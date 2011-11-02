@@ -38,7 +38,7 @@ namespace Tracking {
     return *this;
   }
 
-  const Traxel& Traxel::set_locator(Locator* l) {
+  Traxel& Traxel::set_locator(Locator* l) {
     delete locator_;
     locator_ = l;
     return *this;

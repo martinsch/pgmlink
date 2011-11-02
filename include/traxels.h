@@ -80,7 +80,7 @@ class IntmaxposLocator : public Locator {
    Traxel(const Traxel& other);
    Traxel& operator=(const Traxel& other);
    ~Traxel() { delete locator_; };
-   const Traxel& set_locator(Locator*);
+   Traxel& set_locator(Locator*);
    
    // fields
    unsigned int Id; // id of connected component (aka "label")
