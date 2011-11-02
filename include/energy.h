@@ -30,13 +30,30 @@ class BotDivision {
 
 
 class GeometryDivision2 {
-    public:
-    GeometryDivision2(double mean_div_dist, double min_angle) : mean_div_dist_(mean_div_dist), min_angle_(min_angle) {};
+  /**
+   * Division Energy based on geometric properties of a ancestor-child-child configuration.
+   *
+   * The energy is the sum of the squared distances from the ancestor object to the two children shifted by
+   * a mean distance [distance dependence].
+   * Furthermore, there may be an additional hard constraint on the division angle. If the angle is to small,
+   * the energy will be set to a very high value. [angle constraint]
+   */
+ public:
+  /**
+   * @param mean_div_dist expected moving distance during divisions
+   * @param min_angle minimal angle to accept configuration as a division
+   * @param distance_dependence if turned off, energy will not depend on distance between ancestor and children
+   * @param angle_constraint if turned on, a minimal division angle is demanded
+   */
+ GeometryDivision2(double mean_div_dist, double min_angle, bool distance_dependence=true, bool angle_constraint=true) 
+   : mean_div_dist_(mean_div_dist), min_angle_(min_angle), 
+    distance_dependence_(distance_dependence), angle_constraint_(angle_constraint) {};
     double operator()(const Traxel& ancestor,
 	const Traxel& child1,
 	const Traxel& child2) const;
     private:
     double mean_div_dist_, min_angle_;
+    bool distance_dependence_, angle_constraint_; 
 };
 
 class KasterDivision2 {

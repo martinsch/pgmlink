@@ -13,16 +13,19 @@ double GeometryDivision2::operator()(const Traxel& ancestor,
 	const Traxel& child1,
 	const Traxel& child2) const {
 	double energy = 0;    
-	
-	energy += (ancestor.distance_to(child1)-mean_div_dist_) * (ancestor.distance_to(child1)-mean_div_dist_);
-	energy += (ancestor.distance_to(child2)-mean_div_dist_) * (ancestor.distance_to(child2)-mean_div_dist_);
 
-	// angle constraint
-	double pi = acos(-1);
-	double angle = ancestor.angle(child1, child2);
-	if (angle/pi < min_angle_) {
+	if( angle_constraint_ ) {
+	  double pi = acos(-1);
+	  double angle = ancestor.angle(child1, child2);
+	  if (angle/pi < min_angle_) {
 	    energy += 10000000000000;
-	} 
+	  }
+	}
+	
+	if( distance_dependence_ ) {
+	  energy += (ancestor.distance_to(child1)-mean_div_dist_) * (ancestor.distance_to(child1)-mean_div_dist_);
+	  energy += (ancestor.distance_to(child2)-mean_div_dist_) * (ancestor.distance_to(child2)-mean_div_dist_);
+	}
 
 	return energy;
 }
@@ -142,7 +145,7 @@ double NegLnOneMinusCellness::operator()(const Traxel& tr) const {
 
 
     ////
-    //// class GeometryDivision
+    //// Class GeometryDivision
     ////
     double GeometryDivision::operator()(const Traxel& ancestor,
                           const Traxel& child1,
