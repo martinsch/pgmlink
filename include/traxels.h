@@ -28,7 +28,11 @@ typedef std::map<std::string,feature_array> FeatureMap;
 //
 class Locator {
  public:
-  Locator(std::string fn) : feature_name_(fn) {};
+ Locator( std::string fn,
+	  double x_scale = 1.0,
+	  double y_scale = 1.0,
+	  double z_scale = 1.0 ) 
+   : x_scale(x_scale), y_scale(y_scale), z_scale(z_scale), feature_name_(fn) {};
   virtual Locator* clone() = 0;
   virtual ~Locator() {};
 
@@ -36,6 +40,9 @@ class Locator {
   virtual double X(const FeatureMap&) const = 0;
   virtual double Y(const FeatureMap&) const = 0;
   virtual double Z(const FeatureMap&) const = 0;
+
+  double x_scale, y_scale, z_scale;
+
  protected:
   std::string feature_name_;
   double coordinate_from(const FeatureMap&, size_t idx) const;
@@ -45,18 +52,18 @@ class ComLocator : public Locator {
  public:
  ComLocator() : Locator("com") {};
   virtual ComLocator* clone() { return new ComLocator(*this); };
-  double X(const FeatureMap& m) const { return coordinate_from(m, 0); };
-  double Y(const FeatureMap& m) const { return coordinate_from(m, 1); };
-  double Z(const FeatureMap& m) const { return coordinate_from(m, 2); };
+  double X(const FeatureMap& m) const { return x_scale * coordinate_from(m, 0); };
+  double Y(const FeatureMap& m) const { return y_scale * coordinate_from(m, 1); };
+  double Z(const FeatureMap& m) const { return z_scale * coordinate_from(m, 2); };
 };
 
 class IntmaxposLocator : public Locator {
  public:
  IntmaxposLocator() : Locator("intmaxpos") {};
   virtual IntmaxposLocator* clone() { return new IntmaxposLocator(*this); };
-  double X(const FeatureMap& m) const { return coordinate_from(m, 1); };
-  double Y(const FeatureMap& m) const { return coordinate_from(m, 2); };
-  double Z(const FeatureMap& m) const { return coordinate_from(m, 3); };  
+  double X(const FeatureMap& m) const { return x_scale * coordinate_from(m, 1); };
+  double Y(const FeatureMap& m) const { return y_scale * coordinate_from(m, 2); };
+  double Z(const FeatureMap& m) const { return z_scale * coordinate_from(m, 3); };  
 };
 
 

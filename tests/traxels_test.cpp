@@ -31,6 +31,21 @@ BOOST_AUTO_TEST_CASE( Traxel_XYZ )
   BOOST_CHECK_EQUAL(t.Z(), com[2]);
 }
 
+BOOST_AUTO_TEST_CASE( Traxel_resolution_scaling )
+{
+  ComLocator* locator = new ComLocator();
+  locator->x_scale = 0.5;
+  locator->z_scale = 12.3;
+  Traxel t;
+  t.set_locator(locator);
+  feature_array com(3);
+  com[0] = 34; com[1] = 45; com[2] = 12.3;
+  t.features["com"] = com;
+  BOOST_CHECK_EQUAL(t.X(), 0.5 * com[0]);
+  BOOST_CHECK_EQUAL(t.Y(), com[1]);
+  BOOST_CHECK_EQUAL(t.Z(), 12.3 * com[2]);
+}
+
 BOOST_AUTO_TEST_CASE( Traxel_distance_to )
 {
     // prepare mock objects
