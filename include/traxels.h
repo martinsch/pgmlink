@@ -141,10 +141,20 @@ class IntmaxposLocator : public Locator {
  typedef TraxelStore::index<by_timeid>::type
    TraxelStoreByTimeid;
 
+ //
  // TraxelStore functions 
+ //
+ // timesteps
  std::set<TraxelStoreByTimestep::key_type>
    timesteps(const TraxelStore&);
 
+ TraxelStoreByTimestep::key_type
+   earliest_timestep(const TraxelStore&);
+
+ TraxelStoreByTimestep::key_type
+   latest_timestep(const TraxelStore&);
+
+ // io
  TraxelStore& add(TraxelStore&, const Traxel&);
 
  template<typename InputIt>

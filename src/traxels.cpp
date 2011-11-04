@@ -135,19 +135,25 @@ namespace Tracking {
     return keys_in(t.get<by_timestep>());
   }
 
+ TraxelStoreByTimestep::key_type
+ earliest_timestep(const TraxelStore& t) {
+    return *(timesteps(t).begin());
+ }
+
+ TraxelStoreByTimestep::key_type
+ latest_timestep(const TraxelStore& t) {
+    return *(timesteps(t).rbegin());
+ }
+  
   TraxelStore& add(TraxelStore& ts, const Traxel& t) {
     ts.get<by_timestep>().insert(t);
     return ts;
   }
 
   std::vector<std::vector<Traxel> > nested_vec_from(const TraxelStore& t) {
-    // determine timesteps in traxelstore
-    set<TraxelStoreByTimestep::key_type> keys;
-    keys = timesteps(t);
-
     // determine offset and range of timesteps
-    TraxelStoreByTimestep::key_type offset = *(keys.begin());
-    size_t range = *(keys.rbegin()) - offset + 1;
+    TraxelStoreByTimestep::key_type offset = earliest_timestep(t);
+    size_t range = latest_timestep(t) - offset + 1;
 
     // construct nested vec
     vector<vector<Traxel> > ret(range);
