@@ -83,6 +83,30 @@ class NegLnOneMinusCellness {
   double w_;
 };
 
+class BorderAwareConstant {
+  /**
+   * Zero near temporal border, else 1.
+   */
+ public:
+ BorderAwareConstant( double weight,
+		       int first_t, int last_t,
+		       int margin_t=1) 
+   : w_(weight), first_t_(first_t), last_t_(last_t), margin_t_(margin_t) {}
+
+  double operator()( const Traxel& tr ) const {
+    int t = tr.Timestep;
+    if( (first_t_ <= t && t < first_t_ + margin_t_) 
+	|| (last_t_ - margin_t_ < t && t <= last_t_) ) {
+      return 0.;
+    } else {
+      return w_;
+    }
+  }
+
+ private:
+  double w_;
+  int first_t_, last_t_, margin_t_;
+};
 
 
 ////
