@@ -76,8 +76,8 @@ vector<vector<Event> > BotTracking::operator()(TraxelStore& ts) {
 vector<vector<Event> > MrfTracking::operator()(TraxelStore& ts) {
     cout << "-> building energy functions " << endl;
     SquaredDistance move;
-    ConstantEnergy appearance(app_);
-    ConstantEnergy disappearance(dis_);
+    BorderAwareConstant appearance(app_, earliest_timestep(ts), true, 0);
+    BorderAwareConstant disappearance(dis_, latest_timestep(ts), false, 0);
     GeometryDivision2 division(mean_div_dist_, min_angle_);
 
     Traxels empty;
@@ -114,14 +114,15 @@ vector<vector<Event> > MrfTracking::operator()(TraxelStore& ts) {
     }
 
     cout << "-> building hypotheses" << endl;
-    SingleTimestepTraxel_HypothesesBuilder hyp_builder(&ts);
+    SingleTimestepTraxel_HypothesesBuilder::Options builder_opts(6,50);
+    SingleTimestepTraxel_HypothesesBuilder hyp_builder(&ts, builder_opts);
     HypothesesGraph* graph = hyp_builder.build();
 
     cout << "-> init MRF reasoner" << endl;
     SingleTimestepTraxelMrf mrf(detection,
 			        misdetection,
-			        bind<double>(appearance, _1, empty, empty),
-			        bind<double>(disappearance, _1, empty, empty),
+			        appearance,
+			        disappearance,
 				bind<double>(move, _1, _2, empty, empty),
 				division,
 				opportunity_cost_
