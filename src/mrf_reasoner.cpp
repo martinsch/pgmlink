@@ -100,16 +100,21 @@ void SingleTimestepTraxelMrf::reset() {
 }
 
 void SingleTimestepTraxelMrf::add_detection_nodes( const HypothesesGraph& g) {
+    size_t node_count = 0;
     for(HypothesesGraph::NodeIt n(g); n!=lemon::INVALID; ++n) {
 	mrf_->Space()->addDimension(2);
-	node_map_[n] = mrf_->Space()->dimension() - 1; 
+	node_map_[n] = mrf_->Space()->dimension() - 1;
+	++node_count;
     }
+    LOG(logINFO) << "reasoner: " << node_count << " detection nodes added";
 }
 void SingleTimestepTraxelMrf::add_transition_nodes( const HypothesesGraph& g) {
+    size_t node_count = 0;
     for(HypothesesGraph::ArcIt a(g); a!=lemon::INVALID; ++a) {
 	mrf_->Space()->addDimension(2);
 	arc_map_[a] = mrf_->Space()->dimension() - 1; 
     }
+    LOG(logINFO) << "reasoner: " << node_count << " transition nodes added";    
 }
 
 void SingleTimestepTraxelMrf::add_finite_factors( const HypothesesGraph& g) {
@@ -119,6 +124,7 @@ void SingleTimestepTraxelMrf::add_finite_factors( const HypothesesGraph& g) {
     //// add detection factors
     ////
     LOG(logDEBUG) << "SingleTimestepTraxelMrf::add_finite_factors: add detection factors";
+    size_t detection_factor_count = 0;
     for(HypothesesGraph::NodeIt n(g); n!=lemon::INVALID; ++n) {
 	size_t vi[] = {node_map_[n]};
 	OpengmMrf::ogmFactor f(*(mrf_->Space()), vi, vi+1);
@@ -127,15 +133,20 @@ void SingleTimestepTraxelMrf::add_finite_factors( const HypothesesGraph& g) {
 	f(1) = detection_(traxel_map[n]);
 	LOG(logDEBUG3) << "SingleTimestepTraxelMrf::add_finite_factors: detection energy: "<< f(1);
 	mrf_->Model()->addFactor(f);
+	++detection_factor_count;
     }
+    LOG(logINFO) << "reasoner: " << detection_factor_count << " detection factors added";
 
     ////
     //// add transition factors
     ////
+    size_t transition_factor_count = 0;
     for(HypothesesGraph::NodeIt n(g); n!=lemon::INVALID; ++n) {
       add_outgoing_factor(g, n);
       add_incoming_factor(g, n);
+      transition_factor_count = transition_factor_count + 2;
     }
+    LOG(logINFO) << "reasoner: " << transition_factor_count << " transition factors added (finite energy)";
 }	    
 
 
@@ -149,6 +160,7 @@ namespace {
 void SingleTimestepTraxelMrf::add_constraints( const HypothesesGraph& g) {
     LOG(logDEBUG) << "SingleTimestepTraxelMrf::add_constraints: entered";
     typedef opengm::LPCplex<OpengmMrf::ogmGraphicalModel, OpengmMrf::ogmAccumulator> cplex;
+    size_t constraint_count = 0;
     ////
     //// outgoing transitions
     ////
@@ -157,6 +169,7 @@ void SingleTimestepTraxelMrf::add_constraints( const HypothesesGraph& g) {
 	// couple detection and transitions
 	for(HypothesesGraph::OutArcIt a(g, n); a!=lemon::INVALID; ++a) {
 	    couple(n, a);
+	    ++constraint_count;
 	}
 	// couple transitions
 	vector<size_t> cplex_idxs;
@@ -166,6 +179,7 @@ void SingleTimestepTraxelMrf::add_constraints( const HypothesesGraph& g) {
 	vector<int> coeffs(cplex_idxs.size(), 1);
 	// 0 <= 1*transition + ... + 1*transition <= 2
 	dynamic_cast<cplex*>(optimizer_)->addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0, 2);
+	++constraint_count;
     }
 
     ////
@@ -176,6 +190,7 @@ void SingleTimestepTraxelMrf::add_constraints( const HypothesesGraph& g) {
 	// couple detection and transitions
 	for(HypothesesGraph::InArcIt a(g, n); a!=lemon::INVALID; ++a) {
 	    couple(n, a);
+	    ++constraint_count;
 	}
 	    
 	// couple transitions
@@ -186,7 +201,10 @@ void SingleTimestepTraxelMrf::add_constraints( const HypothesesGraph& g) {
 	vector<int> coeffs(cplex_idxs.size(), 1);
 	// 0 <= 1*transition + ... + 1*transition <= 1
 	dynamic_cast<cplex*>(optimizer_)->addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0, 1);
+	++constraint_count;
     }
+
+    LOG(logINFO) << "reasoner: " << constraint_count << " hard constraints added";
 }
 
 void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::Arc& a) {
@@ -279,6 +297,8 @@ void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::
 				 traxel_map[g.target(arcs[i-1])],
 				 traxel_map[g.target(arcs[j-1])]
 				 );
+	  LOG(logDEBUG3) << "SingleTimestepTraxelMrf::add_outgoing_factors: division energy: "<< element[index];
+
 	  // reset
   	  coords[i] = 0;
 	  coords[j] = 0;
