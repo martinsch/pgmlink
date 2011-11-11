@@ -113,6 +113,7 @@ void SingleTimestepTraxelMrf::add_transition_nodes( const HypothesesGraph& g) {
     for(HypothesesGraph::ArcIt a(g); a!=lemon::INVALID; ++a) {
 	mrf_->Space()->addDimension(2);
 	arc_map_[a] = mrf_->Space()->dimension() - 1; 
+	++node_count;
     }
     LOG(logINFO) << "reasoner: " << node_count << " transition nodes added";    
 }
