@@ -170,6 +170,9 @@ namespace Tracking {
 
 
 
+  //
+  // state_of_nodes()
+  //
   boost::shared_ptr<std::vector< std::map<unsigned int, bool> > > state_of_nodes(const HypothesesGraph& g) {
     LOG(logDEBUG) << "detections(): entered";
     shared_ptr<vector< map<unsigned int, bool> > > ret(new vector< map<unsigned int, bool> >);
