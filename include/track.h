@@ -33,8 +33,15 @@ namespace Tracking {
 	      double opportunity_cost = 0,
 	      double mean_div_dist=25,
 	      double min_angle=0)
-    : app_(appearance), dis_(disappearance), det_(detection), mis_(misdetection), rf_fn_(random_forest_filename), use_rf_(cellness_by_random_forest), opportunity_cost_(opportunity_cost), mean_div_dist_(mean_div_dist), min_angle_(min_angle) {}
+      : app_(appearance), dis_(disappearance), det_(detection), mis_(misdetection), 
+      rf_fn_(random_forest_filename), use_rf_(cellness_by_random_forest), 
+      opportunity_cost_(opportunity_cost), mean_div_dist_(mean_div_dist), min_angle_(min_angle) {}
     std::vector< std::vector<Event> > operator()(TraxelStore&);
+
+    /**
+     * Get state of detection variables after call to operator().
+     */
+    std::vector< std::map<unsigned int, bool> > detections();
     
   private:
     double app_, dis_, det_, mis_;
@@ -42,6 +49,7 @@ namespace Tracking {
     bool use_rf_;
     double opportunity_cost_;
     double mean_div_dist_, min_angle_;
+    shared_ptr<std::vector< std::map<unsigned int, bool> > > last_detections_; 
   };
 
      /**

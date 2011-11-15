@@ -13,7 +13,7 @@ namespace Tracking {
 	/**
 	* The traxels participating in the event.
 	*
-	* A (Dis-)appearance is described by one tracklet id, a move by two tracklet ids and
+	* A (Dis-)appearance is described by one traxel id, a move by two traxel ids and
 	* a division by three (motherId, daughterId1, daughterId2). A Void is just an empty vector.
 	*/
 	std::vector<unsigned int> traxel_ids;

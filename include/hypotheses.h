@@ -105,6 +105,7 @@ namespace Tracking {
 
   HypothesesGraph& prune_inactive(HypothesesGraph&);
   boost::shared_ptr<std::vector< std::vector<Event> > > events(const HypothesesGraph&);
+  boost::shared_ptr<std::vector< std::map<unsigned int, bool> > > state_of_nodes(const HypothesesGraph&);
 
 
   ////

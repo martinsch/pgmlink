@@ -63,7 +63,7 @@ namespace Tracking {
       // prune inactive nodes 
       LOG(logDEBUG) << "prune_inactive: prune inactive nodes";
       typedef property_map<node_active, HypothesesGraph::base_graph>::type::FalseIt inactive_node_it;
-      // collect inactive nodess
+      // collect inactive nodes
       vector<HypothesesGraph::Node> nodes_to_prune;
 
       for(inactive_node_it it(active_nodes); it!=lemon::INVALID; ++it) {
@@ -163,6 +163,35 @@ namespace Tracking {
 		    LOG(logDEBUG3) << e;	      
 	    }
 	}
+    }
+
+    return ret;
+  }
+
+
+
+  boost::shared_ptr<std::vector< std::map<unsigned int, bool> > > state_of_nodes(const HypothesesGraph& g) {
+    LOG(logDEBUG) << "detections(): entered";
+    shared_ptr<vector< map<unsigned int, bool> > > ret(new vector< map<unsigned int, bool> >);
+
+    // required node properties: timestep, traxel, active
+    typedef property_map<node_timestep, HypothesesGraph::base_graph>::type node_timestep_map_t;
+    node_timestep_map_t& node_timestep_map = g.get(node_timestep());
+    typedef property_map<node_traxel, HypothesesGraph::base_graph>::type node_traxel_map_t;
+    node_traxel_map_t& node_traxel_map = g.get(node_traxel());
+    typedef property_map<node_active, HypothesesGraph::base_graph>::type node_active_map_t;
+    node_active_map_t& node_active_map = g.get(node_active());
+
+
+    // for every timestep
+    for(int t = g.earliest_timestep(); t < g.latest_timestep(); ++t) {
+      ret->push_back(map<unsigned int, bool>());
+      for(node_timestep_map_t::ItemIt node_at(node_timestep_map, t); node_at!=lemon::INVALID; ++node_at) {
+	assert(node_traxel_map[node_at].Timestep == t);
+	unsigned int id = node_traxel_map[node_at].Id;
+	bool active = node_active_map[node_at];
+	(*ret)[t-g.earliest_timestep()][id] = active;
+      }
     }
 
     return ret;

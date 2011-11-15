@@ -65,7 +65,9 @@ vector<vector<Event> > BotTracking::operator()(TraxelStore& ts) {
 
     cout << "-> constructing events" << endl;
     
-    return *events(*graph);
+    boost::shared_ptr<vector<vector<Event> > > es = events(*graph);
+    delete graph;
+    return *es;
 }
 
 
@@ -137,12 +139,26 @@ vector<vector<Event> > MrfTracking::operator()(TraxelStore& ts) {
     cout << "-> conclude" << endl;
     mrf.conclude(*graph);
 
+    cout << "-> storing state of detection vars" << endl;
+    last_detections_ = state_of_nodes(*graph);
+
     cout << "-> pruning inactive hypotheses" << endl;
     prune_inactive(*graph);
 
     cout << "-> constructing events" << endl;
     
     return *events(*graph);
+}
+
+
+
+vector< map<unsigned int, bool> > MrfTracking::detections() {
+  vector< map<unsigned int, bool> > res;
+  if( last_detections_ ) {
+    return *last_detections_;    
+  } else {
+    throw std::runtime_error("MrfTracking::detections(): previous tracking result required");
+  }
 }
 
 
