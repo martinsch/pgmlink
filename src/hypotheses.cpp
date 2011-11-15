@@ -187,7 +187,7 @@ namespace Tracking {
 
 
     // for every timestep
-    for(int t = g.earliest_timestep(); t < g.latest_timestep(); ++t) {
+    for(int t = g.earliest_timestep(); t <= g.latest_timestep(); ++t) {
       ret->push_back(map<unsigned int, bool>());
       for(node_timestep_map_t::ItemIt node_at(node_timestep_map, t); node_at!=lemon::INVALID; ++node_at) {
 	assert(node_traxel_map[node_at].Timestep == t);
