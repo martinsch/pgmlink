@@ -44,19 +44,9 @@ void SingleTimestepTraxelMrf::formulate( const HypothesesGraph& hypotheses ) {
     param.verbose_ = true;
     param.integerConstraint_ = true;
     //param.epGap_ = 0.05;
+
     OpengmMrf::ogmGraphicalModel* model = mrf_->Model();
-    cout << "PING1" << endl;
-
-    opengm::GraphicalModel<double, opengm::Adder> m;
-    m.addVariable(2);
-    cout << "PING1.4" << endl;
-    //m.numberOfFactors();
-    cout << "PING1.5" << endl;
-    opengm::LPCplex<OpengmMrf::ogmGraphicalModel, OpengmMrf::ogmAccumulator> c(m);
-
-    cout << "PING2" << endl;
     optimizer_ = new cplex_optimizer(*model, param);
-    cout << "PING2.5" << endl;    
     if(with_constraints_) {
 	if(constraints_as_infinite_energy_ == true) {
 	    throw "SingleTimestepTraxelMrf::formulate(): constraints_as_infite_energy not supported yet.";
@@ -64,7 +54,6 @@ void SingleTimestepTraxelMrf::formulate( const HypothesesGraph& hypotheses ) {
 	LOG(logDEBUG) << "SingleTimestepTraxelMrf::formulate: add_constraints";
 	add_constraints( hypotheses );
     }
-    cout << "PING3" << endl;
 }
 
 

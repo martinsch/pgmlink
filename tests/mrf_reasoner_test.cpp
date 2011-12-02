@@ -48,20 +48,18 @@ BOOST_AUTO_TEST_CASE( HypothesesGraph_build_hyp2 ) {
   std::cout << "Adding nodes" << std::endl;
   std::cout <<  std::endl;
 
-  Tracking::property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_m = g.get(node_traxel());
-
-  Node n1=g.add_node(0); //traxel_m.set(n1, 0);
-  Node n2=g.add_node(0); //traxel_m.set(n2, 0);
-  Node n3=g.add_node(0); //traxel_m.set(n3, 0);
-  Node n4=g.add_node(0); //traxel_m.set(n4, 0);
-  Node m1=g.add_node(1); //traxel_m.set(m1, 1);
-  Node m2=g.add_node(1); //traxel_m.set(m2, 1);
-  Node m3=g.add_node(1); //traxel_m.set(m3, 1);
-  Node m4=g.add_node(1); //traxel_m.set(m4, 1);
-  Node o1=g.add_node(2); //traxel_m.set(o1, 2);
-  Node o2=g.add_node(2); //traxel_m.set(o2, 2);
-  Node o3=g.add_node(2); //traxel_m.set(o3, 2);
-  Node o4=g.add_node(2); //traxel_m.set(o4, 2);
+  Node n1=g.add_node(0);
+  Node n2=g.add_node(0);
+  Node n3=g.add_node(0);
+  Node n4=g.add_node(0);
+  Node m1=g.add_node(1);
+  Node m2=g.add_node(1);
+  Node m3=g.add_node(1);
+  Node m4=g.add_node(1);
+  Node o1=g.add_node(2);
+  Node o2=g.add_node(2);
+  Node o3=g.add_node(2);
+  Node o4=g.add_node(2);
 
   std::cout << "Nodes:";
   for (NodeIt i(g); i!=INVALID; ++i)
@@ -115,153 +113,153 @@ BOOST_AUTO_TEST_CASE( HypothesesGraph_build_hyp2 ) {
 }
 
 
-// BOOST_AUTO_TEST_CASE( HypothesesGraph_build_hyp_mrf ) {
+BOOST_AUTO_TEST_CASE( HypothesesGraph_build_hyp_mrf ) {
 
 
-//     Traxel n1, n2, n3, n4, m1, m2, m3, m4, o1, o2, o3, o4, o5;
-//     feature_array comn1(feature_array::difference_type(3)); //float vector
-//     feature_array comn2(feature_array::difference_type(3));
-//     feature_array comn3(feature_array::difference_type(3));
-//     feature_array comn4(feature_array::difference_type(3));
-//     feature_array comm1(feature_array::difference_type(3)); 
-//     feature_array comm2(feature_array::difference_type(3));
-//     feature_array comm3(feature_array::difference_type(3));
-//     feature_array comm4(feature_array::difference_type(3));    
-//     feature_array como1(feature_array::difference_type(3)); 
-//     feature_array como2(feature_array::difference_type(3));
-//     feature_array como3(feature_array::difference_type(3));
-//     feature_array como4(feature_array::difference_type(3));
-//     feature_array como5(feature_array::difference_type(3));
+    Traxel n1, n2, n3, n4, m1, m2, m3, m4, o1, o2, o3, o4, o5;
+    feature_array comn1(feature_array::difference_type(3)); //float vector
+    feature_array comn2(feature_array::difference_type(3));
+    feature_array comn3(feature_array::difference_type(3));
+    feature_array comn4(feature_array::difference_type(3));
+    feature_array comm1(feature_array::difference_type(3)); 
+    feature_array comm2(feature_array::difference_type(3));
+    feature_array comm3(feature_array::difference_type(3));
+    feature_array comm4(feature_array::difference_type(3));    
+    feature_array como1(feature_array::difference_type(3)); 
+    feature_array como2(feature_array::difference_type(3));
+    feature_array como3(feature_array::difference_type(3));
+    feature_array como4(feature_array::difference_type(3));
+    feature_array como5(feature_array::difference_type(3));
 
-//     comn1[0] = 0;
-//     comn1[1] = 0;
-//     comn1[2] = 0;
-//     n1.features["com"] = comn1;
-//     n1.Id = 11;
-//     n1.Timestep = 0;
+    comn1[0] = 0;
+    comn1[1] = 0;
+    comn1[2] = 0;
+    n1.features["com"] = comn1;
+    n1.Id = 11;
+    n1.Timestep = 0;
 
-//     comn2[0] = 1;
-//     comn2[1] = 1;
-//     comn2[2] = 1;
-//     n2.features["com"] = comn2;
-//     n2.Id = 12;
-//     n2.Timestep = 0;
+    comn2[0] = 1;
+    comn2[1] = 1;
+    comn2[2] = 1;
+    n2.features["com"] = comn2;
+    n2.Id = 12;
+    n2.Timestep = 0;
 
-//     comn3[0] = 0;
-//     comn3[1] = 0;
-//     comn3[2] = 2;
-//     n3.features["com"] = comn3;
-//     n3.Id = 13;
-//     n3.Timestep = 0;
+    comn3[0] = 0;
+    comn3[1] = 0;
+    comn3[2] = 2;
+    n3.features["com"] = comn3;
+    n3.Id = 13;
+    n3.Timestep = 0;
 
-//     comn4[0] = 2;
-//     comn4[1] = 0;
-//     comn4[2] = 0;
-//     n4.features["com"] = comn4;
-//     n4.Id = 14;
-//     n4.Timestep = 0;
+    comn4[0] = 2;
+    comn4[1] = 0;
+    comn4[2] = 0;
+    n4.features["com"] = comn4;
+    n4.Id = 14;
+    n4.Timestep = 0;
 
-//     comm1[0] = 2;
-//     comm1[1] = 2;
-//     comm1[2] = 2;
-//     m1.features["com"] = comm1;
-//     m1.Id = 21;
-//     m1.Timestep = 1;
+    comm1[0] = 2;
+    comm1[1] = 2;
+    comm1[2] = 2;
+    m1.features["com"] = comm1;
+    m1.Id = 21;
+    m1.Timestep = 1;
 
-//     comm2[0] = 1;
-//     comm2[1] = 0;
-//     comm2[2] = 1;
-//     m2.features["com"] = comm2;
-//     m2.Id = 22;
-//     m2.Timestep = 1;
+    comm2[0] = 1;
+    comm2[1] = 0;
+    comm2[2] = 1;
+    m2.features["com"] = comm2;
+    m2.Id = 22;
+    m2.Timestep = 1;
 
-//     comm3[0] = 0;
-//     comm3[1] = 1;
-//     comm3[2] = 1;
-//     m3.features["com"] = comm3;
-//     m3.Id = 23;
-//     m3.Timestep = 1;
+    comm3[0] = 0;
+    comm3[1] = 1;
+    comm3[2] = 1;
+    m3.features["com"] = comm3;
+    m3.Id = 23;
+    m3.Timestep = 1;
 
-//     comm4[0] = 3;
-//     comm4[1] = 3;
-//     comm4[2] = 3;
-//     m4.features["com"] = comm4;
-//     m4.Id = 24;
-//     m4.Timestep = 1;
+    comm4[0] = 3;
+    comm4[1] = 3;
+    comm4[2] = 3;
+    m4.features["com"] = comm4;
+    m4.Id = 24;
+    m4.Timestep = 1;
 
-//     como1[0] = 4;
-//     como1[1] = 4;
-//     como1[2] = 4;
-//     o1.features["com"] = como1;
-//     o1.Id = 31;
-//     o1.Timestep = 2;
+    como1[0] = 4;
+    como1[1] = 4;
+    como1[2] = 4;
+    o1.features["com"] = como1;
+    o1.Id = 31;
+    o1.Timestep = 2;
 
-//     como2[0] = 7;
-//     como2[1] = 19;
-//     como2[2] = 8;
-//     o2.features["com"] = como2;
-//     o2.Id = 32;
-//     o2.Timestep = 2;
+    como2[0] = 7;
+    como2[1] = 19;
+    como2[2] = 8;
+    o2.features["com"] = como2;
+    o2.Id = 32;
+    o2.Timestep = 2;
 
-//     como3[0] = 0;
-//     como3[1] = 7;
-//     como3[2] = 1;
-//     o3.features["com"] = como3;
-//     o3.Id = 33;
-//     o3.Timestep = 2;
+    como3[0] = 0;
+    como3[1] = 7;
+    como3[2] = 1;
+    o3.features["com"] = como3;
+    o3.Id = 33;
+    o3.Timestep = 2;
 
-//     como4[0] = 5;
-//     como4[1] = 0;
-//     como4[2] = 9;
-//     o4.features["com"] = como4;
-//     o4.Id = 34;
-//     o4.Timestep = 2;
+    como4[0] = 5;
+    como4[1] = 0;
+    como4[2] = 9;
+    o4.features["com"] = como4;
+    o4.Id = 34;
+    o4.Timestep = 2;
 
-//     como5[0] = 0;
-//     como5[1] = 4;
-//     como5[2] = 0;
-//     o5.features["com"] = como5;
-//     o5.Id = 34;
-//     o5.Timestep = 2;
+    como5[0] = 0;
+    como5[1] = 4;
+    como5[2] = 0;
+    o5.features["com"] = como5;
+    o5.Id = 34;
+    o5.Timestep = 2;
 
-//     TraxelStore ts;
-//     add(ts,n1);
-//     add(ts,n2);
-//     add(ts,n3);
-//     add(ts,n4);
-//     add(ts,m1);
-//     add(ts,m2);
-//     add(ts,m3);
-//     add(ts,m4);
-//     add(ts,o1);
-//     add(ts,o2);
-//     add(ts,o3);
-//     add(ts,o4);
-//     add(ts,o5);
+    TraxelStore ts;
+    add(ts,n1);
+    add(ts,n2);
+    add(ts,n3);
+    add(ts,n4);
+    add(ts,m1);
+    add(ts,m2);
+    add(ts,m3);
+    add(ts,m4);
+    add(ts,o1);
+    add(ts,o2);
+    add(ts,o3);
+    add(ts,o4);
+    add(ts,o5);
 
-//     SingleTimestepTraxel_HypothesesBuilder builder(&ts);
-//     HypothesesGraph* graph = builder.build();
+    SingleTimestepTraxel_HypothesesBuilder builder(&ts);
+    HypothesesGraph* graph = builder.build();
 
-//     Traxels empty;
-//     ConstantEnergy e1(10);	
-//     ConstantEnergy e2(90);	
-//     ConstantEnergy e3(70);	
-//     ConstantEnergy e4(50);	
-//     ConstantEnergy e5(20);		
-//     ConstantEnergy e6(5);	
+    Traxels empty;
+    ConstantEnergy e1(10);	
+    ConstantEnergy e2(90);	
+    ConstantEnergy e3(70);	
+    ConstantEnergy e4(50);	
+    ConstantEnergy e5(20);		
+    ConstantEnergy e6(5);	
     
-//     SingleTimestepTraxelMrf mrf(bind<double>(e1, _1, empty, empty),		//detection
-// 			        bind<double>(e2, _1, empty, empty),		//non_detection
-// 			        bind<double>(e3, _1, empty, empty),		//appearance
-// 			        bind<double>(e4, _1, empty, empty),		//disappearance
-// 				bind<double>(e5, _1, _2, empty, empty),		//move
-// 				bind<double>(e6, _1, _2, _3, empty, empty)	//division
-// 			       );
-//     cout << "-> workflow: formulating model" << endl; 
-//     mrf.formulate( *graph );
-//     cout << "-> workflow: infer" << endl; 
-//     mrf.infer();
-//     cout << "-> workflow: conclude" << endl; 
-//     mrf.conclude(*graph);
-//     prune_inactive(*graph);
-// }
+    SingleTimestepTraxelMrf mrf(bind<double>(e1, _1, empty, empty),		//detection
+			        bind<double>(e2, _1, empty, empty),		//non_detection
+			        bind<double>(e3, _1, empty, empty),		//appearance
+			        bind<double>(e4, _1, empty, empty),		//disappearance
+				bind<double>(e5, _1, _2, empty, empty),		//move
+				bind<double>(e6, _1, _2, _3, empty, empty)	//division
+			       );
+    cout << "-> workflow: formulating model" << endl; 
+    mrf.formulate( *graph );
+    cout << "-> workflow: infer" << endl; 
+    mrf.infer();
+    cout << "-> workflow: conclude" << endl; 
+    mrf.conclude(*graph);
+    prune_inactive(*graph);
+}
