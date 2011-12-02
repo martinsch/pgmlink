@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE( HypothesesGraph_build_hyp2 ) {
   Node n1=g.add_node(0);
   Node n2=g.add_node(0);
   Node n3=g.add_node(0);
-  Node n4=g.add_node(0);
+  g.add_node(0);
   Node m1=g.add_node(1);
   Node m2=g.add_node(1);
   Node m3=g.add_node(1);
@@ -70,14 +70,14 @@ BOOST_AUTO_TEST_CASE( HypothesesGraph_build_hyp2 ) {
   std::cout << "Addings arcs" << std::endl;
   std::cout <<  std::endl;
 
-  Arc n1_m2=g.addArc(n1,m2);
-  Arc n2_m1=g.addArc(n2,m1);
-  Arc n3_m3=g.addArc(n3,m3);
-  Arc n3_m4=g.addArc(n3,m4);
-  Arc m1_o1=g.addArc(m1,o1);
-  Arc m2_o2=g.addArc(m2,o2);
-  Arc m4_o3=g.addArc(m4,o3);
-  Arc m4_o4=g.addArc(m4,o4);
+  g.addArc(n1,m2);
+  g.addArc(n2,m1);
+  g.addArc(n3,m3);
+  g.addArc(n3,m4);
+  g.addArc(m1,o1);
+  g.addArc(m2,o2);
+  g.addArc(m4,o3);
+  g.addArc(m4,o4);
 
   std::cout << "Arcs:";
   for (ArcIt2 i(g); i!=INVALID; ++i)
