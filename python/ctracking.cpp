@@ -20,6 +20,11 @@ namespace Tracking {
     using namespace vigra;
 
     // extending Traxel
+    void set_intmaxpos_locator(Traxel& t) {
+      Locator* l = new IntmaxposLocator();
+      t.set_locator(l); // takes ownership of pointer
+    }
+
     void add_feature_array(Traxel& t, string key, size_t size) {
 	    t.features[key] = feature_array(size, 0);
      }
@@ -91,7 +96,8 @@ BOOST_PYTHON_MODULE( ctracking )
     class_<Traxel>("Traxel")
 	.def_readwrite("Id", &Traxel::Id)
 	.def_readwrite("Timestep", &Traxel::Timestep)
-        .def("set_locator", &Traxel::set_locator, return_self<>())
+         //.def("set_locator", &Traxel::set_locator, return_self<>())
+        .def("set_intmaxpos_locator", &set_intmaxpos_locator, args("self"))
         .def("X", &Traxel::X)
         .def("Y", &Traxel::Y)
         .def("Z", &Traxel::Z)
