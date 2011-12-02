@@ -1,5 +1,6 @@
-#define BOOST_TEST_MODULE mrf_reasoner_test
+#define BOOST_TEST_MODULE new_reasoner_test
 
+#include <vector>
 #include <iostream>
 
 #include <boost/test/unit_test.hpp>
@@ -8,6 +9,11 @@
 
 #include <lemon/color.h>
 #include <lemon/graph_to_eps.h>
+
+#include <lemon/core.h>
+#include <lemon/concepts/digraph.h>
+#include <lemon/list_graph.h>
+#include <lemon/maps.h>
 
 #include "graph.h"
 #include "hypotheses.h"
@@ -18,87 +24,89 @@
 using namespace Tracking;
 using namespace std;
 using namespace boost;
-using namespace lemon;
 
-BOOST_AUTO_TEST_CASE( SingleTimestepTraxelMrf_construction )
-{
-    Traxels empty;
-    ConstantEnergy e(25);
-    
-    SingleTimestepTraxelMrf mrf(bind<double>(e, _1, empty, empty),
-			        bind<double>(e, _1, empty, empty),
-			        bind<double>(e, _1, empty, empty),
-			        bind<double>(e, _1, empty, empty),
-				bind<double>(e, _1, _2, empty, empty),
-				bind<double>(e, _1, _2, _3, empty, empty)
-			       );
+BOOST_AUTO_TEST_CASE( HypothesesGraph_build_hyp ) {
+    HypothesesGraph graph;
+    graph.add_node(13);
 }
 
+BOOST_AUTO_TEST_CASE( HypothesesGraph_build_hyp2 ) {
+
+  std::cout << "Constructing HypothesesGraph" << std::endl;
+  std::cout <<  std::endl;
+
+  typedef HypothesesGraph::ArcIt ArcIt2;
+  typedef HypothesesGraph::Arc Arc;
+  typedef HypothesesGraph::NodeIt NodeIt;
+  typedef HypothesesGraph::Node Node;
+  using lemon::INVALID;
+
+  HypothesesGraph g;
+  HypothesesGraph* graph=&g;
+  graph->add(node_traxel());
+
+  std::cout << "Adding nodes" << std::endl;
+  std::cout <<  std::endl;
+
+  Tracking::property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_m = g.get(node_traxel());
+
+  Node n1=g.add_node(0); //traxel_m.set(n1, 0);
+  Node n2=g.add_node(0); //traxel_m.set(n2, 0);
+  Node n3=g.add_node(0); //traxel_m.set(n3, 0);
+  Node n4=g.add_node(0); //traxel_m.set(n4, 0);
+  Node m1=g.add_node(1); //traxel_m.set(m1, 1);
+  Node m2=g.add_node(1); //traxel_m.set(m2, 1);
+  Node m3=g.add_node(1); //traxel_m.set(m3, 1);
+  Node m4=g.add_node(1); //traxel_m.set(m4, 1);
+  Node o1=g.add_node(2); //traxel_m.set(o1, 2);
+  Node o2=g.add_node(2); //traxel_m.set(o2, 2);
+  Node o3=g.add_node(2); //traxel_m.set(o3, 2);
+  Node o4=g.add_node(2); //traxel_m.set(o4, 2);
+
+  std::cout << "Nodes:";
+  for (NodeIt i(g); i!=INVALID; ++i)
+    std::cout << " " << g.id(i);
+  std::cout << std::endl;
 
 
-BOOST_AUTO_TEST_CASE( SingleTimestepTraxelMrf_workflow )
-{
-  cout << "-> workflow: scaffolding" << endl; 
-  // scaffolding
-    Traxel tr11, tr12, tr21, tr22;
-    feature_array com11(feature_array::difference_type(3));
-    feature_array com12(feature_array::difference_type(3));
-    feature_array com21(feature_array::difference_type(3));
-    feature_array com22(feature_array::difference_type(3));
+  std::cout << "Addings arcs" << std::endl;
+  std::cout <<  std::endl;
 
-    com11[0] = 0;
-    com11[1] = 0;
-    com11[2] = 0;
-    tr11.features["com"] = com11;
-    tr11.Id = 5;
-    tr11.Timestep = 0;
+  Arc n1_m2=g.addArc(n1,m2);
+  Arc n2_m1=g.addArc(n2,m1);
+  Arc n3_m3=g.addArc(n3,m3);
+  Arc n3_m4=g.addArc(n3,m4);
+  Arc m1_o1=g.addArc(m1,o1);
+  Arc m2_o2=g.addArc(m2,o2);
+  Arc m4_o3=g.addArc(m4,o3);
+  Arc m4_o4=g.addArc(m4,o4);
 
-    com12[0] = 0;
-    com12[1] = 1;
-    com12[2] = 0;
-    tr12.features["com"] = com12;
-    tr12.Id = 7;
-    tr12.Timestep = 0;
+  std::cout << "Arcs:";
+  for (ArcIt2 i(g); i!=INVALID; ++i)
+  std::cout << " (" << g.id(g.source(i)) << "," << g.id(g.target(i)) << ")";
+  std::cout << std::endl;
+  std::cout <<  std::endl;
 
-    com21[0] = 1;
-    com21[1] = 0;
-    com21[2] = 0;
-    tr21.features["com"] = com21;
-    tr21.Id = 9;
-    tr21.Timestep = 1;
+  std::cout << "Constructing Reasoner" << std::endl;
+  std::cout <<  std::endl;
 
 
-    com22[0] = 1;
-    com22[1] = 1;
-    com22[2] = 0;
-    tr22.features["com"] = com22;
-    tr22.Id = 11;
-    tr22.Timestep = 1;
-
-    TraxelStore ts;
-    add(ts,tr11);
-    add(ts,tr12);
-    add(ts,tr21);
-    add(ts,tr22);
-
-    SingleTimestepTraxel_HypothesesBuilder builder(&ts);
-    HypothesesGraph* graph = builder.build();
-
-    Traxels empty;
-    ConstantEnergy e(25);
+   Traxels empty;
+   ConstantEnergy e(25);
     
-    cout << "-> workflow: construction MRF reasoner" << endl; 
-    SingleTimestepTraxelMrf mrf(bind<double>(e, _1, empty, empty),
-			        bind<double>(e, _1, empty, empty),
-			        bind<double>(e, _1, empty, empty),
-			        bind<double>(e, _1, empty, empty),
-				bind<double>(e, _1, _2, empty, empty),
-				bind<double>(e, _1, _2, _3, empty, empty)
+   SingleTimestepTraxelMrf mrf(bind<double>(e, _1, empty, empty),		//detection
+			        bind<double>(e, _1, empty, empty),		//non_detection
+			        bind<double>(e, _1, empty, empty),		//appearance
+			        bind<double>(e, _1, empty, empty),		//disappearance
+				bind<double>(e, _1, _2, empty, empty),		//move
+				bind<double>(e, _1, _2, _3, empty, empty)	//division
 			       );
 
-    // test
+  std::cout << "Formulating Factors" << std::endl;
+  std::cout <<  std::endl;
+
     cout << "-> workflow: formulating model" << endl; 
-    mrf.formulate(*graph);
+    mrf.formulate( *graph );
     cout << "-> workflow: infer" << endl; 
     mrf.infer();
     cout << "-> workflow: conclude" << endl; 
@@ -106,124 +114,154 @@ BOOST_AUTO_TEST_CASE( SingleTimestepTraxelMrf_workflow )
     prune_inactive(*graph);
 }
 
-BOOST_AUTO_TEST_CASE( diamond_pattern ) {
-    /*
-    //      --- tr21 ---
-    //    /              \
-    // tr11 --- tr22 --- tr31
-    //    \              /
-    //      --- tr23 ---
-    */
-    // trXY: traxel Y at timestep X
-  Traxel tr11, tr21, tr22, tr23, tr31;
-    feature_array com11(3);
-    feature_array com21(3);
-    feature_array com22(3);
-    feature_array com23(3);
-    feature_array com31(3);
 
-    com11[0] = 0;
-    com11[1] = 0;
-    com11[2] = 0;
-    tr11.features["com"] = com11;
-    tr11.Id = 11;
-    tr11.Timestep = 1;
-
-    com21[0] = 1;
-    com21[1] = 0;
-    com21[2] = 0;
-    tr21.features["com"] = com21;
-    tr21.Id = 21;
-    tr21.Timestep = 2;
-
-    com22[0] = 1;
-    com22[1] = 1;
-    com22[2] = 0;
-    tr22.features["com"] = com22;
-    tr22.Id = 22;
-    tr22.Timestep = 2;
-
-    com23[0] = 1;
-    com23[1] = 2;
-    com23[2] = 0;
-    tr23.features["com"] = com23;
-    tr23.Id = 23;
-    tr23.Timestep = 2;
+// BOOST_AUTO_TEST_CASE( HypothesesGraph_build_hyp_mrf ) {
 
 
-    com31[0] = 2;
-    com31[1] = 0;
-    com31[2] = 0;
-    tr31.features["com"] = com31;
-    tr31.Id = 31;
-    tr31.Timestep = 3;
- 
-    TraxelStore ts;
-    add(ts,tr11);
-    add(ts,tr21);
-    add(ts,tr22);
-    add(ts,tr23);
-    add(ts,tr31);
+//     Traxel n1, n2, n3, n4, m1, m2, m3, m4, o1, o2, o3, o4, o5;
+//     feature_array comn1(feature_array::difference_type(3)); //float vector
+//     feature_array comn2(feature_array::difference_type(3));
+//     feature_array comn3(feature_array::difference_type(3));
+//     feature_array comn4(feature_array::difference_type(3));
+//     feature_array comm1(feature_array::difference_type(3)); 
+//     feature_array comm2(feature_array::difference_type(3));
+//     feature_array comm3(feature_array::difference_type(3));
+//     feature_array comm4(feature_array::difference_type(3));    
+//     feature_array como1(feature_array::difference_type(3)); 
+//     feature_array como2(feature_array::difference_type(3));
+//     feature_array como3(feature_array::difference_type(3));
+//     feature_array como4(feature_array::difference_type(3));
+//     feature_array como5(feature_array::difference_type(3));
 
-    SingleTimestepTraxel_HypothesesBuilder builder(&ts);
-    HypothesesGraph* graph = builder.build();
+//     comn1[0] = 0;
+//     comn1[1] = 0;
+//     comn1[2] = 0;
+//     n1.features["com"] = comn1;
+//     n1.Id = 11;
+//     n1.Timestep = 0;
 
-    typedef Tracking::property_map<node_traxel, HypothesesGraph::base_graph>::type node_traxel_map_t;
-    node_traxel_map_t& node_traxel_map = graph->get(node_traxel());
-    for(HypothesesGraph::NodeIt it(*graph); it!=lemon::INVALID; ++it) {
-	cout << "Node id: " << graph->id(it) << endl;
-	cout << "Traxel id: " << node_traxel_map[it].Id << endl;
+//     comn2[0] = 1;
+//     comn2[1] = 1;
+//     comn2[2] = 1;
+//     n2.features["com"] = comn2;
+//     n2.Id = 12;
+//     n2.Timestep = 0;
 
-	for(HypothesesGraph::OutArcIt ait(*graph, it); ait!=lemon::INVALID; ++ait) {
-	    cout << "Arc id: " << graph->id(ait) << endl;
-	    cout << "Target node id: " << graph->id(graph->target(ait)) << endl;
-	}
-	cout << endl;
-    }
+//     comn3[0] = 0;
+//     comn3[1] = 0;
+//     comn3[2] = 2;
+//     n3.features["com"] = comn3;
+//     n3.Id = 13;
+//     n3.Timestep = 0;
 
+//     comn4[0] = 2;
+//     comn4[1] = 0;
+//     comn4[2] = 0;
+//     n4.features["com"] = comn4;
+//     n4.Id = 14;
+//     n4.Timestep = 0;
 
-    Traxels empty;
-    ConstantEnergy move(1);
-    ConstantEnergy detection(1);
-    ConstantEnergy non_detection(25);
-    ConstantEnergy appearance(1);
-    ConstantEnergy disappearance(1);
-    ConstantEnergy division(25);
+//     comm1[0] = 2;
+//     comm1[1] = 2;
+//     comm1[2] = 2;
+//     m1.features["com"] = comm1;
+//     m1.Id = 21;
+//     m1.Timestep = 1;
+
+//     comm2[0] = 1;
+//     comm2[1] = 0;
+//     comm2[2] = 1;
+//     m2.features["com"] = comm2;
+//     m2.Id = 22;
+//     m2.Timestep = 1;
+
+//     comm3[0] = 0;
+//     comm3[1] = 1;
+//     comm3[2] = 1;
+//     m3.features["com"] = comm3;
+//     m3.Id = 23;
+//     m3.Timestep = 1;
+
+//     comm4[0] = 3;
+//     comm4[1] = 3;
+//     comm4[2] = 3;
+//     m4.features["com"] = comm4;
+//     m4.Id = 24;
+//     m4.Timestep = 1;
+
+//     como1[0] = 4;
+//     como1[1] = 4;
+//     como1[2] = 4;
+//     o1.features["com"] = como1;
+//     o1.Id = 31;
+//     o1.Timestep = 2;
+
+//     como2[0] = 7;
+//     como2[1] = 19;
+//     como2[2] = 8;
+//     o2.features["com"] = como2;
+//     o2.Id = 32;
+//     o2.Timestep = 2;
+
+//     como3[0] = 0;
+//     como3[1] = 7;
+//     como3[2] = 1;
+//     o3.features["com"] = como3;
+//     o3.Id = 33;
+//     o3.Timestep = 2;
+
+//     como4[0] = 5;
+//     como4[1] = 0;
+//     como4[2] = 9;
+//     o4.features["com"] = como4;
+//     o4.Id = 34;
+//     o4.Timestep = 2;
+
+//     como5[0] = 0;
+//     como5[1] = 4;
+//     como5[2] = 0;
+//     o5.features["com"] = como5;
+//     o5.Id = 34;
+//     o5.Timestep = 2;
+
+//     TraxelStore ts;
+//     add(ts,n1);
+//     add(ts,n2);
+//     add(ts,n3);
+//     add(ts,n4);
+//     add(ts,m1);
+//     add(ts,m2);
+//     add(ts,m3);
+//     add(ts,m4);
+//     add(ts,o1);
+//     add(ts,o2);
+//     add(ts,o3);
+//     add(ts,o4);
+//     add(ts,o5);
+
+//     SingleTimestepTraxel_HypothesesBuilder builder(&ts);
+//     HypothesesGraph* graph = builder.build();
+
+//     Traxels empty;
+//     ConstantEnergy e1(10);	
+//     ConstantEnergy e2(90);	
+//     ConstantEnergy e3(70);	
+//     ConstantEnergy e4(50);	
+//     ConstantEnergy e5(20);		
+//     ConstantEnergy e6(5);	
     
-    cout << "-> diamond_pattern: construction MRF reasoner" << endl; 
-    SingleTimestepTraxelMrf mrf(bind<double>(detection, _1, empty, empty),
-			        bind<double>(non_detection, _1, empty, empty),
-			        bind<double>(appearance, _1, empty, empty),
-			        bind<double>(disappearance, _1, empty, empty),
-				bind<double>(move, _1, _2, empty, empty),
-				bind<double>(division, _1, _2, _3, empty, empty)
-			       );
-
-    // test
-    cout << "-> diamond_pattern: formulating model" << endl; 
-    mrf.formulate(*graph);
-    cout << "-> diamond_pattern: infer" << endl; 
-    mrf.infer();
-    cout << "-> diamond_pattern: conclude" << endl; 
-    mrf.conclude(*graph);
-
-      //Tracking::property_map<node_active, HypothesesGraph::base_graph>::type& active_nodes = (*graph).get(node_active());
-      Tracking::property_map<arc_active, HypothesesGraph::base_graph>::type& active_arcs = (*graph).get(arc_active());
-    
-      // prune inactive arcs
-      typedef Tracking::property_map<arc_active, HypothesesGraph::base_graph>::type::FalseIt inactive_arc_it;
-      for(inactive_arc_it it(active_arcs); it!=lemon::INVALID; ++it) {
-	cout << "Inactive arc: " << (*graph).id(it) << endl;
-      } 
-
-      typedef Tracking::property_map<arc_active, HypothesesGraph::base_graph>::type::TrueIt active_arc_it;
-      for(active_arc_it it(active_arcs); it!=lemon::INVALID; ++it) {
-	cout << "Active arc: " << (*graph).id(it) << endl;
-      } 
-
-
-    prune_inactive(*graph);
-    events(*graph);
-}
-
-// EOF
+//     SingleTimestepTraxelMrf mrf(bind<double>(e1, _1, empty, empty),		//detection
+// 			        bind<double>(e2, _1, empty, empty),		//non_detection
+// 			        bind<double>(e3, _1, empty, empty),		//appearance
+// 			        bind<double>(e4, _1, empty, empty),		//disappearance
+// 				bind<double>(e5, _1, _2, empty, empty),		//move
+// 				bind<double>(e6, _1, _2, _3, empty, empty)	//division
+// 			       );
+//     cout << "-> workflow: formulating model" << endl; 
+//     mrf.formulate( *graph );
+//     cout << "-> workflow: infer" << endl; 
+//     mrf.infer();
+//     cout << "-> workflow: conclude" << endl; 
+//     mrf.conclude(*graph);
+//     prune_inactive(*graph);
+// }

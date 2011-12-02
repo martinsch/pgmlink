@@ -24,12 +24,10 @@ namespace Tracking {
 //// class OpengmMrf
 ////
     OpengmMrf::OpengmMrf() {
-	//space_ = new ogmSpace();
 	model_ = new ogmGraphicalModel();
     }
 
     OpengmMrf::~OpengmMrf() {
-	//delete space_;
 	delete model_;
     }
 
