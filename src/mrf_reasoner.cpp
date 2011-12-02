@@ -1,13 +1,18 @@
 #include <algorithm>
 #include <cassert>
+#include <stdexcept>
 #include <opengm/inference/lpcplex.hxx>
-#include <marray/marray.hxx>
+#include <opengm/datastructures/marray/marray.hxx>
 
 #include "graphical_model.h"
 #include "hypotheses.h"
 #include "log.h"
-#include "reasoning/mrf_reasoner.h"
+#include "reasoning/new_reasoner.h"
 #include "traxels.h"
+
+//#include <ostream>
+
+using namespace std;
 
 namespace Tracking {
   SingleTimestepTraxelMrf::~SingleTimestepTraxelMrf() {
@@ -33,11 +38,11 @@ void SingleTimestepTraxelMrf::formulate( const HypothesesGraph& hypotheses ) {
     LOG(logDEBUG) << "SingleTimestepTraxelMrf::formulate: add_finite_factors";
     add_finite_factors( hypotheses );
 
-    typedef opengm::LPCplex<OpengmMrf::ogmGraphicalModel, OpengmMrf::ogmAccumulator> cplex_optimizer;
+   typedef opengm::LPCplex<OpengmMrf::ogmGraphicalModel, OpengmMrf::ogmAccumulator> cplex_optimizer;
     cplex_optimizer::Parameter param;
     param.verbose_ = true;
     param.integerConstraint_ = true;
-    param.epGap_ = 0.05;
+    //param.epGap_ = 0.05;
     OpengmMrf::ogmGraphicalModel* model = mrf_->Model();
     optimizer_ = new cplex_optimizer(*model, param);
     
@@ -55,14 +60,14 @@ void SingleTimestepTraxelMrf::formulate( const HypothesesGraph& hypotheses ) {
 void SingleTimestepTraxelMrf::infer() {
     opengm::InferenceTermination status = optimizer_->infer();
     if(status != opengm::NORMAL) {
-	throw runtime_error("GraphicalModel::infer(): optimizer terminated unnormally");
+        throw std::runtime_error("GraphicalModel::infer(): optimizer terminated unnormally");
     }
 }
 
 
 void SingleTimestepTraxelMrf::conclude( HypothesesGraph& g ) {
     // extract solution from optimizer
-    vector<OpengmMrf::ogmInference::state_type> solution;
+    vector<OpengmMrf::ogmInference::StateType> solution;				
     opengm::InferenceTermination status = optimizer_->arg(solution);
     if(status != opengm::NORMAL) {
 	throw runtime_error("GraphicalModel::infer(): solution extraction terminated unnormally");
@@ -100,57 +105,48 @@ void SingleTimestepTraxelMrf::reset() {
 }
 
 void SingleTimestepTraxelMrf::add_detection_nodes( const HypothesesGraph& g) {
-    size_t node_count = 0;
     for(HypothesesGraph::NodeIt n(g); n!=lemon::INVALID; ++n) {
-	mrf_->Space()->addDimension(2);
-	node_map_[n] = mrf_->Space()->dimension() - 1;
-	++node_count;
+	mrf_->Model()->addVariable(2);
+	node_map_[n] = mrf_->Model()->numberOfVariables() - 1; 
     }
-    LOG(logINFO) << "reasoner: " << node_count << " detection nodes added";
 }
 void SingleTimestepTraxelMrf::add_transition_nodes( const HypothesesGraph& g) {
-    size_t node_count = 0;
     for(HypothesesGraph::ArcIt a(g); a!=lemon::INVALID; ++a) {
-	mrf_->Space()->addDimension(2);
-	arc_map_[a] = mrf_->Space()->dimension() - 1; 
-	++node_count;
+	mrf_->Model()->addVariable(2);
+	arc_map_[a] = mrf_->Model()->numberOfVariables() - 1; 
     }
-    LOG(logINFO) << "reasoner: " << node_count << " transition nodes added";    
 }
 
 void SingleTimestepTraxelMrf::add_finite_factors( const HypothesesGraph& g) {
     LOG(logDEBUG) << "SingleTimestepTraxelMrf::add_finite_factors: entered";
-    property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g.get(node_traxel());
+    property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g.get(node_traxel());		
     ////
     //// add detection factors
     ////
     LOG(logDEBUG) << "SingleTimestepTraxelMrf::add_finite_factors: add detection factors";
-    size_t detection_factor_count = 0;
-    for(HypothesesGraph::NodeIt n(g); n!=lemon::INVALID; ++n) {
-	size_t vi[] = {node_map_[n]};
-	OpengmMrf::ogmFactor f(*(mrf_->Space()), vi, vi+1);
+   for(HypothesesGraph::NodeIt n(g); n!=lemon::INVALID; ++n) {
+	cout << node_map_[n] << endl;
+	size_t vi[] = {node_map_[n]};						// node index
+	cout << mrf_->Model()->numberOfStates(*vi) << endl;
+	const size_t shape[]={mrf_->Model()->numberOfStates(*vi)}; 		// graphicalmodel_factor.hxx (l.950)
+	OpengmMrf::ExplicitFunctionType f(shape,shape+1);			
 	f(0) = non_detection_(traxel_map[n]);
 	LOG(logDEBUG3) << "SingleTimestepTraxelMrf::add_finite_factors: non_detection energy: "<< f(0);
 	f(1) = detection_(traxel_map[n]);
+	cout << f(0) << f(1) << endl;
 	LOG(logDEBUG3) << "SingleTimestepTraxelMrf::add_finite_factors: detection energy: "<< f(1);
-	mrf_->Model()->addFactor(f);
-	++detection_factor_count;
+	OpengmMrf::FunctionIdentifier id=mrf_->Model()->addFunction(f);	
+	mrf_->Model()->addFactor(id,vi,vi+1); 
     }
-    LOG(logINFO) << "reasoner: " << detection_factor_count << " detection factors added";
 
     ////
     //// add transition factors
     ////
-    size_t transition_factor_count = 0;
     for(HypothesesGraph::NodeIt n(g); n!=lemon::INVALID; ++n) {
       add_outgoing_factor(g, n);
       add_incoming_factor(g, n);
-      transition_factor_count = transition_factor_count + 2;
     }
-    LOG(logINFO) << "reasoner: " << transition_factor_count << " transition factors added (finite energy)";
 }	    
-
-
 
 namespace {
     inline size_t cplex_id(size_t opengm_id) {
@@ -161,7 +157,6 @@ namespace {
 void SingleTimestepTraxelMrf::add_constraints( const HypothesesGraph& g) {
     LOG(logDEBUG) << "SingleTimestepTraxelMrf::add_constraints: entered";
     typedef opengm::LPCplex<OpengmMrf::ogmGraphicalModel, OpengmMrf::ogmAccumulator> cplex;
-    size_t constraint_count = 0;
     ////
     //// outgoing transitions
     ////
@@ -170,7 +165,6 @@ void SingleTimestepTraxelMrf::add_constraints( const HypothesesGraph& g) {
 	// couple detection and transitions
 	for(HypothesesGraph::OutArcIt a(g, n); a!=lemon::INVALID; ++a) {
 	    couple(n, a);
-	    ++constraint_count;
 	}
 	// couple transitions
 	vector<size_t> cplex_idxs;
@@ -180,7 +174,6 @@ void SingleTimestepTraxelMrf::add_constraints( const HypothesesGraph& g) {
 	vector<int> coeffs(cplex_idxs.size(), 1);
 	// 0 <= 1*transition + ... + 1*transition <= 2
 	dynamic_cast<cplex*>(optimizer_)->addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0, 2);
-	++constraint_count;
     }
 
     ////
@@ -191,7 +184,6 @@ void SingleTimestepTraxelMrf::add_constraints( const HypothesesGraph& g) {
 	// couple detection and transitions
 	for(HypothesesGraph::InArcIt a(g, n); a!=lemon::INVALID; ++a) {
 	    couple(n, a);
-	    ++constraint_count;
 	}
 	    
 	// couple transitions
@@ -202,10 +194,7 @@ void SingleTimestepTraxelMrf::add_constraints( const HypothesesGraph& g) {
 	vector<int> coeffs(cplex_idxs.size(), 1);
 	// 0 <= 1*transition + ... + 1*transition <= 1
 	dynamic_cast<cplex*>(optimizer_)->addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0, 1);
-	++constraint_count;
     }
-
-    LOG(logINFO) << "reasoner: " << constraint_count << " hard constraints added";
 }
 
 void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::Arc& a) {
@@ -225,7 +214,7 @@ void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::
     property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g.get(node_traxel());
     // collect and count outgoing arcs
     vector<HypothesesGraph::Arc> arcs; 
-    vector<size_t> vi; // opengm variable indeces
+    vector<size_t> vi; 		// opengm variable indeces
     vi.push_back(node_map_[n]); // first detection node, remaining will be transition nodes
     int count = 0;
     for(HypothesesGraph::OutArcIt a(g, n); a != lemon::INVALID; ++a) {
@@ -235,62 +224,111 @@ void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::
     }
 
     // safeguard, if something in lemon changes; opengm expects a monotonic increasing sequence
-    if(!(mrf_->Space()->isValidIndexSequence(vi.begin(), vi.end()))) {
-      throw std::runtime_error("SingleTimestepTraxelMrf::add_incoming_factor(): invalid index sequence");
+    if(!(mrf_->Model()->isValidIndexSequence(vi.begin(), vi.end()))) {
+      throw std::runtime_error("SingleTimestepTraxelMrf::add_outgoing_factor(): invalid index sequence");
     }
 
     // construct factor
     if(count == 0) {
-      // disappearance
-      OpengmMrf::ogmFactor f(*(mrf_->Space()), vi.begin(), vi.end());
-      f(1) = disappearance_(traxel_map[n]);
-      f(0) = opportunity_cost_;
-      mrf_->Model()->addFactor(f);
-    } else if(count == 1) {
-      // no division possible
-      OpengmMrf::ogmFactor f(*(mrf_->Space()), vi.begin(), vi.end(), 0.);
-      f(1,0) = disappearance_(traxel_map[n]);
-      f(1,1) = move_(traxel_map[n], traxel_map[g.target(arcs[0])]);
-      f(0,0) = opportunity_cost_;
-      mrf_->Model()->addFactor(f);
-    } else {
-      // build value table
+	// build value table
       typedef marray::Marray<OpengmMrf::Energy> table_t;
-      table_t::dimension_type table_dim = count + 1; // detection var + n * transition var
+      size_t table_dim = 1; 		// only one detection var
       vector<size_t> shape(table_dim, 2);
       table_t table(shape.begin(), shape.end(), 0.);
-      table_t::coordinate_tuple coords;
+      std::vector<size_t> coords;
+      size_t index = 0;
+      table_t::iterator element(table);
+
+	// opportunity
+        coords = std::vector<size_t>(table_dim, 0); 		// (0)
+        table.coordinatesToIndex(coords.begin(), index);
+        element[index] = opportunity_cost_;
+	LOG(logDEBUG3) << "SingleTimestepTraxelMrf::add_outgoing_factors: opportunity: "<< element[index];
+
+	// disappearance 
+     	coords = std::vector<size_t>(table_dim, 0);
+   	coords[0] = 1; 						// (1)
+        table.coordinatesToIndex(coords.begin(), index);
+        element[index] = disappearance_(traxel_map[n]);
+	LOG(logDEBUG3) << "SingleTimestepTraxelMrf::add_outgoing_factors: disappearance: "<< element[index];
+
+	OpengmMrf::FunctionIdentifier id=mrf_->Model()->addFunction(table);	
+	mrf_->Model()->addFactor(id,vi.begin(),vi.end());
+
+    } else if(count == 1) {
+      // no division possible
+      typedef marray::Marray<OpengmMrf::Energy> table_t;
+      size_t table_dim = 2; 		// detection var + 1 * transition var
+      vector<size_t> shape(table_dim, 2);
+      table_t table(shape.begin(), shape.end(), 0.);
+      std::vector<size_t> coords;
       size_t index = 0;
       table_t::iterator element(table);
 
       // opportunity configuration
-      coords = table_t::coordinate_tuple(table_dim, 0); // (0,0,...,0)
+      coords = std::vector<size_t>(table_dim, 0); // (0,0)
       table.coordinatesToIndex(coords.begin(), index);
       element[index] = opportunity_cost_;
+      LOG(logDEBUG3) << "SingleTimestepTraxelMrf::add_outgoing_factors: opportunity: "<< element[index];
 
       // disappearance configuration
-      coords = table_t::coordinate_tuple(table_dim, 0);
+      coords = std::vector<size_t>(table_dim, 0);
+      coords[0] = 1; // (1,0)
+      table.coordinatesToIndex(coords.begin(), index);
+      element[index] = disappearance_(traxel_map[n]);
+      LOG(logDEBUG3) << "SingleTimestepTraxelMrf::add_outgoing_factors: disappearance: "<< element[index];
+
+      // move configurations
+      coords = std::vector<size_t>(table_dim, 1);
+      // (1,1)
+	table.coordinatesToIndex(coords.begin(), index);
+	element[index] = move_(traxel_map[n], traxel_map[g.target(arcs[0])]);
+	LOG(logDEBUG3) << "SingleTimestepTraxelMrf::add_outgoing_factors: move: "<< element[index];
+
+      // add factor
+	OpengmMrf::FunctionIdentifier id=mrf_->Model()->addFunction(table);	
+	mrf_->Model()->addFactor(id,vi.begin(),vi.end());
+    } else {
+      // build value table
+      typedef marray::Marray<OpengmMrf::Energy> table_t;
+      size_t table_dim = count + 1; 		// detection var + n * transition var
+      vector<size_t> shape(table_dim, 2);
+      table_t table(shape.begin(), shape.end(), 0.);
+      std::vector<size_t> coords;
+      size_t index = 0;
+      table_t::iterator element(table);
+
+      // opportunity configuration
+      coords = std::vector<size_t>(table_dim, 0); // (0,0,...,0)
+      table.coordinatesToIndex(coords.begin(), index);
+      element[index] = opportunity_cost_;
+      LOG(logDEBUG3) << "SingleTimestepTraxelMrf::add_outgoing_factors: opportunity: "<< element[index];
+
+      // disappearance configuration
+      coords = std::vector<size_t>(table_dim, 0);
       coords[0] = 1; // (1,0,...,0)
       table.coordinatesToIndex(coords.begin(), index);
       element[index] = disappearance_(traxel_map[n]);
+      LOG(logDEBUG3) << "SingleTimestepTraxelMrf::add_outgoing_factors: disappearance: "<< element[index];
 
       // move configurations
-      coords = table_t::coordinate_tuple(table_dim, 0);
+      coords = std::vector<size_t>(table_dim, 0);
       coords[0] = 1;
       // (1,0,0,0,1,0,0)
       for(size_t i = 1; i < table_dim; ++i) {
 	coords[i] = 1; 
 	table.coordinatesToIndex(coords.begin(), index);
 	element[index] = move_(traxel_map[n], traxel_map[g.target(arcs[i-1])]);
+	LOG(logDEBUG3) << "SingleTimestepTraxelMrf::add_outgoing_factors: move: "<< element[index];
 	coords[i] = 0; // reset coords
       }
       
       // division configurations
-      coords = table_t::coordinate_tuple(table_dim, 0);
+      coords = std::vector<size_t>(table_dim, 0);
       coords[0] = 1;
       // (1,0,0,1,0,1,0,0) 
-      for(int i = 1; i < table_dim - 1; ++i) {
-	for(int j = i+1; j < table_dim; ++j) {
+      for(unsigned int i = 1; i < table_dim - 1; ++i) {
+	for(unsigned int j = i+1; j < table_dim; ++j) {
 	  coords[i] = 1;
 	  coords[j] = 1;
 	  table.coordinatesToIndex(coords.begin(), index);
@@ -298,17 +336,15 @@ void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::
 				 traxel_map[g.target(arcs[i-1])],
 				 traxel_map[g.target(arcs[j-1])]
 				 );
-	  LOG(logDEBUG3) << "SingleTimestepTraxelMrf::add_outgoing_factors: division energy: "<< element[index];
-
+	  LOG(logDEBUG3) << "SingleTimestepTraxelMrf::add_outgoing_factors: division: "<< element[index];
 	  // reset
   	  coords[i] = 0;
 	  coords[j] = 0;
 	}
       }
-      
       // add factor
-      OpengmMrf::ogmFactor f(*(mrf_->Space()), vi.begin(), vi.end(), table.begin(), table.end());
-      mrf_->Model()->addFactor(f);      
+	OpengmMrf::FunctionIdentifier id=mrf_->Model()->addFunction(table);	
+	mrf_->Model()->addFactor(id,vi.begin(),vi.end());
     }   
 }
 
@@ -331,29 +367,33 @@ void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::
     //// construct factor
     // build value table
     typedef marray::Marray<OpengmMrf::Energy> table_t;
-    table_t::dimension_type table_dim = count + 1; // detection var + n * transition var
+    size_t table_dim = count + 1; // detection var + n * transition var
     vector<size_t> shape(table_dim, 2);
     table_t table(shape.begin(), shape.end(), 0.);
-    table_t::coordinate_tuple coords;
+    std::vector<size_t> coords;
     size_t index = 0;
     table_t::iterator element(table);
-    
+
+    OpengmMrf::ExplicitFunctionType f(shape.begin(),shape.end());			
+	    
     //
     // the costs for incoming moves are considered in the outgoing factors
     //
 
     // appearance configuration
-    coords = table_t::coordinate_tuple(table_dim, 0);
+    coords = std::vector<size_t>(table_dim, 0);
     coords[0] = 1; // (1,0,...,0)
     table.coordinatesToIndex(coords.begin(), index);
     element[index] = appearance_(traxel_map[n]);
     
     // add factor
-    if(!(mrf_->Space()->isValidIndexSequence(vi.begin(), vi.end()))) {
+    if(!(mrf_->Model()->isValidIndexSequence(vi.begin(), vi.end()))) {
       throw std::runtime_error("SingleTimestepTraxelMrf::add_incoming_factor(): invalid index sequence");
     }
-    OpengmMrf::ogmFactor f(*(mrf_->Space()), vi.begin(), vi.end(), table.begin(), table.end());
-    mrf_->Model()->addFactor(f);
+    OpengmMrf::FunctionIdentifier id=mrf_->Model()->addFunction(f);
+    mrf_->Model()->addFactor(id,vi.begin(),vi.end());
   }
 
-} /* namespace Tracking */
+
+
+} /* namespace Tracking */ 
