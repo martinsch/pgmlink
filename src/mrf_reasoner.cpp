@@ -126,15 +126,12 @@ void SingleTimestepTraxelMrf::add_finite_factors( const HypothesesGraph& g) {
     ////
     LOG(logDEBUG) << "SingleTimestepTraxelMrf::add_finite_factors: add detection factors";
    for(HypothesesGraph::NodeIt n(g); n!=lemon::INVALID; ++n) {
-	cout << node_map_[n] << endl;
 	size_t vi[] = {node_map_[n]};						// node index
-	cout << mrf_->Model()->numberOfStates(*vi) << endl;
 	const size_t shape[]={mrf_->Model()->numberOfStates(*vi)}; 		// graphicalmodel_factor.hxx (l.950)
 	OpengmMrf::ExplicitFunctionType f(shape,shape+1);			
 	f(0) = non_detection_(traxel_map[n]);
 	LOG(logDEBUG3) << "SingleTimestepTraxelMrf::add_finite_factors: non_detection energy: "<< f(0);
 	f(1) = detection_(traxel_map[n]);
-	cout << f(0) << f(1) << endl;
 	LOG(logDEBUG3) << "SingleTimestepTraxelMrf::add_finite_factors: detection energy: "<< f(1);
 	OpengmMrf::FunctionIdentifier id=mrf_->Model()->addFunction(f);	
 	mrf_->Model()->addFactor(id,vi,vi+1); 
