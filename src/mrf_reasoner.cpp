@@ -7,7 +7,7 @@
 #include "graphical_model.h"
 #include "hypotheses.h"
 #include "log.h"
-#include "reasoning/new_reasoner.h"
+#include "reasoning/mrf_reasoner.h"
 #include "traxels.h"
 
 //#include <ostream>
