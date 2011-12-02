@@ -21,7 +21,7 @@ if(Boost_FOUND)
   target_link_libraries(ilp_construction_test track_lib ${Boost_LIBRARIES} ann)
 
   add_executable(track_test track_test.cpp)
-  target_link_libraries(track_test track_lib ${Boost_LIBRARIES} vigraimpex ilocplex)
+  target_link_libraries(track_test track_lib ${Boost_LIBRARIES} vigraimpex)
 
   add_executable(traxels_test traxels_test.cpp)
   target_link_libraries(traxels_test track_lib ${Boost_LIBRARIES})
@@ -33,13 +33,13 @@ if(Boost_FOUND)
   target_link_libraries(graph_test track_lib ${Boost_LIBRARIES})
 
   add_executable(graphical_model_test graphical_model_test.cpp) 
-  target_link_libraries(graphical_model_test track_lib ${Boost_LIBRARIES} vigraimpex ilocplex cplex concert)
+  target_link_libraries(graphical_model_test track_lib ${Boost_LIBRARIES} vigraimpex)
 
   add_executable(mrf_reasoner_test mrf_reasoner_test.cpp) 
-  target_link_libraries(mrf_reasoner_test track_lib ${Boost_LIBRARIES} ilocplex cplex concert)
+  target_link_libraries(mrf_reasoner_test track_lib ${Boost_LIBRARIES})
 
   add_executable(hypotheses_test hypotheses_test.cpp) 
-  target_link_libraries(hypotheses_test track_lib ${Boost_LIBRARIES} ilocplex cplex concert)
+  target_link_libraries(hypotheses_test track_lib ${Boost_LIBRARIES})
 
   # assume by default that HDF5 is installed. Set definition for vigra random forest
   ADD_DEFINITIONS(-DHasHDF5)
