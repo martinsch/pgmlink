@@ -43,7 +43,7 @@ void SingleTimestepTraxelMrf::formulate( const HypothesesGraph& hypotheses ) {
     cplex_optimizer::Parameter param;
     param.verbose_ = true;
     param.integerConstraint_ = true;
-    //param.epGap_ = 0.05;
+    param.epGap_ = 0.05;
 
     OpengmMrf::ogmGraphicalModel* model = mrf_->Model();
     optimizer_ = new cplex_optimizer(*model, param);
