@@ -15,7 +15,7 @@ if(Boost_FOUND)
     ${PROJECT_SOURCE_DIR}/../../3rd_party/lib
   )
 
-  configure_file(randomforest_test.cpp randomforest_test.cpp)
+  configure_file(randomforest_test.cpp.cmake randomforest_test.cpp)
 
   add_executable(ilp_construction_test ilp_construction_test.cpp)
   target_link_libraries(ilp_construction_test track_lib ${Boost_LIBRARIES} ann)
