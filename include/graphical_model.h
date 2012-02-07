@@ -28,7 +28,7 @@ class OpengmMrf {
    typedef opengm::Factor<ogmGraphicalModel> ogmFactor;
    typedef opengm::Minimizer ogmAccumulator;
    typedef opengm::Inference<ogmGraphicalModel, ogmAccumulator> ogmInference;
-   typedef ogmGraphicalModel::ExplicitFunctionType ExplicitFunctionType;
+   typedef opengm::meta::TypeAtTypeList<ogmGraphicalModel::FunctionTypeList, 0>::type ExplicitFunctionType;
    typedef ogmGraphicalModel::FunctionIdentifier FunctionIdentifier;
     
    OpengmMrf();

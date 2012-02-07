@@ -68,7 +68,7 @@ void SingleTimestepTraxelMrf::infer() {
 
 void SingleTimestepTraxelMrf::conclude( HypothesesGraph& g ) {
     // extract solution from optimizer
-    vector<OpengmMrf::ogmInference::StateType> solution;				
+    vector<OpengmMrf::ogmInference::LabelType> solution;				
     opengm::InferenceTermination status = optimizer_->arg(solution);
     if(status != opengm::NORMAL) {
 	throw runtime_error("GraphicalModel::infer(): solution extraction terminated unnormally");
@@ -229,7 +229,7 @@ void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::
     // construct factor
     if(count == 0) {
 	// build value table
-      typedef marray::Marray<OpengmMrf::Energy> table_t;
+      typedef OpengmMrf::ExplicitFunctionType table_t;
       size_t table_dim = 1; 		// only one detection var
       vector<size_t> shape(table_dim, 2);
       table_t table(shape.begin(), shape.end(), 0.);
@@ -255,7 +255,7 @@ void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::
 
     } else if(count == 1) {
       // no division possible
-      typedef marray::Marray<OpengmMrf::Energy> table_t;
+      typedef OpengmMrf::ExplicitFunctionType table_t;
       size_t table_dim = 2; 		// detection var + 1 * transition var
       vector<size_t> shape(table_dim, 2);
       table_t table(shape.begin(), shape.end(), 0.);
@@ -288,7 +288,7 @@ void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::
 	mrf_->Model()->addFactor(id,vi.begin(),vi.end());
     } else {
       // build value table
-      typedef marray::Marray<OpengmMrf::Energy> table_t;
+      typedef OpengmMrf::ExplicitFunctionType table_t;
       size_t table_dim = count + 1; 		// detection var + n * transition var
       vector<size_t> shape(table_dim, 2);
       table_t table(shape.begin(), shape.end(), 0.);
@@ -365,7 +365,7 @@ void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::
     
     //// construct factor
     // build value table
-    typedef marray::Marray<OpengmMrf::Energy> table_t;
+    typedef OpengmMrf::ExplicitFunctionType table_t;
     size_t table_dim = count + 1; // detection var + n * transition var
     vector<size_t> shape(table_dim, 2);
     table_t table(shape.begin(), shape.end(), 0.);
