@@ -147,6 +147,11 @@ BOOST_PYTHON_MODULE( ctracking )
       .def("detections", &MrfTracking::detections) 
     ;
 
+    class_<KanadeTracking>("KanadeTracking") 
+      .def("__call__", &KanadeTracking::operator())
+      .def("detections", &KanadeTracking::detections) 
+    ;
+
     class_<FixedCostTracking>("FixedCostTracking",  init<double,double,double,double,double>(
 	args("division", "move", "disappearance", "appearance", "distance_threshold")))
 	.def("__call__", &FixedCostTracking::operator())
