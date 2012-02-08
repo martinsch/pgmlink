@@ -52,6 +52,23 @@ namespace Tracking {
     shared_ptr<std::vector< std::map<unsigned int, bool> > > last_detections_; 
   };
 
+
+
+  class KanadeTracking {
+  public:
+    std::vector< std::vector<Event> > operator()(TraxelStore&);
+
+    /**
+     * Get state of detection variables after call to operator().
+     */
+    std::vector< std::map<unsigned int, bool> > detections();
+
+  private:
+    shared_ptr<std::vector< std::map<unsigned int, bool> > > last_detections_; 
+  };
+
+
+
      /**
      * Track two timesteps with an adaptive energies-type ilp.
      */

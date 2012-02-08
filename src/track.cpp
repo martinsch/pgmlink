@@ -11,6 +11,7 @@
 #include "hypotheses.h"
 #include "log.h"
 #include "reasoning/mrf_reasoner.h"
+#include "reasoning/kanade_reasoner.h"
 #ifdef USE_CPLEX
 #include "cplex_solver.h"
 #else
@@ -68,6 +69,48 @@ vector<vector<Event> > BotTracking::operator()(TraxelStore& ts) {
     boost::shared_ptr<vector<vector<Event> > > es = events(*graph);
     delete graph;
     return *es;
+}
+
+
+
+////
+//// class KanadeTracking
+///
+vector<vector<Event> > KanadeTracking::operator()(TraxelStore& ts) {
+    cout << "-> building hypotheses" << endl;
+    SingleTimestepTraxel_HypothesesBuilder::Options builder_opts(6,50);
+    SingleTimestepTraxel_HypothesesBuilder hyp_builder(&ts, builder_opts);
+    HypothesesGraph* graph = hyp_builder.build();
+
+    cout << "-> init reasoner" << endl;
+    Kanade reasoner;
+
+    cout << "-> formulate" << endl;        
+    reasoner.formulate(*graph);
+    
+    cout << "-> infer" << endl;
+    reasoner.infer();
+    
+    cout << "-> conclude" << endl;
+    reasoner.conclude(*graph);
+
+    //cout << "-> storing state of detection vars" << endl;
+    //last_detections_ = state_of_nodes(*graph);
+
+    cout << "-> pruning inactive hypotheses" << endl;
+    prune_inactive(*graph);
+
+    cout << "-> constructing events" << endl;
+    return *events(*graph);
+}
+
+vector< map<unsigned int, bool> > KanadeTracking::detections() {
+  vector< map<unsigned int, bool> > res;
+  if( last_detections_ ) {
+    return *last_detections_;    
+  } else {
+    throw std::runtime_error("KanadeTracking::detections(): previous tracking result required");
+  }
 }
 
 
