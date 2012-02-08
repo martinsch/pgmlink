@@ -29,6 +29,9 @@ if(Boost_FOUND)
   add_executable(energy_test energy_test.cpp)
   target_link_libraries(energy_test track_lib ${Boost_LIBRARIES})
 
+  add_executable(kanade_reasoner_test kanade_reasoner_test.cpp)
+  target_link_libraries(kanade_reasoner_test track_lib ${Boost_LIBRARIES})
+
   add_executable(graph_test graph_test.cpp)
   target_link_libraries(graph_test track_lib ${Boost_LIBRARIES})
 
@@ -52,6 +55,7 @@ if(Boost_FOUND)
   add_test(graphical_model graphical_model_test)
   add_test(graph graph_test)
   add_test(ilp_construction ilp_construction_test)
+  add_test(kanade_reasoner kanade_reasoner_test)
   add_test(traxels traxels_test)
   add_test(energy energy_test)
   add_test(track track_test)
