@@ -95,7 +95,7 @@ vector<vector<Event> > KanadeTracking::operator()(TraxelStore& ts) {
     reasoner.conclude(*graph);
 
     //cout << "-> storing state of detection vars" << endl;
-    //last_detections_ = state_of_nodes(*graph);
+    last_detections_ = state_of_nodes(*graph);
 
     cout << "-> pruning inactive hypotheses" << endl;
     prune_inactive(*graph);
