@@ -6,6 +6,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include "energy.h"
+#include "kanade_potentials.h"
 #include "ilp_construction.h"
 #include "graphical_model.h"
 #include "hypotheses.h"
@@ -78,12 +79,12 @@ vector<vector<Event> > BotTracking::operator()(TraxelStore& ts) {
 ///
 vector<vector<Event> > KanadeTracking::operator()(TraxelStore& ts) {
     cout << "-> building energy functions " << endl;
-    BorderAwareConstant ini(100, 0, false, 0);
-    BorderAwareConstant term(100, 0, false, 0);
-    SquaredDistance link;
-    GeometryDivision2 div(0, 0);
-    BorderAwareConstant tp(10, 0, false, 0);
-    BorderAwareConstant fp(500, 0, false, 0);
+    KanadeIniPotential ini( 1, earliest_timestep(ts), 0.000000000001, 5 );
+    KanadeTermPotential term( 1, latest_timestep(ts), 0.000000000001, 5 );
+    KanadeLinkPotential link(25);
+    KanadeDivPotential div(25);
+    KanadeTpPotential tp(0.05);
+    KanadeFpPotential fp(0.05);
 
     cout << "-> building hypotheses" << endl;
     SingleTimestepTraxel_HypothesesBuilder::Options builder_opts(6,50);
@@ -92,7 +93,7 @@ vector<vector<Event> > KanadeTracking::operator()(TraxelStore& ts) {
 
     cout << "-> init reasoner" << endl;
     Traxels empty;
-    Kanade reasoner(ini, term, bind<double>(link, _1, _2, empty, empty), div, tp, fp);
+    Kanade reasoner(ini, term, link, div, tp, fp);
 
     cout << "-> formulate" << endl;        
     reasoner.formulate(*graph);
