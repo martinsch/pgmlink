@@ -44,6 +44,9 @@ if(Boost_FOUND)
   add_executable(hypotheses_test hypotheses_test.cpp) 
   target_link_libraries(hypotheses_test track_lib ${Boost_LIBRARIES})
 
+  add_executable(field_of_view_test field_of_view_test.cpp) 
+  target_link_libraries(field_of_view_test track_lib ${Boost_LIBRARIES})
+
   # assume by default that HDF5 is installed. Set definition for vigra random forest
   ADD_DEFINITIONS(-DHasHDF5)
 
@@ -51,6 +54,7 @@ if(Boost_FOUND)
   target_link_libraries(randomforest_test track_lib ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} hdf5 hdf5_hl vigraimpex)
 
   add_test(hypotheses hypotheses_test)
+  add_test(field_of_view field_of_view_test)
   add_test(mrf_reasoner mrf_reasoner_test)
   add_test(graphical_model graphical_model_test)
   add_test(graph graph_test)
