@@ -77,13 +77,22 @@ vector<vector<Event> > BotTracking::operator()(TraxelStore& ts) {
 //// class KanadeTracking
 ///
 vector<vector<Event> > KanadeTracking::operator()(TraxelStore& ts) {
+    cout << "-> building energy functions " << endl;
+    BorderAwareConstant ini(100, 0, false, 0);
+    BorderAwareConstant term(100, 0, false, 0);
+    SquaredDistance link;
+    GeometryDivision2 div(0, 0);
+    BorderAwareConstant tp(10, 0, false, 0);
+    BorderAwareConstant fp(500, 0, false, 0);
+
     cout << "-> building hypotheses" << endl;
     SingleTimestepTraxel_HypothesesBuilder::Options builder_opts(6,50);
     SingleTimestepTraxel_HypothesesBuilder hyp_builder(&ts, builder_opts);
     HypothesesGraph* graph = hyp_builder.build();
 
     cout << "-> init reasoner" << endl;
-    Kanade reasoner;
+    Traxels empty;
+    Kanade reasoner(ini, term, bind<double>(link, _1, _2, empty, empty), div, tp, fp);
 
     cout << "-> formulate" << endl;        
     reasoner.formulate(*graph);
