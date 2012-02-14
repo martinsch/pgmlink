@@ -35,8 +35,8 @@ BOOST_AUTO_TEST_CASE( FieldOfView_test ) {
   should_ub.push_back(0);  
   should_ub.push_back(0);
 
-  BOOST_CHECK_EQUAL_COLLECTIONS(fov.lb().begin(), fov.lb().first.end(), should_lb.begin(), should_lb.end());
-  BOOST_CHECK_EQUAL_COLLECTIONS(fov.ub().begin(), fov.ub().end(), should_ub.begin(), should_ub.end());
+  BOOST_CHECK_EQUAL_COLLECTIONS(fov.lower_bound().begin(), fov.lower_bound().first.end(), should_lb.begin(), should_lb.end());
+  BOOST_CHECK_EQUAL_COLLECTIONS(fov.upper_bound().begin(), fov.upper_bound().end(), should_ub.begin(), should_ub.end());
 
   // field of view: (t 3, x 1, y 0, z 0) -- (t 5, x 10, y 12, z 6)
   fov.set_boundingbox( 3,1,1,1, 5,10,12,6 );
@@ -53,8 +53,8 @@ BOOST_AUTO_TEST_CASE( FieldOfView_test ) {
   should_ub.push_back(12);  
   should_ub.push_back(6);
 
-  BOOST_CHECK_EQUAL_COLLECTIONS(fov.lb().begin(), fov.lb().end(), should_lb.begin(), should_lb.end());
-  BOOST_CHECK_EQUAL_COLLECTIONS(fov.ub().begin(), fov.ub().end(), should_ub.begin(), should_ub.end());
+  BOOST_CHECK_EQUAL_COLLECTIONS(fov.lower_bound().begin(), fov.lower_bound().end(), should_lb.begin(), should_lb.end());
+  BOOST_CHECK_EQUAL_COLLECTIONS(fov.upper_bound().begin(), fov.upper_bound().end(), should_ub.begin(), should_ub.end());
 
   BOOST_CHECK(!fov.contains( 0,0,0,0 ));
   BOOST_CHECK(fov.contains( 3,2,2,7 ));
