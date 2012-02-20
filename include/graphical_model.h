@@ -35,6 +35,7 @@ class OpengmMrf {
    ~OpengmMrf();
 
    ogmGraphicalModel* Model() {return model_; }
+   const ogmGraphicalModel* Model() const {return model_; }
  
    private:
    OpengmMrf(const OpengmMrf&);
