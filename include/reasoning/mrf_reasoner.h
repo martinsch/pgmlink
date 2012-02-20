@@ -40,6 +40,13 @@ class SingleTimestepTraxelMrf : public Reasoner {
     virtual void infer();
     virtual void conclude( HypothesesGraph& );
 
+    /** Return current state of graphical model
+     *
+     * The returned pointer may be NULL before formulate() is called
+     * the first time.
+     **/
+    const OpengmMrf* get_graphical_model() const;
+
     private:
     // copy and assingment have to be implemented, yet
     SingleTimestepTraxelMrf(const SingleTimestepTraxelMrf&) {};

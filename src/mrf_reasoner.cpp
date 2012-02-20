@@ -92,6 +92,10 @@ void SingleTimestepTraxelMrf::conclude( HypothesesGraph& g ) {
     }
 }
 
+  const OpengmMrf* SingleTimestepTraxelMrf::get_graphical_model() const {
+    return mrf_;
+  }
+
 void SingleTimestepTraxelMrf::reset() {
     if(mrf_ != NULL) {
 	delete mrf_;
