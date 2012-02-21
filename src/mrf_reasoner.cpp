@@ -92,6 +92,18 @@ void SingleTimestepTraxelMrf::conclude( HypothesesGraph& g ) {
     }
 }
 
+  const OpengmMrf* SingleTimestepTraxelMrf::get_graphical_model() const {
+    return mrf_;
+  }
+
+  const std::map<HypothesesGraph::Node, size_t>& SingleTimestepTraxelMrf::get_node_map() const {
+    return node_map_;
+  }
+
+  const std::map<HypothesesGraph::Arc, size_t>& SingleTimestepTraxelMrf::get_arc_map() const {
+    return arc_map_;
+  }
+
 void SingleTimestepTraxelMrf::reset() {
     if(mrf_ != NULL) {
 	delete mrf_;
@@ -351,17 +363,19 @@ void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::
     LOG(logDEBUG) << "SingleTimestepTraxelMrf::add_incoming_factor(): entered";
     property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g.get(node_traxel());
     // collect and count incoming arcs
-    vector<HypothesesGraph::Arc> arcs; 
     vector<size_t> vi; // opengm variable indeces
     int count = 0;
     for(HypothesesGraph::InArcIt a(g, n); a != lemon::INVALID; ++a) {
-      arcs.push_back(a);
       vi.push_back(arc_map_[a]);
       ++count;
     }
     vi.push_back(node_map_[n]); 
+
+    // hypothesis graph is built in a way, that this is a valid index sequence
     std::reverse(vi.begin(), vi.end());
-    std::reverse(arcs.begin(),arcs.end());
+    if(!(mrf_->Model()->isValidIndexSequence(vi.begin(), vi.end()))) {
+      throw std::runtime_error("SingleTimestepTraxelMrf::add_incoming_factor(): invalid index sequence");
+    }
     
     //// construct factor
     // build value table
@@ -373,8 +387,6 @@ void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::
     size_t index = 0;
     table_t::iterator element(table);
 
-    OpengmMrf::ExplicitFunctionType f(shape.begin(),shape.end());			
-	    
     //
     // the costs for incoming moves are considered in the outgoing factors
     //
@@ -386,10 +398,7 @@ void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::
     element[index] = appearance_(traxel_map[n]);
     
     // add factor
-    if(!(mrf_->Model()->isValidIndexSequence(vi.begin(), vi.end()))) {
-      throw std::runtime_error("SingleTimestepTraxelMrf::add_incoming_factor(): invalid index sequence");
-    }
-    OpengmMrf::FunctionIdentifier id=mrf_->Model()->addFunction(f);
+    OpengmMrf::FunctionIdentifier id=mrf_->Model()->addFunction(table);
     mrf_->Model()->addFactor(id,vi.begin(),vi.end());
     LOG(logDEBUG) << "SingleTimestepTraxelMrf::add_incoming_factor(): leaving";
   }

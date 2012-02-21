@@ -40,6 +40,26 @@ class SingleTimestepTraxelMrf : public Reasoner {
     virtual void infer();
     virtual void conclude( HypothesesGraph& );
 
+    /** Return current state of graphical model
+     *
+     * The returned pointer may be NULL before formulate() is called
+     * the first time.
+     **/
+    const OpengmMrf* get_graphical_model() const;
+
+    /** Return mapping from HypothesesGraph nodes to graphical model variable ids
+     *
+     * The map is populated after the first call to formulate().
+     */
+    const std::map<HypothesesGraph::Node, size_t>& get_node_map() const;
+
+    /** Return mapping from HypothesesGraph arcs to graphical model variable ids
+     *
+     * The map is populated after the first call to formulate().
+     */
+    const std::map<HypothesesGraph::Arc, size_t>& get_arc_map() const;
+    
+
     private:
     // copy and assingment have to be implemented, yet
     SingleTimestepTraxelMrf(const SingleTimestepTraxelMrf&) {};
