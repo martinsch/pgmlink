@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE( HypothesesGraph_build_hyp2 ) {
   Node n1=g.add_node(0);
   Node n2=g.add_node(0);
   Node n3=g.add_node(0);
-  g.add_node(0);
+  Node n4=g.add_node(0);
   Node m1=g.add_node(1);
   Node m2=g.add_node(1);
   Node m3=g.add_node(1);
@@ -70,6 +70,7 @@ BOOST_AUTO_TEST_CASE( HypothesesGraph_build_hyp2 ) {
   std::cout << "Addings arcs" << std::endl;
   std::cout <<  std::endl;
 
+  g.addArc(n2,m2);
   g.addArc(n1,m2);
   g.addArc(n2,m1);
   g.addArc(n3,m3);
@@ -90,26 +91,89 @@ BOOST_AUTO_TEST_CASE( HypothesesGraph_build_hyp2 ) {
 
 
    Traxels empty;
-   ConstantEnergy e(25);
+   ConstantEnergy e1(1);
+   ConstantEnergy e2(2);
+   ConstantEnergy e3(3);
+   ConstantEnergy e4(4);
+   ConstantEnergy e5(5);
+   ConstantEnergy e6(6);
     
-   SingleTimestepTraxelMrf mrf(bind<double>(e, _1, empty, empty),		//detection
-			        bind<double>(e, _1, empty, empty),		//non_detection
-			        bind<double>(e, _1, empty, empty),		//appearance
-			        bind<double>(e, _1, empty, empty),		//disappearance
-				bind<double>(e, _1, _2, empty, empty),		//move
-				bind<double>(e, _1, _2, _3, empty, empty)	//division
+   SingleTimestepTraxelMrf mrf(bind<double>(e1, _1, empty, empty),		//detection
+			       bind<double>(e2, _1, empty, empty),		//non_detection
+			       bind<double>(e3, _1, empty, empty),		//appearance
+			       bind<double>(e4, _1, empty, empty),		//disappearance
+			       bind<double>(e5, _1, _2, empty, empty),		//move
+			       bind<double>(e6, _1, _2, _3, empty, empty),	//division
+			       7                                                //opportunity
 			       );
 
   std::cout << "Formulating Factors" << std::endl;
   std::cout <<  std::endl;
 
-    cout << "-> workflow: formulating model" << endl; 
-    mrf.formulate( *graph );
-    cout << "-> workflow: infer" << endl; 
-    mrf.infer();
-    cout << "-> workflow: conclude" << endl; 
-    mrf.conclude(*graph);
-    prune_inactive(*graph);
+  cout << "-> workflow: formulating model" << endl; 
+  mrf.formulate( *graph );
+
+  ////
+  //// check topology of graphical model
+  ////
+  const OpengmMrf::ogmGraphicalModel* model = mrf.get_graphical_model()->Model();
+  BOOST_CHECK( model != NULL );
+  BOOST_CHECK_EQUAL( model->numberOfVariables(), 21);
+  BOOST_CHECK_EQUAL( model->numberOfFactors(), 36);
+
+  // incoming factor
+  size_t det_var; // detection variable
+  det_var = mrf.get_node_map().find(m2)->second;
+  BOOST_CHECK_EQUAL(model->numberOfFactors(det_var), 3);
+  const OpengmMrf::ogmGraphicalModel::FactorType f = (*model)[model->factorOfVariable(det_var, 2)];
+  BOOST_CHECK_EQUAL(f.numberOfVariables(), 3);
+  BOOST_CHECK_EQUAL(f.size(), 8);
+  BOOST_CHECK_EQUAL(f.shape(0), 2);
+  BOOST_CHECK_EQUAL(f.shape(1), 2);
+  BOOST_CHECK_EQUAL(f.shape(2), 2);
+  BOOST_CHECK_EQUAL(f.function<0>()(0,0,0), 0);
+  BOOST_CHECK_EQUAL(f.function<0>()(0,0,1), 0);
+  BOOST_CHECK_EQUAL(f.function<0>()(0,1,0), 0);
+  BOOST_CHECK_EQUAL(f.function<0>()(0,1,1), 0);
+  BOOST_CHECK_EQUAL(f.function<0>()(1,0,0), 3);
+  BOOST_CHECK_EQUAL(f.function<0>()(1,0,1), 0);
+  BOOST_CHECK_EQUAL(f.function<0>()(1,1,0), 0);
+  BOOST_CHECK_EQUAL(f.function<0>()(1,1,1), 0);
+
+  // outgoing factor
+  det_var = mrf.get_node_map().find(m4)->second;
+  BOOST_CHECK_EQUAL(model->numberOfFactors(det_var), 3);
+  const OpengmMrf::ogmGraphicalModel::FactorType f2 = (*model)[model->factorOfVariable(det_var, 1)];
+  BOOST_CHECK_EQUAL(f2.numberOfVariables(), 3);
+  BOOST_CHECK_EQUAL(f2.size(), 8);
+  BOOST_CHECK_EQUAL(f2.shape(0), 2);
+  BOOST_CHECK_EQUAL(f2.shape(1), 2);
+  BOOST_CHECK_EQUAL(f2.shape(2), 2);
+  BOOST_CHECK_EQUAL(f2.function<0>()(0,0,0), 7);
+  BOOST_CHECK_EQUAL(f2.function<0>()(0,0,1), 0);
+  BOOST_CHECK_EQUAL(f2.function<0>()(0,1,0), 0);
+  BOOST_CHECK_EQUAL(f2.function<0>()(0,1,1), 0);
+  BOOST_CHECK_EQUAL(f2.function<0>()(1,0,0), 4);
+  BOOST_CHECK_EQUAL(f2.function<0>()(1,0,1), 5);
+  BOOST_CHECK_EQUAL(f2.function<0>()(1,1,0), 5);
+  BOOST_CHECK_EQUAL(f2.function<0>()(1,1,1), 6);
+
+  // detection factor
+  det_var = mrf.get_node_map().find(n4)->second;
+  BOOST_CHECK_EQUAL(model->numberOfFactors(det_var), 3);
+  const OpengmMrf::ogmGraphicalModel::FactorType f3 = (*model)[model->factorOfVariable(det_var, 0)];
+  BOOST_CHECK_EQUAL(f3.numberOfVariables(), 1);
+  BOOST_CHECK_EQUAL(f3.size(), 2);
+  BOOST_CHECK_EQUAL(f3.shape(0), 2);
+  BOOST_CHECK_EQUAL(f3.function<0>()(0), 2);
+  BOOST_CHECK_EQUAL(f3.function<0>()(1), 1);
+
+
+  cout << "-> workflow: infer" << endl; 
+  mrf.infer();
+  cout << "-> workflow: conclude" << endl; 
+  mrf.conclude(*graph);
+  prune_inactive(*graph);
 }
 
 
