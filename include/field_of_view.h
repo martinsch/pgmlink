@@ -19,7 +19,7 @@ namespace Tracking {
 		  double uy,
 		  double uz );
 
-  boolean contains( double t, double x, double y, double z ) const;
+  bool contains( double t, double x, double y, double z ) const;
 
   const std::vector<double>& lower_bound() const;
   const std::vector<double>& upper_bound() const;
