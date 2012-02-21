@@ -387,8 +387,6 @@ void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::
     size_t index = 0;
     table_t::iterator element(table);
 
-    OpengmMrf::ExplicitFunctionType f(shape.begin(),shape.end());			
-	    
     //
     // the costs for incoming moves are considered in the outgoing factors
     //
@@ -400,7 +398,7 @@ void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::
     element[index] = appearance_(traxel_map[n]);
     
     // add factor
-    OpengmMrf::FunctionIdentifier id=mrf_->Model()->addFunction(f);
+    OpengmMrf::FunctionIdentifier id=mrf_->Model()->addFunction(table);
     mrf_->Model()->addFactor(id,vi.begin(),vi.end());
     LOG(logDEBUG) << "SingleTimestepTraxelMrf::add_incoming_factor(): leaving";
   }
