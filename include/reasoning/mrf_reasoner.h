@@ -47,6 +47,19 @@ class SingleTimestepTraxelMrf : public Reasoner {
      **/
     const OpengmMrf* get_graphical_model() const;
 
+    /** Return mapping from HypothesesGraph nodes to graphical model variable ids
+     *
+     * The map is populated after the first call to formulate().
+     */
+    const std::map<HypothesesGraph::Node, size_t>& get_node_map() const;
+
+    /** Return mapping from HypothesesGraph arcs to graphical model variable ids
+     *
+     * The map is populated after the first call to formulate().
+     */
+    const std::map<HypothesesGraph::Arc, size_t>& get_arc_map() const;
+    
+
     private:
     // copy and assingment have to be implemented, yet
     SingleTimestepTraxelMrf(const SingleTimestepTraxelMrf&) {};

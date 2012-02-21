@@ -96,6 +96,14 @@ void SingleTimestepTraxelMrf::conclude( HypothesesGraph& g ) {
     return mrf_;
   }
 
+  const std::map<HypothesesGraph::Node, size_t>& SingleTimestepTraxelMrf::get_node_map() const {
+    return node_map_;
+  }
+
+  const std::map<HypothesesGraph::Arc, size_t>& SingleTimestepTraxelMrf::get_arc_map() const {
+    return arc_map_;
+  }
+
 void SingleTimestepTraxelMrf::reset() {
     if(mrf_ != NULL) {
 	delete mrf_;
