@@ -70,6 +70,7 @@ BOOST_AUTO_TEST_CASE( HypothesesGraph_build_hyp2 ) {
   std::cout << "Addings arcs" << std::endl;
   std::cout <<  std::endl;
 
+  g.addArc(n2,m2);
   g.addArc(n1,m2);
   g.addArc(n2,m1);
   g.addArc(n3,m3);
@@ -103,13 +104,63 @@ BOOST_AUTO_TEST_CASE( HypothesesGraph_build_hyp2 ) {
   std::cout << "Formulating Factors" << std::endl;
   std::cout <<  std::endl;
 
-    cout << "-> workflow: formulating model" << endl; 
-    mrf.formulate( *graph );
-    cout << "-> workflow: infer" << endl; 
-    mrf.infer();
-    cout << "-> workflow: conclude" << endl; 
-    mrf.conclude(*graph);
-    prune_inactive(*graph);
+  cout << "-> workflow: formulating model" << endl; 
+  mrf.formulate( *graph );
+
+  ////
+  //// check topology of graphical model
+  ////
+  const OpengmMrf::ogmGraphicalModel* model = mrf.get_graphical_model()->Model();
+  BOOST_CHECK( model != NULL );
+  BOOST_CHECK_EQUAL( model->numberOfVariables(), 21);
+  BOOST_CHECK_EQUAL( model->numberOfFactors(), 36);
+
+  // check some factors
+  size_t det_var; // detection variable
+
+  det_var = mrf.get_node_map().find(m2)->second;
+  BOOST_CHECK_EQUAL(model->numberOfFactors(det_var), 3);
+
+  const OpengmMrf::ogmGraphicalModel::FactorType f = (*model)[model->factorOfVariable(det_var, 2)];
+  BOOST_CHECK_EQUAL(f.numberOfVariables(), 3);
+  BOOST_CHECK_EQUAL(f.size(), 8);
+  BOOST_CHECK_EQUAL(f.shape(0), 2);
+  BOOST_CHECK_EQUAL(f.shape(1), 2);
+  BOOST_CHECK_EQUAL(f.shape(2), 2);
+  BOOST_CHECK_EQUAL(f.function<0>()(0,0,0), 0);
+  BOOST_CHECK_EQUAL(f.function<0>()(0,0,1), 0);
+  BOOST_CHECK_EQUAL(f.function<0>()(0,1,0), 0);
+  BOOST_CHECK_EQUAL(f.function<0>()(0,1,1), 0);
+  BOOST_CHECK_EQUAL(f.function<0>()(1,0,0), 0);
+  BOOST_CHECK_EQUAL(f.function<0>()(1,0,1), 25);
+  BOOST_CHECK_EQUAL(f.function<0>()(1,1,0), 25);
+  BOOST_CHECK_EQUAL(f.function<0>()(1,1,1), 0);
+
+
+  det_var = mrf.get_node_map().find(m4)->second;
+  BOOST_CHECK_EQUAL(model->numberOfFactors(det_var), 3);
+
+  const OpengmMrf::ogmGraphicalModel::FactorType f2 = (*model)[model->factorOfVariable(det_var, 1)];
+  BOOST_CHECK_EQUAL(f2.numberOfVariables(), 3);
+  BOOST_CHECK_EQUAL(f2.size(), 8);
+  BOOST_CHECK_EQUAL(f2.shape(0), 2);
+  BOOST_CHECK_EQUAL(f2.shape(1), 2);
+  BOOST_CHECK_EQUAL(f2.shape(2), 2);
+  BOOST_CHECK_EQUAL(f2.function<0>()(0,0,0), 0);
+  BOOST_CHECK_EQUAL(f2.function<0>()(0,0,1), 0);
+  BOOST_CHECK_EQUAL(f2.function<0>()(0,1,0), 0);
+  BOOST_CHECK_EQUAL(f2.function<0>()(0,1,1), 0);
+  BOOST_CHECK_EQUAL(f2.function<0>()(1,0,0), 25);
+  BOOST_CHECK_EQUAL(f2.function<0>()(1,0,1), 25);
+  BOOST_CHECK_EQUAL(f2.function<0>()(1,1,0), 25);
+  BOOST_CHECK_EQUAL(f2.function<0>()(1,1,1), 25);
+
+
+  cout << "-> workflow: infer" << endl; 
+  mrf.infer();
+  cout << "-> workflow: conclude" << endl; 
+  mrf.conclude(*graph);
+  prune_inactive(*graph);
 }
 
 
