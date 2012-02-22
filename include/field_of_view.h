@@ -9,7 +9,17 @@ namespace Tracking {
   /** Field of view in 3d+t space as a rectangular cuboid. */
   class FieldOfView {
   public:
-  FieldOfView() : lb_(4, 0), ub_(4, 0) {}
+    FieldOfView() : lb_(4, 0), ub_(4, 0) {}
+    FieldOfView(double lt,
+		double lx,
+		double ly,
+		double lz,
+		double ut,
+		double ux,
+		double uy,
+		double uz ) : lb_(4, 0), ub_(4, 0) {
+      set_boundingbox(lt, lx, ly, lz, ut, ux, uy, uz);
+    }
 
     /**
      * Set lower and upper bound of cuboid.
