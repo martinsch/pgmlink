@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include <set>
 #include "traxels.h"
+#include "field_of_view.h"
 
 using namespace std;
 
@@ -164,6 +165,17 @@ namespace Tracking {
     }
     
     return ret;
+  }
+
+  size_t filter_by_fov( const TraxelStore& in, TraxelStore& out, const FieldOfView& fov ) {
+    size_t n = 0;
+    for(TraxelStore::iterator it = in.begin(); it != in.end(); ++it) {
+      if(fov.contains(it->Timestep, it->X(), it->Y(), it->Z())) {
+	  add(out, *it);
+	  ++n;
+	}
+    }
+    return n;
   }
 } /* namespace Tracking */
 
