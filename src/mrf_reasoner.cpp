@@ -56,9 +56,6 @@ void SingleTimestepTraxelMrf::formulate( const HypothesesGraph& hypotheses ) {
     OpengmMrf::ogmGraphicalModel* model = mrf_->Model();
     optimizer_ = new cplex_optimizer(*model, param);
     if(with_constraints_) {
-	if(constraints_as_infinite_energy_ == true) {
-	    throw "SingleTimestepTraxelMrf::formulate(): constraints_as_infite_energy not supported yet.";
-	}
 	LOG(logDEBUG) << "SingleTimestepTraxelMrf::formulate: add_constraints";
 	add_constraints( hypotheses );
     }

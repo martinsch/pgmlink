@@ -20,8 +20,7 @@ class SingleTimestepTraxelMrf : public Reasoner {
 			    boost::function<double (const Traxel&, const Traxel&, const Traxel&)> division,
 			    double opportunity_cost = 0,
                             double forbidden_cost = 0,
-			    bool with_constraints = true,
-			    bool constraints_as_infinite_energy = false
+			    bool with_constraints = true
     ) 
     : detection_(detection), 
     non_detection_(non_detection),
@@ -33,8 +32,7 @@ class SingleTimestepTraxelMrf : public Reasoner {
     forbidden_cost_(forbidden_cost),
     mrf_(NULL),
     optimizer_(NULL),
-    with_constraints_(with_constraints),
-    constraints_as_infinite_energy_(constraints_as_infinite_energy)
+    with_constraints_(with_constraints)
     { };
     ~SingleTimestepTraxelMrf();
 
