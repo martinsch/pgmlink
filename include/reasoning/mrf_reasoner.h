@@ -19,6 +19,7 @@ class SingleTimestepTraxelMrf : public Reasoner {
 			    boost::function<double (const Traxel&, const Traxel&)> move,
 			    boost::function<double (const Traxel&, const Traxel&, const Traxel&)> division,
 			    double opportunity_cost = 0,
+                            double forbidden_cost = 0,
 			    bool with_constraints = true,
 			    bool constraints_as_infinite_energy = false
     ) 
@@ -29,6 +30,7 @@ class SingleTimestepTraxelMrf : public Reasoner {
     move_(move),
     division_(division),
     opportunity_cost_(opportunity_cost),
+    forbidden_cost_(forbidden_cost),
     mrf_(NULL),
     optimizer_(NULL),
     with_constraints_(with_constraints),
@@ -39,6 +41,9 @@ class SingleTimestepTraxelMrf : public Reasoner {
     virtual void formulate( const HypothesesGraph& );
     virtual void infer();
     virtual void conclude( HypothesesGraph& );
+
+    double forbidden_cost() const;
+    bool with_constraints() const;
 
     /** Return current state of graphical model
      *
@@ -84,6 +89,7 @@ class SingleTimestepTraxelMrf : public Reasoner {
     boost::function<double (const Traxel&, const Traxel&)> move_;
     boost::function<double (const Traxel&, const Traxel&, const Traxel&)> division_;
     double opportunity_cost_;
+    double forbidden_cost_;
     
     OpengmMrf* mrf_;
     OpengmMrf::ogmInference* optimizer_;

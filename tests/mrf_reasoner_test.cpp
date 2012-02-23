@@ -104,7 +104,8 @@ BOOST_AUTO_TEST_CASE( HypothesesGraph_build_hyp2 ) {
 			       bind<double>(e4, _1, empty, empty),		//disappearance
 			       bind<double>(e5, _1, _2, empty, empty),		//move
 			       bind<double>(e6, _1, _2, _3, empty, empty),	//division
-			       7                                                //opportunity
+			       7,                                               //opportunity
+			       8                                                //forbidden cost 
 			       );
 
   std::cout << "Formulating Factors" << std::endl;
@@ -132,13 +133,13 @@ BOOST_AUTO_TEST_CASE( HypothesesGraph_build_hyp2 ) {
   BOOST_CHECK_EQUAL(f.shape(1), 2);
   BOOST_CHECK_EQUAL(f.shape(2), 2);
   BOOST_CHECK_EQUAL(f.function<0>()(0,0,0), 0);
-  BOOST_CHECK_EQUAL(f.function<0>()(0,0,1), 0);
-  BOOST_CHECK_EQUAL(f.function<0>()(0,1,0), 0);
-  BOOST_CHECK_EQUAL(f.function<0>()(0,1,1), 0);
+  BOOST_CHECK_EQUAL(f.function<0>()(0,0,1), 8);
+  BOOST_CHECK_EQUAL(f.function<0>()(0,1,0), 8);
+  BOOST_CHECK_EQUAL(f.function<0>()(0,1,1), 8);
   BOOST_CHECK_EQUAL(f.function<0>()(1,0,0), 3);
   BOOST_CHECK_EQUAL(f.function<0>()(1,0,1), 0);
   BOOST_CHECK_EQUAL(f.function<0>()(1,1,0), 0);
-  BOOST_CHECK_EQUAL(f.function<0>()(1,1,1), 0);
+  BOOST_CHECK_EQUAL(f.function<0>()(1,1,1), 8);
 
   // outgoing factor
   det_var = mrf.get_node_map().find(m4)->second;
@@ -150,9 +151,9 @@ BOOST_AUTO_TEST_CASE( HypothesesGraph_build_hyp2 ) {
   BOOST_CHECK_EQUAL(f2.shape(1), 2);
   BOOST_CHECK_EQUAL(f2.shape(2), 2);
   BOOST_CHECK_EQUAL(f2.function<0>()(0,0,0), 7);
-  BOOST_CHECK_EQUAL(f2.function<0>()(0,0,1), 0);
-  BOOST_CHECK_EQUAL(f2.function<0>()(0,1,0), 0);
-  BOOST_CHECK_EQUAL(f2.function<0>()(0,1,1), 0);
+  BOOST_CHECK_EQUAL(f2.function<0>()(0,0,1), 8);
+  BOOST_CHECK_EQUAL(f2.function<0>()(0,1,0), 8);
+  BOOST_CHECK_EQUAL(f2.function<0>()(0,1,1), 8);
   BOOST_CHECK_EQUAL(f2.function<0>()(1,0,0), 4);
   BOOST_CHECK_EQUAL(f2.function<0>()(1,0,1), 5);
   BOOST_CHECK_EQUAL(f2.function<0>()(1,1,0), 5);
