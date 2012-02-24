@@ -4,8 +4,10 @@
 
 #include <boost/test/unit_test.hpp>
 #include <boost/test/floating_point_comparison.hpp>
+#include <boost/tuple/tuple.hpp>
 
 #include "traxels.h"
+#include "field_of_view.h"
 
 using namespace Tracking;
 using namespace std;
@@ -186,5 +188,48 @@ BOOST_AUTO_TEST_CASE( global_fun_nested_vec_from )
   BOOST_CHECK_EQUAL(nested_vec[1].size(), 2);
   BOOST_CHECK_EQUAL(nested_vec[2].size(), 0);
   BOOST_CHECK_EQUAL(nested_vec[3].size(), 1);
+}
+
+BOOST_AUTO_TEST_CASE( global_fun_filter_by_fov )
+{
+  FieldOfView fov( 1,1,1,1, 2,2,2,2 );
+  Traxel outside, inside, on_the_border, in_space_out_time, out_space_in_time;
+  feature_array com1(3), com2(3), com3(3);
+  com1[0] = 0.5; com1[1] = 2.5; com1[2] = 1;
+  com2[0] = 1.5; com2[1] = 1.5; com2[2] = 1.5;
+  com3[0] = 2;   com3[1] = 2;   com3[2] = 2;
+
+  outside.features["com"] = com1;
+  outside.Timestep = 3;
+  outside.Id = 0;
+
+  inside.features["com"] = com2;
+  inside.Timestep = 2;
+  inside.Id = 1;
+
+  on_the_border.features["com"] = com3;
+  on_the_border.Timestep = 1;
+  on_the_border.Id = 2;
+
+  in_space_out_time.features["com"] = com2;
+  in_space_out_time.Timestep = 0;
+  in_space_out_time.Id = 3;
+
+  out_space_in_time.features["com"] = com1;
+  out_space_in_time.Timestep = 2;
+  out_space_in_time.Id = 4;
+
+  Traxel traxels[] = {outside, inside, on_the_border, in_space_out_time, out_space_in_time};
+  TraxelStore ts, ts_out;
+  add(ts, traxels, traxels + (sizeof(traxels) / sizeof(Traxel)));
+  BOOST_CHECK_EQUAL(ts.size(), 5);
+  BOOST_CHECK_EQUAL(ts_out.size(), 0);  
+
+  size_t n = filter_by_fov(ts, ts_out, fov);
+  BOOST_CHECK_EQUAL(ts.size(), 5);
+  BOOST_CHECK_EQUAL(n, 2);
+  BOOST_CHECK_EQUAL(ts_out.size(), 2);
+  BOOST_CHECK_EQUAL(ts_out.get<by_timeid>().count(tuple<int, unsigned int>(2,1)), 1);
+  BOOST_CHECK_EQUAL(ts_out.get<by_timeid>().count(tuple<int, unsigned int>(1,2)), 1);
 }
 // EOF

@@ -162,6 +162,14 @@ class IntmaxposLocator : public Locator {
 
  std::vector<std::vector<Traxel> > nested_vec_from(const TraxelStore&);
 
+ /** 
+  * Filter by field of fiew. 
+  * This function adds Traxels from in to out, that are contained in the field of fiew.
+  * @return the number of Traxels in the field of view
+  */
+ class FieldOfView;
+ size_t filter_by_fov( const TraxelStore& in, TraxelStore& out, const FieldOfView& );
+
 
 
 /**/
@@ -186,4 +194,3 @@ Traxels traxel_map_from_traxel_sequence(InputIterator begin, InputIterator end) 
 
 
 #endif /* TRACKLETS_H */
-
