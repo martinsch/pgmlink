@@ -14,6 +14,7 @@
 
 #include "../../tracking/include/track.h"
 #include "../../tracking/include/traxels.h"
+#include "../../tracking/include/field_of_view.h"
 
 namespace Tracking {
     using namespace std;
@@ -74,6 +75,18 @@ BOOST_PYTHON_MODULE( ctracking )
 {
     using namespace boost::python;
     using namespace Tracking;
+
+    // field_of_view.h
+    class_< FieldOfView >("FieldOfView")
+      .def(init<double, double, double, double, double, double, double, double>(
+	   args("lt","lx","ly","lz","ut","ux","uy","uz")))
+      .def("set_boundingbox", &FieldOfView::set_boundingbox, return_self<>())
+      //.def("contains", &FieldOfView::contains)
+      //.def("lower_bound", &FieldOfView::lower_bound, return_value_policy<copy_const_reference>())
+      //.def("upper_bound", &FieldOfView::upper_bound, return_value_policy<copy_const_reference>())
+      //.def("spatial_margin", &FieldOfView::spatial_margin)
+      //.def("temporal_margin", &FieldOfView::temporal_margin)
+    ;
     
     // traxels.h
     class_< feature_array >("feature_array");
@@ -112,9 +125,14 @@ BOOST_PYTHON_MODULE( ctracking )
 	.def("__len__", &Traxels::size)
     ;
 
+    class_< std::vector<double> >("VectorOfDouble")
+    .def(vector_indexing_suite< std::vector<double> >() )
+    ;
+
     class_<TraxelStore>("TraxelStore")
       .def("add", &add_traxel_to_traxelstore)
       .def("add_from_Traxels", &add_Traxels_to_traxelstore)
+      .def("bounding_box", &bounding_box)
       ;
 
     // track.h
@@ -147,7 +165,8 @@ BOOST_PYTHON_MODULE( ctracking )
       .def("detections", &MrfTracking::detections) 
     ;
 
-    class_<KanadeTracking>("KanadeTracking") 
+    class_<KanadeTracking>("KanadeTracking",
+			   init<FieldOfView>(args("field_of_view"))) 
       .def("__call__", &KanadeTracking::operator())
       .def("detections", &KanadeTracking::detections) 
     ;

@@ -79,8 +79,8 @@ vector<vector<Event> > BotTracking::operator()(TraxelStore& ts) {
 ///
 vector<vector<Event> > KanadeTracking::operator()(TraxelStore& ts) {
     cout << "-> building energy functions " << endl;
-    KanadeIniPotential ini( 1, earliest_timestep(ts), 0.000000000001, 5 );
-    KanadeTermPotential term( 1, latest_timestep(ts), 0.000000000001, 5 );
+    KanadeIniPotential ini( fov_ );
+    KanadeTermPotential term( fov_ );
     KanadeLinkPotential link(25);
     KanadeDivPotential div(25);
     KanadeTpPotential tp(0.05);

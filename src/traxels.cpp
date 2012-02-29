@@ -1,6 +1,8 @@
+#include <algorithm>
 #include <cmath>
 #include <stdexcept>
 #include <set>
+#include <vector>
 #include "traxels.h"
 #include "field_of_view.h"
 
@@ -118,6 +120,37 @@ namespace Tracking {
   //
   // type TraxelStore
   //
+  std::vector<double> bounding_box(const TraxelStore& ts) {
+    std::vector<double> bb(8,0);
+    double lt,lx,ly,lz,ut,ux,uy,uz;
+    lt=0; lx=1; ly=2; lz=3; ut=4; ux=5; uy=6; uz=7;
+
+    TraxelStoreByTimestep::iterator it=ts.get<by_timestep>().begin();
+    bb[lt] = static_cast<double>(it->Timestep);
+    bb[lx] = it->X();
+    bb[ly] = it->Y();
+    bb[lz] = it->Z();
+    bb[ut] = static_cast<double>(it->Timestep);
+    bb[ux] = it->X();
+    bb[uy] = it->Y();
+    bb[uz] = it->Z();
+    ++it;
+
+    for(;
+	it!=ts.get<by_timestep>().end(); ++it) {
+      bb[lt] = min(bb[lt], static_cast<double>(it->Timestep));
+      bb[lx] = min(bb[lx], it->X());
+      bb[ly] = min(bb[ly], it->Y());
+      bb[lz] = min(bb[lz], it->Z());
+      bb[ut] = max(bb[ut], static_cast<double>(it->Timestep));
+      bb[ux] = max(bb[ux], it->X());
+      bb[uy] = max(bb[uy], it->Y());
+      bb[uz] = max(bb[uz], it->Z());
+    }
+
+    return bb;
+  }
+
   namespace {
     template<typename ordered_index_t>
     set<typename ordered_index_t::key_type> keys_in(const ordered_index_t& i) {

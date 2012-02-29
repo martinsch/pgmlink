@@ -8,6 +8,7 @@
 #include "ilp_construction.h"
 #include "randomforest.h"
 #include "traxels.h"
+#include "field_of_view.h"
 
 namespace Tracking {
   class BotTracking {
@@ -60,6 +61,8 @@ namespace Tracking {
 
   class KanadeTracking {
   public:
+  KanadeTracking(FieldOfView fov = FieldOfView(0,0,0,0, 100,4000,4000,4000)) : fov_(fov) {}
+
     std::vector< std::vector<Event> > operator()(TraxelStore&);
 
     /**
@@ -68,6 +71,7 @@ namespace Tracking {
     std::vector< std::map<unsigned int, bool> > detections();
 
   private:
+    FieldOfView fov_;
     shared_ptr<std::vector< std::map<unsigned int, bool> > > last_detections_; 
   };
 

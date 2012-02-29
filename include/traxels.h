@@ -144,6 +144,12 @@ class IntmaxposLocator : public Locator {
  //
  // TraxelStore functions 
  //
+ /**
+  * Tight bounding box surrounding the Traxels in store.
+  * @return lt lx ly lz ut ux uy uz 
+  */
+ std::vector<double> bounding_box(const TraxelStore&);
+
  // timesteps
  std::set<TraxelStoreByTimestep::key_type>
    timesteps(const TraxelStore&);
