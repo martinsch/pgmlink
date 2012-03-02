@@ -14,6 +14,7 @@
 
 #include "../../tracking/include/track.h"
 #include "../../tracking/include/traxels.h"
+#include "../../tracking/include/field_of_view.h"
 
 namespace Tracking {
     using namespace std;
@@ -23,6 +24,16 @@ namespace Tracking {
     void set_intmaxpos_locator(Traxel& t) {
       Locator* l = new IntmaxposLocator();
       t.set_locator(l); // takes ownership of pointer
+    }
+
+    void set_x_scale(Traxel& t, double s) {
+      t.locator()->x_scale = s;
+    }
+    void set_y_scale(Traxel& t, double s) {
+      t.locator()->y_scale = s;
+    }
+    void set_z_scale(Traxel& t, double s) {
+      t.locator()->z_scale = s;
     }
 
     void add_feature_array(Traxel& t, string key, size_t size) {
@@ -74,6 +85,18 @@ BOOST_PYTHON_MODULE( ctracking )
 {
     using namespace boost::python;
     using namespace Tracking;
+
+    // field_of_view.h
+    class_< FieldOfView >("FieldOfView")
+      .def(init<double, double, double, double, double, double, double, double>(
+	   args("lt","lx","ly","lz","ut","ux","uy","uz")))
+      .def("set_boundingbox", &FieldOfView::set_boundingbox, return_self<>())
+      //.def("contains", &FieldOfView::contains)
+      //.def("lower_bound", &FieldOfView::lower_bound, return_value_policy<copy_const_reference>())
+      //.def("upper_bound", &FieldOfView::upper_bound, return_value_policy<copy_const_reference>())
+      //.def("spatial_margin", &FieldOfView::spatial_margin)
+      //.def("temporal_margin", &FieldOfView::temporal_margin)
+    ;
     
     // traxels.h
     class_< feature_array >("feature_array");
@@ -96,7 +119,10 @@ BOOST_PYTHON_MODULE( ctracking )
     class_<Traxel>("Traxel")
 	.def_readwrite("Id", &Traxel::Id)
 	.def_readwrite("Timestep", &Traxel::Timestep)
-         //.def("set_locator", &Traxel::set_locator, return_self<>())
+        //.def("set_locator", &Traxel::set_locator, return_self<>())
+        .def("set_x_scale", &set_x_scale)
+        .def("set_y_scale", &set_y_scale)
+        .def("set_z_scale", &set_z_scale)
         .def("set_intmaxpos_locator", &set_intmaxpos_locator, args("self"))
         .def("X", &Traxel::X)
         .def("Y", &Traxel::Y)
@@ -112,9 +138,14 @@ BOOST_PYTHON_MODULE( ctracking )
 	.def("__len__", &Traxels::size)
     ;
 
+    class_< std::vector<double> >("VectorOfDouble")
+    .def(vector_indexing_suite< std::vector<double> >() )
+    ;
+
     class_<TraxelStore>("TraxelStore")
       .def("add", &add_traxel_to_traxelstore)
       .def("add_from_Traxels", &add_Traxels_to_traxelstore)
+      .def("bounding_box", &bounding_box)
       ;
 
     // track.h
@@ -147,7 +178,8 @@ BOOST_PYTHON_MODULE( ctracking )
       .def("detections", &MrfTracking::detections) 
     ;
 
-    class_<KanadeTracking>("KanadeTracking") 
+    class_<KanadeTracking>("KanadeTracking",
+			   init<FieldOfView>(args("field_of_view"))) 
       .def("__call__", &KanadeTracking::operator())
       .def("detections", &KanadeTracking::detections) 
     ;
