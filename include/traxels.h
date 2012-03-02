@@ -1,5 +1,5 @@
-#ifndef TRACKLETS_H
-#define TRACKLETS_H
+#ifndef TRAXELS_H
+#define TRAXELS_H
 
 #include <map>
 #include <vector>
@@ -199,4 +199,4 @@ Traxels traxel_map_from_traxel_sequence(InputIterator begin, InputIterator end) 
 } /* namespace Tracking */
 
 
-#endif /* TRACKLETS_H */
+#endif /* TRAXELS_H */
