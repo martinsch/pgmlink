@@ -128,7 +128,6 @@ namespace Tracking {
     ds[3] = abs_distance(c1, c4, c5, q);
     ds[4] = abs_distance(c1, c2, c4, q);
     ds[5] = abs_distance(c5, c6, c8, q);
-    cout << ds[0] << " " << ds[1] << "\n";
     return *min_element(ds, ds+6);
   }
   

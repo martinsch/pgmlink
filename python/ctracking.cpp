@@ -26,6 +26,16 @@ namespace Tracking {
       t.set_locator(l); // takes ownership of pointer
     }
 
+    void set_x_scale(Traxel& t, double s) {
+      t.locator()->x_scale = s;
+    }
+    void set_y_scale(Traxel& t, double s) {
+      t.locator()->y_scale = s;
+    }
+    void set_z_scale(Traxel& t, double s) {
+      t.locator()->z_scale = s;
+    }
+
     void add_feature_array(Traxel& t, string key, size_t size) {
 	    t.features[key] = feature_array(size, 0);
      }
@@ -109,7 +119,10 @@ BOOST_PYTHON_MODULE( ctracking )
     class_<Traxel>("Traxel")
 	.def_readwrite("Id", &Traxel::Id)
 	.def_readwrite("Timestep", &Traxel::Timestep)
-         //.def("set_locator", &Traxel::set_locator, return_self<>())
+        //.def("set_locator", &Traxel::set_locator, return_self<>())
+        .def("set_x_scale", &set_x_scale)
+        .def("set_y_scale", &set_y_scale)
+        .def("set_z_scale", &set_z_scale)
         .def("set_intmaxpos_locator", &set_intmaxpos_locator, args("self"))
         .def("X", &Traxel::X)
         .def("Y", &Traxel::Y)
