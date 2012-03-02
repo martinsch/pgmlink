@@ -179,7 +179,8 @@ BOOST_PYTHON_MODULE( ctracking )
     ;
 
     class_<KanadeTracking>("KanadeTracking",
-			   init<FieldOfView>(args("field_of_view"))) 
+			   init<FieldOfView, double, double, double, double, double, double>(
+											     args("field_of_view", "misdetection_rate", "temporal_lambda", "spatial_lambda", "link_lambda", "temporal_cutoff", "spatial_cutoff"))) 
       .def("__call__", &KanadeTracking::operator())
       .def("detections", &KanadeTracking::detections) 
     ;

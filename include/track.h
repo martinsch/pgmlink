@@ -61,7 +61,20 @@ namespace Tracking {
 
   class KanadeTracking {
   public:
-  KanadeTracking(FieldOfView fov = FieldOfView(0,0,0,0, 100,4000,4000,4000)) : fov_(fov) {}
+  KanadeTracking(FieldOfView fov = FieldOfView(0,0,0,0, 100,4000,4000,4000),
+		 double misdetection_rate = 0.1265,
+		 double temporal_lambda = 5,
+		 double spatial_lambda = 30,
+		 double link_lambda = 25,
+		 double temporal_cutoff = 15,
+		 double spatial_cutoff = 40) 
+    : fov_(fov),
+      misdetection_rate_(misdetection_rate),
+      temporal_lambda_(temporal_lambda),
+      spatial_lambda_(spatial_lambda),
+      link_lambda_(link_lambda),
+      temporal_cutoff_(temporal_cutoff),
+      spatial_cutoff_(spatial_cutoff) {}
 
     std::vector< std::vector<Event> > operator()(TraxelStore&);
 
@@ -72,6 +85,13 @@ namespace Tracking {
 
   private:
     FieldOfView fov_;
+    double misdetection_rate_;
+    double temporal_lambda_;
+    double spatial_lambda_;
+    double link_lambda_;
+    double temporal_cutoff_;
+    double spatial_cutoff_;
+
     shared_ptr<std::vector< std::map<unsigned int, bool> > > last_detections_; 
   };
 
