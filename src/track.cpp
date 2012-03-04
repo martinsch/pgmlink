@@ -182,7 +182,8 @@ vector<vector<Event> > MrfTracking::operator()(TraxelStore& ts) {
 				division,
 				opportunity_cost_,
 				forbidden_cost_,
-				with_constraints_
+				with_constraints_,
+				fixed_detections_
 			       );
 
     cout << "-> formulate MRF model" << endl;        

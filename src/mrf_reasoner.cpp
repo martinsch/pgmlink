@@ -46,18 +46,23 @@ void SingleTimestepTraxelMrf::formulate( const HypothesesGraph& hypotheses ) {
     LOG(logDEBUG) << "SingleTimestepTraxelMrf::formulate: add_finite_factors";
     add_finite_factors( hypotheses );
 
-
     typedef opengm::LPCplex<OpengmMrf::ogmGraphicalModel, OpengmMrf::ogmAccumulator> cplex_optimizer;
     cplex_optimizer::Parameter param;
     param.verbose_ = true;
     param.integerConstraint_ = true;
-    param.epGap_ = 0.05;
+    param.epGap_ = 0.00001;
 
     OpengmMrf::ogmGraphicalModel* model = mrf_->Model();
     optimizer_ = new cplex_optimizer(*model, param);
+
     if(with_constraints_) {
 	LOG(logDEBUG) << "SingleTimestepTraxelMrf::formulate: add_constraints";
 	add_constraints( hypotheses );
+    }
+
+    if(fixed_detections_) {
+	LOG(logDEBUG) << "SingleTimestepTraxelMrf::formulate: fix_detections";
+	fix_detections( hypotheses, 1 );
     }
 }
 
@@ -169,7 +174,7 @@ namespace {
     }
 }
 
-void SingleTimestepTraxelMrf::add_constraints( const HypothesesGraph& g) {
+void SingleTimestepTraxelMrf::add_constraints( const HypothesesGraph& g ) {
     LOG(logDEBUG) << "SingleTimestepTraxelMrf::add_constraints: entered";
     typedef opengm::LPCplex<OpengmMrf::ogmGraphicalModel, OpengmMrf::ogmAccumulator> cplex;
     ////
@@ -222,6 +227,18 @@ void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::
 	    coeffs.push_back(-1);
 	    // 0 <= 1*detection - 1*transition <= 1
 	    dynamic_cast<cplex*>(optimizer_)->addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin() , 0, 1);
+}
+
+  void SingleTimestepTraxelMrf::fix_detections( const HypothesesGraph& g, size_t val ) {
+	    typedef opengm::LPCplex<OpengmMrf::ogmGraphicalModel, OpengmMrf::ogmAccumulator> cplex;
+	    for(HypothesesGraph::NodeIt n(g); n!=lemon::INVALID; ++n) {
+	      vector<size_t> cplex_idxs; 
+	      cplex_idxs.push_back(cplex_id(node_map_[n]));
+	      vector<int> coeffs;
+	      coeffs.push_back(1);
+	      // val <= 1*detection <= val
+	      dynamic_cast<cplex*>(optimizer_)->addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin() , val, val);
+	    }
 }
 
   void SingleTimestepTraxelMrf::add_outgoing_factor( const HypothesesGraph& g, const HypothesesGraph::Node& n ) {
