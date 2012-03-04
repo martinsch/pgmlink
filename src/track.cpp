@@ -81,10 +81,10 @@ vector<vector<Event> > KanadeTracking::operator()(TraxelStore& ts) {
     cout << "-> building energy functions " << endl;
     KanadeIniPotential ini( fov_ );
     KanadeTermPotential term( fov_ );
-    KanadeLinkPotential link(25);
-    KanadeDivPotential div(25);
-    KanadeTpPotential tp(0.05);
-    KanadeFpPotential fp(0.05);
+    KanadeLinkPotential link( link_lambda_ );
+    KanadeDivPotential div( link_lambda_ );
+    KanadeTpPotential tp( misdetection_rate_ );
+    KanadeFpPotential fp( misdetection_rate_ );
 
     cout << "-> building hypotheses" << endl;
     SingleTimestepTraxel_HypothesesBuilder::Options builder_opts(6,50);

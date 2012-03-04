@@ -1,5 +1,5 @@
-#ifndef TRACKLETS_H
-#define TRACKLETS_H
+#ifndef TRAXELS_H
+#define TRAXELS_H
 
 #include <map>
 #include <vector>
@@ -81,6 +81,7 @@ class IntmaxposLocator : public Locator {
    Traxel& operator=(const Traxel& other);
    ~Traxel() { delete locator_; };
    Traxel& set_locator(Locator*);
+   Locator* locator() {return locator_;}
    
    // fields
    unsigned int Id; // id of connected component (aka "label")
@@ -199,4 +200,4 @@ Traxels traxel_map_from_traxel_sequence(InputIterator begin, InputIterator end) 
 } /* namespace Tracking */
 
 
-#endif /* TRACKLETS_H */
+#endif /* TRAXELS_H */
