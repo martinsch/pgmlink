@@ -20,7 +20,8 @@ class SingleTimestepTraxelMrf : public Reasoner {
 			    boost::function<double (const Traxel&, const Traxel&, const Traxel&)> division,
 			    double opportunity_cost = 0,
                             double forbidden_cost = 0,
-			    bool with_constraints = true
+			    bool with_constraints = true,
+			    bool fixed_detections = false
     ) 
     : detection_(detection), 
     non_detection_(non_detection),
@@ -32,7 +33,8 @@ class SingleTimestepTraxelMrf : public Reasoner {
     forbidden_cost_(forbidden_cost),
     mrf_(NULL),
     optimizer_(NULL),
-    with_constraints_(with_constraints)
+    with_constraints_(with_constraints),
+    fixed_detections_(fixed_detections)
     { };
     ~SingleTimestepTraxelMrf();
 
@@ -75,7 +77,8 @@ class SingleTimestepTraxelMrf : public Reasoner {
     void add_finite_factors( const HypothesesGraph& );
 
     // helper
-    void couple(HypothesesGraph::Node&, HypothesesGraph::Arc&);
+    void couple( HypothesesGraph::Node&, HypothesesGraph::Arc& );
+    void fix_detections( const HypothesesGraph&, size_t value );
     void add_outgoing_factor( const HypothesesGraph&, const HypothesesGraph::Node& );
     void add_incoming_factor( const HypothesesGraph&, const HypothesesGraph::Node& );
 
@@ -96,7 +99,7 @@ class SingleTimestepTraxelMrf : public Reasoner {
     std::map<HypothesesGraph::Arc, size_t> arc_map_;
 
     bool with_constraints_;
-    bool constraints_as_infinite_energy_;
+    bool fixed_detections_;
 };
 
 } /* namespace Tracking */
