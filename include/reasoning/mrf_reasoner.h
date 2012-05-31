@@ -19,9 +19,10 @@ class SingleTimestepTraxelMrf : public Reasoner {
 			    boost::function<double (const Traxel&, const Traxel&)> move,
 			    boost::function<double (const Traxel&, const Traxel&, const Traxel&)> division,
 			    double opportunity_cost = 0,
-                            double forbidden_cost = 0,
+                double forbidden_cost = 0,
 			    bool with_constraints = true,
-			    bool fixed_detections = false
+			    bool fixed_detections = false,
+			    double ep_gap = 0.01
     ) 
     : detection_(detection), 
     non_detection_(non_detection),
@@ -34,7 +35,8 @@ class SingleTimestepTraxelMrf : public Reasoner {
     mrf_(NULL),
     optimizer_(NULL),
     with_constraints_(with_constraints),
-    fixed_detections_(fixed_detections)
+    fixed_detections_(fixed_detections),
+    ep_gap_(ep_gap)
     { };
     ~SingleTimestepTraxelMrf();
 
@@ -100,6 +102,8 @@ class SingleTimestepTraxelMrf : public Reasoner {
 
     bool with_constraints_;
     bool fixed_detections_;
+
+    double ep_gap_;
 };
 
 } /* namespace Tracking */

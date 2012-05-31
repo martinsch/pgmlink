@@ -36,10 +36,14 @@ namespace Tracking {
 	      bool with_constraints = true,
 	      bool fixed_detections = false,
 	      double mean_div_dist=25,
-	      double min_angle=0)
+	      double min_angle=0,
+	      double ep_gap=0.01
+	      )
       : app_(appearance), dis_(disappearance), det_(detection), mis_(misdetection), 
       rf_fn_(random_forest_filename), use_rf_(cellness_by_random_forest), 
-      opportunity_cost_(opportunity_cost), forbidden_cost_(forbidden_cost), with_constraints_(with_constraints), fixed_detections_(fixed_detections), mean_div_dist_(mean_div_dist), min_angle_(min_angle) {}
+      opportunity_cost_(opportunity_cost), forbidden_cost_(forbidden_cost), with_constraints_(with_constraints),
+      fixed_detections_(fixed_detections), mean_div_dist_(mean_div_dist), min_angle_(min_angle),
+      ep_gap_(ep_gap){}
     std::vector< std::vector<Event> > operator()(TraxelStore&);
 
     /**
@@ -56,7 +60,8 @@ namespace Tracking {
     bool with_constraints_;
     bool fixed_detections_;
     double mean_div_dist_, min_angle_;
-    shared_ptr<std::vector< std::map<unsigned int, bool> > > last_detections_; 
+    double ep_gap_;
+    shared_ptr<std::vector< std::map<unsigned int, bool> > > last_detections_;
   };
 
 

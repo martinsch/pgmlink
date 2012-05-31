@@ -50,20 +50,20 @@ void SingleTimestepTraxelMrf::formulate( const HypothesesGraph& hypotheses ) {
     cplex_optimizer::Parameter param;
     param.verbose_ = true;
     param.integerConstraint_ = true;
-    param.epGap_ = 0.00001;
+    param.epGap_ = ep_gap_;
 
     OpengmMrf::ogmGraphicalModel* model = mrf_->Model();
     optimizer_ = new cplex_optimizer(*model, param);
 
-    if(with_constraints_) {
-	LOG(logDEBUG) << "SingleTimestepTraxelMrf::formulate: add_constraints";
-	add_constraints( hypotheses );
-    }
+	if (with_constraints_) {
+		LOG(logDEBUG) << "SingleTimestepTraxelMrf::formulate: add_constraints";
+		add_constraints(hypotheses);
+	}
 
-    if(fixed_detections_) {
-	LOG(logDEBUG) << "SingleTimestepTraxelMrf::formulate: fix_detections";
-	fix_detections( hypotheses, 1 );
-    }
+	if (fixed_detections_) {
+		LOG(logDEBUG) << "SingleTimestepTraxelMrf::formulate: fix_detections";
+		fix_detections(hypotheses, 1);
+	}
 }
 
 

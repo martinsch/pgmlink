@@ -172,8 +172,8 @@ BOOST_PYTHON_MODULE( ctracking )
     ;
 
     class_<MrfTracking>("MrfTracking", 
-			init<string,double,double,double,double,bool,double,double,bool,bool,double,double>(
-													     args("random_forest_filename", "appearance", "disappearance", "detection", "misdetection", "use_random_forest", "opportunity_cost", "forbidden_cost", "with_constraints", "fixed_detections", "mean_div_dist", "min_angle")))
+			init<string,double,double,double,double,bool,double,double,bool,bool,double,double,double>(
+								     args("random_forest_filename", "appearance", "disappearance", "detection", "misdetection", "use_random_forest", "opportunity_cost", "forbidden_cost", "with_constraints", "fixed_detections", "mean_div_dist", "min_angle", "ep_gap")))
       .def("__call__", &MrfTracking::operator())
       .def("detections", &MrfTracking::detections) 
     ;
