@@ -170,7 +170,7 @@ vector<vector<Event> > MrfTracking::operator()(TraxelStore& ts) {
 	SingleTimestepTraxelMrf mrf(detection, misdetection, appearance,
 			disappearance, bind<double>(move, _1, _2, empty, empty), division,
 			opportunity_cost_, forbidden_cost_, with_constraints_,
-			fixed_detections_);
+			fixed_detections_, ep_gap_);
 
 	cout << "-> formulate MRF model" << endl;
 	mrf.formulate(*graph);
