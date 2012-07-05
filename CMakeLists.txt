@@ -64,7 +64,7 @@ SET(ARCHITECTURE ux64)
 ##
 # build type and compiler options
 ##
-    SET(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++98 -pedantic")
+    SET(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++98 -pedantic -pthread")
     SET(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
     SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -Werror")
 
