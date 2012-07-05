@@ -32,3 +32,30 @@ link_directories(${PROJECT_SOURCE_DIR}/../3rd_party/lib/)
 add_library(ctracking SHARED ${TRACKING_SRCS})
 target_link_libraries(ctracking ${Boost_PYTHON_LIBRARIES} track_lib ilocplex vigraimpex)
 set_target_properties(ctracking PROPERTIES PREFIX "" OUTPUT_NAME "ctracking")
+
+
+# install
+
+
+
+
+# this will set ctracking install dir to $PYTHON_SITE_PACKAGES
+# make use of ${PYTHON_EXECUTABLE} instead of /usr/bin/python
+
+
+FIND_PACKAGE(PythonInterp)
+IF(NOT DEFINED CTRACKING_INSTALL_DIR OR CTRACKING_INSTALL_DIR MATCHES "^$")
+    execute_process(COMMAND ${PYTHON_EXECUTABLE} -c 
+                    "from distutils.sysconfig import *; print get_python_lib(1)"
+                    OUTPUT_VARIABLE PYTHON_SITE_PACKAGES OUTPUT_STRIP_TRAILING_WHITESPACE)
+    FILE(TO_CMAKE_PATH ${PYTHON_SITE_PACKAGES} CTRACKING_INSTALL_DIR)
+ENDIF()
+SET(CTRACKING_INSTALL_DIR ${CTRACKING_INSTALL_DIR}
+    CACHE PATH "where to install the VIGRA Python package" FORCE)
+# this is the install path relative to CMAKE_INSTALL_PREFIX,
+# use this in INSTALL() commands to get packaging right
+FILE(RELATIVE_PATH CTRACKING_INSTALL_DIR ${CMAKE_INSTALL_PREFIX} ${CTRACKING_INSTALL_DIR})
+
+
+INSTALL(TARGETS ctracking
+        DESTINATION ${CTRACKING_INSTALL_DIR}/ctracking)
