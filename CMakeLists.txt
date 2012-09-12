@@ -54,23 +54,24 @@ SET(ARCHITECTURE ux64)
 ##
 # build options
 ##
+
     # logging level
     SET(LOGGING_LEVEL "INFO" CACHE STRING "Choose a global logging level: NO_LOGGING, ERROR, WARNING, INFO, DEBUG, DEBUG1, ..., DEBUG4")
 
     # unit tests
-    set(WITH_TESTS "False" CACHE BOOL "Build tests.")
+    SET(WITH_TESTS "False" CACHE BOOL "Build tests.")
 
 ##
 # build type and compiler options
 ##
-    set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++98 -pedantic")
-    set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
-    set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Werror")
+    SET(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++98 -pedantic -pthread")
+    SET(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
+    SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -Werror")
 
-    set(WITH_CHECKED_STL "True" CACHE BOOL "Build with checked libg++ for more robust code (may degrade performance).")
-    if(WITH_CHECKED_STL)
+    SET(WITH_CHECKED_STL "True" CACHE BOOL "Build with checked libg++ for more robust code (may degrade performance).")
+    IF(WITH_CHECKED_STL)
       ADD_DEFINITIONS(-D_GLIBCXX_DEBUG)
-    endif()
+    ENDIF()
     
     ADD_DEFINITIONS(-DUSE_CPLEX)
     #CPLEX switch to be compatible with STL
@@ -112,6 +113,35 @@ FILE(GLOB LIB_SOURCES src/*.cpp)
 
 ADD_LIBRARY(track_lib SHARED ${LIB_SOURCES})
 TARGET_LINK_LIBRARIES(track_lib hdf5 hdf5_hl ann cplex ilocplex pthread concert vigraimpex emon)
+
+
+
+
+### Always use full RPATH
+
+# use, i.e. don't skip the full RPATH for the build tree
+SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
+
+# when building, don't use the install RPATH already
+# (but later on when installing)
+SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE) 
+
+SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+
+# add the automatically determined parts of the RPATH
+# which point to directories outside the build tree to the install RPATH
+SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
+
+# the RPATH to be used when installing, but only if it's not a system directory
+LIST(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/lib" isSystemDir)
+IF("${isSystemDir}" STREQUAL "-1")
+   SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+ENDIF("${isSystemDir}" STREQUAL "-1")
+
+
+
+
 #TARGET_LINK_LIBRARIES(track_lib lpsolve${LP_SOLVE_VERSION}${LP_SOLVE_SUBVERSION})
 
 #ADD_EXECUTABLE(track_standalone examples/track_standalone.cpp)
@@ -124,13 +154,18 @@ if(WITH_TESTS)
 endif()
 
 # Python
-set(WITH_PYTHON true CACHE BOOL "build with python wrapper")
+SET(WITH_PYTHON true CACHE BOOL "build with python wrapper")
 if(WITH_PYTHON)
   add_subdirectory(python/)
 endif()
 
 # Binaries
-set(WITH_BINARIES true CACHE BOOL "binaries using the library")
+SET(WITH_BINARIES true CACHE BOOL "binaries using the library")
 if(WITH_BINARIES)
   add_subdirectory(bin/)
 endif()
+
+# Install target track_lib
+INSTALL(TARGETS track_lib
+        DESTINATION lib)
+
