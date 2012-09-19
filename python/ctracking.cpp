@@ -12,9 +12,9 @@
 #include <vigra/numpy_array_converters.hxx>
 #include <vigra/multi_array.hxx>
 
-#include "../../tracking/include/track.h"
-#include "../../tracking/include/traxels.h"
-#include "../../tracking/include/field_of_view.h"
+#include "../include/track.h"
+#include "../include/traxels.h"
+#include "../include/field_of_view.h"
 
 namespace Tracking {
     using namespace std;
@@ -165,12 +165,6 @@ BOOST_PYTHON_MODULE( ctracking )
       .def(vector_indexing_suite<vector<map<unsigned int, bool> > >())
     ;
 
-    class_<BotTracking>("BotTracking", 
-			init<double,double,double>(
-								      args("detection", "misdetection", "opportunity_cost")))
-	.def("__call__", &BotTracking::operator())
-    ;
-
     class_<MrfTracking>("MrfTracking", 
 			init<string,double,double,double,double,bool,double,double,bool,bool,double,double,double>(
 								     args("random_forest_filename", "appearance", "disappearance", "detection", "misdetection", "use_random_forest", "opportunity_cost", "forbidden_cost", "with_constraints", "fixed_detections", "mean_div_dist", "min_angle", "ep_gap")))
@@ -178,41 +172,6 @@ BOOST_PYTHON_MODULE( ctracking )
       .def("detections", &MrfTracking::detections) 
     ;
 
-    class_<KanadeTracking>("KanadeTracking",
-			   init<FieldOfView, double, double, double, double, double, double>(
-											     args("field_of_view", "misdetection_rate", "temporal_lambda", "spatial_lambda", "link_lambda", "temporal_cutoff", "spatial_cutoff"))) 
-      .def("__call__", &KanadeTracking::operator())
-      .def("detections", &KanadeTracking::detections) 
-    ;
-
-    class_<FixedCostTracking>("FixedCostTracking",  init<double,double,double,double,double>(
-	args("division", "move", "disappearance", "appearance", "distance_threshold")))
-	.def("__call__", &FixedCostTracking::operator())
-    ;
-
-    class_<ShortestDistanceTracking>("ShortestDistanceTracking", init<double, double, double, double, unsigned int>(
-												      args("division", "disappearance", "appearance", "distance_threshold", "max_nearest_neighbors")))
-	.def("__call__", &ShortestDistanceTracking::operator())
-    ;
-
-    class_<CellnessTracking>("CellnessTracking", init<string, double, double, double, double, double, double>(
-	args("random_forest_file", "w_div1", "w_div2", "w_move", "w_app", "w_disapp", "distance_threshold"),
-	"Weights description"
-	"\n\nDivision:"
-	"\n   w_div1: weight for the difference of the children's cellness"
-	"\n   w_div2: weight for the parent cellness"
-        "\n Move:"
-        "\n   w_move: weight for the cellness difference"
-        "\n Appearance:"
-        "\n   w_app: scale of the appearance cost"
-        "\n Disappearance:"
-        "\n   w_disapp: scale of the disappearance cost"))
-	.def("__call__", &CellnessTracking::operator())
-    ;
-
-
-
-    // ilp_construction.h
     enum_<Event::EventType>("EventType")
 	.value("Move", Event::Move)
 	.value("Division", Event::Division)
@@ -229,6 +188,4 @@ BOOST_PYTHON_MODULE( ctracking )
 	.def_readonly("traxel_ids", &Event::traxel_ids)
 	.def_readonly("energy", &Event::energy)
     ;
-    //class_<AdaptiveEnergiesFormulation>("AdaptiveEnergiesFormulation")
-    //;
 }

@@ -2,7 +2,7 @@
 # (c) Bernhard X. Kausler, 2010
 #
 
-set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../cmake_extensions/)
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_extensions/)
 
 ####################
 ### dependencies ###

@@ -8,29 +8,15 @@ if(Boost_FOUND)
   include_directories(
     ${Boost_INCLUDE_DIRS}
     ${PROJECT_SOURCE_DIR}/include/
-    ${PROJECT_SOURCE_DIR}/../../3rd_party/include
-  )
-
-  LINK_DIRECTORIES( 
-    ${PROJECT_SOURCE_DIR}/../../3rd_party/lib
   )
 
   configure_file(randomforest_test.cpp.cmake randomforest_test.cpp)
-
-  add_executable(ilp_construction_test ilp_construction_test.cpp)
-  target_link_libraries(ilp_construction_test track_lib ${Boost_LIBRARIES} ann)
-
-  add_executable(track_test track_test.cpp)
-  target_link_libraries(track_test track_lib ${Boost_LIBRARIES} vigraimpex)
 
   add_executable(traxels_test traxels_test.cpp)
   target_link_libraries(traxels_test track_lib ${Boost_LIBRARIES})
 
   add_executable(energy_test energy_test.cpp)
   target_link_libraries(energy_test track_lib ${Boost_LIBRARIES})
-
-  add_executable(kanade_reasoner_test kanade_reasoner_test.cpp)
-  target_link_libraries(kanade_reasoner_test track_lib ${Boost_LIBRARIES})
 
   add_executable(graph_test graph_test.cpp)
   target_link_libraries(graph_test track_lib ${Boost_LIBRARIES})
@@ -58,11 +44,8 @@ if(Boost_FOUND)
   add_test(mrf_reasoner mrf_reasoner_test)
   add_test(graphical_model graphical_model_test)
   add_test(graph graph_test)
-  add_test(ilp_construction ilp_construction_test)
-  add_test(kanade_reasoner kanade_reasoner_test)
   add_test(traxels traxels_test)
   add_test(energy energy_test)
-  add_test(track track_test)
   add_test(randomforest randomforest_test)
 endif()
 

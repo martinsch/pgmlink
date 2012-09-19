@@ -159,12 +159,6 @@ if(WITH_PYTHON)
   add_subdirectory(python/)
 endif()
 
-# Binaries
-SET(WITH_BINARIES true CACHE BOOL "binaries using the library")
-if(WITH_BINARIES)
-  add_subdirectory(bin/)
-endif()
-
 # Install target track_lib
 INSTALL(TARGETS track_lib
         DESTINATION lib)
