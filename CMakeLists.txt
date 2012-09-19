@@ -41,15 +41,7 @@
 ###########################################################################################
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
-
-PROJECT(tracking)
-
-SET(VERSION 1)
-SET(SUBVERSION 5)
-SET(ANN_VERSION 1.1.2)
-SET(LP_SOLVE_VERSION 5)
-SET(LP_SOLVE_SUBVERSION 5)
-SET(ARCHITECTURE ux64)
+PROJECT(pgmlink)
 
 ##
 # build options
@@ -73,7 +65,6 @@ SET(ARCHITECTURE ux64)
       ADD_DEFINITIONS(-D_GLIBCXX_DEBUG)
     ENDIF()
     
-    ADD_DEFINITIONS(-DUSE_CPLEX)
     #CPLEX switch to be compatible with STL
     ADD_DEFINITIONS(-DIL_STD)
 
@@ -86,28 +77,9 @@ SET(ARCHITECTURE ux64)
     LOGGING_LEVEL_TO_DEFINE(LOGGING_LEVEL LOG_DEFINE)
     ADD_DEFINITIONS(-D FILELOG_MAX_LEVEL=${LOG_DEFINE})
 
-
-# pass information about the revision number to the compilation
-#FIND_PROGRAM(HG_EXECUTABLE hg DOC "mercurial command line client")
-#EXECUTE_PROCESS(COMMAND ${HG_EXECUTABLE} --debug tip OUTPUT_VARIABLE hginfo OUTPUT_STRIP_TRAILING_WHITESPACE)
-#STRING(REGEX REPLACE "^(.*\n)?changeset:([ ]+)([^\n]+).*" "\\3" ProjectRevision ${hginfo})
-#STRING(REGEX REPLACE "^(.*\n)?user:([ ]+)([^\n]+).*" "\\3" LastChangedAuthor ${hginfo})
-#STRING(REGEX REPLACE "^(.*\n)?date:([ ]+)([^\n]+).*" "\\3" LastChangedDate ${hginfo})
-
-#CONFIGURE_FILE(
-#  "${PROJECT_SOURCE_DIR}/include/tracking.h.in"
-#  "${PROJECT_BINARY_DIR}/include/tracking.h"
-#)
-
 INCLUDE_DIRECTORIES(
   "${PROJECT_SOURCE_DIR}/include/" 
 )
-#LINK_DIRECTORIES( 
-#  ${PROJECT_SOURCE_DIR}/../3rd_party/lib
-#)
-
-
-
 
 FILE(GLOB LIB_SOURCES src/*.cpp)
 
