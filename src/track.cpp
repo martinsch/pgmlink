@@ -162,9 +162,7 @@ vector<vector<Event> > MrfTracking::operator()(TraxelStore& ts) {
 	}
 
 	cout << "-> building hypotheses" << endl;
-   //cout << "WARNING: considering only a neighborhood of 3" << endl;
-	SingleTimestepTraxel_HypothesesBuilder::Options builder_opts(3, 40);
-	//SingleTimestepTraxel_HypothesesBuilder::Options builder_opts(6, 50);
+	SingleTimestepTraxel_HypothesesBuilder::Options builder_opts(6, 50);
 	SingleTimestepTraxel_HypothesesBuilder hyp_builder(&ts, builder_opts);
 	HypothesesGraph* graph = hyp_builder.build();
 
