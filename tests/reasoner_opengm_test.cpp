@@ -1,4 +1,4 @@
-#define BOOST_TEST_MODULE new_reasoner_test
+#define BOOST_TEST_MODULE reasoner_opengm_test
 
 #include <vector>
 #include <iostream>
@@ -18,7 +18,7 @@
 #include "pgmlink/graph.h"
 #include "pgmlink/hypotheses.h"
 #include "pgmlink/energy.h"
-#include "pgmlink/reasoning/mrf_reasoner.h"
+#include "pgmlink/reasoner_opengm.h"
 #include "pgmlink/traxels.h"
 
 using namespace Tracking;
