@@ -56,6 +56,12 @@ PROJECT(pgmlink)
 ##
 # build type and compiler options
 ##
+    IF(NOT CMAKE_BUILD_TYPE)
+      SET(CMAKE_BUILD_TYPE Release CACHE STRING
+	"Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
+	FORCE)
+    ENDIF(NOT CMAKE_BUILD_TYPE)
+
     SET(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++98 -pedantic -pthread")
     SET(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
     SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -Werror")
@@ -110,14 +116,6 @@ LIST(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/lib"
 IF("${isSystemDir}" STREQUAL "-1")
    SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 ENDIF("${isSystemDir}" STREQUAL "-1")
-
-
-
-
-#TARGET_LINK_LIBRARIES(track_lib lpsolve${LP_SOLVE_VERSION}${LP_SOLVE_SUBVERSION})
-
-#ADD_EXECUTABLE(track_standalone examples/track_standalone.cpp)
-#TARGET_LINK_LIBRARIES(track_standalone track_lib vigraimpex concert)
 
 # Tests
 if(WITH_TESTS)
