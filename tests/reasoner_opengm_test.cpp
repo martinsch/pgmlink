@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE( HypothesesGraph_build_hyp2 ) {
   HypothesesGraph* graph=&g;
   graph->add(node_traxel());
 
-  std::cout << "Adding nodes" << std::endl;
+  std::cout << "Adding nodes and arcs" << std::endl;
   std::cout <<  std::endl;
 
   Node n1=g.add_node(0);
@@ -61,24 +61,24 @@ BOOST_AUTO_TEST_CASE( HypothesesGraph_build_hyp2 ) {
   Node o3=g.add_node(2);
   Node o4=g.add_node(2);
 
+  // we have to shuffle the order of adding arcs
+  // that way we can test if the index sorting in formulate()
+  // is working
+
+  g.addArc(m1,o1);
+  g.addArc(n2,m1);
+  g.addArc(m4,o4);
+  g.addArc(m4,o3);
+  g.addArc(n3,m4);
+  g.addArc(n1,m2);
+  g.addArc(n3,m3);
+  g.addArc(m2,o2);
+  g.addArc(n2,m2);
+
   std::cout << "Nodes:";
   for (NodeIt i(g); i!=INVALID; ++i)
     std::cout << " " << g.id(i);
   std::cout << std::endl;
-
-
-  std::cout << "Addings arcs" << std::endl;
-  std::cout <<  std::endl;
-
-  g.addArc(n2,m2);
-  g.addArc(n1,m2);
-  g.addArc(n2,m1);
-  g.addArc(n3,m3);
-  g.addArc(n3,m4);
-  g.addArc(m1,o1);
-  g.addArc(m2,o2);
-  g.addArc(m4,o3);
-  g.addArc(m4,o4);
 
   std::cout << "Arcs:";
   for (ArcIt2 i(g); i!=INVALID; ++i)
