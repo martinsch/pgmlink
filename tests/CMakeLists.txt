@@ -10,50 +10,22 @@ if(Boost_FOUND)
     ${PROJECT_SOURCE_DIR}/include/
   )
 
-  configure_file(randomforest_test.cpp.cmake randomforest_test.cpp)
-
+  ## autodiscover test sources and add tests
   file(GLOB TEST_SRCS *.cpp)
-  foreach(TEST_SRCS)
-    string(LENGTH ${loop_var} l)
-    string(SUBSTRING ${loop_var} 0 (l-4) test_name)
-    add_executable( ${test_name} ${loop_var} )
-    target_link_libraries( ${test_name} track_lib ${Boost_LIBRARIES})    
-  endforeach(TEST_SRCS)
+  foreach(test_src ${TEST_SRCS})
+    get_filename_component(test_name ${test_src} NAME_WE)
+    add_executable( ${test_name} ${test_src} )
+    target_link_libraries( ${test_name} track_lib ${Boost_LIBRARIES})   
+    add_test( ${test_name} ${test_name})
+  endforeach(test_src)
 
-  # add_executable(traxels_test traxels_test.cpp)
-  # target_link_libraries(traxels_test track_lib ${Boost_LIBRARIES})
-
-  # add_executable(energy_test energy_test.cpp)
-  # target_link_libraries(energy_test track_lib ${Boost_LIBRARIES})
-
-  # add_executable(graph_test graph_test.cpp)
-  # target_link_libraries(graph_test track_lib ${Boost_LIBRARIES})
-
-  # add_executable(graphical_model_test graphical_model_test.cpp) 
-  # target_link_libraries(graphical_model_test track_lib ${Boost_LIBRARIES} vigraimpex)
-
-  # add_executable(reasoner_opengm_test reasoner_opengm_test.cpp) 
-  # target_link_libraries(reasoner_opengm_test track_lib ${Boost_LIBRARIES})
-
-  # add_executable(hypotheses_test hypotheses_test.cpp) 
-  # target_link_libraries(hypotheses_test track_lib ${Boost_LIBRARIES})
-
-  # add_executable(field_of_view_test field_of_view_test.cpp) 
-  # target_link_libraries(field_of_view_test track_lib ${Boost_LIBRARIES})
-
+  ## randomforest lives in the project dir and we add it manually
   # assume by default that HDF5 is installed. Set definition for vigra random forest
   ADD_DEFINITIONS(-DHasHDF5)
-
-  #add_executable(randomforest_test ${PROJECT_BINARY_DIR}/tests/randomforest_test.cpp)
-  #target_link_libraries(randomforest_test track_lib ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} hdf5 hdf5_hl vigraimpex)
-
-  add_test(hypotheses hypotheses_test)
-  add_test(field_of_view field_of_view_test)
-  add_test(reasoner_opengm reasoner_opengm_test)
-  add_test(graphical_model graphical_model_test)
-  add_test(graph graph_test)
-  add_test(traxels traxels_test)
-  add_test(energy energy_test)
+  configure_file(randomforest_test.cpp.cmake randomforest_test.cpp)
+  add_executable(randomforest_test ${PROJECT_BINARY_DIR}/tests/randomforest_test.cpp)
+  target_link_libraries(randomforest_test track_lib ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} hdf5 hdf5_hl vigraimpex)
   add_test(randomforest randomforest_test)
+
 endif()
 
