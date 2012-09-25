@@ -10,7 +10,7 @@
 #include "pgmlink/graphical_model.h"
 #include "pgmlink/hypotheses.h"
 #include "pgmlink/log.h"
-#include "pgmlink/reasoning/mrf_reasoner.h"
+#include "pgmlink/reasoner_opengm.h"
 #include "pgmlink/track.h"
 
 using namespace std;
