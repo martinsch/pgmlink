@@ -83,6 +83,8 @@ class SingleTimestepTraxelMrf : public Reasoner {
     void fix_detections( const HypothesesGraph&, size_t value );
     void add_outgoing_factor( const HypothesesGraph&, const HypothesesGraph::Node& );
     void add_incoming_factor( const HypothesesGraph&, const HypothesesGraph::Node& );
+    template<typename table_t, typename const_iter>
+      void add_factor( const table_t& table, const_iter first_idx, const_iter last_idx );
 
     // energy functions
     boost::function<double (const Traxel&)> detection_;
@@ -106,5 +108,17 @@ class SingleTimestepTraxelMrf : public Reasoner {
     double ep_gap_;
 };
 
+
+
+/******************/
+/* Implementation */
+/******************/
+ 
+ template< typename table_t, typename const_iter >
+   void SingleTimestepTraxelMrf::add_factor( const table_t& table, const_iter first_idx, const_iter last_idx ){
+   OpengmMrf::FunctionIdentifier id=mrf_->Model()->addFunction(table);
+   mrf_->Model()->addFactor(id, first_idx, last_idx);
+ }
+ 
 } /* namespace Tracking */
 #endif /* MRF_REASONER_H */

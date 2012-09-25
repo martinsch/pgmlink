@@ -1,6 +1,8 @@
 #include <algorithm>
 #include <cassert>
 #include <stdexcept>
+#include <utility>
+#include <iterator>
 #include <opengm/inference/lpcplex.hxx>
 #include <opengm/datastructures/marray/marray.hxx>
 
@@ -285,8 +287,7 @@ void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::
         element[index] = disappearance_(traxel_map[n]);
 	LOG(logDEBUG3) << "SingleTimestepTraxelMrf::add_outgoing_factors: disappearance: "<< element[index];
 
-	OpengmMrf::FunctionIdentifier id=mrf_->Model()->addFunction(table);	
-	mrf_->Model()->addFactor(id,vi.begin(),vi.end());
+	add_factor( table, vi.begin(), vi.end() );
 
     } else if(count == 1) {
       // no division possible
@@ -314,13 +315,11 @@ void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::
       // move configurations
       coords = std::vector<size_t>(table_dim, 1);
       // (1,1)
-	table.coordinatesToIndex(coords.begin(), index);
-	element[index] = move_(traxel_map[n], traxel_map[g.target(arcs[0])]);
-	LOG(logDEBUG3) << "SingleTimestepTraxelMrf::add_outgoing_factors: move: "<< element[index];
+      table.coordinatesToIndex(coords.begin(), index);
+      element[index] = move_(traxel_map[n], traxel_map[g.target(arcs[0])]);
+      LOG(logDEBUG3) << "SingleTimestepTraxelMrf::add_outgoing_factors: move: "<< element[index];
 
-      // add factor
-	OpengmMrf::FunctionIdentifier id=mrf_->Model()->addFunction(table);	
-	mrf_->Model()->addFactor(id,vi.begin(),vi.end());
+      add_factor( table, vi.begin(), vi.end() );
     } else {
       // build value table
       typedef OpengmMrf::ExplicitFunctionType table_t;
@@ -375,9 +374,8 @@ void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::
 	  coords[j] = 0;
 	}
       }
-      // add factor
-	OpengmMrf::FunctionIdentifier id=mrf_->Model()->addFunction(table);	
-	mrf_->Model()->addFactor(id,vi.begin(),vi.end());
+
+      add_factor( table, vi.begin(), vi.end() );
     }   
     LOG(logDEBUG) << "SingleTimestepTraxelMrf::add_outgoing_factor(): leaving";
 }
@@ -432,12 +430,31 @@ void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::
       coords[i] = 0; // reset coords
     }
 
-    // add factor
-    OpengmMrf::FunctionIdentifier id=mrf_->Model()->addFunction(table);
-    mrf_->Model()->addFactor(id,vi.begin(),vi.end());
+    add_factor( table, vi.begin(), vi.end() );
     LOG(logDEBUG) << "SingleTimestepTraxelMrf::add_incoming_factor(): leaving";
   }
 
+  namespace indexsorter {
+    template <typename pair_t>
+    void compare( pair_t lhs, pair_t rhs ){
+      return (lhs.second < rhs.second);
+    }
 
+    template <typename iterator>
+    void sort_indices(iterator first, iterator last, vector<size_t>& indices) {
+      typedef pair< size_t, typename iterator_traits<iterator>::value_type> pair_t;
+      vector< pair_t > seq;
+      size_t idx = 0;
+      for(iterator it = first; it!=last; ++it) {
+	seq.push_back( pair_t(idx, *it) );
+	idx += 1;
+      }
+      std::sort( seq.begin(), seq.end(), compare );
+
+      for( typename vector<pair_t>::iterator it = seq.begin(); it != seq.end(); ++it ){
+      	indices.push_back( it->first );
+      }
+    }
+  } /* namespace indexsorter */
 
 } /* namespace Tracking */ 
