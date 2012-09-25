@@ -6,12 +6,12 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/shared_array.hpp>
 
-#include "energy.h"
-#include "graphical_model.h"
-#include "hypotheses.h"
-#include "log.h"
-#include "reasoning/mrf_reasoner.h"
-#include "track.h"
+#include "pgmlink/energy.h"
+#include "pgmlink/graphical_model.h"
+#include "pgmlink/hypotheses.h"
+#include "pgmlink/log.h"
+#include "pgmlink/reasoning/mrf_reasoner.h"
+#include "pgmlink/track.h"
 
 using namespace std;
 using boost::shared_ptr;

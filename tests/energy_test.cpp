@@ -5,7 +5,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/floating_point_comparison.hpp>
 
-#include "energy.h"
+#include "pgmlink/energy.h"
 
 using namespace Tracking;
 using namespace std;

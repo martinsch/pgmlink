@@ -46,7 +46,7 @@ namespace Tracking {
 #include <cassert>
 #include <iterator>
 #include <boost/scoped_array.hpp>
-#include "traxels.h"
+#include "pgmlink/traxels.h"
 
 using namespace std;
 using namespace boost;

@@ -12,8 +12,8 @@
 #include <opengm/inference/lpcplex.hxx>
 #include <vigra/multi_array.hxx>
 
-#include "hypotheses.h"
-#include "graph.h"
+#include "pgmlink/hypotheses.h"
+#include "pgmlink/graph.h"
 
 using boost::vecS;
 using boost::bidirectionalS;

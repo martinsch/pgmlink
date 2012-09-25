@@ -1,5 +1,5 @@
-#include "energy.h"
-#include "log.h"
+#include "pgmlink/energy.h"
+#include "pgmlink/log.h"
 #include <cmath>
 #include <string>
 

@@ -5,10 +5,10 @@
 #include <string>
 #include <boost/shared_ptr.hpp>
 
-#include "event.h"
-#include "randomforest.h"
-#include "traxels.h"
-#include "field_of_view.h"
+#include "pgmlink/event.h"
+#include "pgmlink/randomforest.h"
+#include "pgmlink/traxels.h"
+#include "pgmlink/field_of_view.h"
 
 namespace Tracking {
   class MrfTracking {

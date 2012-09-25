@@ -10,7 +10,7 @@
 #include <lemon/list_graph.h>
 #include <lemon/maps.h>
 
-#include "graph.h"
+#include "pgmlink/graph.h"
 
 using namespace Tracking;
 using namespace std;

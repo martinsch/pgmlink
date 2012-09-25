@@ -1,4 +1,4 @@
-#define BOOST_TEST_MODULE ilp_construction_test
+#define BOOST_TEST_MODULE randomforest_test
 
 #include <vector>
 #include <iostream>
@@ -7,7 +7,7 @@
 //#include <boost/test/floating_point_comparison.hpp>
 //#include <boost/shared_ptr.hpp>
 
-#include <randomforest.h>
+#include "pgmlink/randomforest.h"
 
 
 BOOST_AUTO_TEST_CASE( checkCreateFeatureVector )

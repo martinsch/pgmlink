@@ -15,11 +15,11 @@
 #include <lemon/list_graph.h>
 #include <lemon/maps.h>
 
-#include "graph.h"
-#include "hypotheses.h"
-#include "energy.h"
-#include "reasoning/mrf_reasoner.h"
-#include "traxels.h"
+#include "pgmlink/graph.h"
+#include "pgmlink/hypotheses.h"
+#include "pgmlink/energy.h"
+#include "pgmlink/reasoning/mrf_reasoner.h"
+#include "pgmlink/traxels.h"
 
 using namespace Tracking;
 using namespace std;

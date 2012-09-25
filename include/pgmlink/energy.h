@@ -2,7 +2,7 @@
 #define ENERGY_H
 
 #include <stdexcept>
-#include <traxels.h>
+#include "pgmlink/traxels.h"
 #include <cmath>
 
 namespace Tracking {

@@ -1,8 +1,8 @@
 #include <cassert>
 #include <exception>
 #include <string>
-#include "log.h"
-#include "randomforest.h"
+#include "pgmlink/log.h"
+#include "pgmlink/randomforest.h"
 
 using namespace std;
 

@@ -2,9 +2,9 @@
 #include <utility>
 #include <vector>
 #include <boost/tuple/tuple.hpp>
-#include "hypotheses.h"
-#include "log.h"
-#include "nearest_neighbors.h"
+#include "pgmlink/hypotheses.h"
+#include "pgmlink/log.h"
+#include "pgmlink/nearest_neighbors.h"
 
 using namespace std;
 

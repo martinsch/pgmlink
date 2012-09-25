@@ -10,8 +10,8 @@
 #include <lemon/list_graph.h>
 #include <lemon/maps.h>
 
-#include "hypotheses.h"
-#include "traxels.h"
+#include "pgmlink/hypotheses.h"
+#include "pgmlink/traxels.h"
 
 using namespace Tracking;
 using namespace std;

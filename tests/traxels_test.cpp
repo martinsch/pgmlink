@@ -6,8 +6,8 @@
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/tuple/tuple.hpp>
 
-#include "traxels.h"
-#include "field_of_view.h"
+#include "pgmlink/traxels.h"
+#include "pgmlink/field_of_view.h"
 
 using namespace Tracking;
 using namespace std;

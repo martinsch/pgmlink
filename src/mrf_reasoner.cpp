@@ -4,11 +4,11 @@
 #include <opengm/inference/lpcplex.hxx>
 #include <opengm/datastructures/marray/marray.hxx>
 
-#include "graphical_model.h"
-#include "hypotheses.h"
-#include "log.h"
-#include "reasoning/mrf_reasoner.h"
-#include "traxels.h"
+#include "pgmlink/graphical_model.h"
+#include "pgmlink/hypotheses.h"
+#include "pgmlink/log.h"
+#include "pgmlink/reasoning/mrf_reasoner.h"
+#include "pgmlink/traxels.h"
 
 //#include <ostream>
 

@@ -12,9 +12,9 @@
 #include <vigra/numpy_array_converters.hxx>
 #include <vigra/multi_array.hxx>
 
-#include "../include/track.h"
-#include "../include/traxels.h"
-#include "../include/field_of_view.h"
+#include "../include/pgmlink/track.h"
+#include "../include/pgmlink/traxels.h"
+#include "../include/pgmlink/field_of_view.h"
 
 namespace Tracking {
     using namespace std;

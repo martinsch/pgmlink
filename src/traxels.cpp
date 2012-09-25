@@ -3,8 +3,8 @@
 #include <stdexcept>
 #include <set>
 #include <vector>
-#include "traxels.h"
-#include "field_of_view.h"
+#include "pgmlink/traxels.h"
+#include "pgmlink/field_of_view.h"
 
 using namespace std;
 

@@ -6,10 +6,10 @@
 #include <boost/shared_ptr.hpp>
 #include <lemon/list_graph.h>
 #include <lemon/maps.h>
-#include "event.h"
-#include "graph.h"
-#include "log.h"
-#include "traxels.h"
+#include "pgmlink/event.h"
+#include "pgmlink/graph.h"
+#include "pgmlink/log.h"
+#include "pgmlink/traxels.h"
 
 namespace Tracking {
   ////

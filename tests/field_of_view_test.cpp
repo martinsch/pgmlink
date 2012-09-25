@@ -7,7 +7,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/floating_point_comparison.hpp>
 
-#include "field_of_view.h"
+#include "pgmlink/field_of_view.h"
 
 using namespace Tracking;
 using namespace std;

@@ -10,7 +10,7 @@
 
 #include <vigra/hdf5impex.hxx>
 
-#include <traxels.h>
+#include "pgmlink/traxels.h"
 
 namespace Tracking {
 namespace RF {

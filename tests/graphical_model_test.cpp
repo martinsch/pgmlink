@@ -6,10 +6,10 @@
 #include <boost/test/floating_point_comparison.hpp>
 #include <vigra/multi_array.hxx>
 
-#include "energy.h"
-#include "graphical_model.h"
-#include "traxels.h"
-#include "event.h"
+#include "pgmlink/energy.h"
+#include "pgmlink/graphical_model.h"
+#include "pgmlink/traxels.h"
+#include "pgmlink/event.h"
 
 using namespace Tracking;
 using namespace std;
