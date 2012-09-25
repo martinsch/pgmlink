@@ -1,8 +1,6 @@
 #include <algorithm>
 #include <cassert>
 #include <stdexcept>
-#include <utility>
-#include <iterator>
 #include <opengm/inference/lpcplex.hxx>
 #include <opengm/datastructures/marray/marray.hxx>
 
@@ -433,28 +431,5 @@ void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::
     add_factor( table, vi.begin(), vi.end() );
     LOG(logDEBUG) << "SingleTimestepTraxelMrf::add_incoming_factor(): leaving";
   }
-
-  namespace indexsorter {
-    template <typename pair_t>
-    void compare( pair_t lhs, pair_t rhs ){
-      return (lhs.second < rhs.second);
-    }
-
-    template <typename iterator>
-    void sort_indices(iterator first, iterator last, vector<size_t>& indices) {
-      typedef pair< size_t, typename iterator_traits<iterator>::value_type> pair_t;
-      vector< pair_t > seq;
-      size_t idx = 0;
-      for(iterator it = first; it!=last; ++it) {
-	seq.push_back( pair_t(idx, *it) );
-	idx += 1;
-      }
-      std::sort( seq.begin(), seq.end(), compare );
-
-      for( typename vector<pair_t>::iterator it = seq.begin(); it != seq.end(); ++it ){
-      	indices.push_back( it->first );
-      }
-    }
-  } /* namespace indexsorter */
 
 } /* namespace Tracking */ 
