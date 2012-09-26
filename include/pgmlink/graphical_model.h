@@ -21,6 +21,8 @@ using boost::bidirectionalS;
 using boost::shared_ptr;
 
 namespace Tracking {
+template <typename VALUE_T>
+  class OpengmBinaryFactor;
 
 class OpengmModel {
    public:
@@ -31,7 +33,7 @@ class OpengmModel {
    typedef opengm::Inference<ogmGraphicalModel, ogmAccumulator> ogmInference;
    typedef opengm::meta::TypeAtTypeList<ogmGraphicalModel::FunctionTypeList, 0>::type ExplicitFunctionType;
    typedef ogmGraphicalModel::FunctionIdentifier FunctionIdentifier;
-    
+   
    OpengmModel();
    ~OpengmModel();
 
@@ -53,10 +55,11 @@ template <typename VALUE_T>
   OpengmBinaryFactor( const std::vector<size_t>& ogm_var_indices, VALUE_T init=0 );
   OpengmBinaryFactor( std::vector<size_t>::const_iterator first_ogm_idx, std::vector<size_t>::const_iterator last_ogm_idx, VALUE_T init=0 );  
 
-  OpengmBinaryFactor& set_value( const std::vector<size_t> coords, VALUE_T v);
+  void set_value( const std::vector<size_t> coords, VALUE_T v);
   VALUE_T get_value( const std::vector<size_t> coords ) const;
 
   const OpengmModel::ExplicitFunctionType& OgmFunction() const;
+  void add_to( OpengmModel& ) const;
 
  private:
   OpengmModel::ExplicitFunctionType ogmfunction_;
@@ -68,7 +71,7 @@ template <typename VALUE_T>
 /******************/
 /* Implementation */
 /******************/
-
+ 
 ////
 //// class OpengmBinaryFactor
 ////
@@ -85,7 +88,7 @@ template <typename VALUE_T>
  }
 
  template <typename VALUE_T>  
-   OpengmBinaryFactor<VALUE_T>& OpengmBinaryFactor<VALUE_T>::set_value( const std::vector<size_t> coords, VALUE_T v) {
+   void OpengmBinaryFactor<VALUE_T>::set_value( const std::vector<size_t> coords, VALUE_T v) {
    if( coords.size() != vi_.size() ) {
      throw std::invalid_argument("OpengmBinaryFactor::set_value(): coordinate dimension differs from factor dimension");
    }
@@ -111,7 +114,12 @@ template <typename VALUE_T>
    const OpengmModel::ExplicitFunctionType& OpengmBinaryFactor<VALUE_T>::OgmFunction() const {
    return ogmfunction_;
  }
- 
+
+ template <typename VALUE_T>
+   void OpengmBinaryFactor<VALUE_T>::add_to( OpengmModel& m ) const {
+   OpengmModel::FunctionIdentifier id=m.Model()->addFunction( ogmfunction_ );
+   m.Model()->addFactor(id, vi_.begin(), vi_.end());
+ }
 
 } /* namespace Tracking */
 
