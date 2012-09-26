@@ -1,6 +1,7 @@
 #ifndef GRAPHICAL_MODEL_H
 #define GRAPHICAL_MODEL_H
 
+#include <algorithm>
 #include <vector>
 #include <utility>
 #include <string>
@@ -15,13 +16,14 @@
 
 #include "pgmlink/hypotheses.h"
 #include "pgmlink/graph.h"
+#include "pgmlink/util.h"
 
 using boost::vecS;
 using boost::bidirectionalS;
 using boost::shared_ptr;
 
 namespace Tracking {
-template <typename VALUE_T>
+template <typename VALUE>
   class OpengmBinaryFactor;
 
 class OpengmModel {
@@ -49,22 +51,23 @@ class OpengmModel {
 
 
 
-template <typename VALUE_T>
+template <typename VALUE>
   class OpengmExplicitFactor {
  public:
-  OpengmExplicitFactor( const std::vector<size_t>& ogm_var_indices, VALUE_T init=0, size_t states_per_var=2 );
+  OpengmExplicitFactor( const std::vector<size_t>& ogm_var_indices, VALUE init=0, size_t states_per_var=2 );
   template <typename ITER>
-    OpengmExplicitFactor( ITER first_ogm_idx, ITER last_ogm_idx, VALUE_T init=0, size_t states_per_var=2 );  
+    OpengmExplicitFactor( ITER first_ogm_idx, ITER last_ogm_idx, VALUE init=0, size_t states_per_var=2 );  
 
-  void set_value( const std::vector<size_t> coords, VALUE_T v);
-  VALUE_T get_value( const std::vector<size_t> coords ) const;
-
-  const OpengmModel::ExplicitFunctionType& OgmFunction() const;
+  void set_value( std::vector<size_t> coords, VALUE v);
+  VALUE get_value( std::vector<size_t> coords ) const;
   void add_to( OpengmModel& ) const;
 
  private:
   OpengmModel::ExplicitFunctionType ogmfunction_;
   std::vector<size_t> vi_;
+  std::vector<size_t> order_;
+
+  void init_( VALUE init, size_t states_per_var );
 };    
 
 
@@ -76,50 +79,63 @@ template <typename VALUE_T>
 ////
 //// class OpengmExplicitFactor
 ////
- template <typename VALUE_T>
-   OpengmExplicitFactor<VALUE_T>::OpengmExplicitFactor( const std::vector<size_t>& ogm_var_indices, VALUE_T init, size_t states_per_var ) : vi_(ogm_var_indices) {
-  std::vector<size_t> shape( vi_.size(), states_per_var );
-  ogmfunction_ = OpengmModel::ExplicitFunctionType( shape.begin(), shape.end(), init );
+ template <typename VALUE>
+   OpengmExplicitFactor<VALUE>::OpengmExplicitFactor( const std::vector<size_t>& ogm_var_indices, VALUE init, size_t states_per_var ) : vi_(ogm_var_indices) {
+  init_( init, states_per_var );
 }
- template <typename VALUE_T>
+ template <typename VALUE>
    template< typename ITER >
-   OpengmExplicitFactor<VALUE_T>::OpengmExplicitFactor( ITER first_ogm_idx, ITER last_ogm_idx, VALUE_T init, size_t states_per_var )
+   OpengmExplicitFactor<VALUE>::OpengmExplicitFactor( ITER first_ogm_idx, ITER last_ogm_idx, VALUE init, size_t states_per_var )
    : vi_(first_ogm_idx, last_ogm_idx) {
-  std::vector<size_t> shape( vi_.size(), states_per_var );
-  ogmfunction_ = OpengmModel::ExplicitFunctionType( shape.begin(), shape.end(), init );
+  init_( init, states_per_var );
  }
 
- template <typename VALUE_T>  
-   void OpengmExplicitFactor<VALUE_T>::set_value( const std::vector<size_t> coords, VALUE_T v) {
+ template <typename VALUE>  
+   void OpengmExplicitFactor<VALUE>::set_value( std::vector<size_t> coords, VALUE v) {
    if( coords.size() != vi_.size() ) {
      throw std::invalid_argument("OpengmExplicitFactor::set_value(): coordinate dimension differs from factor dimension");
    }
    OpengmModel::ExplicitFunctionType::iterator element( ogmfunction_ );
    size_t index;
+
+   indexsorter::reorder( coords, order_ );
    ogmfunction_.coordinatesToIndex(coords.begin(), index);
    element[index] = v;
  }
 
- template <typename VALUE_T>
-   VALUE_T OpengmExplicitFactor<VALUE_T>::get_value( const std::vector<size_t> coords ) const {
+ template <typename VALUE>
+   VALUE OpengmExplicitFactor<VALUE>::get_value( std::vector<size_t> coords ) const {
    if( coords.size() != vi_.size() ) {
      throw std::invalid_argument("OpengmExplicitFactor::get_value(): coordinate dimension differs from factor dimension");
    }
    OpengmModel::ExplicitFunctionType::iterator element( ogmfunction_ );
    size_t index;
+
+   indexsorter::reorder( coords, order_ );
    ogmfunction_.coordinatesToIndex(coords.begin(), index);
    return element[index];
  }
 
- template <typename VALUE_T>
-   const OpengmModel::ExplicitFunctionType& OpengmExplicitFactor<VALUE_T>::OgmFunction() const {
-   return ogmfunction_;
+ template <typename VALUE>
+   void OpengmExplicitFactor<VALUE>::add_to( OpengmModel& m ) const {
+   std::vector<size_t> sorted_vi(vi_);
+
+   std::sort(sorted_vi.begin(), sorted_vi.end());
+   // opengm expects a monotonic increasing sequence
+   if(!(m.Model()->isValidIndexSequence(sorted_vi.begin(), sorted_vi.end()))) {
+      throw std::runtime_error("OpengmExplicitFactor::add_to(): invalid index sequence");
+   }
+
+   OpengmModel::FunctionIdentifier id=m.Model()->addFunction( ogmfunction_ );
+   m.Model()->addFactor(id, sorted_vi.begin(), sorted_vi.end());
  }
 
- template <typename VALUE_T>
-   void OpengmExplicitFactor<VALUE_T>::add_to( OpengmModel& m ) const {
-   OpengmModel::FunctionIdentifier id=m.Model()->addFunction( ogmfunction_ );
-   m.Model()->addFactor(id, vi_.begin(), vi_.end());
+ template <typename VALUE>
+   void OpengmExplicitFactor<VALUE>::init_( VALUE init, size_t states_per_var ) {
+   indexsorter::sort_indices( vi_.begin(), vi_.end(), order_ );
+
+   std::vector<size_t> shape( vi_.size(), states_per_var );
+   ogmfunction_ = OpengmModel::ExplicitFunctionType( shape.begin(), shape.end(), init );
  }
 
 } /* namespace Tracking */

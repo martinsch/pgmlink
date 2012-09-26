@@ -256,11 +256,6 @@ void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::
       ++count;
     }
 
-    // safeguard, if something in lemon changes; opengm expects a monotonic increasing sequence
-    if(!(mrf_->Model()->isValidIndexSequence(vi.begin(), vi.end()))) {
-      throw std::runtime_error("SingleTimestepTraxelMrf::add_outgoing_factor(): invalid index sequence");
-    }
-
     // construct factor
     if(count == 0) {
       // build value table
@@ -305,7 +300,7 @@ void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::
       // build value table
       size_t table_dim = count + 1; 		// detection var + n * transition var
       std::vector<size_t> coords;
-      OpengmExplicitFactor<double> table( vi );
+      OpengmExplicitFactor<double> table( vi, forbidden_cost_ );
 
       // opportunity configuration
       coords = std::vector<size_t>(table_dim, 0); // (0,0,...,0)
@@ -362,12 +357,7 @@ void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::
       ++count;
     }
     vi.push_back(node_map_[n]); 
-
-    // hypothesis graph is built in a way, that this is a valid index sequence
     std::reverse(vi.begin(), vi.end());
-    if(!(mrf_->Model()->isValidIndexSequence(vi.begin(), vi.end()))) {
-      throw std::runtime_error("SingleTimestepTraxelMrf::add_incoming_factor(): invalid index sequence");
-    }
     
     //// construct factor
     // build value table
