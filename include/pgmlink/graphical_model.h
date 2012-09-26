@@ -50,10 +50,11 @@ class OpengmModel {
 
 
 template <typename VALUE_T>
-  class OpengmBinaryFactor {
+  class OpengmExplicitFactor {
  public:
-  OpengmBinaryFactor( const std::vector<size_t>& ogm_var_indices, VALUE_T init=0 );
-  OpengmBinaryFactor( std::vector<size_t>::const_iterator first_ogm_idx, std::vector<size_t>::const_iterator last_ogm_idx, VALUE_T init=0 );  
+  OpengmExplicitFactor( const std::vector<size_t>& ogm_var_indices, VALUE_T init=0, size_t states_per_var=2 );
+  template <typename ITER>
+    OpengmExplicitFactor( ITER first_ogm_idx, ITER last_ogm_idx, VALUE_T init=0, size_t states_per_var=2 );  
 
   void set_value( const std::vector<size_t> coords, VALUE_T v);
   VALUE_T get_value( const std::vector<size_t> coords ) const;
@@ -73,36 +74,36 @@ template <typename VALUE_T>
 /******************/
  
 ////
-//// class OpengmBinaryFactor
+//// class OpengmExplicitFactor
 ////
  template <typename VALUE_T>
-   OpengmBinaryFactor<VALUE_T>::OpengmBinaryFactor( const std::vector<size_t>& ogm_var_indices, VALUE_T init ) : vi_(ogm_var_indices) {
-  std::vector<size_t> shape( vi_.size(), 2);
+   OpengmExplicitFactor<VALUE_T>::OpengmExplicitFactor( const std::vector<size_t>& ogm_var_indices, VALUE_T init, size_t states_per_var ) : vi_(ogm_var_indices) {
+  std::vector<size_t> shape( vi_.size(), states_per_var );
   ogmfunction_ = OpengmModel::ExplicitFunctionType( shape.begin(), shape.end(), init );
 }
  template <typename VALUE_T>
-   OpengmBinaryFactor<VALUE_T>::OpengmBinaryFactor( std::vector<size_t>::const_iterator first_ogm_idx, std::vector<size_t>::const_iterator last_ogm_idx, VALUE_T init  )
+   template< typename ITER >
+   OpengmExplicitFactor<VALUE_T>::OpengmExplicitFactor( ITER first_ogm_idx, ITER last_ogm_idx, VALUE_T init, size_t states_per_var )
    : vi_(first_ogm_idx, last_ogm_idx) {
-  std::vector<size_t> shape( vi_.size(), 2);
+  std::vector<size_t> shape( vi_.size(), states_per_var );
   ogmfunction_ = OpengmModel::ExplicitFunctionType( shape.begin(), shape.end(), init );
  }
 
  template <typename VALUE_T>  
-   void OpengmBinaryFactor<VALUE_T>::set_value( const std::vector<size_t> coords, VALUE_T v) {
+   void OpengmExplicitFactor<VALUE_T>::set_value( const std::vector<size_t> coords, VALUE_T v) {
    if( coords.size() != vi_.size() ) {
-     throw std::invalid_argument("OpengmBinaryFactor::set_value(): coordinate dimension differs from factor dimension");
+     throw std::invalid_argument("OpengmExplicitFactor::set_value(): coordinate dimension differs from factor dimension");
    }
    OpengmModel::ExplicitFunctionType::iterator element( ogmfunction_ );
    size_t index;
    ogmfunction_.coordinatesToIndex(coords.begin(), index);
    element[index] = v;
-   return *this;
  }
 
  template <typename VALUE_T>
-   VALUE_T OpengmBinaryFactor<VALUE_T>::get_value( const std::vector<size_t> coords ) const {
+   VALUE_T OpengmExplicitFactor<VALUE_T>::get_value( const std::vector<size_t> coords ) const {
    if( coords.size() != vi_.size() ) {
-     throw std::invalid_argument("OpengmBinaryFactor::get_value(): coordinate dimension differs from factor dimension");
+     throw std::invalid_argument("OpengmExplicitFactor::get_value(): coordinate dimension differs from factor dimension");
    }
    OpengmModel::ExplicitFunctionType::iterator element( ogmfunction_ );
    size_t index;
@@ -111,12 +112,12 @@ template <typename VALUE_T>
  }
 
  template <typename VALUE_T>
-   const OpengmModel::ExplicitFunctionType& OpengmBinaryFactor<VALUE_T>::OgmFunction() const {
+   const OpengmModel::ExplicitFunctionType& OpengmExplicitFactor<VALUE_T>::OgmFunction() const {
    return ogmfunction_;
  }
 
  template <typename VALUE_T>
-   void OpengmBinaryFactor<VALUE_T>::add_to( OpengmModel& m ) const {
+   void OpengmExplicitFactor<VALUE_T>::add_to( OpengmModel& m ) const {
    OpengmModel::FunctionIdentifier id=m.Model()->addFunction( ogmfunction_ );
    m.Model()->addFactor(id, vi_.begin(), vi_.end());
  }

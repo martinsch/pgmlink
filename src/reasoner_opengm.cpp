@@ -142,31 +142,31 @@ void SingleTimestepTraxelMrf::add_transition_nodes( const HypothesesGraph& g) {
 }
 
 void SingleTimestepTraxelMrf::add_finite_factors( const HypothesesGraph& g) {
-    LOG(logDEBUG) << "SingleTimestepTraxelMrf::add_finite_factors: entered";
-    property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g.get(node_traxel());		
-    ////
-    //// add detection factors
-    ////
-    LOG(logDEBUG) << "SingleTimestepTraxelMrf::add_finite_factors: add detection factors";
-   for(HypothesesGraph::NodeIt n(g); n!=lemon::INVALID; ++n) {
-	size_t vi[] = {node_map_[n]};						// node index
-	const size_t shape[]={mrf_->Model()->numberOfStates(*vi)}; 		// graphicalmodel_factor.hxx (l.950)
-	OpengmModel::ExplicitFunctionType f(shape,shape+1);			
-	f(0) = non_detection_(traxel_map[n]);
-	LOG(logDEBUG3) << "SingleTimestepTraxelMrf::add_finite_factors: non_detection energy: "<< f(0);
-	f(1) = detection_(traxel_map[n]);
-	LOG(logDEBUG3) << "SingleTimestepTraxelMrf::add_finite_factors: detection energy: "<< f(1);
-	OpengmModel::FunctionIdentifier id=mrf_->Model()->addFunction(f);	
-	mrf_->Model()->addFactor(id,vi,vi+1); 
-    }
+  LOG(logDEBUG) << "SingleTimestepTraxelMrf::add_finite_factors: entered";
+  property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g.get(node_traxel());		
+  ////
+  //// add detection factors
+  ////
+  LOG(logDEBUG) << "SingleTimestepTraxelMrf::add_finite_factors: add detection factors";
+  for(HypothesesGraph::NodeIt n(g); n!=lemon::INVALID; ++n) {
+    size_t vi[] = {node_map_[n]};
+    vector<size_t> coords(1,0);
+    OpengmExplicitFactor<double> table( vi, vi+1 );
+    coords[0] = 0;
+    table.set_value( coords, non_detection_(traxel_map[n]) ); 
+    coords[0] = 1;
+    table.set_value( coords, detection_(traxel_map[n]) );
 
-    ////
-    //// add transition factors
-    ////
-    for(HypothesesGraph::NodeIt n(g); n!=lemon::INVALID; ++n) {
-      add_outgoing_factor(g, n);
-      add_incoming_factor(g, n);
-    }
+    table.add_to( *mrf_ );
+  }
+  
+  ////
+  //// add transition factors
+  ////
+  for(HypothesesGraph::NodeIt n(g); n!=lemon::INVALID; ++n) {
+    add_outgoing_factor(g, n);
+    add_incoming_factor(g, n);
+  }
 }	    
 
 namespace {
@@ -266,7 +266,7 @@ void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::
       // build value table
       size_t table_dim = 1; 		// only one detection var
       std::vector<size_t> coords;
-      OpengmBinaryFactor<double> table( vi );
+      OpengmExplicitFactor<double> table( vi );
 
       // opportunity
       coords = std::vector<size_t>(table_dim, 0); 		// (0)
@@ -277,13 +277,13 @@ void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::
       coords[0] = 1; 						// (1)
       table.set_value( coords, disappearance_(traxel_map[n]) );
 
-      add_factor( table.OgmFunction(), vi.begin(), vi.begin()+1 );
+      table.add_to( *mrf_ );
 
     } else if(count == 1) {
       // no division possible
       size_t table_dim = 2; 		// detection var + 1 * transition var
       std::vector<size_t> coords;
-      OpengmBinaryFactor<double> table( vi, forbidden_cost_ );
+      OpengmExplicitFactor<double> table( vi, forbidden_cost_ );
 
       // opportunity configuration
       coords = std::vector<size_t>(table_dim, 0); // (0,0)
@@ -299,12 +299,13 @@ void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::
       // (1,1)
       table.set_value( coords, move_(traxel_map[n], traxel_map[g.target(arcs[0])]) );
 
-      add_factor( table.OgmFunction(), vi.begin(), vi.end() );
+      table.add_to( *mrf_ );      
+
     } else {
       // build value table
       size_t table_dim = count + 1; 		// detection var + n * transition var
       std::vector<size_t> coords;
-      OpengmBinaryFactor<double> table( vi );
+      OpengmExplicitFactor<double> table( vi );
 
       // opportunity configuration
       coords = std::vector<size_t>(table_dim, 0); // (0,0,...,0)
@@ -344,7 +345,8 @@ void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::
 	}
       }
 
-      add_factor( table.OgmFunction(), vi.begin(), vi.end() );
+      table.add_to( *mrf_ );      
+
     }   
     LOG(logDEBUG) << "SingleTimestepTraxelMrf::add_outgoing_factor(): leaving";
 }
@@ -369,24 +371,19 @@ void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::
     
     //// construct factor
     // build value table
-      typedef OpengmModel::ExplicitFunctionType table_t;
     size_t table_dim = count + 1; // detection var + n * transition var
-    vector<size_t> shape(table_dim, 2);
-    table_t table(shape.begin(), shape.end(), forbidden_cost_);
+    OpengmExplicitFactor<double> table( vi, forbidden_cost_ );
     std::vector<size_t> coords;
-    size_t index = 0;
-    table_t::iterator element(table);
 
     // allow opportunity configuration
-    coords = std::vector<size_t>(table_dim, 0); // (0,0,...,0)
-    table.coordinatesToIndex(coords.begin(), index);
-    element[index] = 0;
+    // (0,0,...,0)
+    coords = std::vector<size_t>(table_dim, 0);
+    table.set_value( coords, 0 );
 
     // appearance configuration
     coords = std::vector<size_t>(table_dim, 0);
     coords[0] = 1; // (1,0,...,0)
-    table.coordinatesToIndex(coords.begin(), index);
-    element[index] = appearance_(traxel_map[n]);
+    table.set_value( coords, appearance_(traxel_map[n]) );
     
     // allow move configurations
     coords = std::vector<size_t>(table_dim, 0);
@@ -394,12 +391,11 @@ void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::
     // (1,0,0,0,1,0,0)
     for(size_t i = 1; i < table_dim; ++i) {
       coords[i] = 1; 
-      table.coordinatesToIndex(coords.begin(), index);
-      element[index] = 0;
+      table.set_value( coords, 0 );
       coords[i] = 0; // reset coords
     }
 
-    add_factor( table, vi.begin(), vi.end() );
+    table.add_to( *mrf_ );
     LOG(logDEBUG) << "SingleTimestepTraxelMrf::add_incoming_factor(): leaving";
   }
 
