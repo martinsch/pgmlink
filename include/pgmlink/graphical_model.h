@@ -51,6 +51,7 @@ template <typename VALUE_T>
   class OpengmBinaryFactor {
  public:
   OpengmBinaryFactor( const std::vector<size_t>& ogm_var_indices, VALUE_T init=0 );
+  OpengmBinaryFactor( std::vector<size_t>::const_iterator first_ogm_idx, std::vector<size_t>::const_iterator last_ogm_idx, VALUE_T init=0 );  
 
   OpengmBinaryFactor& set_value( const std::vector<size_t> coords, VALUE_T v);
   VALUE_T get_value( const std::vector<size_t> coords ) const;
@@ -76,6 +77,12 @@ template <typename VALUE_T>
   std::vector<size_t> shape( vi_.size(), 2);
   ogmfunction_ = OpengmModel::ExplicitFunctionType( shape.begin(), shape.end(), init );
 }
+ template <typename VALUE_T>
+   OpengmBinaryFactor<VALUE_T>::OpengmBinaryFactor( std::vector<size_t>::const_iterator first_ogm_idx, std::vector<size_t>::const_iterator last_ogm_idx, VALUE_T init  )
+   : vi_(first_ogm_idx, last_ogm_idx) {
+  std::vector<size_t> shape( vi_.size(), 2);
+  ogmfunction_ = OpengmModel::ExplicitFunctionType( shape.begin(), shape.end(), init );
+ }
 
  template <typename VALUE_T>  
    OpengmBinaryFactor<VALUE_T>& OpengmBinaryFactor<VALUE_T>::set_value( const std::vector<size_t> coords, VALUE_T v) {
