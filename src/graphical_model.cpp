@@ -20,15 +20,15 @@ using namespace boost;
 
 namespace Tracking {
 
-////
-//// class OpengmModel
-////
-    OpengmModel::OpengmModel() {
-	model_ = new ogmGraphicalModel();
-    }
-
-    OpengmModel::~OpengmModel() {
-	delete model_;
-    }
+  ////
+  //// class OpengmModel
+  ////
+  OpengmModel::OpengmModel() {
+    model_ = new ogmGraphicalModel();
+  }
+  
+  OpengmModel::~OpengmModel() {
+    delete model_;
+  }
 
 } /* namespace Tracking */
