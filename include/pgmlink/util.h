@@ -2,6 +2,7 @@
 #define PGMLINK_UTIL_H
 
 #include <algorithm>
+#include <stdexcept>
 #include <iterator>
 #include <utility>
 #include <vector>
@@ -29,6 +30,21 @@ namespace Tracking {
       	indices.push_back( it->first );
       }
     }
+
+    template <typename T>
+    void reorder( std::vector<T> & data, const std::vector<std::size_t> & order )
+    {
+      if(data.size() != order.size()){
+	throw std::invalid_argument("indexsorter::reorder(): data and order vector must have the same size");
+      }
+      std::vector<T> tmp;         
+      tmp.reserve( data.size() ); 
+      for ( std::size_t i = 0; i < order.size(); ++i ) {
+          tmp.push_back( data[order[i]] );
+      }
+       data.swap( tmp );
+    }
+
   } /* namespace indexsorter */
 
 } /* namespace Tracking */
