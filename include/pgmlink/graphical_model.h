@@ -21,7 +21,7 @@ using boost::shared_ptr;
 
 namespace Tracking {
 
-class OpengmMrf {
+class OpengmModel {
    public:
    typedef double Energy;
    typedef opengm::GraphicalModel<Energy, opengm::Adder> ogmGraphicalModel;
@@ -31,15 +31,15 @@ class OpengmMrf {
    typedef opengm::meta::TypeAtTypeList<ogmGraphicalModel::FunctionTypeList, 0>::type ExplicitFunctionType;
    typedef ogmGraphicalModel::FunctionIdentifier FunctionIdentifier;
     
-   OpengmMrf();
-   ~OpengmMrf();
+   OpengmModel();
+   ~OpengmModel();
 
    ogmGraphicalModel* Model() {return model_; }
    const ogmGraphicalModel* Model() const {return model_; }
  
    private:
-   OpengmMrf(const OpengmMrf&);
-   OpengmMrf& operator=(const OpengmMrf&);
+   OpengmModel(const OpengmModel&);
+   OpengmModel& operator=(const OpengmModel&);
    
    ogmGraphicalModel* model_;
 };

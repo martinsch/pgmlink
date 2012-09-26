@@ -21,13 +21,13 @@ using namespace boost;
 namespace Tracking {
 
 ////
-//// class OpengmMrf
+//// class OpengmModel
 ////
-    OpengmMrf::OpengmMrf() {
+    OpengmModel::OpengmModel() {
 	model_ = new ogmGraphicalModel();
     }
 
-    OpengmMrf::~OpengmMrf() {
+    OpengmModel::~OpengmModel() {
 	delete model_;
     }
 

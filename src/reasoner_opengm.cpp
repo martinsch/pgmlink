@@ -37,7 +37,7 @@ bool SingleTimestepTraxelMrf::with_constraints() const {
 void SingleTimestepTraxelMrf::formulate( const HypothesesGraph& hypotheses ) {
     LOG(logDEBUG) << "SingleTimestepTraxelMrf::formulate: entered";
     reset();
-    mrf_ = new OpengmMrf();
+    mrf_ = new OpengmModel();
 
     LOG(logDEBUG) << "SingleTimestepTraxelMrf::formulate: add_detection_nodes";
     add_detection_nodes( hypotheses );
@@ -46,14 +46,14 @@ void SingleTimestepTraxelMrf::formulate( const HypothesesGraph& hypotheses ) {
     LOG(logDEBUG) << "SingleTimestepTraxelMrf::formulate: add_finite_factors";
     add_finite_factors( hypotheses );
 
-    typedef opengm::LPCplex<OpengmMrf::ogmGraphicalModel, OpengmMrf::ogmAccumulator> cplex_optimizer;
+    typedef opengm::LPCplex<OpengmModel::ogmGraphicalModel, OpengmModel::ogmAccumulator> cplex_optimizer;
     cplex_optimizer::Parameter param;
     param.verbose_ = true;
     param.integerConstraint_ = true;
     param.epGap_ = ep_gap_;
     LOG(logDEBUG) << "SingleTimestepTraxelMrf::formulate ep_gap = " << param.epGap_;
 
-    OpengmMrf::ogmGraphicalModel* model = mrf_->Model();
+    OpengmModel::ogmGraphicalModel* model = mrf_->Model();
     optimizer_ = new cplex_optimizer(*model, param);
 
 	if (with_constraints_) {
@@ -79,7 +79,7 @@ void SingleTimestepTraxelMrf::infer() {
 
 void SingleTimestepTraxelMrf::conclude( HypothesesGraph& g ) {
     // extract solution from optimizer
-    vector<OpengmMrf::ogmInference::LabelType> solution;
+    vector<OpengmModel::ogmInference::LabelType> solution;
     opengm::InferenceTermination status = optimizer_->arg(solution);
     if(status != opengm::NORMAL) {
 	throw runtime_error("GraphicalModel::infer(): solution extraction terminated unnormally");
@@ -103,7 +103,7 @@ void SingleTimestepTraxelMrf::conclude( HypothesesGraph& g ) {
     }
 }
 
-  const OpengmMrf* SingleTimestepTraxelMrf::get_graphical_model() const {
+  const OpengmModel* SingleTimestepTraxelMrf::get_graphical_model() const {
     return mrf_;
   }
 
@@ -151,12 +151,12 @@ void SingleTimestepTraxelMrf::add_finite_factors( const HypothesesGraph& g) {
    for(HypothesesGraph::NodeIt n(g); n!=lemon::INVALID; ++n) {
 	size_t vi[] = {node_map_[n]};						// node index
 	const size_t shape[]={mrf_->Model()->numberOfStates(*vi)}; 		// graphicalmodel_factor.hxx (l.950)
-	OpengmMrf::ExplicitFunctionType f(shape,shape+1);			
+	OpengmModel::ExplicitFunctionType f(shape,shape+1);			
 	f(0) = non_detection_(traxel_map[n]);
 	LOG(logDEBUG3) << "SingleTimestepTraxelMrf::add_finite_factors: non_detection energy: "<< f(0);
 	f(1) = detection_(traxel_map[n]);
 	LOG(logDEBUG3) << "SingleTimestepTraxelMrf::add_finite_factors: detection energy: "<< f(1);
-	OpengmMrf::FunctionIdentifier id=mrf_->Model()->addFunction(f);	
+	OpengmModel::FunctionIdentifier id=mrf_->Model()->addFunction(f);	
 	mrf_->Model()->addFactor(id,vi,vi+1); 
     }
 
@@ -177,7 +177,7 @@ namespace {
 
 void SingleTimestepTraxelMrf::add_constraints( const HypothesesGraph& g ) {
     LOG(logDEBUG) << "SingleTimestepTraxelMrf::add_constraints: entered";
-    typedef opengm::LPCplex<OpengmMrf::ogmGraphicalModel, OpengmMrf::ogmAccumulator> cplex;
+    typedef opengm::LPCplex<OpengmModel::ogmGraphicalModel, OpengmModel::ogmAccumulator> cplex;
     ////
     //// outgoing transitions
     ////
@@ -219,7 +219,7 @@ void SingleTimestepTraxelMrf::add_constraints( const HypothesesGraph& g ) {
 }
 
 void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::Arc& a) {
-	    typedef opengm::LPCplex<OpengmMrf::ogmGraphicalModel, OpengmMrf::ogmAccumulator> cplex;
+	    typedef opengm::LPCplex<OpengmModel::ogmGraphicalModel, OpengmModel::ogmAccumulator> cplex;
     	    vector<size_t> cplex_idxs; 
 	    cplex_idxs.push_back(cplex_id(node_map_[n]));
 	    cplex_idxs.push_back(cplex_id(arc_map_[a]));
@@ -231,7 +231,7 @@ void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::
 }
 
   void SingleTimestepTraxelMrf::fix_detections( const HypothesesGraph& g, size_t val ) {
-	    typedef opengm::LPCplex<OpengmMrf::ogmGraphicalModel, OpengmMrf::ogmAccumulator> cplex;
+	    typedef opengm::LPCplex<OpengmModel::ogmGraphicalModel, OpengmModel::ogmAccumulator> cplex;
 	    for(HypothesesGraph::NodeIt n(g); n!=lemon::INVALID; ++n) {
 	      vector<size_t> cplex_idxs; 
 	      cplex_idxs.push_back(cplex_id(node_map_[n]));
@@ -264,7 +264,7 @@ void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::
     // construct factor
     if(count == 0) {
       // build value table
-      typedef OpengmMrf::ExplicitFunctionType table_t;
+      typedef OpengmModel::ExplicitFunctionType table_t;
       size_t table_dim = 1; 		// only one detection var
       vector<size_t> shape(table_dim, 2);
       table_t table(shape.begin(), shape.end(), forbidden_cost_);
@@ -289,7 +289,7 @@ void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::
 
     } else if(count == 1) {
       // no division possible
-      typedef OpengmMrf::ExplicitFunctionType table_t;
+      typedef OpengmModel::ExplicitFunctionType table_t;
       size_t table_dim = 2; 		// detection var + 1 * transition var
       vector<size_t> shape(table_dim, 2);
       table_t table(shape.begin(), shape.end(), forbidden_cost_);
@@ -320,7 +320,7 @@ void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::
       add_factor( table, vi.begin(), vi.end() );
     } else {
       // build value table
-      typedef OpengmMrf::ExplicitFunctionType table_t;
+      typedef OpengmModel::ExplicitFunctionType table_t;
       size_t table_dim = count + 1; 		// detection var + n * transition var
       vector<size_t> shape(table_dim, 2);
       table_t table(shape.begin(), shape.end(), forbidden_cost_);
@@ -398,7 +398,7 @@ void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::
     
     //// construct factor
     // build value table
-      typedef OpengmMrf::ExplicitFunctionType table_t;
+      typedef OpengmModel::ExplicitFunctionType table_t;
     size_t table_dim = count + 1; // detection var + n * transition var
     vector<size_t> shape(table_dim, 2);
     table_t table(shape.begin(), shape.end(), forbidden_cost_);

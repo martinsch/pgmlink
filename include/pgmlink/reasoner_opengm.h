@@ -52,7 +52,7 @@ class SingleTimestepTraxelMrf : public Reasoner {
      * The returned pointer may be NULL before formulate() is called
      * the first time.
      **/
-    const OpengmMrf* get_graphical_model() const;
+    const OpengmModel* get_graphical_model() const;
 
     /** Return mapping from HypothesesGraph nodes to graphical model variable ids
      *
@@ -96,8 +96,8 @@ class SingleTimestepTraxelMrf : public Reasoner {
     double opportunity_cost_;
     double forbidden_cost_;
     
-    OpengmMrf* mrf_;
-    OpengmMrf::ogmInference* optimizer_;
+    OpengmModel* mrf_;
+    OpengmModel::ogmInference* optimizer_;
 
     std::map<HypothesesGraph::Node, size_t> node_map_;
     std::map<HypothesesGraph::Arc, size_t> arc_map_;
@@ -116,7 +116,7 @@ class SingleTimestepTraxelMrf : public Reasoner {
  
  template< typename table_t, typename const_iter >
    void SingleTimestepTraxelMrf::add_factor( const table_t& table, const_iter first_idx, const_iter last_idx ){
-   OpengmMrf::FunctionIdentifier id=mrf_->Model()->addFunction(table);
+   OpengmModel::FunctionIdentifier id=mrf_->Model()->addFunction(table);
    mrf_->Model()->addFactor(id, first_idx, last_idx);
  }
  
