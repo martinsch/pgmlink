@@ -13,6 +13,7 @@
 #include "pgmlink/log.h"
 #include "pgmlink/reasoner_opengm.h"
 #include "pgmlink/tracking.h"
+#include "pgmlink/reasoner_nearestneighbor.h"
 
 using namespace std;
 using boost::shared_ptr;
@@ -119,6 +120,72 @@ vector<map<unsigned int, bool> > ChaingraphTracking::detections() {
 	} else {
 		throw std::runtime_error(
 				"ChaingraphTracking::detections(): previous tracking result required");
+	}
+}
+
+
+////
+//// class NNTracking
+////
+vector<vector<Event> > NNTracking::operator()(TraxelStore& ts) {
+	cout << "-> building hypotheses" << endl;
+	SingleTimestepTraxel_HypothesesBuilder::Options builder_opts(2, max(divDist_,movDist_));
+	SingleTimestepTraxel_HypothesesBuilder hyp_builder(&ts, builder_opts);
+	HypothesesGraph* graph = hyp_builder.build();
+	HypothesesGraph& g = *graph;
+
+	LOG(logDEBUG1) << "NNTracking: adding offered property to nodes";
+	// adding 'offered' property and set it true for each node
+	g.add(node_offered());
+	property_map<node_offered, HypothesesGraph::base_graph>::type& offered_nodes = g.get(node_offered());
+	for(HypothesesGraph::NodeIt n(g); n!=lemon::INVALID; ++n) {
+		offered_nodes.set(n,true);
+	}
+	LOG(logDEBUG1) << "NNTracking: adding distance property to edges";
+	g.add(arc_distance());
+	property_map<arc_distance, HypothesesGraph::base_graph>::type& arc_distances = g.get(arc_distance());
+	property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g.get(node_traxel());
+	for(HypothesesGraph::ArcIt a(g); a!=lemon::INVALID; ++a) {
+		HypothesesGraph::Node from = g.source(a);
+		HypothesesGraph::Node to = g.target(a);
+		Traxel from_tr = traxel_map[from];
+		Traxel to_tr = traxel_map[to];
+		double dist = from_tr.distance_to(to_tr);
+		LOG(logDEBUG2) << "NNTracking:: distance from " << from_tr.Id << " to " << to_tr.Id << " = " << dist;
+		arc_distances.set(a, dist);
+	}
+
+
+	cout << "-> init NN reasoner" << endl;
+	SingleTimestepTraxelNN nn_reasoner(divDist_,movDist_);
+
+	cout << "-> formulate NN model" << endl;
+	nn_reasoner.formulate(*graph);
+
+	cout << "-> infer" << endl;
+	nn_reasoner.infer();
+
+	cout << "-> conclude" << endl;
+	nn_reasoner.conclude(*graph);
+
+	cout << "-> storing state of detection vars" << endl;
+	last_detections_ = state_of_nodes(*graph);
+
+	cout << "-> pruning inactive hypotheses" << endl;
+	prune_inactive(*graph);
+
+	cout << "-> constructing events" << endl;
+
+	return *events(*graph);
+}
+
+vector<map<unsigned int, bool> > NNTracking::detections() {
+	vector<map<unsigned int, bool> > res;
+	if (last_detections_) {
+		return *last_detections_;
+	} else {
+		throw std::runtime_error(
+				"NNTracking::detections(): previous tracking result required");
 	}
 }
 

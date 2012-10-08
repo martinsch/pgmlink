@@ -60,6 +60,21 @@ namespace pgmlink {
     shared_ptr<std::vector< std::map<unsigned int, bool> > > last_detections_;
   };
 
+  class NNTracking {
+    public:
+      NNTracking(double divDist = 30, double movDist = 10)
+        : divDist_(divDist), movDist_(movDist){}
+      std::vector< std::vector<Event> > operator()(TraxelStore&);
+
+      /**
+       * Get state of detection variables after call to operator().
+       */
+      std::vector< std::map<unsigned int, bool> > detections();
+
+    private:
+      double divDist_, movDist_;
+      shared_ptr<std::vector< std::map<unsigned int, bool> > > last_detections_;
+    };
 }
 
 #endif /* TRACKING_H */

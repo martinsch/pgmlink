@@ -13,6 +13,7 @@
 #include "pgmlink/hypotheses.h"
 #include "pgmlink/log.h"
 #include "pgmlink/nearest_neighbors.h"
+//#include "pgmlink/traxels.h"
 
 using namespace std;
 
@@ -308,6 +309,7 @@ void read_lgf( HypothesesGraph& g, std::istream& is, bool with_n_traxel ) {
   }
 
   HypothesesGraph* SingleTimestepTraxel_HypothesesBuilder::add_edges(HypothesesGraph* graph) const {
+	LOG(logDEBUG) << "SingleTimestepTraxel_HypothesesBuilder::add_edges(): entered";
     typedef HypothesesGraph::node_timestep_map::Value timestep_t;
     const set<timestep_t>& timesteps = graph->timesteps();
     // iterate over all timesteps except the last
