@@ -1,4 +1,4 @@
-*.cpp~
+*~
 *.cmake
 *project
 *Makefile*
