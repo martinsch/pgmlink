@@ -300,10 +300,14 @@ void read_lgf( HypothesesGraph& g, std::istream& is, bool with_n_traxel ) {
     LOG(logDEBUG) << "SingleTimestepTraxel_HypothesesBuilder::add_nodes(): entered";
     property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_m = graph->get(node_traxel());
 
+//    for(TraxelStore::index_const_iterator<by_timestep>::type it = ts_->begin(); it!= ts_->end(); ++it) {
+//      HypothesesGraph::Node node = graph->add_node(it->Timestep);
+//      traxel_m.set(node, *it);
+//    }
     for(TraxelStoreByTimestep::const_iterator it = ts_->begin(); it!= ts_->end(); ++it) {
-      HypothesesGraph::Node node = graph->add_node(it->Timestep);
-      traxel_m.set(node, *it);
-    }
+	  HypothesesGraph::Node node = graph->add_node(it->Timestep);
+	  traxel_m.set(node, *it);
+	}
 
     return graph;
   }

@@ -150,8 +150,29 @@ vector<vector<Event> > NNTracking::operator()(TraxelStore& ts) {
 		HypothesesGraph::Node to = g.target(a);
 		Traxel from_tr = traxel_map[from];
 		Traxel to_tr = traxel_map[to];
-		double dist = from_tr.distance_to(to_tr);
-		LOG(logDEBUG2) << "NNTracking:: distance from " << from_tr.Id << " to " << to_tr.Id << " = " << dist;
+
+		double dist = 0;
+		// if we want to add another dimension to the norm, we remove the sqrt, add the dimensions and sqrt again
+
+		for(std::vector<std::string>::const_iterator it = distanceFeatures_.begin(); it!=distanceFeatures_.end(); ++it) {
+			if (*it == "com") {
+				// com is already considered in Traxel::distance_to()
+				// Traxel::distance_to computes: sqrt( (x1-x2)^2 + (y1-y2)^2 + (z1-z2)^2 )
+				double d = from_tr.distance_to(to_tr);
+				LOG(logDEBUG2) << "NNTracking:: com distance from " << from_tr.Id << " to " << to_tr.Id << " = " << d;
+				dist += (d*d);
+			}
+			std::vector<float> from_feat = from_tr.features.find(*it)->second;
+			std::vector<float> to_feat = to_tr.features.find(*it)->second;
+			for (size_t i = 0; i<from_feat.size(); ++i) {
+				// TODO: do we have to consider x/y/z scale for some features?
+				double d = (from_feat[i] - to_feat[i]);
+				dist += (d*d);
+			}
+		}
+		dist = sqrt(dist);
+		LOG(logDEBUG2) << "NNTracking:: combined distance from " << from_tr.Id << " to " << to_tr.Id << " = " << dist;
+
 		arc_distances.set(a, dist);
 	}
 

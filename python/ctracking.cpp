@@ -142,6 +142,10 @@ BOOST_PYTHON_MODULE( ctracking )
     .def(vector_indexing_suite< std::vector<double> >() )
     ;
 
+    class_< std::vector<std::string> >("VectorOfString")
+	.def(vector_indexing_suite< std::vector<string> >() )
+	;
+
     class_<TraxelStore>("TraxelStore")
       .def("add", &add_traxel_to_traxelstore)
       .def("add_from_Traxels", &add_Traxels_to_traxelstore)
@@ -172,9 +176,10 @@ BOOST_PYTHON_MODULE( ctracking )
       .def("detections", &MrfTracking::detections) 
     ;
 
+
     class_<NNTracking>("NNTracking",
-			init<double,double>(
-				 args("divDist", "movDist")))
+			init<double,double,std::vector<std::string> >(
+				 args("divDist", "movDist", "features")))
 	  .def("__call__", &NNTracking::operator())
 	  .def("detections", &NNTracking::detections)
         ;
