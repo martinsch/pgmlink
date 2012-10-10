@@ -178,7 +178,7 @@ vector<vector<Event> > NNTracking::operator()(TraxelStore& ts) {
 
 
 	cout << "-> init NN reasoner" << endl;
-	SingleTimestepTraxelNN nn_reasoner(divDist_,movDist_);
+	SingleTimestepTraxelNN nn_reasoner(divDist_,movDist_,divisionThreshold_);
 
 	cout << "-> formulate NN model" << endl;
 	nn_reasoner.formulate(*graph);

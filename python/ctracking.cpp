@@ -178,8 +178,8 @@ BOOST_PYTHON_MODULE( ctracking )
 
 
     class_<NNTracking>("NNTracking",
-			init<double,double,std::vector<std::string> >(
-				 args("divDist", "movDist", "features")))
+			init<double,double,std::vector<std::string>, double >(
+				 args("divDist", "movDist", "features", "divisionThreshold")))
 	  .def("__call__", &NNTracking::operator())
 	  .def("detections", &NNTracking::detections)
         ;
