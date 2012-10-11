@@ -13,7 +13,7 @@
 #include "pgmlink/hypotheses.h"
 #include "pgmlink/log.h"
 #include "pgmlink/nearest_neighbors.h"
-//#include "pgmlink/traxels.h"
+#include "pgmlink/traxels.h"
 
 using namespace std;
 
@@ -300,10 +300,6 @@ void read_lgf( HypothesesGraph& g, std::istream& is, bool with_n_traxel ) {
     LOG(logDEBUG) << "SingleTimestepTraxel_HypothesesBuilder::add_nodes(): entered";
     property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_m = graph->get(node_traxel());
 
-//    for(TraxelStore::index_const_iterator<by_timestep>::type it = ts_->begin(); it!= ts_->end(); ++it) {
-//      HypothesesGraph::Node node = graph->add_node(it->Timestep);
-//      traxel_m.set(node, *it);
-//    }
     for(TraxelStoreByTimestep::const_iterator it = ts_->begin(); it!= ts_->end(); ++it) {
 	  HypothesesGraph::Node node = graph->add_node(it->Timestep);
 	  traxel_m.set(node, *it);
@@ -312,17 +308,19 @@ void read_lgf( HypothesesGraph& g, std::istream& is, bool with_n_traxel ) {
     return graph;
   }
 
-  HypothesesGraph* SingleTimestepTraxel_HypothesesBuilder::add_edges(HypothesesGraph* graph) const {
-	LOG(logDEBUG) << "SingleTimestepTraxel_HypothesesBuilder::add_edges(): entered";
-    typedef HypothesesGraph::node_timestep_map::Value timestep_t;
-    const set<timestep_t>& timesteps = graph->timesteps();
-    // iterate over all timesteps except the last
-    for(set<timestep_t>::const_iterator t = timesteps.begin(); t != (--timesteps.end()); ++t) {
-	add_edges_at(graph, *t);
-    }
+	HypothesesGraph* SingleTimestepTraxel_HypothesesBuilder::add_edges(
+			HypothesesGraph* graph) const {
+		LOG(logDEBUG) << "SingleTimestepTraxel_HypothesesBuilder::add_edges(): entered";
+		typedef HypothesesGraph::node_timestep_map::Value timestep_t;
+		const set<timestep_t>& timesteps = graph->timesteps();
+		// iterate over all timesteps except the last
+		for (set<timestep_t>::const_iterator t = timesteps.begin();
+				t != (--timesteps.end()); ++t) {
+			add_edges_at(graph, *t);
+		}
 
-    return graph;
-  }
+		return graph;
+	}
 
   HypothesesGraph* SingleTimestepTraxel_HypothesesBuilder::add_edges_at(HypothesesGraph* graph, int timestep) const {
 	const HypothesesGraph::node_timestep_map& timemap = graph->get(
