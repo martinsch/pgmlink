@@ -253,47 +253,54 @@ namespace Tracking {
   }
 
   HypothesesGraph* SingleTimestepTraxel_HypothesesBuilder::add_edges_at(HypothesesGraph* graph, int timestep) const {
-      const HypothesesGraph::node_timestep_map& timemap = graph->get(node_timestep());
-      typedef property_map<node_traxel, HypothesesGraph::base_graph>::type traxelmap_t;
-      const traxelmap_t& traxelmap = graph->get(node_traxel());
-      const TraxelStoreByTimeid& traxels_by_timeid = ts_->get<by_timeid>();
-      const TraxelStoreByTimestep& traxels_by_timestep = ts_->get<by_timestep>();
+	const HypothesesGraph::node_timestep_map& timemap = graph->get(
+			node_timestep());
+	typedef property_map<node_traxel, HypothesesGraph::base_graph>::type traxelmap_t;
+	const traxelmap_t& traxelmap = graph->get(node_traxel());
+	const TraxelStoreByTimeid& traxels_by_timeid = ts_->get<by_timeid>();
+	const TraxelStoreByTimestep& traxels_by_timestep = ts_->get<by_timestep>();
 
-      // establish transition edges between a current node and appropriate nodes in next timestep
-      for(HypothesesGraph::node_timestep_map::ItemIt curr_node(timemap, timestep); curr_node!=lemon::INVALID; ++curr_node) {
-	  assert(timemap[curr_node] == timestep);
-	  assert(traxelmap[curr_node].Timestep == timestep);
+	//// find k nearest neighbors in next timestep
+	// init nearest neighbor search
+	pair<TraxelStoreByTimestep::const_iterator,
+			TraxelStoreByTimestep::const_iterator> traxels_at =
+			traxels_by_timestep.equal_range(timestep + 1);
 
-	  //// find k nearest neighbors in next timestep
-	  // init nearest neighbor search
-	  pair<TraxelStoreByTimestep::const_iterator,TraxelStoreByTimestep::const_iterator> traxels_at =
-	    traxels_by_timestep.equal_range(timestep+1);
+	for (TraxelStoreByTimestep::const_iterator it = traxels_at.first;
+			it != traxels_at.second; ++it) {
+		assert(it->Timestep == (timestep+1));
+	}
 
-	  for(TraxelStoreByTimestep::const_iterator it = traxels_at.first; it != traxels_at.second; ++it) {
-	    assert(it->Timestep == (timestep+1));
-	  }
+	NearestNeighborSearch nns(traxels_at.first, traxels_at.second);
 
-	  NearestNeighborSearch nns(traxels_at.first, traxels_at.second);
+	// establish transition edges between a current node and appropriate nodes in next timestep
+	for (HypothesesGraph::node_timestep_map::ItemIt curr_node(timemap,
+			timestep); curr_node != lemon::INVALID; ++curr_node) {
+		assert(timemap[curr_node] == timestep);
+		assert(traxelmap[curr_node].Timestep == timestep);
 
-	  // search
-	  map<unsigned int, double> nearest_neighbors =
-	    nns.knn_in_range(traxelmap[curr_node], options_.distance_threshold, options_.max_nearest_neighbors);
-	  
-	  //// connect current node with k nearest neighbor nodes
-	  for(map<unsigned int, double>::const_iterator neighbor = nearest_neighbors.begin();
-	    neighbor != nearest_neighbors.end(); 
-            ++neighbor) {
-		// connect with one of the neighbor nodes
-		TraxelStoreByTimeid::iterator neighbor_traxel = traxels_by_timeid.find(boost::make_tuple(timestep+1, neighbor->first));
-		assert(neighbor_traxel->Timestep == (timestep + 1));
-		assert(neighbor_traxel->Timestep != traxelmap[curr_node].Timestep);
-		traxelmap_t::ItemIt neighbor_node(traxelmap, *neighbor_traxel);
-		assert(curr_node != neighbor_node);
-		graph->addArc(curr_node, neighbor_node);
-	  }
-      }
-	
-      return graph;
+		// search
+		map<unsigned int, double> nearest_neighbors = nns.knn_in_range(
+				traxelmap[curr_node], options_.distance_threshold,
+				options_.max_nearest_neighbors);
+
+		//// connect current node with k nearest neighbor nodes
+		for (map<unsigned int, double>::const_iterator neighbor =
+				nearest_neighbors.begin(); neighbor != nearest_neighbors.end();
+				++neighbor) {
+			// connect with one of the neighbor nodes
+			TraxelStoreByTimeid::iterator neighbor_traxel =
+					traxels_by_timeid.find(
+							boost::make_tuple(timestep + 1, neighbor->first));
+			assert(neighbor_traxel->Timestep == (timestep + 1));
+			assert(neighbor_traxel->Timestep != traxelmap[curr_node].Timestep);
+			traxelmap_t::ItemIt neighbor_node(traxelmap, *neighbor_traxel);
+			assert(curr_node != neighbor_node);
+			graph->addArc(curr_node, neighbor_node);
+		}
+	}
+
+	return graph;
   }
 
 } /* namespace Tracking */
