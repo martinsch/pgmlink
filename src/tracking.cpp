@@ -161,13 +161,14 @@ vector<vector<Event> > NNTracking::operator()(TraxelStore& ts) {
 				double d = from_tr.distance_to(to_tr);
 				LOG(logDEBUG2) << "NNTracking:: com distance from " << from_tr.Id << " to " << to_tr.Id << " = " << d;
 				dist += (d*d);
-			}
-			std::vector<float> from_feat = from_tr.features.find(*it)->second;
-			std::vector<float> to_feat = to_tr.features.find(*it)->second;
-			for (size_t i = 0; i<from_feat.size(); ++i) {
-				// TODO: do we have to consider x/y/z scale for some features?
-				double d = (from_feat[i] - to_feat[i]);
-				dist += (d*d);
+			} else {
+				std::vector<float> from_feat = from_tr.features.find(*it)->second;
+				std::vector<float> to_feat = to_tr.features.find(*it)->second;
+				for (size_t i = 0; i<from_feat.size(); ++i) {
+					// TODO: do we have to consider x/y/z scale for some features?
+					double d = (from_feat[i] - to_feat[i]);
+					dist += (d*d);
+				}
 			}
 		}
 		dist = sqrt(dist);
