@@ -62,8 +62,13 @@ namespace pgmlink {
 
   class NNTracking {
     public:
-      NNTracking(double divDist = 30, double movDist = 10, std::vector<std::string> features = 0, double divisionThreshold = 0.5)
-        : divDist_(divDist), movDist_(movDist), distanceFeatures_(features), divisionThreshold_(divisionThreshold){}
+      NNTracking(double divDist = 30,
+    		  double movDist = 10,
+    		  std::vector<std::string> features = 0,
+    		  double divisionThreshold = 0.5,
+    		  bool splitterHandling = true)
+        : divDist_(divDist), movDist_(movDist), distanceFeatures_(features),
+          divisionThreshold_(divisionThreshold), splitterHandling_(splitterHandling){}
       std::vector< std::vector<Event> > operator()(TraxelStore&);
 
       /**
@@ -75,6 +80,7 @@ namespace pgmlink {
       double divDist_, movDist_;
       std::vector<std::string> distanceFeatures_;
       double divisionThreshold_;
+      bool splitterHandling_;
       shared_ptr<std::vector< std::map<unsigned int, bool> > > last_detections_;
     };
 }
