@@ -29,14 +29,14 @@ BOOST_AUTO_TEST_CASE( ogm_model_building )
    for(size_t variable2 = variable1 + 1; variable2 < gm.numberOfVariables(); ++variable2)
    for(size_t variable3 = variable2 + 1; variable3 < gm.numberOfVariables(); ++variable3) {
       const size_t shape[] = {
-         gm.numberOfStates(variable1),
-         gm.numberOfStates(variable2),
-         gm.numberOfStates(variable3)
+         gm.numberOfLabels(variable1),
+         gm.numberOfLabels(variable2),
+         gm.numberOfLabels(variable3)
       };
       OpengmModel::ExplicitFunctionType f(shape, shape + 3);
-      for(size_t state1 = 0; state1 < gm.numberOfStates(variable1); ++state1)
-      for(size_t state2 = 0; state2 < gm.numberOfStates(variable2); ++state2)
-      for(size_t state3 = 0; state3 < gm.numberOfStates(variable3); ++state3) {
+      for(size_t state1 = 0; state1 < gm.numberOfLabels(variable1); ++state1)
+      for(size_t state2 = 0; state2 < gm.numberOfLabels(variable2); ++state2)
+      for(size_t state3 = 0; state3 < gm.numberOfLabels(variable3); ++state3) {
          f(0,0,0)=float(vv[0]);
 	 f(1,0,0)=float(vv[1]);
 	 f(0,1,0)=float(vv[2]);
