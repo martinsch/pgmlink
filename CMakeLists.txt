@@ -42,6 +42,18 @@
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 PROJECT(pgmlink)
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_extensions/)
+
+
+##
+# dependencies
+##
+    find_package( VIGRA REQUIRED )
+    find_package( Lemon REQUIRED )
+    find_package( HDF5 REQUIRED )
+
+    include_directories(${VIGRA_INCLUDE_DIR} ${LEMON_INCLUDE_DIR} ${HDF5_INCLUDE_DIRS} )
+    link_directories( ${VIGRA_IMPEX_LIBRARY_DIR} ${LEMON_LIBRARY_DIR} ${HDF5_LIBRARY_DIRS} )
 
 ##
 # build options
@@ -90,7 +102,7 @@ INCLUDE_DIRECTORIES(
 FILE(GLOB LIB_SOURCES src/*.cpp)
 
 ADD_LIBRARY(track_lib SHARED ${LIB_SOURCES})
-TARGET_LINK_LIBRARIES(track_lib hdf5 hdf5_hl ann cplex ilocplex pthread concert vigraimpex emon)
+TARGET_LINK_LIBRARIES(track_lib ${HD5_LIBRARIES} ${HDF5_HL_LIBRARIES} ann cplex ilocplex pthread concert ${VIGRA_IMPEX_LIBRARY} ${LEMON_LIBRARIES})
 
 
 
