@@ -142,6 +142,10 @@ BOOST_PYTHON_MODULE( ctracking )
     .def(vector_indexing_suite< std::vector<double> >() )
     ;
 
+    class_< std::vector<int> >("VectorOfInt")
+	.def(vector_indexing_suite< std::vector<int> >() )
+	;
+
     class_< std::vector<std::string> >("VectorOfString")
 	.def(vector_indexing_suite< std::vector<string> >() )
 	;
@@ -178,8 +182,8 @@ BOOST_PYTHON_MODULE( ctracking )
 
 
     class_<NNTracking>("NNTracking",
-			init<double,double,std::vector<std::string>, double,bool >(
-				 args("divDist", "movDist", "features", "divisionThreshold", "splitterHandling")))
+			init<double,double,std::vector<std::string>, double,bool,bool,std::vector<int> >(
+				 args("divDist", "movDist", "features", "divisionThreshold", "splitterHandling", "mergerHandling", "maxTraxelIdAt")))
 	  .def("__call__", &NNTracking::operator())
 	  .def("detections", &NNTracking::detections)
         ;
@@ -189,6 +193,7 @@ BOOST_PYTHON_MODULE( ctracking )
 	.value("Division", Event::Division)
 	.value("Appearance", Event::Appearance)
 	.value("Disappearance", Event::Disappearance)
+	.value("SplitNodes", Event::SplitNodes)
 	.value("Void", Event::Void)
     ;
 

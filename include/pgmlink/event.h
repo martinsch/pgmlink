@@ -14,7 +14,7 @@ namespace pgmlink {
   public:
   Event() : n_features_(0) { type = Void; };
     
-    enum EventType {Move, Division, Appearance, Disappearance, Void};
+    enum EventType {Move, Division, Appearance, Disappearance, SplitNodes, Void};
     EventType type;
     
     /**

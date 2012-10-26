@@ -78,6 +78,16 @@ namespace pgmlink {
   template <typename Graph>
     const std::string property_map<arc_distance,Graph>::name = "arc_distance";
 
+  // split_into
+  struct split_from {};
+  template <typename Graph>
+    struct property_map<split_from, Graph> {
+    typedef lemon::IterableValueMap< Graph, typename Graph::Node, int> type;
+    static const std::string name;
+  };
+  template <typename Graph>
+    const std::string property_map<split_from,Graph>::name = "split_from";
+
   // arc_from_timestep
   struct arc_from_timestep {};
   template <typename Graph>

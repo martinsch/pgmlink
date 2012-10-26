@@ -66,9 +66,12 @@ namespace pgmlink {
     		  double movDist = 10,
     		  std::vector<std::string> features = 0,
     		  double divisionThreshold = 0.5,
-    		  bool splitterHandling = true)
+    		  bool splitterHandling = true,
+    		  bool mergerHandling = true,
+    		  std::vector<int> maxTraxelIdAt = 0)
         : divDist_(divDist), movDist_(movDist), distanceFeatures_(features),
-          divisionThreshold_(divisionThreshold), splitterHandling_(splitterHandling){}
+          divisionThreshold_(divisionThreshold), splitterHandling_(splitterHandling),
+          mergerHandling_(mergerHandling), maxTraxelIdAt_(maxTraxelIdAt){}
       std::vector< std::vector<Event> > operator()(TraxelStore&);
 
       /**
@@ -80,8 +83,9 @@ namespace pgmlink {
       double divDist_, movDist_;
       std::vector<std::string> distanceFeatures_;
       double divisionThreshold_;
-      bool splitterHandling_;
+      bool splitterHandling_, mergerHandling_;
       shared_ptr<std::vector< std::map<unsigned int, bool> > > last_detections_;
+      std::vector<int> maxTraxelIdAt_;
     };
 }
 
