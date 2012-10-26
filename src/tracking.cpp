@@ -138,8 +138,12 @@ vector<vector<Event> > NNTracking::operator()(TraxelStore& ts) {
 	// adding 'offered' property and set it true for each node
 	g.add(node_offered());
 	property_map<node_offered, HypothesesGraph::base_graph>::type& offered_nodes = g.get(node_offered());
+	// adding 'split_into' property
+	g.add(split_from());
+	property_map<split_from, HypothesesGraph::base_graph>::type& split_from_map = g.get(split_from());
 	for(HypothesesGraph::NodeIt n(g); n!=lemon::INVALID; ++n) {
 		offered_nodes.set(n,true);
+		split_from_map.set(n,-1);
 	}
 	LOG(logDEBUG1) << "NNTracking: adding distance property to edges";
 	g.add(arc_distance());
@@ -179,7 +183,7 @@ vector<vector<Event> > NNTracking::operator()(TraxelStore& ts) {
 
 
 	cout << "-> init NN reasoner" << endl;
-	SingleTimestepTraxelNN nn_reasoner(divDist_,movDist_,divisionThreshold_,splitterHandling_);
+	SingleTimestepTraxelNN nn_reasoner(divDist_,movDist_,divisionThreshold_,splitterHandling_, mergerHandling_, maxTraxelIdAt_);
 
 	cout << "-> formulate NN model" << endl;
 	nn_reasoner.formulate(*graph);

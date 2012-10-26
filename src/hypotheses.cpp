@@ -97,7 +97,7 @@ namespace pgmlink {
     node_timestep_map_t& node_timestep_map = g.get(node_timestep());
     typedef property_map<node_traxel, HypothesesGraph::base_graph>::type node_traxel_map_t;
     node_traxel_map_t& node_traxel_map = g.get(node_traxel());
-
+    property_map<split_from, HypothesesGraph::base_graph>::type& split_from_map = g.get(split_from());
 
 
     // for every timestep
@@ -111,6 +111,15 @@ namespace pgmlink {
 	LOG(logDEBUG2) << "events(): for every node: destiny";
 	for(node_timestep_map_t::ItemIt node_at(node_timestep_map, t); node_at!=lemon::INVALID; ++node_at) {
 	    assert(node_traxel_map[node_at].Timestep == t);
+	    if (split_from_map[node_at] != -1) {
+	    	LOG(logDEBUG3) << "events(): splitter node: " << g.id(node_at);
+	    	HypothesesGraph::Node split_from = g.nodeFromId(split_from_map[node_at]);
+	    	Event e;
+	    	e.type = Event::SplitNodes;
+	    	e.traxel_ids.push_back(node_traxel_map[split_from].Id);
+	    	e.traxel_ids.push_back(node_traxel_map[node_at].Id); // dummyNode
+	    	(*ret)[t-g.earliest_timestep()].push_back(e);
+	    }
 	    // count ougoing arcs
 	    int count = 0;
 	    for(HypothesesGraph::base_graph::OutArcIt a(g, node_at); a!=lemon::INVALID; ++a) ++count;
@@ -194,7 +203,6 @@ namespace pgmlink {
     node_traxel_map_t& node_traxel_map = g.get(node_traxel());
     typedef property_map<node_active, HypothesesGraph::base_graph>::type node_active_map_t;
     node_active_map_t& node_active_map = g.get(node_active());
-
 
     // for every timestep
     for(int t = g.earliest_timestep(); t <= g.latest_timestep(); ++t) {
