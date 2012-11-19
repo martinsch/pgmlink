@@ -293,6 +293,15 @@ void read_lgf( HypothesesGraph& g, std::istream& is, bool with_n_traxel ) {
   }
 
 
+namespace {
+  double getDivisionProbability(const Traxel& tr) {
+  	FeatureMap::const_iterator it = tr.features.find("divProb");
+  	if (it == tr.features.end()) {
+  		throw runtime_error("getDivisionProbability(): divProb feature not in traxel");
+  	}
+  	return it->second[0];
+  }
+}
 
   ////
   //// class SingleTimestepTraxel_HypothesesBuilder
@@ -324,13 +333,26 @@ void read_lgf( HypothesesGraph& g, std::istream& is, bool with_n_traxel ) {
 		// iterate over all timesteps except the last
 		for (set<timestep_t>::const_iterator t = timesteps.begin();
 				t != (--timesteps.end()); ++t) {
+			std::cout << "forward t = " << *t << std::endl;
 			add_edges_at(graph, *t);
+		}
+
+		// if the forward_backward option is enabled, go again through the graph, this time
+		// reversely and add the nearest neighbors if not already present
+		if (options_.forward_backward) {
+			// reversely iterate over all timesteps except the first
+			for (set<timestep_t>::const_reverse_iterator t = timesteps.rbegin();
+					t != (--timesteps.rend()); ++t) {
+				std::cout << "backward t = " << *t << std::endl;
+				add_edges_at(graph, *t, true);
+			}
 		}
 
 		return graph;
 	}
 
-  HypothesesGraph* SingleTimestepTraxel_HypothesesBuilder::add_edges_at(HypothesesGraph* graph, int timestep) const {
+  HypothesesGraph* SingleTimestepTraxel_HypothesesBuilder::add_edges_at(HypothesesGraph* graph,
+		  int timestep, bool reverse) const {
 	const HypothesesGraph::node_timestep_map& timemap = graph->get(
 			node_timestep());
 	typedef property_map<node_traxel, HypothesesGraph::base_graph>::type traxelmap_t;
@@ -338,18 +360,25 @@ void read_lgf( HypothesesGraph& g, std::istream& is, bool with_n_traxel ) {
 	const TraxelStoreByTimeid& traxels_by_timeid = ts_->get<by_timeid>();
 	const TraxelStoreByTimestep& traxels_by_timestep = ts_->get<by_timestep>();
 
+	int to_timestep = timestep + 1;
+	if (reverse) {
+		// iterating through the graph backward in time
+		to_timestep = timestep - 1;
+	}
+
 	//// find k nearest neighbors in next timestep
 	// init nearest neighbor search
 	pair<TraxelStoreByTimestep::const_iterator,
 			TraxelStoreByTimestep::const_iterator> traxels_at =
-			traxels_by_timestep.equal_range(timestep + 1);
+			traxels_by_timestep.equal_range(to_timestep);
 
 	for (TraxelStoreByTimestep::const_iterator it = traxels_at.first;
 			it != traxels_at.second; ++it) {
-		assert(it->Timestep == (timestep+1));
+		assert(it->Timestep == to_timestep);
 	}
 
 	NearestNeighborSearch nns(traxels_at.first, traxels_at.second);
+
 
 	// establish transition edges between a current node and appropriate nodes in next timestep
 	for (HypothesesGraph::node_timestep_map::ItemIt curr_node(timemap,
@@ -357,10 +386,21 @@ void read_lgf( HypothesesGraph& g, std::istream& is, bool with_n_traxel ) {
 		assert(timemap[curr_node] == timestep);
 		assert(traxelmap[curr_node].Timestep == timestep);
 
+		// if we want to consider divisions already in the Hypotheses graph
+		// make sure that each potentially dividing cell has 2 nearest neighbors
+		// (but only if we go through the graph forward in time)
+		unsigned int max_nn = options_.max_nearest_neighbors;
+		if (options_.consider_divisions && !reverse && max_nn < 2) {
+			double div_prob = getDivisionProbability(traxelmap[curr_node]);
+			if (div_prob > options_.division_threshold) {
+				max_nn = 2;
+			}
+		}
+
 		// search
 		map<unsigned int, double> nearest_neighbors = nns.knn_in_range(
 				traxelmap[curr_node], options_.distance_threshold,
-				options_.max_nearest_neighbors);
+				max_nn);
 
 		//// connect current node with k nearest neighbor nodes
 		for (map<unsigned int, double>::const_iterator neighbor =
@@ -369,12 +409,27 @@ void read_lgf( HypothesesGraph& g, std::istream& is, bool with_n_traxel ) {
 			// connect with one of the neighbor nodes
 			TraxelStoreByTimeid::iterator neighbor_traxel =
 					traxels_by_timeid.find(
-							boost::make_tuple(timestep + 1, neighbor->first));
-			assert(neighbor_traxel->Timestep == (timestep + 1));
+							boost::make_tuple(to_timestep, neighbor->first));
+			assert(neighbor_traxel->Timestep == to_timestep);
 			assert(neighbor_traxel->Timestep != traxelmap[curr_node].Timestep);
 			traxelmap_t::ItemIt neighbor_node(traxelmap, *neighbor_traxel);
 			assert(curr_node != neighbor_node);
-			graph->addArc(curr_node, neighbor_node);
+			if (!reverse) {
+				// if we go through the graph forward in time, add an arc from curr_node to neighbor_node
+				graph->addArc(curr_node, neighbor_node);
+			} else {
+				// if we go through the graph backward in time, add an arc from neighbor_node to curr_node
+				// if not already present
+				bool found = false;
+				for (HypothesesGraph::OutArcIt out_arc(*graph, neighbor_node); out_arc!=lemon::INVALID; ++out_arc) {
+					if ((*graph).target(out_arc) == curr_node) {
+						found = true;
+					}
+				}
+				if (!found) {
+					graph->addArc(neighbor_node, curr_node);
+				}
+			}
 		}
 	}
 
