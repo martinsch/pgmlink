@@ -418,13 +418,7 @@ namespace {
 			} else {
 				// if we go through the graph backward in time, add an arc from neighbor_node to curr_node
 				// if not already present
-				bool found = false;
-				for (HypothesesGraph::OutArcIt out_arc(*graph, neighbor_node); out_arc!=lemon::INVALID; ++out_arc) {
-					if ((*graph).target(out_arc) == curr_node) {
-						found = true;
-					}
-				}
-				if (!found) {
+				if (lemon::findArc(*graph,neighbor_node,curr_node) == lemon::INVALID) {
 					graph->addArc(neighbor_node, curr_node);
 				}
 			}
