@@ -184,10 +184,16 @@ namespace pgmlink {
   class SingleTimestepTraxel_HypothesesBuilder : public HypothesesBuilder {
   public:
     struct Options {
-	Options(unsigned int mnn = 6, double dt = 50) : max_nearest_neighbors(mnn),
-							distance_threshold(dt) {};
-	unsigned int max_nearest_neighbors;
-	double distance_threshold;
+	Options(unsigned int mnn = 6, double dt = 50,
+			bool forward_backward=false, bool consider_divisions=false,
+			double division_threshold = 0.5) :
+  		max_nearest_neighbors(mnn), distance_threshold(dt), forward_backward(forward_backward),
+  		consider_divisions(consider_divisions),
+  		division_threshold(division_threshold){};
+  	unsigned int max_nearest_neighbors;
+  	double distance_threshold;
+  	bool forward_backward, consider_divisions;
+  	double division_threshold;
     };
 
   SingleTimestepTraxel_HypothesesBuilder(const TraxelStore* ts, const Options& o = Options()) : ts_(ts), options_(o) {};
@@ -199,7 +205,7 @@ namespace pgmlink {
     virtual HypothesesGraph* add_edges(HypothesesGraph*) const;
 
   private:
-    HypothesesGraph* add_edges_at(HypothesesGraph*, int timestep) const;
+    HypothesesGraph* add_edges_at(HypothesesGraph*, int timestep, bool reverse=false) const;
 
     const TraxelStore* ts_;
     Options options_;
