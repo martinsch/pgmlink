@@ -333,7 +333,6 @@ namespace {
 		// iterate over all timesteps except the last
 		for (set<timestep_t>::const_iterator t = timesteps.begin();
 				t != (--timesteps.end()); ++t) {
-			std::cout << "forward t = " << *t << std::endl;
 			add_edges_at(graph, *t);
 		}
 
@@ -343,7 +342,6 @@ namespace {
 			// reversely iterate over all timesteps except the first
 			for (set<timestep_t>::const_reverse_iterator t = timesteps.rbegin();
 					t != (--timesteps.rend()); ++t) {
-				std::cout << "backward t = " << *t << std::endl;
 				add_edges_at(graph, *t, true);
 			}
 		}
