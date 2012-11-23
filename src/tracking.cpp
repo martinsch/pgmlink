@@ -14,6 +14,8 @@
 #include "pgmlink/reasoner_opengm.h"
 #include "pgmlink/tracking.h"
 #include "pgmlink/reasoner_nearestneighbor.h"
+#include "pgmlink/reasoner_nntracklets.h"
+#include "pgmlink/track.h"
 
 using namespace std;
 using boost::shared_ptr;
@@ -215,6 +217,110 @@ vector<map<unsigned int, bool> > NNTracking::detections() {
 	}
 }
 
+
+
+////
+//// class NNTrackletsTracking
+////
+vector<vector<Event> > NNTrackletsTracking::operator()(TraxelStore& ts) {
+	cout << "-> building hypotheses" << endl;
+	SingleTimestepTraxel_HypothesesBuilder::Options builder_opts(1, // max_nearest_neighbors
+			maxDist_,
+			true, // forward_backward
+			true, // consider_divisions
+			divisionThreshold_
+			);
+	SingleTimestepTraxel_HypothesesBuilder hyp_builder(&ts, builder_opts);
+	HypothesesGraph* graph = hyp_builder.build();
+	HypothesesGraph& g = *graph;
+
+	LOG(logDEBUG1) << "NNTrackletsTracking: adding offered property to nodes";
+	// adding 'offered' property and set it true for each node
+	g.add(node_offered());
+	property_map<node_offered, HypothesesGraph::base_graph>::type& offered_nodes = g.get(node_offered());
+	// adding 'split_into' property
+	g.add(split_from());
+	property_map<split_from, HypothesesGraph::base_graph>::type& split_from_map = g.get(split_from());
+	for(HypothesesGraph::NodeIt n(g); n!=lemon::INVALID; ++n) {
+		offered_nodes.set(n,true);
+		split_from_map.set(n,-1);
+	}
+	LOG(logDEBUG1) << "NNTrackletsTracking: adding distance property to edges";
+	g.add(arc_distance());
+	property_map<arc_distance, HypothesesGraph::base_graph>::type& arc_distances = g.get(arc_distance());
+	property_map<arc_distance, HypothesesGraph::base_graph>::type& arc_vol_ratios = g.get(arc_vol_ratio());
+	property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g.get(node_traxel());
+	for(HypothesesGraph::ArcIt a(g); a!=lemon::INVALID; ++a) {
+		HypothesesGraph::Node from = g.source(a);
+		HypothesesGraph::Node to = g.target(a);
+		Traxel from_tr = traxel_map[from];
+		Traxel to_tr = traxel_map[to];
+
+//		double dist = 0;
+//		// if we want to add another dimension to the norm, we remove the sqrt, add the dimensions and sqrt again
+//
+//		for(std::vector<std::string>::const_iterator it = distanceFeatures_.begin(); it!=distanceFeatures_.end(); ++it) {
+//			if (*it == "com") {
+//				// com is already considered in Traxel::distance_to()
+//				// Traxel::distance_to computes: sqrt( (x1-x2)^2 + (y1-y2)^2 + (z1-z2)^2 )
+//				double d = from_tr.distance_to(to_tr);
+//				LOG(logDEBUG3) << "NNTrackletsTracking: com distance from " << from_tr.Id << " to " << to_tr.Id << " = " << d;
+//				dist += (d*d);
+//			} else {
+//				std::vector<float> from_feat = from_tr.features.find(*it)->second;
+//				std::vector<float> to_feat = to_tr.features.find(*it)->second;
+//				for (size_t i = 0; i<from_feat.size(); ++i) {
+//					// TODO: do we have to consider x/y/z scale for some features?
+//					double d = (from_feat[i] - to_feat[i]);
+//					dist += (d*d);
+//				}
+//			}
+//		}
+//		dist = sqrt(dist);
+		arc_distances.set(a, from_tr.distance_to(to_tr));
+		LOG(logDEBUG2) << "NNTrackletsTracking: combined distance from " << from_tr.Id << " to " << to_tr.Id << " = " << from_tr.distance_to(to_tr);
+
+		std::vector<float> from_vol = from_tr.features.find("count")->second;
+		std::vector<float> to_vol = to_tr.features.find("count")->second;
+		double ratio = from_vol[0] / double(to_vol[0]);
+		arc_vol_ratios.set(a, ratio);
+		LOG(logDEBUG2) << "NNTrackletsTracking: volume ratio for arc from " << from_tr.Id << " to " << to_tr.Id << " = " << ratio;
+
+	}
+
+
+	cout << "-> init NN reasoner" << endl;
+	SingleTimestepTraxelNNTracklets nn_reasoner(maxDist_,divisionThreshold_,splitterHandling_, mergerHandling_, maxTraxelIdAt_);
+
+	cout << "-> formulate NN model" << endl;
+	nn_reasoner.formulate(*graph);
+
+	cout << "-> infer" << endl;
+	nn_reasoner.infer();
+
+	cout << "-> conclude" << endl;
+	nn_reasoner.conclude(*graph);
+
+	cout << "-> storing state of detection vars" << endl;
+	last_detections_ = state_of_nodes(*graph);
+
+	cout << "-> pruning inactive hypotheses" << endl;
+	prune_inactive(*graph);
+
+	cout << "-> constructing events" << endl;
+
+	return *events(*graph);
+}
+
+vector<map<unsigned int, bool> > NNTrackletsTracking::detections() {
+	vector<map<unsigned int, bool> > res;
+	if (last_detections_) {
+		return *last_detections_;
+	} else {
+		throw std::runtime_error(
+				"NNTracking::detections(): previous tracking result required");
+	}
+}
 
 
 } // namespace tracking
