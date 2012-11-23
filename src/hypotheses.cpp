@@ -30,6 +30,17 @@ namespace pgmlink {
       return node;
   }
 
+  HypothesesGraph::Node HypothesesGraph::add_node(std::vector<node_timestep_map::Value> timesteps) {
+	  node_timestep_map& timestep_m = get(node_timestep());
+
+	  HypothesesGraph::Node node = addNode();
+	  for (std::vector<node_timestep_map::Value>::const_iterator it = timesteps.begin(); it!=timesteps.end(); ++it) {
+			timestep_m.set(node, *it);
+			timesteps_.insert( *it );
+	  }
+	  return node;
+  }
+
   const std::set<HypothesesGraph::node_timestep_map::Value>& HypothesesGraph::timesteps() const {
     return timesteps_;
   }
@@ -186,6 +197,111 @@ namespace pgmlink {
 
     return ret;
   }
+
+  //
+  // generateTrackletGraph
+  //
+  // a traxel graph (containing nodes of traxels) with some active arcs is converted into a tracklet graph
+  // where all nodes connected by active paths are summarized in a single tracklet node
+  void generateTrackletGraph(const HypothesesGraph& traxel_graph, HypothesesGraph& tracklet_graph) {
+
+  	// go through the traxels graph, add each node which doesn't have an active incoming arc, and
+  	// follow the active outgoing path to add those nodes to the tracklet
+  	property_map<arc_active, HypothesesGraph::base_graph>::type& active_arcs = traxel_graph.get(arc_active());
+  	property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = traxel_graph.get(node_traxel());
+  	typedef property_map<node_timestep, HypothesesGraph::base_graph>::type node_timestep_map_t;
+	node_timestep_map_t& node_timestep_map = traxel_graph.get(node_timestep());
+
+  	tracklet_graph.add(node_tracklet());
+  	property_map<node_tracklet, HypothesesGraph::base_graph>::type& tracklet_map = tracklet_graph.get(node_tracklet());
+
+  	// this map stores the traxel_graph nodes at t+1 as keys which will be linked by the
+  	// list of tracklet nodes at t stored as map-values
+  	std::map<HypothesesGraph::Node, std::vector<HypothesesGraph::Node> > node_link_map;
+
+  	// add nodes
+  	for(int t = traxel_graph.earliest_timestep(); t <= traxel_graph.latest_timestep(); ++t) {
+		for(node_timestep_map_t::ItemIt traxel_node(node_timestep_map, t); traxel_node!=lemon::INVALID; ++traxel_node) {
+			bool has_active_incoming = false;
+			std::vector<HypothesesGraph::Arc> tracklet_incoming_arcs;
+			for(HypothesesGraph::InArcIt a(traxel_graph, traxel_node); a != lemon::INVALID; ++a) {
+				tracklet_incoming_arcs.push_back(a);
+				if (active_arcs[a]) {
+					has_active_incoming = true;
+					break;
+				}
+			}
+
+			if (has_active_incoming) {
+				// if the traxel node has an active incoming arc, it has already been added to some tracklet
+				continue;
+			}
+			std::vector<int> timesteps;
+			std::vector<Traxel> tracklet;
+			Traxel tr = traxel_map[traxel_node];
+			timesteps.push_back(tr.Timestep);
+			tracklet.push_back(tr);
+			HypothesesGraph::Node tn = traxel_node;
+			HypothesesGraph::Node tn_next;
+			std::vector<HypothesesGraph::Arc> tn_outarcs;
+
+			// follow the active outgoing path to add those nodes to the tracklet
+			while (true) {
+				bool active_outgoing = false;
+				tn_outarcs.clear();
+
+				for(HypothesesGraph::OutArcIt a(traxel_graph, tn); a != lemon::INVALID; ++a) {
+					tn_outarcs.push_back(a);
+
+					if (active_arcs[a]) {
+						assert(!active_outgoing); // "found more than one active outgoing arc"
+						tn_next = traxel_graph.target(a);
+						tr = traxel_map[tn_next];
+						timesteps.push_back(tr.Timestep);
+						tracklet.push_back(tr);
+						active_outgoing = true;
+					}
+				}
+				if (active_outgoing) {
+					tn = tn_next;
+				} else { // no active outgoing arc found -- tracklet ends
+					break;
+				}
+			}
+
+			HypothesesGraph::Node curr_tracklet_node = tracklet_graph.add_node(timesteps);
+			tracklet_map.set(curr_tracklet_node, tracklet);
+
+			// store the outgoing arcs of the traxel node
+			if (tn_outarcs.size() > 0) {
+				for(std::vector<HypothesesGraph::Arc>::const_iterator arc_it = tn_outarcs.begin(); arc_it!=tn_outarcs.end(); ++arc_it) {
+					HypothesesGraph::Node traxel_node_to = traxel_graph.target(*arc_it);
+					if (node_link_map.find(traxel_node_to) == node_link_map.end()) {
+						node_link_map.insert(
+								std::pair<HypothesesGraph::Node, std::vector<HypothesesGraph::Node> > (
+										traxel_node_to, std::vector<HypothesesGraph::Node>() ) );
+					}
+					node_link_map[traxel_node_to].push_back(curr_tracklet_node);
+				}
+			}
+
+			// set the incoming arcs of the tracklet (traxel_node is the first node in the tracklet)
+			assert(traxel_map[traxel_node].Id==tracklet[0].Id);
+			assert(traxel_map[traxel_node].Timestep==tracklet[0].Timestep);
+			std::map<HypothesesGraph::Node, std::vector<HypothesesGraph::Node> >::const_iterator traxel_to_it = node_link_map.find(traxel_node);
+
+			if (traxel_to_it == node_link_map.end()) {
+				LOG(logDEBUG) << "There is no incoming arc for traxel_node " << traxel_graph.id(traxel_node);
+			} else {
+				for(std::vector<HypothesesGraph::Node>::const_iterator tracklet_from_it = (*traxel_to_it).second.begin();
+						tracklet_from_it != (*traxel_to_it).second.end(); ++tracklet_from_it) {
+					tracklet_graph.addArc(*tracklet_from_it,curr_tracklet_node);
+				}
+			}
+		}
+  	}
+  }
+
 
 
 

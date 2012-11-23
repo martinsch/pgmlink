@@ -48,6 +48,16 @@ namespace pgmlink {
   template <typename Graph>
     const std::string property_map<node_traxel,Graph>::name = "node_traxel";
 
+  // node_traxel
+	struct node_tracklet {};
+	template <typename Graph>
+	  struct property_map<node_tracklet, Graph> {
+	  typedef lemon::IterableValueMap< Graph, typename Graph::Node, std::vector<Traxel> > type;
+	  static const std::string name;
+	};
+	template <typename Graph>
+	  const std::string property_map<node_tracklet,Graph>::name = "node_tracklet";
+
   // node_active
   struct node_active {};
   template <typename Graph>
@@ -68,7 +78,7 @@ namespace pgmlink {
   template <typename Graph>
     const std::string property_map<node_offered,Graph>::name = "node_offered";
 
-  // node_div_prob
+  // arc_distance
   struct arc_distance {};
   template <typename Graph>
     struct property_map<arc_distance, Graph> {
@@ -77,6 +87,15 @@ namespace pgmlink {
   };
   template <typename Graph>
     const std::string property_map<arc_distance,Graph>::name = "arc_distance";
+
+  struct arc_vol_ratio {};
+    template <typename Graph>
+      struct property_map<arc_vol_ratio, Graph> {
+      typedef lemon::IterableValueMap< Graph, typename Graph::Arc, double> type;
+      static const std::string name;
+    };
+    template <typename Graph>
+      const std::string property_map<arc_vol_ratio,Graph>::name = "arc_vol_ratio";
 
   // split_into
   struct split_from {};
@@ -133,6 +152,8 @@ namespace pgmlink {
 
     // use this instead of calling the parent graph directly
     HypothesesGraph::Node add_node(node_timestep_map::Value timestep);
+    // call this function to add a multi-temporal node (e.g. for tracklets)
+    HypothesesGraph::Node add_node(std::vector<node_timestep_map::Value> timesteps);
 
     const std::set<HypothesesGraph::node_timestep_map::Value>& timesteps() const;
     node_timestep_map::Value earliest_timestep() const;
@@ -150,6 +171,7 @@ namespace pgmlink {
     std::set<node_timestep_map::Value> timesteps_;      
   };
 
+  void generateTrackletGraph(const HypothesesGraph& traxel_graph, HypothesesGraph& tracklet_graph);
   HypothesesGraph& prune_inactive(HypothesesGraph&);
   boost::shared_ptr<std::vector< std::vector<Event> > > events(const HypothesesGraph&);
   boost::shared_ptr<std::vector< std::map<unsigned int, bool> > > state_of_nodes(const HypothesesGraph&);
