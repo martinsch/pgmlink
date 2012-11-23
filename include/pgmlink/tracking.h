@@ -87,6 +87,38 @@ namespace pgmlink {
       shared_ptr<std::vector< std::map<unsigned int, bool> > > last_detections_;
       std::vector<int> maxTraxelIdAt_;
     };
+<<<<<<< HEAD:include/pgmlink/tracking.h
+=======
+
+
+  class NNTrackletsTracking {
+      public:
+	  NNTrackletsTracking(double maxDist = 30,
+      		  std::vector<std::string> features = 0,
+      		  double divisionThreshold = 0.5,
+      		  bool splitterHandling = true,
+      		  bool mergerHandling = true,
+      		  std::vector<int> maxTraxelIdAt = 0)
+          : maxDist_(maxDist), distanceFeatures_(features),
+            divisionThreshold_(divisionThreshold), splitterHandling_(splitterHandling),
+            mergerHandling_(mergerHandling), maxTraxelIdAt_(maxTraxelIdAt){}
+        std::vector< std::vector<Event> > operator()(TraxelStore&);
+
+        /**
+         * Get state of detection variables after call to operator().
+         */
+        std::vector< std::map<unsigned int, bool> > detections();
+
+      private:
+        double maxDist_;
+        std::vector<std::string> distanceFeatures_;
+        double divisionThreshold_;
+        bool splitterHandling_, mergerHandling_;
+        shared_ptr<std::vector< std::map<unsigned int, bool> > > last_detections_;
+        std::vector<int> maxTraxelIdAt_;
+  };
+
+>>>>>>> added stub for tracklets nearest neighbor tracking:include/pgmlink/track.h
 }
 
 #endif /* TRACKING_H */
