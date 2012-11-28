@@ -208,9 +208,20 @@ namespace pgmlink {
   	// go through the traxels graph, add each node which doesn't have an active incoming arc, and
   	// follow the active outgoing path to add those nodes to the tracklet
   	property_map<arc_active, HypothesesGraph::base_graph>::type& active_arcs = traxel_graph.get(arc_active());
-  	property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = traxel_graph.get(node_traxel());
+	property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = traxel_graph.get(node_traxel());
+
+	property_map<node_tracklet, HypothesesGraph::base_graph>::type* traxels_tracklet_map;
+	bool traxel_nodes_are_tracklets = false;
+	if (traxel_graph.getProperties().count("node_tracklet") > 0) {
+		traxel_nodes_are_tracklets = true;
+		traxels_tracklet_map = &traxel_graph.get(node_tracklet());
+	}
+
   	typedef property_map<node_timestep, HypothesesGraph::base_graph>::type node_timestep_map_t;
 	node_timestep_map_t& node_timestep_map = traxel_graph.get(node_timestep());
+
+	// add empty traxel_map to the tracklet graph in order to make the tracklet graph equivalent to traxelgraphs
+	tracklet_graph.add(node_traxel());
 
   	tracklet_graph.add(node_tracklet());
   	property_map<node_tracklet, HypothesesGraph::base_graph>::type& tracklet_map = tracklet_graph.get(node_tracklet());
@@ -238,9 +249,18 @@ namespace pgmlink {
 			}
 			std::vector<int> timesteps;
 			std::vector<Traxel> tracklet;
-			Traxel tr = traxel_map[traxel_node];
-			timesteps.push_back(tr.Timestep);
-			tracklet.push_back(tr);
+			std::vector<Traxel> traxels;
+			if (!traxel_nodes_are_tracklets) {
+				traxels.push_back(traxel_map[traxel_node]);
+			} else {
+				traxels.insert(traxels.begin(), (*traxels_tracklet_map)[traxel_node].begin(),
+						(*traxels_tracklet_map)[traxel_node].end());
+			}
+
+			for (std::vector<Traxel>::const_iterator tr = traxels.begin(); tr != traxels.end(); ++tr) {
+				timesteps.push_back(tr->Timestep);
+				tracklet.push_back(*tr);
+			}
 			HypothesesGraph::Node tn = traxel_node;
 			HypothesesGraph::Node tn_next;
 			std::vector<HypothesesGraph::Arc> tn_outarcs;
@@ -256,9 +276,19 @@ namespace pgmlink {
 					if (active_arcs[a]) {
 						assert(!active_outgoing); // "found more than one active outgoing arc"
 						tn_next = traxel_graph.target(a);
-						tr = traxel_map[tn_next];
-						timesteps.push_back(tr.Timestep);
-						tracklet.push_back(tr);
+
+						traxels.clear();
+						if (!traxel_nodes_are_tracklets) {
+							traxels.push_back(traxel_map[tn_next]);
+						} else {
+							traxels.insert(traxels.begin(), (*traxels_tracklet_map)[tn_next].begin(),
+									(*traxels_tracklet_map)[tn_next].end());
+						}
+
+						for (std::vector<Traxel>::const_iterator tr = traxels.begin(); tr != traxels.end(); ++tr) {
+							timesteps.push_back(tr->Timestep);
+							tracklet.push_back(*tr);
+						}
 						active_outgoing = true;
 					}
 				}
@@ -286,8 +316,13 @@ namespace pgmlink {
 			}
 
 			// set the incoming arcs of the tracklet (traxel_node is the first node in the tracklet)
-			assert(traxel_map[traxel_node].Id==tracklet[0].Id);
-			assert(traxel_map[traxel_node].Timestep==tracklet[0].Timestep);
+			if (!traxel_nodes_are_tracklets) {
+				assert(traxel_map[traxel_node].Id==tracklet[0].Id);
+				assert(traxel_map[traxel_node].Timestep==tracklet[0].Timestep);
+			} else {
+				assert((*traxels_tracklet_map)[traxel_node][0].Id==tracklet[0].Id);
+				assert((*traxels_tracklet_map)[traxel_node][0].Timestep==tracklet[0].Timestep);
+			}
 			std::map<HypothesesGraph::Node, std::vector<HypothesesGraph::Node> >::const_iterator traxel_to_it = node_link_map.find(traxel_node);
 
 			if (traxel_to_it == node_link_map.end()) {

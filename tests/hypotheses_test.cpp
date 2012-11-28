@@ -456,7 +456,7 @@ BOOST_AUTO_TEST_CASE( SingleTimestepTraxel_HypothesesGraph_generateTraxelGraph )
 	generateTrackletGraph(traxel_graph, tracklet_graph);
 
 	std::cout << "Checking result" << std::endl;
-	tracklet_graph.add(node_tracklet());
+//	tracklet_graph.add(node_tracklet());
 	property_map<node_tracklet, HypothesesGraph::base_graph>::type& tracklet_map = tracklet_graph.get(node_tracklet());
 	size_t num_of_nodes = 0;
 	size_t num_of_arcs = 0;
@@ -474,8 +474,32 @@ BOOST_AUTO_TEST_CASE( SingleTimestepTraxel_HypothesesGraph_generateTraxelGraph )
 	BOOST_CHECK_EQUAL(num_of_tracklets_size[1],2); // tracklets of length 2
 	BOOST_CHECK_EQUAL(num_of_tracklets_size[2],1); // tracklets of length 3
 	BOOST_CHECK_EQUAL(num_of_arcs,7);
-}
 
+
+	std::cout << "Generating tracklet graph from tracklet graph" << std::endl;
+	// make a tracklet graph from the tracklet graph -> should be the same!
+	HypothesesGraph tracklet_tracklet_graph;
+	tracklet_graph.add(arc_active());
+	generateTrackletGraph(tracklet_graph, tracklet_tracklet_graph);
+//	tracklet_tracklet_graph.add(node_track)
+	property_map<node_tracklet, HypothesesGraph::base_graph>::type& tracklet_map2 = tracklet_tracklet_graph.get(node_tracklet());
+	num_of_nodes = 0;
+	num_of_arcs = 0;
+	num_of_tracklets_size[0] = 0; num_of_tracklets_size[1] = 0; num_of_tracklets_size[2] = 0;
+
+	for(HypothesesGraph::NodeIt n(tracklet_tracklet_graph); n!=lemon::INVALID; ++n) {
+		++num_of_tracklets_size[tracklet_map2[n].size()-1];
+		++num_of_nodes;
+	}
+	for(HypothesesGraph::ArcIt a(tracklet_tracklet_graph); a!=lemon::INVALID; ++a) {
+		++num_of_arcs;
+	}
+	BOOST_CHECK_EQUAL(num_of_nodes,9);
+	BOOST_CHECK_EQUAL(num_of_tracklets_size[0],6); // tracklets of length 1
+	BOOST_CHECK_EQUAL(num_of_tracklets_size[1],2); // tracklets of length 2
+	BOOST_CHECK_EQUAL(num_of_tracklets_size[2],1); // tracklets of length 3
+	BOOST_CHECK_EQUAL(num_of_arcs,7);
+}
 
 
 // EOF

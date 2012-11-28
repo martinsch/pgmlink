@@ -40,6 +40,10 @@ namespace pgmlink {
   public:
     typedef Graph base_graph;
 
+    std::map<std::string, boost::any> getProperties() const {
+		return properties_;
+	}
+
     template <typename PropertyTag>
       typename property_map<PropertyTag, Graph>::type &
       get(PropertyTag) const;
