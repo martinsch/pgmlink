@@ -180,6 +180,14 @@ BOOST_PYTHON_MODULE( ctracking )
       .def("detections", &MrfTracking::detections) 
     ;
 
+    class_<ConsTracking>("ConsTracking",
+			init<int,double,double,string,bool,double,bool,bool,double>(
+					args("max_number_objects", "max_neighbor_distance", "division_threshold",
+							"detection_rf_filename", "cellness_by_rf", "forbidden_cost",
+							"with_constraints", "fixed_detections", "ep_gap")))
+	  .def("__call__", &ConsTracking::operator())
+	  .def("detections", &ConsTracking::detections)
+	;
 
     class_<NNTracking>("NNTracking",
 			init<double,double,std::vector<std::string>, double,bool,bool,std::vector<int> >(

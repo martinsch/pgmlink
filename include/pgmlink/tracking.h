@@ -119,25 +119,22 @@ namespace pgmlink {
 
   class ConsTracking {
     public:
-	  ConsTracking(const std::string& random_forest_filename = "none",
-  	      double appearance = 500,
-  	      double disappearance = 500,
-  	      double detection = 10,
-  	      double misdetection = 500,
+	  ConsTracking(
+		  int max_number_objects = 3,
+	      double max_neighbor_distance = 20,
+		  double division_threshold = 0.3,
+		  const std::string& random_forest_filename = "none",
   	      bool cellness_by_random_forest = false,
-  	      double opportunity_cost = 0,
   	      double forbidden_cost = 0,
   	      bool with_constraints = true,
   	      bool fixed_detections = false,
-  	      double mean_div_dist=25,
-  	      double min_angle=0,
   	      double ep_gap=0.01
   	      )
-        : app_(appearance), dis_(disappearance), det_(detection), mis_(misdetection),
-        rf_fn_(random_forest_filename), use_rf_(cellness_by_random_forest),
-        opportunity_cost_(opportunity_cost), forbidden_cost_(forbidden_cost), with_constraints_(with_constraints),
-        fixed_detections_(fixed_detections), mean_div_dist_(mean_div_dist), min_angle_(min_angle),
-        ep_gap_(ep_gap){}
+        : max_number_objects_(max_number_objects),
+        	max_dist_(max_neighbor_distance), division_threshold_(division_threshold),
+        detection_rf_fn_(random_forest_filename), use_detection_rf_(cellness_by_random_forest),
+        forbidden_cost_(forbidden_cost), with_constraints_(with_constraints),
+        fixed_detections_(fixed_detections), ep_gap_(ep_gap){}
       std::vector< std::vector<Event> > operator()(TraxelStore&);
 
       /**
@@ -146,14 +143,14 @@ namespace pgmlink {
       std::vector< std::map<unsigned int, bool> > detections();
 
     private:
-      double app_, dis_, det_, mis_;
-      const std::string rf_fn_;
-      bool use_rf_;
-      double opportunity_cost_;
+      int max_number_objects_;
+      double max_dist_;
+      double division_threshold_;
+      const std::string detection_rf_fn_;
+      bool use_detection_rf_;
       double forbidden_cost_;
       bool with_constraints_;
       bool fixed_detections_;
-      double mean_div_dist_, min_angle_;
       double ep_gap_;
       shared_ptr<std::vector< std::map<unsigned int, bool> > > last_detections_;
     };

@@ -332,17 +332,14 @@ vector<map<unsigned int, bool> > NNTrackletsTracking::detections() {
 ////
 vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 	cout << "-> building energy functions " << endl;
-	SquaredDistance move;
-	BorderAwareConstant appearance(app_, earliest_timestep(ts), true, 0);
-	BorderAwareConstant disappearance(dis_, latest_timestep(ts), false, 0);
-	GeometryDivision2 division(mean_div_dist_, min_angle_);
 
 	Traxels empty;
-	// random forest?
-	boost::function<double(const Traxel&)> detection, misdetection;
-	if (use_rf_) {
+	boost::function<double(const Traxel&, const size_t)> detection, division;
+	boost::function<double(const double)> transition;
+
+	if (use_detection_rf_) {
 		LOG(logINFO) << "Loading Random Forest";
-		vigra::RandomForest<RF::RF_LABEL_TYPE> rf = RF::getRandomForest(rf_fn_);
+		vigra::RandomForest<RF::RF_LABEL_TYPE> rf = RF::getRandomForest(detection_rf_fn_);
 		std::vector<std::string> rf_features;
 		rf_features.push_back("volume");
 		rf_features.push_back("bbox");
@@ -363,32 +360,59 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 		LOG(logINFO) << "Predicting cellness";
 		RF::predict_traxels(ts, rf, rf_features, 1, "cellness");
 
-		detection = NegLnCellness(det_);
-		misdetection = NegLnOneMinusCellness(mis_);
+		detection = NegLnDetection(1); // weight 1
 	} else {
-		detection = bind<double>(ConstantEnergy(det_), _1, empty, empty);
-		misdetection = bind<double>(ConstantEnergy(mis_), _1, empty, empty);
+		// assume a quasi geometric distribution
+		vector<double> prob_vector;
+		double p = 0.7; // e.g. for max_number_objects_=3, p=0.7: P(X=(0,1,2,3)) = (0.027, 0.7, 0.21, 0.063)
+		double sum = 0;
+		for(double state = 0; state < max_number_objects_; ++state) {
+			double prob = p*pow(1-p,state);
+			prob_vector.push_back(prob);
+			sum += prob;
+		}
+		prob_vector.insert(prob_vector.begin(), 1-sum);
+		LOG(logDEBUG1) << "ConsTracking(): detection probability vector = ";
+		for (vector<double>::const_iterator it = prob_vector.begin(); it!=prob_vector.end(); ++it) {
+			cout << *it << endl;
+		}
+
+		detection = bind<double>(NegLnConstant(1,prob_vector), _2);
 	}
 
+	division = NegLnDivision(1); // weight 1
+	transition = NegLnTransition(1); // weight 1
+
 	cout << "-> building hypotheses" << endl;
-	SingleTimestepTraxel_HypothesesBuilder::Options builder_opts(6, 50);
+	SingleTimestepTraxel_HypothesesBuilder::Options builder_opts(1, // max_nearest_neighbors
+				max_dist_,
+				true, // forward_backward
+				true, // consider_divisions
+				division_threshold_
+				);
 	SingleTimestepTraxel_HypothesesBuilder hyp_builder(&ts, builder_opts);
 	HypothesesGraph* graph = hyp_builder.build();
 
-	cout << "-> init MRF reasoner" << endl;
-	SingleTimestepTraxelMrf mrf(detection, misdetection, appearance,
-			disappearance, bind<double>(move, _1, _2, empty, empty), division,
-			opportunity_cost_, forbidden_cost_, with_constraints_,
-			fixed_detections_, ep_gap_);
+	cout << "-> init ConservationTracking reasoner" << endl;
+	SingleTimestepTraxelConservation pgm(
+			max_number_objects_,
+			detection,
+			division,
+			transition,
+			forbidden_cost_,
+			with_constraints_,
+			fixed_detections_,
+			ep_gap_
+			);
 
-	cout << "-> formulate MRF model" << endl;
-	mrf.formulate(*graph);
+	cout << "-> formulate ConservationTracking model" << endl;
+	pgm.formulate(*graph);
 
 	cout << "-> infer" << endl;
-	mrf.infer();
+	pgm.infer();
 
 	cout << "-> conclude" << endl;
-	mrf.conclude(*graph);
+	pgm.conclude(*graph);
 
 	cout << "-> storing state of detection vars" << endl;
 	last_detections_ = state_of_nodes(*graph);
