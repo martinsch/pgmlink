@@ -12,25 +12,20 @@ class Traxel;
 
 class SingleTimestepTraxelConservation : public Reasoner {
     public:
-	SingleTimestepTraxelConservation(boost::function<double (const Traxel&)> detection,
-			    boost::function<double (const Traxel&)> non_detection,
-			    boost::function<double (const Traxel&)> appearance,
-			    boost::function<double (const Traxel&)> disappearance,
-			    boost::function<double (const Traxel&, const Traxel&)> move,
-			    boost::function<double (const Traxel&, const Traxel&, const Traxel&)> division,
-			    double opportunity_cost = 0,
+	SingleTimestepTraxelConservation(
+				unsigned int max_number_objects,
+				boost::function<double (const Traxel&, const size_t)> detection,
+			    boost::function<double (const Traxel&, const size_t)> division,
+			    boost::function<double (const double)> transition,
                 double forbidden_cost = 0,
 			    bool with_constraints = true,
 			    bool fixed_detections = false,
 			    double ep_gap = 0.01
     ) 
-    : detection_(detection), 
-    non_detection_(non_detection),
-    appearance_(appearance),
-    disappearance_(disappearance),
-    move_(move),
+    : max_number_objects_(max_number_objects),
+    detection_(detection),
     division_(division),
-    opportunity_cost_(opportunity_cost),
+    transition_(transition),
     forbidden_cost_(forbidden_cost),
     pgm_(NULL),
     optimizer_(NULL),
@@ -76,30 +71,29 @@ class SingleTimestepTraxelConservation : public Reasoner {
     void add_constraints( const HypothesesGraph& );
     void add_detection_nodes( const HypothesesGraph& );
     void add_transition_nodes( const HypothesesGraph& );
+    void add_division_nodes(const HypothesesGraph& );
     void add_finite_factors( const HypothesesGraph& );
 
     // helper
-    void couple( HypothesesGraph::Node&, HypothesesGraph::Arc& );
     void fix_detections( const HypothesesGraph&, size_t value );
-    void add_outgoing_factor( const HypothesesGraph&, const HypothesesGraph::Node& );
-    void add_incoming_factor( const HypothesesGraph&, const HypothesesGraph::Node& );
-    template<typename table_t, typename const_iter>
-      void add_factor( const table_t& table, const_iter first_idx, const_iter last_idx );
+//    template<typename table_t, typename const_iter>
+//      void add_factor( const table_t& table, const_iter first_idx, const_iter last_idx );
+
+
+    unsigned int max_number_objects_;
 
     // energy functions
-    boost::function<double (const Traxel&)> detection_;
-    boost::function<double (const Traxel&)> non_detection_;
-    boost::function<double (const Traxel&)> appearance_;
-    boost::function<double (const Traxel&)> disappearance_;
-    boost::function<double (const Traxel&, const Traxel&)> move_;
-    boost::function<double (const Traxel&, const Traxel&, const Traxel&)> division_;
-    double opportunity_cost_;
+    boost::function<double (const Traxel&, const size_t)> detection_;
+    boost::function<double (const Traxel&, const size_t)> division_;
+//    boost::function<double (const Traxel&, const Traxel&, const size_t)> transition_;
+    boost::function<double (const double)> transition_;
     double forbidden_cost_;
     
     OpengmModel* pgm_;
     OpengmModel::ogmInference* optimizer_;
 
     std::map<HypothesesGraph::Node, size_t> node_map_;
+    std::map<HypothesesGraph::Node, size_t> div_node_map_;
     std::map<HypothesesGraph::Arc, size_t> arc_map_;
 
     bool with_constraints_;
@@ -114,11 +108,11 @@ class SingleTimestepTraxelConservation : public Reasoner {
 /* Implementation */
 /******************/
  
- template< typename table_t, typename const_iter >
-   void SingleTimestepTraxelConservation::add_factor( const table_t& table, const_iter first_idx, const_iter last_idx ){
-   OpengmModel::FunctionIdentifier id=pgm_->Model()->addFunction(table);
-   pgm_->Model()->addFactor(id, first_idx, last_idx);
- }
+// template< typename table_t, typename const_iter >
+//   void SingleTimestepTraxelConservation::add_factor( const table_t& table, const_iter first_idx, const_iter last_idx ){
+//   OpengmModel::FunctionIdentifier id=pgm_->Model()->addFunction(table);
+//   pgm_->Model()->addFactor(id, first_idx, last_idx);
+// }
  
 } /* namespace Tracking */
 #endif /* MRF_REASONER_H */
