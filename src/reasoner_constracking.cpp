@@ -60,7 +60,7 @@ void SingleTimestepTraxelConservation::formulate(const HypothesesGraph& hypothes
 
 	if (with_constraints_) {
 		LOG(logDEBUG) << "SingleTimestepTraxelConservation::formulate: add_constraints";
-//		add_constraints(hypotheses);
+		add_constraints(hypotheses);
 	}
 
 	if (fixed_detections_) {
