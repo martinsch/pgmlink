@@ -76,6 +76,7 @@ class SingleTimestepTraxelConservation : public Reasoner {
 
     // helper
     void fix_detections( const HypothesesGraph&, size_t value );
+    size_t cplex_id(size_t opengm_id, size_t state);
 //    template<typename table_t, typename const_iter>
 //      void add_factor( const table_t& table, const_iter first_idx, const_iter last_idx );
 
@@ -98,6 +99,8 @@ class SingleTimestepTraxelConservation : public Reasoner {
 
     bool with_constraints_;
     bool fixed_detections_;
+
+    unsigned int number_of_detection_nodes_, number_of_transition_nodes_, number_of_division_nodes_;
 
     double ep_gap_;
 };
