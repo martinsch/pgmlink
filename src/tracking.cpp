@@ -393,6 +393,22 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 	SingleTimestepTraxel_HypothesesBuilder hyp_builder(&ts, builder_opts);
 	HypothesesGraph* graph = hyp_builder.build();
 
+
+	LOG(logDEBUG1) << "ConsTracking(): adding distance property to edges";
+	HypothesesGraph& g = *graph;
+	g.add(arc_distance());
+	property_map<arc_distance, HypothesesGraph::base_graph>::type& arc_distances = g.get(arc_distance());
+	property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g.get(node_traxel());
+	for(HypothesesGraph::ArcIt a(g); a!=lemon::INVALID; ++a) {
+		HypothesesGraph::Node from = g.source(a);
+		HypothesesGraph::Node to = g.target(a);
+		Traxel from_tr = traxel_map[from];
+		Traxel to_tr = traxel_map[to];
+
+		double dist = from_tr.distance_to(to_tr);
+		arc_distances.set(a, dist);
+	}
+
 	cout << "-> init ConservationTracking reasoner" << endl;
 	SingleTimestepTraxelConservation pgm(
 			max_number_objects_,
