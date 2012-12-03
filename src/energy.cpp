@@ -61,12 +61,12 @@ namespace {
 	  throw runtime_error("get_detection_prob(): not yet implemented");
   }
 
-  double get_division_prob(const Traxel& tr, size_t state) {
+  double get_division_prob(const Traxel& tr) {
 	  FeatureMap::const_iterator it = tr.features.find("divProb");
 	  if (it == tr.features.end()) {
 		  throw runtime_error("get_division_prob(): divProb feature not in traxel");
 	  }
-	  double div_prob = it->second[state];
+	  double div_prob = it->second[0];
 	  LOG(logDEBUG3) << "get_division(): " << div_prob;
 	  return div_prob;
   }
@@ -99,7 +99,7 @@ double NegLnOneMinusCellness::operator()(const Traxel& tr) const {
 ////
 double NegLnDetection::operator ()(const Traxel& tr, size_t state) const {
 	double arg = get_detection_prob(tr, state);
-    if(arg == 0) arg = 0.00001;
+    if(arg == 0) arg = 0.0000000001;
 	return w_*-1*log(arg);
 }
 
@@ -108,8 +108,11 @@ double NegLnDetection::operator ()(const Traxel& tr, size_t state) const {
 //// class NegLnDivision
 ////
 double NegLnDivision::operator ()(const Traxel& tr, size_t state) const {
-	double arg = get_division_prob(tr, state);
-    if(arg == 0) arg = 0.00001;
+	double arg = get_division_prob(tr);
+	if (state == 0) {
+		arg = 1 - arg;
+	}
+    if(arg == 0) arg = 0.0000000001;
 	return w_*-1*log(arg);
 }
 
@@ -119,7 +122,7 @@ double NegLnDivision::operator ()(const Traxel& tr, size_t state) const {
 ////
 double NegLnTransition::operator ()(const double dist_prob) const {
 	double arg = dist_prob;
-    if(arg == 0) arg = 0.00001;
+    if(arg == 0) arg = 0.0000000001;
 	return w_*-1*log(arg);
 }
 
@@ -133,9 +136,11 @@ double NegLnConstant::operator ()(size_t state) const {
 	}
 	double arg = prob_vector_[state];
 	LOG(logDEBUG3) << "NegLnConstant(): arg = " << arg;
-	if(arg == 0) arg = 0.00001;
+	if(arg == 0) arg = 0.0000000001;
 	return w_*-1*log(arg);
 }
+
+
 
     NullaryEnergy::~NullaryEnergy() {}
     UnaryEnergy::~UnaryEnergy() {}
