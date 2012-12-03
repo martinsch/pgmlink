@@ -108,8 +108,12 @@ namespace pgmlink {
     node_timestep_map_t& node_timestep_map = g.get(node_timestep());
     typedef property_map<node_traxel, HypothesesGraph::base_graph>::type node_traxel_map_t;
     node_traxel_map_t& node_traxel_map = g.get(node_traxel());
-    property_map<split_from, HypothesesGraph::base_graph>::type& split_from_map = g.get(split_from());
-
+    property_map<division_active, HypothesesGraph::base_graph>::type* division_node_map;
+    bool with_mergers_and_splitters = false;
+    if (g.getProperties().count("division_active") > 0) {
+    	division_node_map = &g.get(division_active());
+    	with_mergers_and_splitters = true;
+    }
 
     // for every timestep
     LOG(logDEBUG1) << "events(): earliest_timestep: " << g.earliest_timestep();
@@ -122,17 +126,22 @@ namespace pgmlink {
 	LOG(logDEBUG2) << "events(): for every node: destiny";
 	for(node_timestep_map_t::ItemIt node_at(node_timestep_map, t); node_at!=lemon::INVALID; ++node_at) {
 	    assert(node_traxel_map[node_at].Timestep == t);
-	    if (split_from_map[node_at] != -1) {
-	    	LOG(logDEBUG3) << "events(): splitter node: " << g.id(node_at);
-	    	HypothesesGraph::Node split_from = g.nodeFromId(split_from_map[node_at]);
-	    	Event e;
-	    	e.type = Event::SplitNodes;
-	    	e.traxel_ids.push_back(node_traxel_map[split_from].Id);
-	    	e.traxel_ids.push_back(node_traxel_map[node_at].Id); // dummyNode
-	    	(*ret)[t-g.earliest_timestep()].push_back(e);
-	    }
-	    // count ougoing arcs
+
+	    // count incoming arcs
 	    int count = 0;
+		for(HypothesesGraph::base_graph::InArcIt a(g, node_at); a!=lemon::INVALID; ++a) ++count;
+		LOG(logDEBUG3) << "events(): counted incoming arcs: " << count;
+		if (count > 1) {
+			Event e;
+			e.type = Event::Merging;
+			e.traxel_ids.push_back(node_traxel_map[node_at].Id);
+			(*ret)[t-g.earliest_timestep()].push_back(e);
+			LOG(logDEBUG3) << e;
+		}
+
+
+	    // count outgoing arcs
+	    count = 0;
 	    for(HypothesesGraph::base_graph::OutArcIt a(g, node_at); a!=lemon::INVALID; ++a) ++count;
 	    LOG(logDEBUG3) << "events(): counted outgoing arcs: " << count;
 	    // construct suitable Event object
@@ -157,22 +166,47 @@ namespace pgmlink {
 		    LOG(logDEBUG3) << e;
 		    break;
 		    }
-		// Division
-		case 2: {
+		// Division or Splitting
+		default: {
 		    Event e;
-		    e.type = Event::Division;
-		    e.traxel_ids.push_back(node_traxel_map[node_at].Id);
-		    HypothesesGraph::base_graph::OutArcIt a(g, node_at);
-		    e.traxel_ids.push_back(node_traxel_map[g.target(a)].Id);
-		    ++a;
-		    e.traxel_ids.push_back(node_traxel_map[g.target(a)].Id);
-		    (*ret)[t-g.earliest_timestep()].push_back(e);
-		    LOG(logDEBUG3) << e;
+		    if (with_mergers_and_splitters) {
+		    	if (count == 2 && (*division_node_map)[node_at]) {
+		    		e.type = Event::Division;
+					e.traxel_ids.push_back(node_traxel_map[node_at].Id);
+					HypothesesGraph::base_graph::OutArcIt a(g, node_at);
+					e.traxel_ids.push_back(node_traxel_map[g.target(a)].Id);
+					++a;
+					e.traxel_ids.push_back(node_traxel_map[g.target(a)].Id);
+					(*ret)[t-g.earliest_timestep()].push_back(e);
+					LOG(logDEBUG3) << e;
+		    	} else {
+		    		e.type = Event::Splitting;
+					e.traxel_ids.push_back(node_traxel_map[node_at].Id);
+					(*ret)[t-g.earliest_timestep()].push_back(e);
+					LOG(logDEBUG3) << e;
+
+					for(HypothesesGraph::base_graph::OutArcIt a(g, node_at); a != lemon::INVALID; ++a) {
+						e.type = Event::Move;
+						e.traxel_ids.push_back(node_traxel_map[g.target(a)].Id);
+						(*ret)[t-g.earliest_timestep()].push_back(e);
+						LOG(logDEBUG3) << e;
+					}
+		    	}
+		    } else { // for backward compatibility
+		    	if (count != 2) {
+				    throw runtime_error("events(): encountered node dividing in three or more nodes in graph");
+		    	}
+				e.type = Event::Division;
+				e.traxel_ids.push_back(node_traxel_map[node_at].Id);
+				HypothesesGraph::base_graph::OutArcIt a(g, node_at);
+				e.traxel_ids.push_back(node_traxel_map[g.target(a)].Id);
+				++a;
+				e.traxel_ids.push_back(node_traxel_map[g.target(a)].Id);
+				(*ret)[t-g.earliest_timestep()].push_back(e);
+				LOG(logDEBUG3) << e;
+		    }
 		break;
 	        }
-		default:
-		    throw runtime_error("events(): encountered node dividing in three or more nodes in graph");
-		break;
 	    }
 	}
 
