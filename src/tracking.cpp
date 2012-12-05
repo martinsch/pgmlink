@@ -372,10 +372,6 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 			sum += prob;
 		}
 		prob_vector.insert(prob_vector.begin(), 1-sum);
-		LOG(logDEBUG1) << "ConsTracking(): detection probability vector = ";
-		for (vector<double>::const_iterator it = prob_vector.begin(); it!=prob_vector.end(); ++it) {
-			cout << *it << endl;
-		}
 
 		detection = bind<double>(NegLnConstant(1,prob_vector), _2);
 	}

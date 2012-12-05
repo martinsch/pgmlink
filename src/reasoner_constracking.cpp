@@ -46,6 +46,9 @@ void SingleTimestepTraxelConservation::formulate(const HypothesesGraph& hypothes
 
 	OpengmModel::ogmGraphicalModel* model = pgm_->Model();
 
+	LOG(logDEBUG) << "SingleTimestepTraxelConservation::formulate: add_finite_factors";
+	add_finite_factors(hypotheses);
+
 	typedef opengm::LPCplex<OpengmModel::ogmGraphicalModel,OpengmModel::ogmAccumulator> cplex_optimizer;
 	cplex_optimizer::Parameter param;
 	param.verbose_ = true;
@@ -55,9 +58,6 @@ void SingleTimestepTraxelConservation::formulate(const HypothesesGraph& hypothes
 
 	optimizer_ = new cplex_optimizer(*model, param);
 
-	LOG(logDEBUG) << "SingleTimestepTraxelConservation::formulate: add_finite_factors";
-	add_finite_factors(hypotheses);
-
 	if (with_constraints_) {
 		LOG(logDEBUG) << "SingleTimestepTraxelConservation::formulate: add_constraints";
 		add_constraints(hypotheses);
@@ -65,7 +65,7 @@ void SingleTimestepTraxelConservation::formulate(const HypothesesGraph& hypothes
 
 	if (fixed_detections_) {
 		LOG(logDEBUG) << "SingleTimestepTraxelConservation::formulate: fix_detections";
-		fix_detections(hypotheses, 1);
+		fix_detections(hypotheses, 2);
 	}
 }
 
@@ -84,11 +84,6 @@ void SingleTimestepTraxelConservation::conclude(HypothesesGraph& g) {
 	if (status != opengm::NORMAL) {
 		throw runtime_error(
 				"GraphicalModel::infer(): solution extraction terminated abnormally");
-	}
-
-	cout << "solution:" << endl;
-	for(vector<OpengmModel::ogmInference::LabelType>::const_iterator s = solution.begin(); s!=solution.end();++s) {
-		cout << *s << endl;
 	}
 
 	// add 'active' properties to graph
@@ -160,6 +155,7 @@ void SingleTimestepTraxelConservation::add_detection_nodes(const HypothesesGraph
 		pgm_->Model()->addVariable(max_number_objects_+1);
 		node_map_[n] = pgm_->Model()->numberOfVariables() - 1;
 		assert(pgm_->Model()->numberOfLabels(node_map_[n]) == max_number_objects_ + 1);
+		LOG(logDEBUG4) << "detection node added with id " << node_map_[n];
 		++count;
 	}
 	number_of_detection_nodes_ = count;
@@ -171,6 +167,7 @@ void SingleTimestepTraxelConservation::add_transition_nodes(const HypothesesGrap
 		pgm_->Model()->addVariable(max_number_objects_+1);
 		arc_map_[a] = pgm_->Model()->numberOfVariables() - 1;
 		assert(pgm_->Model()->numberOfLabels(arc_map_[a]) == max_number_objects_ + 1);
+		LOG(logDEBUG4) << "transition node added with id " << arc_map_[a];
 		++count;
 	}
 	number_of_transition_nodes_ = count;
@@ -187,6 +184,7 @@ void SingleTimestepTraxelConservation::add_division_nodes(const HypothesesGraph&
 			pgm_->Model()->addVariable(2);
 			div_node_map_[n] = pgm_->Model()->numberOfVariables() - 1;
 			assert(pgm_->Model()->numberOfLabels(div_node_map_[n]) == 2);
+			LOG(logDEBUG4) << "division node added with id " << div_node_map_[n];
 			++count;
 		}
 	}
@@ -304,7 +302,7 @@ void SingleTimestepTraxelConservation::add_constraints(const HypothesesGraph& g)
 					coeffs.clear();
 					coeffs.push_back(1);
 					cplex_idxs.push_back(cplex_id(node_map_[n],nu));
-					coeffs.push_back(-1);
+					coeffs.push_back(1);
 					cplex_idxs.push_back(cplex_id(arc_map_[a],mu));
 					// 0 <= X_i[nu] + Y_ij[mu] <= 1  forall mu>nu
 					dynamic_cast<cplex*>(optimizer_)->addConstraint(cplex_idxs.begin(),
@@ -435,7 +433,7 @@ void SingleTimestepTraxelConservation::fix_detections(const HypothesesGraph& g,
 		coeffs.push_back(1);
 		// val <= 1*detection <= val
 		dynamic_cast<cplex*>(optimizer_)->addConstraint(cplex_idxs.begin(),
-				cplex_idxs.end(), coeffs.begin(), 0, 0);
+				cplex_idxs.end(), coeffs.begin(), 1, 1);
 	}
 }
 

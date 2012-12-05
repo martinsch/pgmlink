@@ -135,7 +135,7 @@ namespace pgmlink {
 			Event e;
 			e.type = Event::Merging;
 			e.traxel_ids.push_back(node_traxel_map[node_at].Id);
-			(*ret)[t-g.earliest_timestep()].push_back(e);
+			(*ret)[t-g.earliest_timestep()-1].push_back(e);
 			LOG(logDEBUG3) << e;
 		}
 
@@ -168,7 +168,7 @@ namespace pgmlink {
 		    }
 		// Division or Splitting
 		default: {
-		    Event e;
+			Event e;
 		    if (with_mergers_and_splitters) {
 		    	if (count == 2 && (*division_node_map)[node_at]) {
 		    		e.type = Event::Division;
@@ -187,6 +187,8 @@ namespace pgmlink {
 
 					for(HypothesesGraph::base_graph::OutArcIt a(g, node_at); a != lemon::INVALID; ++a) {
 						e.type = Event::Move;
+						e.traxel_ids.clear();
+						e.traxel_ids.push_back(node_traxel_map[node_at].Id);
 						e.traxel_ids.push_back(node_traxel_map[g.target(a)].Id);
 						(*ret)[t-g.earliest_timestep()].push_back(e);
 						LOG(logDEBUG3) << e;
