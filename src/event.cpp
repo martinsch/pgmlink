@@ -81,6 +81,12 @@ ostream& operator<< (ostream &out, const Event &e)
 	case Event::Void:
 	    type = "Voide";
 	    break;
+	case Event::Splitting:
+		type = "Splitting";
+		break;
+	case Event::Merging:
+		type = "Merging";
+		break;
 	default:
 	    type = "unknown";
 	    break;
