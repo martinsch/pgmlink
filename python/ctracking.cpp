@@ -201,8 +201,7 @@ BOOST_PYTHON_MODULE( ctracking )
 	.value("Division", Event::Division)
 	.value("Appearance", Event::Appearance)
 	.value("Disappearance", Event::Disappearance)
-	.value("Splitting", Event::Splitting)
-	.value("Merging", Event::Merging)
+	.value("Merger", Event::Merger)
 	.value("Void", Event::Void)
     ;
 

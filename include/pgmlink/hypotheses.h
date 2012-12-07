@@ -68,6 +68,16 @@ namespace pgmlink {
   template <typename Graph>
     const std::string property_map<node_active,Graph>::name = "node_active";
 
+  // node_active2
+    struct node_active2 {};
+    template <typename Graph>
+      struct property_map<node_active2, Graph> {
+      typedef lemon::IterableValueMap< Graph, typename Graph::Node, std::size_t> type;
+      static const std::string name;
+    };
+    template <typename Graph>
+      const std::string property_map<node_active2,Graph>::name = "node_active2";
+
   // node_offered
   struct node_offered {};
   template <typename Graph>
