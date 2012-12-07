@@ -93,13 +93,13 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Merger ) {
 	size_t t = 1;
 	for (std::vector< std::vector<Event> >::const_iterator it_t = events.begin(); it_t != events.end(); ++it_t) {
 		// events:
-		// t = 1: 2x move, 1x merging
-		// t = 2: 1x move
-		// t = 3: 2x move, 1x splitting
-		if (t==1 || t ==3) {
+		// t = 1: 2x move
+		// t = 2: 1x move, 1x merger
+		// t = 3: 2x move, 1x merger
+		if (t==1 || t ==2) {
+			BOOST_CHECK_EQUAL(it_t->size(),2);
+		} else { // t == 3
 			BOOST_CHECK_EQUAL(it_t->size(),3);
-		} else { // t == 2
-			BOOST_CHECK_EQUAL(it_t->size(),1);
 		}
 
 		for (std::vector<Event>::const_iterator it = (*it_t).begin(); it!=(*it_t).end(); ++it) {

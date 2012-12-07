@@ -87,21 +87,21 @@ void SingleTimestepTraxelConservation::conclude(HypothesesGraph& g) {
 	}
 
 	// add 'active' properties to graph
-	g.add(node_active()).add(arc_active()).add(division_active());
-	property_map<node_active, HypothesesGraph::base_graph>::type& active_nodes =
-			g.get(node_active());
+	g.add(node_active2()).add(arc_active()).add(division_active());
+	property_map<node_active2, HypothesesGraph::base_graph>::type& active_nodes =
+			g.get(node_active2());
 	property_map<arc_active, HypothesesGraph::base_graph>::type& active_arcs =
 			g.get(arc_active());
 	property_map<division_active, HypothesesGraph::base_graph>::type& division_nodes =
 				g.get(division_active());
 
+	vector<size_t> count_objects(max_number_objects_+1,0);
+
 	// write state after inference into 'active'-property maps
 	for (std::map<HypothesesGraph::Node, size_t>::const_iterator it =
 			node_map_.begin(); it != node_map_.end(); ++it) {
-		bool state = false;
-		if (solution[it->second] >= 1)
-			state = true;
-		active_nodes.set(it->first, state);
+		++count_objects[solution[it->second]];
+		active_nodes.set(it->first, solution[it->second]);
 	}
 	for (std::map<HypothesesGraph::Arc, size_t>::const_iterator it =
 			arc_map_.begin(); it != arc_map_.end(); ++it) {
@@ -121,6 +121,11 @@ void SingleTimestepTraxelConservation::conclude(HypothesesGraph& g) {
 		if (solution[it->second] >=1)
 			state = true;
 		division_nodes.set(it->first, state);
+	}
+
+	LOG(logINFO) << "SingleTimestepTraxelConservation::conclude: number of objects in node:";
+	for (size_t i = 0; i<=max_number_objects_; ++i) {
+		LOG(logINFO) << "   " << i << ": " << count_objects[i];
 	}
 }
 
@@ -275,7 +280,7 @@ size_t SingleTimestepTraxelConservation::cplex_id(size_t opengm_id, size_t state
 		return (max_number_objects_ + 1) * opengm_id + state;
 	} else if (opengm_id <= (number_of_detection_nodes_ + number_of_transition_nodes_ + number_of_division_nodes_)) {
 		return (max_number_objects_ + 1) * (number_of_detection_nodes_ + number_of_transition_nodes_) +
-				2 * opengm_id + state;
+				2 * (opengm_id - number_of_detection_nodes_ - number_of_transition_nodes_) + state;
 	}
 	throw std::runtime_error("cplex_id(): open_gm id does not exist");
 }
@@ -307,18 +312,27 @@ void SingleTimestepTraxelConservation::add_constraints(const HypothesesGraph& g)
 					// 0 <= X_i[nu] + Y_ij[mu] <= 1  forall mu>nu
 					dynamic_cast<cplex*>(optimizer_)->addConstraint(cplex_idxs.begin(),
 								cplex_idxs.end(), coeffs.begin(), 0, 1);
+					LOG(logDEBUG3) << "SingleTimestepTraxelConservation::add_constraints: Y_ij <= X_ij added for "
+							<< "n = " << node_map_[n] << ", a = " << arc_map_[a] << ", nu = " << nu << ", mu = " << mu;
 				}
 			}
 			++num_outarcs;
 		}
 
+		LOG(logDEBUG3) << "1";
 
 		int div_cplex_id = -1;
 		if (div_node_map_.count(n) > 0) {
+			LOG(logDEBUG3) << "div_node_map_[n] = " << div_node_map_[n];
+			LOG(logDEBUG3) << "number_of_detection_nodes_ = " << number_of_detection_nodes_;
+			LOG(logDEBUG3) << "number_of_transition_nodes_ = " << number_of_transition_nodes_;
+			LOG(logDEBUG3) << "number_of_division_nodes_ = " << number_of_division_nodes_;
 			div_cplex_id = cplex_id(div_node_map_[n], 1);
+			LOG(logDEBUG3) << "1.1";
 		}
-
+		LOG(logDEBUG3) << "2";
 		if (num_outarcs > 0) {
+			LOG(logDEBUG3) << "3";
 			// couple transitions: sum(Y_ij) = D_i + X_i
 			cplex_idxs.clear();
 			coeffs.clear();
@@ -328,22 +342,31 @@ void SingleTimestepTraxelConservation::add_constraints(const HypothesesGraph& g)
 					cplex_idxs.push_back(cplex_id(arc_map_[a],nu));
 				}
 			}
+			LOG(logDEBUG3) << "4";
 			for (size_t nu = 1; nu <= max_number_objects_; ++nu) {
 				coeffs.push_back(-nu);
 				cplex_idxs.push_back(cplex_id(node_map_[n],nu));
 			}
-
 			if (div_cplex_id != -1) {
+				LOG(logDEBUG3) << "5";
 				cplex_idxs.push_back(div_cplex_id);
 				coeffs.push_back(-1);
 			}
-
-			// 0 <= sum_nu [ sum_j( nu * Y_ij[nu] ) ] - [ sum_nu nu * X_i[nu] - D_i[1] ]<= 0
+			for( size_t iii = 0; iii<cplex_idxs.size(); ++iii) {
+				LOG(logDEBUG3) << "idxs[" << iii << "]=" << cplex_idxs[iii];
+				LOG(logDEBUG3) << "coeffs[" << iii << "]=" << coeffs[iii];
+			}
+			LOG(logDEBUG3) << "6";
+			// 0 <= sum_nu [ sum_j( nu * Y_ij[nu] ) ] - [ sum_nu nu * X_i[nu] + D_i[1] ]<= 0
 			dynamic_cast<cplex*>(optimizer_)->addConstraint(cplex_idxs.begin(),
 					cplex_idxs.end(), coeffs.begin(), 0, 0);
+			LOG(logDEBUG3) << "SingleTimestepTraxelConservation::add_constraints: sum(Y_ij) = D_i + X_i added for "
+						<< "n = " << node_map_[n];
 		}
 
+		LOG(logDEBUG3) << "7";
 		if (div_cplex_id != -1) {
+			LOG(logDEBUG3) << "8";
 			// couple detection and division: D_i = 1 => X_i = 1
 			cplex_idxs.clear();
 			coeffs.clear();
@@ -353,12 +376,12 @@ void SingleTimestepTraxelConservation::add_constraints(const HypothesesGraph& g)
 
 			cplex_idxs.push_back(cplex_id(node_map_[n],1));
 			coeffs.push_back(-1);
-
+			LOG(logDEBUG3) << "9";
 			// -1 <= D_i[1] - X_i[1] <= 0
 			dynamic_cast<cplex*>(optimizer_)->addConstraint(cplex_idxs.begin(),
 					cplex_idxs.end(), coeffs.begin(), -1, 0);
-
-
+			LOG(logDEBUG3) << "SingleTimestepTraxelConservation::add_constraints: D_i=1 => X_i=1 added for "
+						<< "n = " << node_map_[n] << ", d = " << div_node_map_[n];
 
 			// couple divsion and transition: D_1 = 1 => sum_k(Y_ik) = 2
 			cplex_idxs2.clear();
@@ -379,6 +402,8 @@ void SingleTimestepTraxelConservation::add_constraints(const HypothesesGraph& g)
 					// 0 <= D_i[1] + Y_ij[nu] <= 1 forall nu>1
 					dynamic_cast<cplex*>(optimizer_)->addConstraint(cplex_idxs.begin(),
 							cplex_idxs.end(), coeffs.begin(), 0, 1);
+					LOG(logDEBUG3) << "SingleTimestepTraxelConservation::add_constraints: D_i=1 => Y_i[nu]=0 added for "
+								<< "d = " << div_node_map_[n] << ", y = " << arc_map_[a] << ", nu = " << nu;
 
 				}
 
@@ -389,10 +414,12 @@ void SingleTimestepTraxelConservation::add_constraints(const HypothesesGraph& g)
 			// -m <= 2 * D_i[1] - sum_j (Y_ij[1]) <= 0
 			dynamic_cast<cplex*>(optimizer_)->addConstraint(cplex_idxs2.begin(),
 					cplex_idxs2.end(), coeffs2.begin(), -int(max_number_objects_), 0);
+			LOG(logDEBUG3) << "SingleTimestepTraxelConservation::add_constraints: D_i = 1 => sum_k(Y_ik) = 2 added for "
+						<< "d = " << div_node_map_[n];
 		}
 
 
-
+		LOG(logDEBUG3) << "10";
 		////
 		//// incoming transitions
 		////
@@ -417,6 +444,8 @@ void SingleTimestepTraxelConservation::add_constraints(const HypothesesGraph& g)
 			// 0 <= sum_nu [ nu * sum_i (Y_ij[nu] ) ] - sum_nu ( nu * X_j[nu] ) <= 0
 			dynamic_cast<cplex*>(optimizer_)->addConstraint(cplex_idxs.begin(),
 					cplex_idxs.end(), coeffs.begin(), 0, 0);
+			LOG(logDEBUG3) << "SingleTimestepTraxelConservation::add_constraints: sum_k(Y_kj) = X_j added for "
+						<< "n = " << node_map_[n];
 		}
 	}
 }

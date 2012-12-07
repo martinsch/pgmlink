@@ -57,8 +57,17 @@ namespace pgmlink {
     
   HypothesesGraph& prune_inactive(HypothesesGraph& g) {
       LOG(logDEBUG) << "prune_inactive(): entered";
-      property_map<node_active, HypothesesGraph::base_graph>::type& active_nodes = g.get(node_active());
       property_map<arc_active, HypothesesGraph::base_graph>::type& active_arcs = g.get(arc_active());
+
+      property_map<node_active, HypothesesGraph::base_graph>::type* active_nodes;
+	  property_map<node_active2, HypothesesGraph::base_graph>::type* active2_nodes;
+	  bool active2_used = false;
+	  if (g.getProperties().count("node_active") > 0) {
+		active_nodes = &g.get(node_active());
+	  } else if (g.getProperties().count("node_active2") > 0) {
+		active2_nodes = &g.get(node_active2());
+		active2_used = true;
+	  }
     
       // prune inactive arcs
       LOG(logDEBUG) << "prune_inactive: prune inactive arcs";
@@ -82,13 +91,21 @@ namespace pgmlink {
 
       // prune inactive nodes 
       LOG(logDEBUG) << "prune_inactive: prune inactive nodes";
-      typedef property_map<node_active, HypothesesGraph::base_graph>::type::FalseIt inactive_node_it;
       // collect inactive nodes
       vector<HypothesesGraph::Node> nodes_to_prune;
 
-      for(inactive_node_it it(active_nodes); it!=lemon::INVALID; ++it) {
-	nodes_to_prune.push_back(it);
-      } 
+      if (active2_used) {
+  		for (HypothesesGraph::NodeIt it(g); it != lemon::INVALID; ++it) {
+  			if (!(*active2_nodes)[it]) {
+  				nodes_to_prune.push_back(it);
+  			}
+  		}
+      } else {
+    	typedef property_map<node_active, HypothesesGraph::base_graph>::type::FalseIt inactive_node_it;
+		for (inactive_node_it it(*active_nodes); it != lemon::INVALID; ++it) {
+			nodes_to_prune.push_back(it);
+		}
+      }
 
       // prune inactive nodes
       for(vector<HypothesesGraph::Node>::const_iterator it = nodes_to_prune.begin(); it!= nodes_to_prune.end(); ++it) {
@@ -109,10 +126,16 @@ namespace pgmlink {
     typedef property_map<node_traxel, HypothesesGraph::base_graph>::type node_traxel_map_t;
     node_traxel_map_t& node_traxel_map = g.get(node_traxel());
     property_map<division_active, HypothesesGraph::base_graph>::type* division_node_map;
-    bool with_mergers_and_splitters = false;
+    bool with_division_detection = false;
     if (g.getProperties().count("division_active") > 0) {
     	division_node_map = &g.get(division_active());
-    	with_mergers_and_splitters = true;
+    	with_division_detection = true;
+    }
+    property_map<node_active2, HypothesesGraph::base_graph>::type* node_number_of_objects;
+    bool with_mergers = false;
+    if (g.getProperties().count("node_active2") > 0) {
+    	node_number_of_objects = &g.get(node_active2());
+    	with_mergers = true;
     }
 
     // for every timestep
@@ -127,21 +150,17 @@ namespace pgmlink {
 	for(node_timestep_map_t::ItemIt node_at(node_timestep_map, t); node_at!=lemon::INVALID; ++node_at) {
 	    assert(node_traxel_map[node_at].Timestep == t);
 
-	    // count incoming arcs
-	    int count = 0;
-		for(HypothesesGraph::base_graph::InArcIt a(g, node_at); a!=lemon::INVALID; ++a) ++count;
-		LOG(logDEBUG3) << "events(): counted incoming arcs: " << count;
-		if (count > 1) {
+	    if(with_mergers && (*node_number_of_objects)[node_at] > 1) {
 			Event e;
-			e.type = Event::Merging;
+			e.type = Event::Merger;
 			e.traxel_ids.push_back(node_traxel_map[node_at].Id);
-			(*ret)[t-g.earliest_timestep()-1].push_back(e);
+			e.traxel_ids.push_back((*node_number_of_objects)[node_at]);
+			(*ret)[t-g.earliest_timestep()].push_back(e);
 			LOG(logDEBUG3) << e;
-		}
-
+	    }
 
 	    // count outgoing arcs
-	    count = 0;
+	    size_t count = 0;
 	    for(HypothesesGraph::base_graph::OutArcIt a(g, node_at); a!=lemon::INVALID; ++a) ++count;
 	    LOG(logDEBUG3) << "events(): counted outgoing arcs: " << count;
 	    // construct suitable Event object
@@ -169,7 +188,7 @@ namespace pgmlink {
 		// Division or Splitting
 		default: {
 			Event e;
-		    if (with_mergers_and_splitters) {
+		    if (with_division_detection) {
 		    	if (count == 2 && (*division_node_map)[node_at]) {
 		    		e.type = Event::Division;
 					e.traxel_ids.push_back(node_traxel_map[node_at].Id);
@@ -180,11 +199,6 @@ namespace pgmlink {
 					(*ret)[t-g.earliest_timestep()].push_back(e);
 					LOG(logDEBUG3) << e;
 		    	} else {
-		    		e.type = Event::Splitting;
-					e.traxel_ids.push_back(node_traxel_map[node_at].Id);
-					(*ret)[t-g.earliest_timestep()].push_back(e);
-					LOG(logDEBUG3) << e;
-
 					for(HypothesesGraph::base_graph::OutArcIt a(g, node_at); a != lemon::INVALID; ++a) {
 						e.type = Event::Move;
 						e.traxel_ids.clear();
@@ -388,8 +402,15 @@ namespace pgmlink {
     node_timestep_map_t& node_timestep_map = g.get(node_timestep());
     typedef property_map<node_traxel, HypothesesGraph::base_graph>::type node_traxel_map_t;
     node_traxel_map_t& node_traxel_map = g.get(node_traxel());
-    typedef property_map<node_active, HypothesesGraph::base_graph>::type node_active_map_t;
-    node_active_map_t& node_active_map = g.get(node_active());
+    property_map<node_active, HypothesesGraph::base_graph>::type* node_active_map;
+    property_map<node_active2, HypothesesGraph::base_graph>::type* node_active2_map;
+    bool active2_used = false;
+    if (g.getProperties().count("node_active") > 0) {
+    	node_active_map = &g.get(node_active());
+    } else if (g.getProperties().count("node_active2") > 0) {
+    	node_active2_map = &g.get(node_active2());
+    	active2_used = true;
+    }
 
     // for every timestep
     for(int t = g.earliest_timestep(); t <= g.latest_timestep(); ++t) {
@@ -397,7 +418,12 @@ namespace pgmlink {
       for(node_timestep_map_t::ItemIt node_at(node_timestep_map, t); node_at!=lemon::INVALID; ++node_at) {
 	assert(node_traxel_map[node_at].Timestep == t);
 	unsigned int id = node_traxel_map[node_at].Id;
-	bool active = node_active_map[node_at];
+	bool active = false;
+	if (active2_used) {
+		active = ((*node_active2_map)[node_at] > 0);
+	} else {
+		active = (*node_active_map)[node_at];
+	}
 	(*ret)[t-g.earliest_timestep()][id] = active;
       }
     }
