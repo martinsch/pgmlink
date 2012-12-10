@@ -124,17 +124,18 @@ namespace pgmlink {
 	      double max_neighbor_distance = 20,
 		  double division_threshold = 0.3,
 		  const std::string& random_forest_filename = "none",
-  	      bool cellness_by_random_forest = false,
+  	      bool size_dependent_detection_prob = false,
   	      double forbidden_cost = 0,
   	      bool with_constraints = true,
   	      bool fixed_detections = false,
-  	      double ep_gap=0.01
+  	      double ep_gap=0.01,
+  	      double avg_obj_size=30.0
   	      )
         : max_number_objects_(max_number_objects),
         	max_dist_(max_neighbor_distance), division_threshold_(division_threshold),
-        detection_rf_fn_(random_forest_filename), use_detection_rf_(cellness_by_random_forest),
+        detection_rf_fn_(random_forest_filename), use_size_dependent_detection_(size_dependent_detection_prob),
         forbidden_cost_(forbidden_cost), with_constraints_(with_constraints),
-        fixed_detections_(fixed_detections), ep_gap_(ep_gap){}
+        fixed_detections_(fixed_detections), ep_gap_(ep_gap), avg_obj_size_(avg_obj_size){}
       std::vector< std::vector<Event> > operator()(TraxelStore&);
 
       /**
@@ -147,11 +148,12 @@ namespace pgmlink {
       double max_dist_;
       double division_threshold_;
       const std::string detection_rf_fn_;
-      bool use_detection_rf_;
+      bool use_size_dependent_detection_;
       double forbidden_cost_;
       bool with_constraints_;
       bool fixed_detections_;
       double ep_gap_;
+      double avg_obj_size_;
       shared_ptr<std::vector< std::map<unsigned int, bool> > > last_detections_;
     };
 }
