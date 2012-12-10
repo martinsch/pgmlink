@@ -324,7 +324,31 @@ vector<map<unsigned int, bool> > NNTrackletsTracking::detections() {
 }
 
 
+namespace {
+std::vector<double> computeDetProb(double vol, double avg_vol, vector<double> s2) {
+	std::vector<double> result;
 
+	double sum = 0;
+	size_t k = 0;
+	for (vector<double>::const_iterator it = s2.begin(); it != s2.end(); ++it) {
+		double val = vol - k*avg_vol;
+		val = exp(-(val*val)/(2*(*it)));
+		if (k==0) {
+			val *= 1.5;
+		}
+		result.push_back(val);
+		sum += val;
+		++k;
+	}
+
+	// normalize
+	for(std::vector<double>::iterator it = result.begin(); it!=result.end(); ++it) {
+		(*it) /= sum;
+	}
+
+	return result;
+}
+}
 
 
 ////
@@ -337,29 +361,53 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 	boost::function<double(const Traxel&, const size_t)> detection, division;
 	boost::function<double(const double)> transition;
 
-	if (use_detection_rf_) {
-		LOG(logINFO) << "Loading Random Forest";
-		vigra::RandomForest<RF::RF_LABEL_TYPE> rf = RF::getRandomForest(detection_rf_fn_);
-		std::vector<std::string> rf_features;
-		rf_features.push_back("volume");
-		rf_features.push_back("bbox");
-		rf_features.push_back("position");
-		rf_features.push_back("com");
-		rf_features.push_back("pc");
-		rf_features.push_back("intensity");
-		rf_features.push_back("intminmax");
-		rf_features.push_back("pair");
-		rf_features.push_back("sgf");
-		rf_features.push_back("lcom");
-		rf_features.push_back("lpc");
-		rf_features.push_back("lintensity");
-		rf_features.push_back("lintminmax");
-		rf_features.push_back("lpair");
-		rf_features.push_back("lsgf");
+	if (use_size_dependent_detection_) {
+//		LOG(logINFO) << "Loading Random Forest";
+//		vigra::RandomForest<RF::RF_LABEL_TYPE> rf = RF::getRandomForest(detection_rf_fn_);
+//		std::vector<std::string> rf_features;
+//		rf_features.push_back("volume");
+//		rf_features.push_back("bbox");
+//		rf_features.push_back("position");
+//		rf_features.push_back("com");
+//		rf_features.push_back("pc");
+//		rf_features.push_back("intensity");
+//		rf_features.push_back("intminmax");
+//		rf_features.push_back("pair");
+//		rf_features.push_back("sgf");
+//		rf_features.push_back("lcom");
+//		rf_features.push_back("lpc");
+//		rf_features.push_back("lintensity");
+//		rf_features.push_back("lintminmax");
+//		rf_features.push_back("lpair");
+//		rf_features.push_back("lsgf");
 
-		LOG(logINFO) << "Predicting cellness";
-		RF::predict_traxels(ts, rf, rf_features, 1, "cellness");
+//		LOG(logINFO) << "Predicting cellness";
+//		RF::predict_traxels(ts, rf, rf_features, 1, "cellness");
 
+		double s2 = (avg_obj_size_*avg_obj_size_)/4.0;
+		LOG(logDEBUG) << "sigmas are all set to " << s2;
+		vector<double> sigma2(max_number_objects_+1,s2);
+		for(size_t i = 0; i < sigma2.size(); ++i) {
+			cout << sigma2[i] << endl;
+		}
+
+		for(TraxelStore::iterator tr = ts.begin(); tr != ts.end(); ++tr) {
+			Traxel trax = *tr;
+			FeatureMap::const_iterator it = trax.features.find("count");
+			if(it == trax.features.end()) {
+				throw runtime_error("get_detection_prob(): cellness feature not in traxel");
+			}
+			double vol = it->second[0];
+			vector<double> detProb;
+			detProb = computeDetProb(vol,avg_obj_size_,sigma2);
+			feature_array detProbFeat(feature_array::difference_type(max_number_objects_+1));
+			for(int i = 0; i<=max_number_objects_; ++i) {
+				LOG(logDEBUG2) << "detection probability for " << trax.Id << "[" << i << "] = " << detProb[i];
+				detProbFeat[i] = detProb[i];
+			}
+			trax.features["detProb"] = detProbFeat;
+			ts.replace(tr, trax);
+		}
 		detection = NegLnDetection(1); // weight 1
 	} else {
 		// assume a quasi geometric distribution

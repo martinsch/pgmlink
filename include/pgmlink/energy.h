@@ -85,7 +85,8 @@ class NegLnOneMinusCellness {
 
 class NegLnDetection {
 public:
-	NegLnDetection(double weight) : w_(weight) {}
+	NegLnDetection(double weight) :
+		w_(weight) {}
 	double operator()( const Traxel&, const size_t state ) const;
 private:
 	double w_;
