@@ -7,28 +7,6 @@
 
 namespace Tracking {
 
-class BotAppearance {
- public:
-    double operator()( const Traxel& ) const { return 1000; }
-};
-
-class BotDisappearance {
- public:
-    double operator()( const Traxel& ) const { return 1000; }
-};
-
-class BotMove {
- public:
-    double operator()( const Traxel&, const Traxel& ) const { return 200; }
-};
-
-class BotDivision {
- public:
-    double operator()( const Traxel&, const Traxel&, const Traxel& ) const { return 700; }
-};
-
-
-
 class GeometryDivision2 {
   /**
    * Division Energy based on geometric properties of a ancestor-child-child configuration.
