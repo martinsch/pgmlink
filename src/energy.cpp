@@ -57,8 +57,13 @@ namespace {
   }
 
   double get_detection_prob(const Traxel& tr, size_t state) {
-	  LOG(logDEBUG3) << "get_detection_prob(): " << state << tr.Id;
-	  throw runtime_error("get_detection_prob(): not yet implemented");
+	  FeatureMap::const_iterator it = tr.features.find("detProb");
+	  if (it == tr.features.end()) {
+		  throw runtime_error("get_detection_prob(): divProb feature not in traxel");
+	  }
+	  double det_prob = it->second[state];
+	  LOG(logDEBUG3) << "get_detection_prob(): " << det_prob;
+	  return det_prob;
   }
 
   double get_division_prob(const Traxel& tr) {
@@ -67,7 +72,7 @@ namespace {
 		  throw runtime_error("get_division_prob(): divProb feature not in traxel");
 	  }
 	  double div_prob = it->second[0];
-	  LOG(logDEBUG3) << "get_division(): " << div_prob;
+	  LOG(logDEBUG3) << "get_division_prob(): " << div_prob;
 	  return div_prob;
   }
 
@@ -99,7 +104,7 @@ double NegLnOneMinusCellness::operator()(const Traxel& tr) const {
 ////
 double NegLnDetection::operator ()(const Traxel& tr, size_t state) const {
 	double arg = get_detection_prob(tr, state);
-    if(arg == 0) arg = 0.0000000001;
+    if(arg < 0.0000000001) arg = 0.0000000001;
 	return w_*-1*log(arg);
 }
 
@@ -112,7 +117,7 @@ double NegLnDivision::operator ()(const Traxel& tr, size_t state) const {
 	if (state == 0) {
 		arg = 1 - arg;
 	}
-    if(arg == 0) arg = 0.0000000001;
+    if(arg <0.0000000001) arg = 0.0000000001;
 	return w_*-1*log(arg);
 }
 
@@ -122,7 +127,7 @@ double NegLnDivision::operator ()(const Traxel& tr, size_t state) const {
 ////
 double NegLnTransition::operator ()(const double dist_prob) const {
 	double arg = dist_prob;
-    if(arg == 0) arg = 0.0000000001;
+    if(arg < 0.0000000001) arg = 0.0000000001;
 	return w_*-1*log(arg);
 }
 
