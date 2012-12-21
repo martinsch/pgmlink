@@ -13,6 +13,8 @@ CMakeFiles
 doxygenconfig*
 randomforest_test.cpp
 tracking/
+tests/CMakeList.txt
+.gitignore
 
 
 # Compiled source #
