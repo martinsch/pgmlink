@@ -41,6 +41,14 @@ void SingleTimestepTraxelConservation::formulate(const HypothesesGraph& hypothes
 	add_detection_nodes(hypotheses);
 	LOG(logDEBUG) << "SingleTimestepTraxelConservation::formulate: add_transition_nodes";
 	add_transition_nodes(hypotheses);
+	if (with_appearance_) {
+		LOG(logDEBUG) << "SingleTimestepTraxelConservation::formulate: add_appearance_nodes";
+		add_appearance_nodes(hypotheses);
+	}
+	if (with_disappearance_) {
+		LOG(logDEBUG) << "SingleTimestepTraxelConservation::formulate: add_disappearance_nodes";
+		add_disappearance_nodes(hypotheses);
+	}
 	LOG(logDEBUG) << "SingleTimestepTraxelConservation::formulate: add_division_nodes";
 	add_division_nodes(hypotheses);
 
@@ -64,8 +72,9 @@ void SingleTimestepTraxelConservation::formulate(const HypothesesGraph& hypothes
 	}
 
 	if (fixed_detections_) {
+		assert(with_appearance_ || with_disappearance_);
 		LOG(logDEBUG) << "SingleTimestepTraxelConservation::formulate: fix_detections";
-		fix_detections(hypotheses, 2);
+		fix_detections(hypotheses);
 	}
 }
 
@@ -103,6 +112,23 @@ void SingleTimestepTraxelConservation::conclude(HypothesesGraph& g) {
 		++count_objects[solution[it->second]];
 		active_nodes.set(it->first, solution[it->second]);
 	}
+	// the node is also active if its appearance node is active
+	for (std::map<HypothesesGraph::Node, size_t>::const_iterator it =
+			app_node_map_.begin(); it != app_node_map_.end(); ++it) {
+		++count_objects[solution[it->second]];
+		if (solution[it->second] > 0) {
+			active_nodes.set(it->first, solution[it->second]);
+		}
+	}
+	// the node is also active if its disappearance node is active
+	for (std::map<HypothesesGraph::Node, size_t>::const_iterator it =
+			dis_node_map_.begin(); it != dis_node_map_.end(); ++it) {
+		++count_objects[solution[it->second]];
+		if (solution[it->second] > 0) {
+			active_nodes.set(it->first, solution[it->second]);
+		}
+	}
+
 	for (std::map<HypothesesGraph::Arc, size_t>::const_iterator it =
 			arc_map_.begin(); it != arc_map_.end(); ++it) {
 		bool state = false;
@@ -152,6 +178,9 @@ void SingleTimestepTraxelConservation::reset() {
 	}
 	node_map_.clear();
 	arc_map_.clear();
+	div_node_map_.clear();
+	app_node_map_.clear();
+	dis_node_map_.clear();
 }
 
 void SingleTimestepTraxelConservation::add_detection_nodes(const HypothesesGraph& g) {
@@ -164,6 +193,30 @@ void SingleTimestepTraxelConservation::add_detection_nodes(const HypothesesGraph
 		++count;
 	}
 	number_of_detection_nodes_ = count;
+}
+
+void SingleTimestepTraxelConservation::add_appearance_nodes(const HypothesesGraph& g) {
+	size_t count = 0;
+	for (HypothesesGraph::NodeIt n(g); n != lemon::INVALID; ++n) {
+		pgm_->Model()->addVariable(max_number_objects_+1);
+		app_node_map_[n] = pgm_->Model()->numberOfVariables() - 1;
+		assert(pgm_->Model()->numberOfLabels(app_node_map_[n]) == max_number_objects_ + 1);
+		LOG(logDEBUG4) << "appearance node added with id " << app_node_map_[n];
+		++count;
+	}
+	number_of_appearance_nodes_ = count;
+}
+
+void SingleTimestepTraxelConservation::add_disappearance_nodes(const HypothesesGraph& g) {
+	size_t count = 0;
+	for (HypothesesGraph::NodeIt n(g); n != lemon::INVALID; ++n) {
+		pgm_->Model()->addVariable(max_number_objects_+1);
+		dis_node_map_[n] = pgm_->Model()->numberOfVariables() - 1;
+		assert(pgm_->Model()->numberOfLabels(dis_node_map_[n]) == max_number_objects_ + 1);
+		LOG(logDEBUG4) << "detection node added with id " << dis_node_map_[n];
+		++count;
+	}
+	number_of_disappearance_nodes_ = count;
 }
 
 void SingleTimestepTraxelConservation::add_transition_nodes(const HypothesesGraph& g) {
@@ -214,18 +267,35 @@ void SingleTimestepTraxelConservation::add_finite_factors(const HypothesesGraph&
 	////
 	LOG(logDEBUG) << "SingleTimestepTraxelConservation::add_finite_factors: add detection factors";
 	for (HypothesesGraph::NodeIt n(g); n != lemon::INVALID; ++n) {
-		size_t vi[] = { node_map_[n] };
-		vector<size_t> coords(1, 0); // number of variables
+		size_t num_vars = 1;
+		if (with_appearance_) ++num_vars;
+		if (with_disappearance_) ++num_vars;
+		vector<size_t> vi;
+		vi.push_back(node_map_[n]);
+		if (with_appearance_) {
+			vi.push_back(app_node_map_[n]);
+		}
+		if (with_disappearance_) {
+			vi.push_back(dis_node_map_[n]);
+		}
+		// convert vector to array
+//		size_t* viarray = &vi[0];
+		vector<size_t> coords(num_vars, 0); // number of variables
 		// ITER first_ogm_idx, ITER last_ogm_idx, VALUE init, size_t states_per_var
-		OpengmExplicitFactor<double> table(vi, vi + 1, 0, (max_number_objects_ + 1));
+		OpengmExplicitFactor<double> table(vi.begin(), vi.end(), 0, (max_number_objects_ + 1));
 		for (size_t state = 0; state <= max_number_objects_; ++state) {
 			double energy = detection_(traxel_map[n], state);
 			LOG(logDEBUG2) << "SingleTimestepTraxelConservation::add_finite_factors: detection[" << state <<
-					"] = " << energy;
-			coords[0] = state;
-			table.set_value(coords, energy);
-			coords[0] = 0;
+							"] = " << energy;
+			for (size_t var_idx = 0; var_idx < num_vars; ++var_idx) {
+				coords[var_idx] = state;
+				table.set_value(coords, energy);
+				coords[var_idx] = 0;
+				LOG(logDEBUG3) << "SingleTimestepTraxelConservation::add_finite_factors: var_idx " << var_idx <<
+									"] = " << energy;
+			}
 		}
+
 		LOG(logDEBUG3) << "SingleTimestepTraxelConservation::add_finite_factors: adding table to pgm";
 		table.add_to(*pgm_);
 	}
@@ -276,11 +346,13 @@ void SingleTimestepTraxelConservation::add_finite_factors(const HypothesesGraph&
 }
 
 size_t SingleTimestepTraxelConservation::cplex_id(size_t opengm_id, size_t state) {
-	if (opengm_id <= (number_of_detection_nodes_ + number_of_transition_nodes_)) {
+	size_t number_of_nodes_with_multiple_states = number_of_detection_nodes_ + number_of_transition_nodes_+
+			number_of_appearance_nodes_ + number_of_disappearance_nodes_;
+	if (opengm_id <= (number_of_nodes_with_multiple_states)) {
 		return (max_number_objects_ + 1) * opengm_id + state;
-	} else if (opengm_id <= (number_of_detection_nodes_ + number_of_transition_nodes_ + number_of_division_nodes_)) {
-		return (max_number_objects_ + 1) * (number_of_detection_nodes_ + number_of_transition_nodes_) +
-				2 * (opengm_id - number_of_detection_nodes_ - number_of_transition_nodes_) + state;
+	} else if (opengm_id <= (number_of_nodes_with_multiple_states + number_of_division_nodes_)) {
+		return (max_number_objects_ + 1) * (number_of_nodes_with_multiple_states) +
+				2 * (opengm_id - number_of_nodes_with_multiple_states) + state;
 	}
 	throw std::runtime_error("cplex_id(): open_gm id does not exist");
 }
@@ -299,7 +371,7 @@ void SingleTimestepTraxelConservation::add_constraints(const HypothesesGraph& g)
 		//// outgoing transitions
 		////
 		size_t num_outarcs = 0;
-		// couple detection and transitions: Y_ij <= X_i
+		// couple detection and transitions: Y_ij <= X_i + App_i
 		for (HypothesesGraph::OutArcIt a(g, n); a != lemon::INVALID; ++a) {
 			for (size_t nu = 0; nu < max_number_objects_; ++nu) {
 				for (size_t mu = nu+1; mu <= max_number_objects_; ++mu) {
@@ -307,19 +379,23 @@ void SingleTimestepTraxelConservation::add_constraints(const HypothesesGraph& g)
 					coeffs.clear();
 					coeffs.push_back(1);
 					cplex_idxs.push_back(cplex_id(node_map_[n],nu));
+					if (with_appearance_) {
+						coeffs.push_back(1);
+						cplex_idxs2.push_back(cplex_id(app_node_map_[n],nu));
+					}
 					coeffs.push_back(1);
 					cplex_idxs.push_back(cplex_id(arc_map_[a],mu));
-					// 0 <= X_i[nu] + Y_ij[mu] <= 1  forall mu>nu
+					// 0 <= X_i[nu] + App_i[nu] + Y_ij[mu] <= 1  forall mu>nu
 					dynamic_cast<cplex*>(optimizer_)->addConstraint(cplex_idxs.begin(),
 								cplex_idxs.end(), coeffs.begin(), 0, 1);
-					LOG(logDEBUG3) << "SingleTimestepTraxelConservation::add_constraints: Y_ij <= X_ij added for "
+					LOG(logDEBUG3) << "SingleTimestepTraxelConservation::add_constraints:" <<
+							" Y_ij <= X_ij + App_i added for "
 							<< "n = " << node_map_[n] << ", a = " << arc_map_[a] << ", nu = " << nu << ", mu = " << mu;
 				}
 			}
 			++num_outarcs;
 		}
 
-		LOG(logDEBUG3) << "1";
 
 		int div_cplex_id = -1;
 		if (div_node_map_.count(n) > 0) {
@@ -328,12 +404,9 @@ void SingleTimestepTraxelConservation::add_constraints(const HypothesesGraph& g)
 			LOG(logDEBUG3) << "number_of_transition_nodes_ = " << number_of_transition_nodes_;
 			LOG(logDEBUG3) << "number_of_division_nodes_ = " << number_of_division_nodes_;
 			div_cplex_id = cplex_id(div_node_map_[n], 1);
-			LOG(logDEBUG3) << "1.1";
 		}
-		LOG(logDEBUG3) << "2";
 		if (num_outarcs > 0) {
-			LOG(logDEBUG3) << "3";
-			// couple transitions: sum(Y_ij) = D_i + X_i
+			// couple transitions: sum(Y_ij) = D_i + X_i + App_i
 			cplex_idxs.clear();
 			coeffs.clear();
 			for (HypothesesGraph::OutArcIt a(g, n); a != lemon::INVALID; ++a) {
@@ -342,32 +415,31 @@ void SingleTimestepTraxelConservation::add_constraints(const HypothesesGraph& g)
 					cplex_idxs.push_back(cplex_id(arc_map_[a],nu));
 				}
 			}
-			LOG(logDEBUG3) << "4";
 			for (size_t nu = 1; nu <= max_number_objects_; ++nu) {
 				coeffs.push_back(-nu);
 				cplex_idxs.push_back(cplex_id(node_map_[n],nu));
 			}
 			if (div_cplex_id != -1) {
-				LOG(logDEBUG3) << "5";
 				cplex_idxs.push_back(div_cplex_id);
 				coeffs.push_back(-1);
 			}
-			for( size_t iii = 0; iii<cplex_idxs.size(); ++iii) {
-				LOG(logDEBUG3) << "idxs[" << iii << "]=" << cplex_idxs[iii];
-				LOG(logDEBUG3) << "coeffs[" << iii << "]=" << coeffs[iii];
+			if (with_appearance_) {
+				for (size_t nu = 1; nu <= max_number_objects_; ++nu) {
+					coeffs.push_back(-nu);
+					cplex_idxs.push_back(cplex_id(app_node_map_[n],nu));
+				}
 			}
-			LOG(logDEBUG3) << "6";
-			// 0 <= sum_nu [ sum_j( nu * Y_ij[nu] ) ] - [ sum_nu nu * X_i[nu] + D_i[1] ]<= 0
+
+			// 0 <= sum_nu [ sum_j( nu * Y_ij[nu] ) ] - [ sum_nu nu * X_i[nu] + D_i[1] + sum_nu nu * App_i[nu] ]<= 0
 			dynamic_cast<cplex*>(optimizer_)->addConstraint(cplex_idxs.begin(),
 					cplex_idxs.end(), coeffs.begin(), 0, 0);
-			LOG(logDEBUG3) << "SingleTimestepTraxelConservation::add_constraints: sum(Y_ij) = D_i + X_i added for "
-						<< "n = " << node_map_[n];
+			LOG(logDEBUG3) << "SingleTimestepTraxelConservation::add_constraints:" <<
+					" sum(Y_ij) = D_i + X_i + App_i added for "	<< "n = " << node_map_[n];
+
 		}
 
-		LOG(logDEBUG3) << "7";
 		if (div_cplex_id != -1) {
-			LOG(logDEBUG3) << "8";
-			// couple detection and division: D_i = 1 => X_i = 1
+			// couple detection and division: D_i = 1 => X_i + App_i = 1
 			cplex_idxs.clear();
 			coeffs.clear();
 
@@ -376,12 +448,17 @@ void SingleTimestepTraxelConservation::add_constraints(const HypothesesGraph& g)
 
 			cplex_idxs.push_back(cplex_id(node_map_[n],1));
 			coeffs.push_back(-1);
-			LOG(logDEBUG3) << "9";
-			// -1 <= D_i[1] - X_i[1] <= 0
+
+			if (with_appearance_) {
+				cplex_idxs.push_back(cplex_id(app_node_map_[n],1));
+				coeffs.push_back(-1);
+			}
+			// -1 <= D_i[1] - X_i[1] - App_i[1] <= 0
 			dynamic_cast<cplex*>(optimizer_)->addConstraint(cplex_idxs.begin(),
 					cplex_idxs.end(), coeffs.begin(), -1, 0);
-			LOG(logDEBUG3) << "SingleTimestepTraxelConservation::add_constraints: D_i=1 => X_i=1 added for "
-						<< "n = " << node_map_[n] << ", d = " << div_node_map_[n];
+			LOG(logDEBUG3) << "SingleTimestepTraxelConservation::add_constraints:" <<
+					" D_i=1 => X_i + App_i =1 added for " << "n = " << node_map_[n] << ", d = " << div_node_map_[n];
+
 
 			// couple divsion and transition: D_1 = 1 => sum_k(Y_ik) = 2
 			cplex_idxs2.clear();
@@ -402,8 +479,8 @@ void SingleTimestepTraxelConservation::add_constraints(const HypothesesGraph& g)
 					// 0 <= D_i[1] + Y_ij[nu] <= 1 forall nu>1
 					dynamic_cast<cplex*>(optimizer_)->addConstraint(cplex_idxs.begin(),
 							cplex_idxs.end(), coeffs.begin(), 0, 1);
-					LOG(logDEBUG3) << "SingleTimestepTraxelConservation::add_constraints: D_i=1 => Y_i[nu]=0 added for "
-								<< "d = " << div_node_map_[n] << ", y = " << arc_map_[a] << ", nu = " << nu;
+					LOG(logDEBUG3) << "SingleTimestepTraxelConservation::add_constraints:" <<
+							" D_i=1 => Y_i[nu]=0 added for " << "d = " << div_node_map_[n] << ", y = " << arc_map_[a] << ", nu = " << nu;
 
 				}
 
@@ -414,16 +491,15 @@ void SingleTimestepTraxelConservation::add_constraints(const HypothesesGraph& g)
 			// -m <= 2 * D_i[1] - sum_j (Y_ij[1]) <= 0
 			dynamic_cast<cplex*>(optimizer_)->addConstraint(cplex_idxs2.begin(),
 					cplex_idxs2.end(), coeffs2.begin(), -int(max_number_objects_), 0);
-			LOG(logDEBUG3) << "SingleTimestepTraxelConservation::add_constraints: D_i = 1 => sum_k(Y_ik) = 2 added for "
-						<< "d = " << div_node_map_[n];
+			LOG(logDEBUG3) << "SingleTimestepTraxelConservation::add_constraints:" <<
+					" D_i = 1 => sum_k(Y_ik) = 2 added for " << "d = " << div_node_map_[n];
 		}
 
 
-		LOG(logDEBUG3) << "10";
 		////
 		//// incoming transitions
 		////
-		// couple transitions: sum_k(Y_kj) = X_j
+		// couple transitions: sum_k(Y_kj) = X_j + Dis_j
 		cplex_idxs.clear();
 		coeffs.clear();
 
@@ -441,28 +517,87 @@ void SingleTimestepTraxelConservation::add_constraints(const HypothesesGraph& g)
 				cplex_idxs.push_back(cplex_id(node_map_[n],nu));
 				coeffs.push_back(-nu);
 			}
+
+			if (with_disappearance_) {
+				for (size_t nu = 1; nu <= max_number_objects_; ++nu) {
+					cplex_idxs.push_back(cplex_id(dis_node_map_[n],nu));
+					coeffs.push_back(-nu);
+				}
+			}
+
 			// 0 <= sum_nu [ nu * sum_i (Y_ij[nu] ) ] - sum_nu ( nu * X_j[nu] ) <= 0
 			dynamic_cast<cplex*>(optimizer_)->addConstraint(cplex_idxs.begin(),
 					cplex_idxs.end(), coeffs.begin(), 0, 0);
-			LOG(logDEBUG3) << "SingleTimestepTraxelConservation::add_constraints: sum_k(Y_kj) = X_j added for "
-						<< "n = " << node_map_[n];
+			LOG(logDEBUG3) << "SingleTimestepTraxelConservation::add_constraints:" <<
+					" sum_k(Y_kj) = X_j added for "	<< "n = " << node_map_[n];
 		}
+
+
+		////
+		//// disappearance/appearance coupling
+		////
+		if (with_appearance_ || with_disappearance_) {
+			cplex_idxs.clear();
+			coeffs.clear();
+
+			for (size_t nu = 1; nu <= max_number_objects_; ++nu) {
+				cplex_idxs.push_back(cplex_id(node_map_[n],nu));
+				coeffs.push_back(1);
+			}
+
+			if (with_appearance_) {
+				for (size_t nu = 1; nu <= max_number_objects_; ++nu) {
+					cplex_idxs.push_back(cplex_id(app_node_map_[n],nu));
+					coeffs.push_back(1);
+				}
+			}
+
+			if (with_disappearance_) {
+				for (size_t nu = 1; nu <= max_number_objects_; ++nu) {
+					cplex_idxs.push_back(cplex_id(dis_node_map_[n],nu));
+					coeffs.push_back(1);
+				}
+			}
+
+			// 0 <= sum_nu ( X_i[nu] ) + sum_nu ( App_i[nu] ) + sum_nu ( Dis_i[nu] ) <= 1
+			dynamic_cast<cplex*>(optimizer_)->addConstraint(cplex_idxs.begin(),
+					cplex_idxs.end(), coeffs.begin(), 0, 1);
+			LOG(logDEBUG3) << "SingleTimestepTraxelConservation::add_constraints:" <<
+					" X_i>0 v` App_i>0 v` Dis_i>0 added for " << "n = " << node_map_[n];
+		}
+
 	}
 }
 
 
 
-void SingleTimestepTraxelConservation::fix_detections(const HypothesesGraph& g,
-		size_t val) {
+void SingleTimestepTraxelConservation::fix_detections(const HypothesesGraph& g) {
 	typedef opengm::LPCplex<OpengmModel::ogmGraphicalModel,OpengmModel::ogmAccumulator> cplex;
+	property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g.get(node_traxel());
+
 	for (HypothesesGraph::NodeIt n(g); n != lemon::INVALID; ++n) {
 		vector<size_t> cplex_idxs;
-		cplex_idxs.push_back(cplex_id(node_map_[n], val));
 		vector<int> coeffs;
+		vector<double> energies;
+		for (size_t state = 0; state <= max_number_objects_; ++state) {
+			energies.push_back((double) detection_(traxel_map[n], state));
+		}
+		size_t max_state = std::min_element(energies.begin(), energies.end()) - energies.begin();
+		cplex_idxs.push_back(cplex_id(node_map_[n], max_state));
 		coeffs.push_back(1);
-		// val <= 1*detection <= val
+		if (with_appearance_) {
+			cplex_idxs.push_back(cplex_id(app_node_map_[n],max_state));
+			coeffs.push_back(1);
+		}
+		if (with_disappearance_) {
+			cplex_idxs.push_back(cplex_id(dis_node_map_[n],max_state));
+			coeffs.push_back(1);
+		}
+		// 1 <= 1*X_i[max_state] + 1*App_i[max_state] + 1*Dis_i[max_state] <= val
 		dynamic_cast<cplex*>(optimizer_)->addConstraint(cplex_idxs.begin(),
 				cplex_idxs.end(), coeffs.begin(), 1, 1);
+		LOG(logDEBUG3) << "SingleTimestepTraxelConservation::fix_detections:" <<
+							" fix_Detection to " << max_state << " added for " << "n = " << node_map_[n];
 	}
 }
 

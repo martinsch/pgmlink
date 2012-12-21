@@ -385,11 +385,14 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 //		RF::predict_traxels(ts, rf, rf_features, 1, "cellness");
 
 		double s2 = (avg_obj_size_*avg_obj_size_)/4.0;
+		if (s2 < 0.0001) {
+			s2 = 0.0001;
+		}
 		LOG(logDEBUG) << "sigmas are all set to " << s2;
 		vector<double> sigma2(max_number_objects_+1,s2);
-		for(size_t i = 0; i < sigma2.size(); ++i) {
-			cout << sigma2[i] << endl;
-		}
+//		for(size_t i = 0; i < sigma2.size(); ++i) {
+//			cout << sigma2[i] << endl;
+//		}
 
 		for(TraxelStore::iterator tr = ts.begin(); tr != ts.end(); ++tr) {
 			Traxel trax = *tr;
@@ -462,7 +465,9 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 			forbidden_cost_,
 			with_constraints_,
 			fixed_detections_,
-			ep_gap_
+			ep_gap_,
+			with_appearance_,
+			with_disappearance_
 			);
 
 	cout << "-> formulate ConservationTracking model" << endl;
