@@ -11,7 +11,7 @@
 #include "pgmlink/hypotheses.h"
 #include "pgmlink/log.h"
 #include "pgmlink/reasoner_opengm.h"
-#include "pgmlink/track.h"
+#include "pgmlink/tracking.h"
 
 using namespace std;
 using boost::shared_ptr;
@@ -19,9 +19,9 @@ using boost::shared_array;
 
 namespace pgmlink {
 ////
-//// class MrfTracking
+//// class ChaingraphTracking
 ////
-vector<vector<Event> > MrfTracking::operator()(TraxelStore& ts) {
+vector<vector<Event> > ChaingraphTracking::operator()(TraxelStore& ts) {
 	cout << "-> building energy functions " << endl;
 	SquaredDistance move;
 	BorderAwareConstant appearance(app_, earliest_timestep(ts), true, 0);
@@ -68,7 +68,7 @@ vector<vector<Event> > MrfTracking::operator()(TraxelStore& ts) {
 	HypothesesGraph* graph = hyp_builder.build();
 
 	cout << "-> init MRF reasoner" << endl;
-	SingleTimestepTraxelMrf mrf(detection, misdetection, appearance,
+	Chaingraph mrf(detection, misdetection, appearance,
 			disappearance, bind<double>(move, _1, _2, empty, empty), division,
 			opportunity_cost_, forbidden_cost_, with_constraints_,
 			fixed_detections_, ep_gap_);
@@ -93,13 +93,13 @@ vector<vector<Event> > MrfTracking::operator()(TraxelStore& ts) {
 	return *events(*graph);
 }
 
-vector<map<unsigned int, bool> > MrfTracking::detections() {
+vector<map<unsigned int, bool> > ChaingraphTracking::detections() {
 	vector<map<unsigned int, bool> > res;
 	if (last_detections_) {
 		return *last_detections_;
 	} else {
 		throw std::runtime_error(
-				"MrfTracking::detections(): previous tracking result required");
+				"ChaingraphTracking::detections(): previous tracking result required");
 	}
 }
 

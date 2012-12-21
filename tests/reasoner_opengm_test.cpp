@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE( HypothesesGraph_build_hyp2 ) {
    ConstantEnergy e5(5);
    ConstantEnergy e6(6);
     
-   SingleTimestepTraxelMrf mrf(bind<double>(e1, _1, empty, empty),		//detection
+   Chaingraph mrf(bind<double>(e1, _1, empty, empty),		//detection
 			       bind<double>(e2, _1, empty, empty),		//non_detection
 			       bind<double>(e3, _1, empty, empty),		//appearance
 			       bind<double>(e4, _1, empty, empty),		//disappearance
@@ -313,7 +313,7 @@ BOOST_AUTO_TEST_CASE( HypothesesGraph_build_hyp_mrf ) {
     ConstantEnergy e5(20);		
     ConstantEnergy e6(5);	
     
-    SingleTimestepTraxelMrf mrf(bind<double>(e1, _1, empty, empty),		//detection
+    Chaingraph mrf(bind<double>(e1, _1, empty, empty),		//detection
 			        bind<double>(e2, _1, empty, empty),		//non_detection
 			        bind<double>(e3, _1, empty, empty),		//appearance
 			        bind<double>(e4, _1, empty, empty),		//disappearance

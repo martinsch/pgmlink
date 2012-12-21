@@ -15,7 +15,7 @@
 using namespace std;
 
 namespace pgmlink {
-  SingleTimestepTraxelMrf::~SingleTimestepTraxelMrf() {
+  Chaingraph::~Chaingraph() {
    if(mrf_ != NULL) {
 	delete mrf_;
 	mrf_ = NULL;
@@ -26,24 +26,24 @@ namespace pgmlink {
     }
   }
 
-double SingleTimestepTraxelMrf::forbidden_cost() const {
+double Chaingraph::forbidden_cost() const {
     return forbidden_cost_;
 }
 
-bool SingleTimestepTraxelMrf::with_constraints() const {
+bool Chaingraph::with_constraints() const {
     return with_constraints_;
 }
 
-void SingleTimestepTraxelMrf::formulate( const HypothesesGraph& hypotheses ) {
-    LOG(logDEBUG) << "SingleTimestepTraxelMrf::formulate: entered";
+void Chaingraph::formulate( const HypothesesGraph& hypotheses ) {
+    LOG(logDEBUG) << "Chaingraph::formulate: entered";
     reset();
     mrf_ = new OpengmModel();
 
-    LOG(logDEBUG) << "SingleTimestepTraxelMrf::formulate: add_detection_nodes";
+    LOG(logDEBUG) << "Chaingraph::formulate: add_detection_nodes";
     add_detection_nodes( hypotheses );
-    LOG(logDEBUG) << "SingleTimestepTraxelMrf::formulate: add_transition_nodes";
+    LOG(logDEBUG) << "Chaingraph::formulate: add_transition_nodes";
     add_transition_nodes( hypotheses );
-    LOG(logDEBUG) << "SingleTimestepTraxelMrf::formulate: add_finite_factors";
+    LOG(logDEBUG) << "Chaingraph::formulate: add_finite_factors";
     add_finite_factors( hypotheses );
 
     typedef opengm::LPCplex<OpengmModel::ogmGraphicalModel, OpengmModel::ogmAccumulator> cplex_optimizer;
@@ -51,25 +51,25 @@ void SingleTimestepTraxelMrf::formulate( const HypothesesGraph& hypotheses ) {
     param.verbose_ = true;
     param.integerConstraint_ = true;
     param.epGap_ = ep_gap_;
-    LOG(logDEBUG) << "SingleTimestepTraxelMrf::formulate ep_gap = " << param.epGap_;
+    LOG(logDEBUG) << "Chaingraph::formulate ep_gap = " << param.epGap_;
 
     OpengmModel::ogmGraphicalModel* model = mrf_->Model();
     optimizer_ = new cplex_optimizer(*model, param);
 
 	if (with_constraints_) {
-		LOG(logDEBUG) << "SingleTimestepTraxelMrf::formulate: add_constraints";
+		LOG(logDEBUG) << "Chaingraph::formulate: add_constraints";
 		add_constraints(hypotheses);
 	}
 
 	if (fixed_detections_) {
-		LOG(logDEBUG) << "SingleTimestepTraxelMrf::formulate: fix_detections";
+		LOG(logDEBUG) << "Chaingraph::formulate: fix_detections";
 		fix_detections(hypotheses, 1);
 	}
 }
 
 
 
-void SingleTimestepTraxelMrf::infer() {
+void Chaingraph::infer() {
     opengm::InferenceTermination status = optimizer_->infer();
     if(status != opengm::NORMAL) {
         throw std::runtime_error("GraphicalModel::infer(): optimizer terminated unnormally");
@@ -77,7 +77,7 @@ void SingleTimestepTraxelMrf::infer() {
 }
 
 
-void SingleTimestepTraxelMrf::conclude( HypothesesGraph& g ) {
+void Chaingraph::conclude( HypothesesGraph& g ) {
     // extract solution from optimizer
     vector<OpengmModel::ogmInference::LabelType> solution;
     opengm::InferenceTermination status = optimizer_->arg(solution);
@@ -103,19 +103,19 @@ void SingleTimestepTraxelMrf::conclude( HypothesesGraph& g ) {
     }
 }
 
-  const OpengmModel* SingleTimestepTraxelMrf::get_graphical_model() const {
+  const OpengmModel* Chaingraph::get_graphical_model() const {
     return mrf_;
   }
 
-  const std::map<HypothesesGraph::Node, size_t>& SingleTimestepTraxelMrf::get_node_map() const {
+  const std::map<HypothesesGraph::Node, size_t>& Chaingraph::get_node_map() const {
     return node_map_;
   }
 
-  const std::map<HypothesesGraph::Arc, size_t>& SingleTimestepTraxelMrf::get_arc_map() const {
+  const std::map<HypothesesGraph::Arc, size_t>& Chaingraph::get_arc_map() const {
     return arc_map_;
   }
 
-void SingleTimestepTraxelMrf::reset() {
+void Chaingraph::reset() {
     if(mrf_ != NULL) {
 	delete mrf_;
 	mrf_ = NULL;
@@ -128,26 +128,26 @@ void SingleTimestepTraxelMrf::reset() {
     arc_map_.clear();
 }
 
-void SingleTimestepTraxelMrf::add_detection_nodes( const HypothesesGraph& g) {
+void Chaingraph::add_detection_nodes( const HypothesesGraph& g) {
     for(HypothesesGraph::NodeIt n(g); n!=lemon::INVALID; ++n) {
 	mrf_->Model()->addVariable(2);
 	node_map_[n] = mrf_->Model()->numberOfVariables() - 1; 
     }
 }
-void SingleTimestepTraxelMrf::add_transition_nodes( const HypothesesGraph& g) {
+void Chaingraph::add_transition_nodes( const HypothesesGraph& g) {
     for(HypothesesGraph::ArcIt a(g); a!=lemon::INVALID; ++a) {
 	mrf_->Model()->addVariable(2);
 	arc_map_[a] = mrf_->Model()->numberOfVariables() - 1; 
     }
 }
 
-void SingleTimestepTraxelMrf::add_finite_factors( const HypothesesGraph& g) {
-  LOG(logDEBUG) << "SingleTimestepTraxelMrf::add_finite_factors: entered";
+void Chaingraph::add_finite_factors( const HypothesesGraph& g) {
+  LOG(logDEBUG) << "Chaingraph::add_finite_factors: entered";
   property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g.get(node_traxel());		
   ////
   //// add detection factors
   ////
-  LOG(logDEBUG) << "SingleTimestepTraxelMrf::add_finite_factors: add detection factors";
+  LOG(logDEBUG) << "Chaingraph::add_finite_factors: add detection factors";
   for(HypothesesGraph::NodeIt n(g); n!=lemon::INVALID; ++n) {
     size_t vi[] = {node_map_[n]};
     vector<size_t> coords(1,0);
@@ -175,13 +175,13 @@ namespace {
     }
 }
 
-void SingleTimestepTraxelMrf::add_constraints( const HypothesesGraph& g ) {
-    LOG(logDEBUG) << "SingleTimestepTraxelMrf::add_constraints: entered";
+void Chaingraph::add_constraints( const HypothesesGraph& g ) {
+    LOG(logDEBUG) << "Chaingraph::add_constraints: entered";
     typedef opengm::LPCplex<OpengmModel::ogmGraphicalModel, OpengmModel::ogmAccumulator> cplex;
     ////
     //// outgoing transitions
     ////
-    LOG(logDEBUG) << "SingleTimestepTraxelMrf::add_constraints: outgoing transitions";
+    LOG(logDEBUG) << "Chaingraph::add_constraints: outgoing transitions";
     for(HypothesesGraph::NodeIt n(g); n!=lemon::INVALID; ++n) {
 	// couple detection and transitions
 	for(HypothesesGraph::OutArcIt a(g, n); a!=lemon::INVALID; ++a) {
@@ -200,7 +200,7 @@ void SingleTimestepTraxelMrf::add_constraints( const HypothesesGraph& g ) {
     ////
     //// incoming transitions
     ////
-    LOG(logDEBUG) << "SingleTimestepTraxelMrf::add_constraints: incoming transitions";
+    LOG(logDEBUG) << "Chaingraph::add_constraints: incoming transitions";
     for(HypothesesGraph::NodeIt n(g); n!=lemon::INVALID; ++n) {
 	// couple detection and transitions
 	for(HypothesesGraph::InArcIt a(g, n); a!=lemon::INVALID; ++a) {
@@ -218,7 +218,7 @@ void SingleTimestepTraxelMrf::add_constraints( const HypothesesGraph& g ) {
     }
 }
 
-void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::Arc& a) {
+void Chaingraph::couple(HypothesesGraph::Node& n, HypothesesGraph::Arc& a) {
 	    typedef opengm::LPCplex<OpengmModel::ogmGraphicalModel, OpengmModel::ogmAccumulator> cplex;
     	    vector<size_t> cplex_idxs; 
 	    cplex_idxs.push_back(cplex_id(node_map_[n]));
@@ -230,7 +230,7 @@ void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::
 	    dynamic_cast<cplex*>(optimizer_)->addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin() , 0, 1);
 }
 
-  void SingleTimestepTraxelMrf::fix_detections( const HypothesesGraph& g, size_t val ) {
+  void Chaingraph::fix_detections( const HypothesesGraph& g, size_t val ) {
 	    typedef opengm::LPCplex<OpengmModel::ogmGraphicalModel, OpengmModel::ogmAccumulator> cplex;
 	    for(HypothesesGraph::NodeIt n(g); n!=lemon::INVALID; ++n) {
 	      vector<size_t> cplex_idxs; 
@@ -242,8 +242,8 @@ void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::
 	    }
 }
 
-  void SingleTimestepTraxelMrf::add_outgoing_factor( const HypothesesGraph& g, const HypothesesGraph::Node& n ) {
-    LOG(logDEBUG) << "SingleTimestepTraxelMrf::add_outgoing_factor(): entered";
+  void Chaingraph::add_outgoing_factor( const HypothesesGraph& g, const HypothesesGraph::Node& n ) {
+    LOG(logDEBUG) << "Chaingraph::add_outgoing_factor(): entered";
     property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g.get(node_traxel());
     // collect and count outgoing arcs
     vector<HypothesesGraph::Arc> arcs; 
@@ -343,11 +343,11 @@ void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::
       table.add_to( *mrf_ );      
 
     }   
-    LOG(logDEBUG) << "SingleTimestepTraxelMrf::add_outgoing_factor(): leaving";
+    LOG(logDEBUG) << "Chaingraph::add_outgoing_factor(): leaving";
 }
 
-  void SingleTimestepTraxelMrf::add_incoming_factor( const HypothesesGraph& g, const HypothesesGraph::Node& n ) {
-    LOG(logDEBUG) << "SingleTimestepTraxelMrf::add_incoming_factor(): entered";
+  void Chaingraph::add_incoming_factor( const HypothesesGraph& g, const HypothesesGraph::Node& n ) {
+    LOG(logDEBUG) << "Chaingraph::add_incoming_factor(): entered";
     property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g.get(node_traxel());
     // collect and count incoming arcs
     vector<size_t> vi; // opengm variable indeces
@@ -386,7 +386,7 @@ void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::
     }
 
     table.add_to( *mrf_ );
-    LOG(logDEBUG) << "SingleTimestepTraxelMrf::add_incoming_factor(): leaving";
+    LOG(logDEBUG) << "Chaingraph::add_incoming_factor(): leaving";
   }
 
 } /* namespace pgmlink */ 

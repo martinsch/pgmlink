@@ -10,9 +10,9 @@
 namespace pgmlink {
 class Traxel;
 
-class SingleTimestepTraxelMrf : public Reasoner {
+class Chaingraph : public Reasoner {
     public:
-    SingleTimestepTraxelMrf(boost::function<double (const Traxel&)> detection,
+    Chaingraph(boost::function<double (const Traxel&)> detection,
 			    boost::function<double (const Traxel&)> non_detection,
 			    boost::function<double (const Traxel&)> appearance,
 			    boost::function<double (const Traxel&)> disappearance,
@@ -38,7 +38,7 @@ class SingleTimestepTraxelMrf : public Reasoner {
     fixed_detections_(fixed_detections),
     ep_gap_(ep_gap)
     { };
-    ~SingleTimestepTraxelMrf();
+    ~Chaingraph();
 
     virtual void formulate( const HypothesesGraph& );
     virtual void infer();
@@ -69,8 +69,8 @@ class SingleTimestepTraxelMrf : public Reasoner {
 
     private:
     // copy and assingment have to be implemented, yet
-    SingleTimestepTraxelMrf(const SingleTimestepTraxelMrf&) {};
-    SingleTimestepTraxelMrf& operator=(const SingleTimestepTraxelMrf&) { return *this;};
+    Chaingraph(const Chaingraph&) {};
+    Chaingraph& operator=(const Chaingraph&) { return *this;};
 
     void reset();
     void add_constraints( const HypothesesGraph& );
@@ -115,7 +115,7 @@ class SingleTimestepTraxelMrf : public Reasoner {
 /******************/
  
  template< typename table_t, typename const_iter >
-   void SingleTimestepTraxelMrf::add_factor( const table_t& table, const_iter first_idx, const_iter last_idx ){
+   void Chaingraph::add_factor( const table_t& table, const_iter first_idx, const_iter last_idx ){
    OpengmModel::FunctionIdentifier id=mrf_->Model()->addFunction(table);
    mrf_->Model()->addFactor(id, first_idx, last_idx);
  }

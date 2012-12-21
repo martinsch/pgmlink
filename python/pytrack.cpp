@@ -5,7 +5,7 @@
 #include <boost/python/suite/indexing/map_indexing_suite.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
-#include "../include/pgmlink/track.h"
+#include "../include/pgmlink/tracking.h"
 
 using namespace std;
 using namespace pgmlink;
@@ -28,11 +28,11 @@ void export_track() {
       .def(vector_indexing_suite<vector<map<unsigned int, bool> > >())
     ;
 
-    class_<MrfTracking>("MrfTracking", 
+    class_<ChaingraphTracking>("ChaingraphTracking", 
 			init<string,double,double,double,double,bool,double,double,bool,bool,double,double,double>(
 								     args("random_forest_filename", "appearance", "disappearance", "detection", "misdetection", "use_random_forest", "opportunity_cost", "forbidden_cost", "with_constraints", "fixed_detections", "mean_div_dist", "min_angle", "ep_gap")))
-      .def("__call__", &MrfTracking::operator())
-      .def("detections", &MrfTracking::detections) 
+      .def("__call__", &ChaingraphTracking::operator())
+      .def("detections", &ChaingraphTracking::detections) 
     ;
 
     enum_<Event::EventType>("EventType")

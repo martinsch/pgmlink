@@ -11,9 +11,9 @@
 #include "pgmlink/field_of_view.h"
 
 namespace pgmlink {
-  class MrfTracking {
+  class ChaingraphTracking {
   public:
-    MrfTracking(const std::string& random_forest_filename = "none",
+    ChaingraphTracking(const std::string& random_forest_filename = "none",
 	      double appearance = 500, 
 	      double disappearance = 500,
 	      double detection = 10,
