@@ -26,12 +26,11 @@ ADD_DEFINITIONS(-DHasHDF5)
 ### wrapper ###
 ###############
 
-set(TRACKING_SRCS ctracking.cpp)
-link_directories(${PROJECT_SOURCE_DIR}/../3rd_party/lib/)
+set(PYPGMLINK_SRCS pypgmlink.cpp)
 
-add_library(ctracking SHARED ${TRACKING_SRCS})
-target_link_libraries(ctracking ${Boost_PYTHON_LIBRARIES} track_lib ilocplex vigraimpex)
-set_target_properties(ctracking PROPERTIES PREFIX "" OUTPUT_NAME "ctracking")
+add_library(pypgmlink SHARED ${PYPGMLINK_SRCS})
+target_link_libraries(pypgmlink ${Boost_PYTHON_LIBRARIES} track_lib ilocplex vigraimpex)
+set_target_properties(pypgmlink PROPERTIES PREFIX "" OUTPUT_NAME "pgmlink")
 
 
 # install
@@ -39,23 +38,22 @@ set_target_properties(ctracking PROPERTIES PREFIX "" OUTPUT_NAME "ctracking")
 
 
 
-# this will set ctracking install dir to $PYTHON_SITE_PACKAGES
+# this will set the install dir to $PYTHON_SITE_PACKAGES
 # make use of ${PYTHON_EXECUTABLE} instead of /usr/bin/python
 
 
 FIND_PACKAGE(PythonInterp)
-IF(NOT DEFINED CTRACKING_INSTALL_DIR OR CTRACKING_INSTALL_DIR MATCHES "^$")
+IF(NOT DEFINED PYPGMLINK_INSTALL_DIR OR PYPGMLINK_INSTALL_DIR MATCHES "^$")
     execute_process(COMMAND ${PYTHON_EXECUTABLE} -c 
                     "from distutils.sysconfig import *; print get_python_lib(1)"
                     OUTPUT_VARIABLE PYTHON_SITE_PACKAGES OUTPUT_STRIP_TRAILING_WHITESPACE)
-    FILE(TO_CMAKE_PATH ${PYTHON_SITE_PACKAGES} CTRACKING_INSTALL_DIR)
+    FILE(TO_CMAKE_PATH ${PYTHON_SITE_PACKAGES} PYPGMLINK_INSTALL_DIR)
 ENDIF()
-SET(CTRACKING_INSTALL_DIR ${CTRACKING_INSTALL_DIR}
-    CACHE PATH "where to install the VIGRA Python package" FORCE)
+SET(PYPGMLINK_INSTALL_DIR ${PYPGMLINK_INSTALL_DIR}
+    CACHE PATH "where to install the pgmlink Python package" FORCE)
 # this is the install path relative to CMAKE_INSTALL_PREFIX,
 # use this in INSTALL() commands to get packaging right
-FILE(RELATIVE_PATH CTRACKING_INSTALL_DIR ${CMAKE_INSTALL_PREFIX} ${CTRACKING_INSTALL_DIR})
+FILE(RELATIVE_PATH PYPGMLINK_INSTALL_DIR ${CMAKE_INSTALL_PREFIX} ${PYPGMLINK_INSTALL_DIR})
 
-
-INSTALL(TARGETS ctracking
-        DESTINATION ${CTRACKING_INSTALL_DIR})
+INSTALL(TARGETS pypgmlink
+        DESTINATION ${PYPGMLINK_INSTALL_DIR})

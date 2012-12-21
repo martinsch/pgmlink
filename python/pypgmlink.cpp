@@ -81,7 +81,7 @@ namespace Tracking {
 }
 
 
-BOOST_PYTHON_MODULE( ctracking )
+BOOST_PYTHON_MODULE( pgmlink )
 {
     using namespace boost::python;
     using namespace Tracking;
