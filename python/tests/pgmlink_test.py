@@ -23,7 +23,7 @@ class Test_Traxels( ut.TestCase ):
         self.assertEqual(t.get_feature_value("com", 2), 12)
 
 class Test_HypothesesGraph( ut.TestCase ):
-    def runTest( self ):
+    def test_graph_interface( self ):
         # exercise the interface
 
         g = pgmlink.HypothesesGraph()
@@ -46,6 +46,16 @@ class Test_HypothesesGraph( ut.TestCase ):
         self.assertTrue( not g.valid(n3) ) 
         self.assertTrue( g.valid(a1) ) 
         self.assertTrue( not g.valid(a2) )  
+
+    def test_property_maps( self ):
+        t = pgmlink.Traxel()
+        t.Id = 33
+
+        g = pgmlink.HypothesesGraph()
+        n1 = g.addNode(0)
+        m = g.addNodeTraxelMap()
+        m[n1] = t
+        self.assertEqual(m[n1].Id, 33)
 
 if __name__=="__main__":
     ut.main()

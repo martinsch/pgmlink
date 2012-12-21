@@ -1,4 +1,5 @@
 #include <boost/python.hpp>
+#include <boost/python/iterator.hpp>
 #include <boost/python/return_internal_reference.hpp>
 #include <boost/utility.hpp>
 
@@ -9,6 +10,46 @@
 using namespace pgmlink;
 using namespace boost::python;
 
+typedef typename property_map<node_traxel, typename HypothesesGraph::base_graph>::type node_traxel_m;
+
+
+node_traxel_m& addNodeTraxelMap(HypothesesGraph* g) {
+  g->add(node_traxel());
+  return g->get(node_traxel());
+}
+node_traxel_m& getNodeTraxelMap(HypothesesGraph* g) {
+  return g->get(node_traxel());
+}
+
+
+inline object pass_through(object const& o) { return o; }
+
+struct lemon_iterator_wrapper {
+  lemon_iterator_wrapper( node_traxel_m::ValueIt endValue )
+    : endValue_(endValue) {}
+
+  static node_traxel_m::Value
+  next( node_traxel_m::ValueIt& it ){
+    if( it == endValue_) {
+        PyErr_SetString(PyExc_StopIteration, "No more data.");
+        boost::python::throw_error_already_set();
+    }
+    const node_traxel_m::Value& result = *it;
+    ++it;
+    return result;
+  }
+
+  static void
+  wrap( const char* python_name) {
+    class_<typename node_traxel_m::ValueIt>( python_name )
+      .def("next", next)
+      .def("__iter__", pass_through) 
+      ;
+  }
+
+  node_traxel_m::ValueIt endValue_;
+};
+
 void export_hypotheses() {
   class_<typename HypothesesGraph::Arc>("Arc");
   class_<typename HypothesesGraph::ArcIt>("ArcIt");
@@ -16,6 +57,18 @@ void export_hypotheses() {
   class_<typename HypothesesGraph::NodeIt>("NodeIt");
   class_<typename HypothesesGraph::InArcIt>("InArcIt");
   class_<typename HypothesesGraph::OutArcIt>("OutArcIt");
+
+  // NodeTraxelMap
+  // class_<typename node_traxel_m::ValueIt>("NodeTraxelMap_ValueIt")
+  //   .def("next", &node_traxel_m::ValueIt::operator++)
+  //   ;
+
+  class_<node_traxel_m, boost::noncopyable>("NodeTraxelMap", init<const HypothesesGraph&>(args("hypotheses_graph")))
+    .def("__getitem__", &node_traxel_m::operator[],
+	 return_internal_reference<>())
+    .def("__setitem__", &node_traxel_m::set)
+    ;
+
 
   // handle function overloading
   void (HypothesesGraph::*erase1)(const HypothesesGraph::Node) = &HypothesesGraph::erase;
@@ -61,6 +114,12 @@ void export_hypotheses() {
     .def("baseNode", baseNode2)
     .def("runningNode", runningNode2)
     .def("oppositeNode", &HypothesesGraph::oppositeNode)
+
+    // extensions
+    .def("addNodeTraxelMap", &addNodeTraxelMap,
+	 return_internal_reference<>())
+    .def("getNodeTraxelMap", &getNodeTraxelMap,
+	 return_internal_reference<>()) 
     ;
 
   //
