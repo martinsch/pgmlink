@@ -18,7 +18,7 @@
 using namespace std;
 using namespace boost;
 
-namespace Tracking {
+namespace pgmlink {
 
   ////
   //// class OpengmModel
@@ -31,4 +31,4 @@ namespace Tracking {
     delete model_;
   }
 
-} /* namespace Tracking */
+} /* namespace pgmlink */

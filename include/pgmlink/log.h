@@ -76,7 +76,7 @@
 
 
 
-namespace Tracking
+namespace pgmlink
 {
 
 
@@ -140,7 +140,7 @@ public:
 
 
 // getRedirect()
-inline FILE*& Tracking::Output2FILE::getRedirect()
+inline FILE*& pgmlink::Output2FILE::getRedirect()
 {
     static FILE* pStream = stderr;
     return pStream;
@@ -149,7 +149,7 @@ inline FILE*& Tracking::Output2FILE::getRedirect()
 
 
 // output()
-inline void Tracking::Output2FILE::output(const std::string& msg)
+inline void pgmlink::Output2FILE::output(const std::string& msg)
 {
     FILE* pStream = getRedirect();
     if (!pStream) {
@@ -202,7 +202,7 @@ public:
      * This function can be used as a safeguard in the logging macros to defend against illegal
      * user defined global logging levels.
      *
-     * @return The deepest Tracking::LogLevel available.
+     * @return The deepest pgmlink::LogLevel available.
      */
     static LogLevel& getReportingLevel();
 
@@ -241,7 +241,7 @@ private:
 
 // Log()
 template <typename T>
-Tracking::Log<T>::Log()
+pgmlink::Log<T>::Log()
 {
 }
 
@@ -249,19 +249,19 @@ Tracking::Log<T>::Log()
 
 // get()
 template <typename T>
-std::ostringstream& Tracking::Log<T>::get(LogLevel level)
+std::ostringstream& pgmlink::Log<T>::get(LogLevel level)
 {
     // check for valid logging level
     LogLevel ll = level;
     if ( ll <= logNO_LOGGING || ll > getReportingLevel() ) {
-        Tracking::Log<T>().get(Tracking::logWARNING) << "Log<T>::get(): Invalid logging level '" << ll << "'. Using INFO level as default.";
+        pgmlink::Log<T>().get(pgmlink::logWARNING) << "Log<T>::get(): Invalid logging level '" << ll << "'. Using INFO level as default.";
         ll = logINFO;
     }
 
     // print standard logging preambel to logging stream
-    os_ << "- " << Tracking::nowTime();
+    os_ << "- " << pgmlink::nowTime();
     os_ << " " << toString(ll) << ": ";
-    os_ << std::string(ll > Tracking::logDEBUG ? ll - Tracking::logDEBUG : 0, '\t');
+    os_ << std::string(ll > pgmlink::logDEBUG ? ll - pgmlink::logDEBUG : 0, '\t');
 
     return os_;
 }
@@ -270,7 +270,7 @@ std::ostringstream& Tracking::Log<T>::get(LogLevel level)
 
 // ~Log()
 template <typename T>
-Tracking::Log<T>::~Log()
+pgmlink::Log<T>::~Log()
 {
     os_ << std::endl;
     T::output(os_.str());
@@ -280,9 +280,9 @@ Tracking::Log<T>::~Log()
 
 // getReportingLevel()
 template <typename T>
-Tracking::LogLevel& Tracking::Log<T>::getReportingLevel()
+pgmlink::LogLevel& pgmlink::Log<T>::getReportingLevel()
 {
-    static Tracking::LogLevel reportingLevel = Tracking::logDEBUG4;
+    static pgmlink::LogLevel reportingLevel = pgmlink::logDEBUG4;
     return reportingLevel;
 }
 
@@ -290,10 +290,10 @@ Tracking::LogLevel& Tracking::Log<T>::getReportingLevel()
 
 // toString()
 template <typename T>
-std::string Tracking::Log<T>::toString(LogLevel level)
+std::string pgmlink::Log<T>::toString(LogLevel level)
 {
     if (level > getReportingLevel() || level < logNO_LOGGING) {
-        Tracking::Log<T>().get(Tracking::logWARNING) << "Log<T>::toString(): Unknown logging level '" << level << "'. Using INFO level as default.";
+        pgmlink::Log<T>().get(pgmlink::logWARNING) << "Log<T>::toString(): Unknown logging level '" << level << "'. Using INFO level as default.";
         return "INFO";
     }
 
@@ -305,30 +305,30 @@ std::string Tracking::Log<T>::toString(LogLevel level)
 
 // fromString()
 template <typename T>
-Tracking::LogLevel Tracking::Log<T>::fromString(const std::string& level)
+pgmlink::LogLevel pgmlink::Log<T>::fromString(const std::string& level)
 {
     if (level == "DEBUG4")
-        return Tracking::logDEBUG4;
+        return pgmlink::logDEBUG4;
     if (level == "DEBUG3")
-        return Tracking::logDEBUG3;
+        return pgmlink::logDEBUG3;
     if (level == "DEBUG2")
-        return Tracking::logDEBUG2;
+        return pgmlink::logDEBUG2;
     if (level == "DEBUG1")
-        return Tracking::logDEBUG1;
+        return pgmlink::logDEBUG1;
     if (level == "DEBUG")
-        return Tracking::logDEBUG;
+        return pgmlink::logDEBUG;
     if (level == "INFO")
-        return Tracking::logINFO;
+        return pgmlink::logINFO;
     if (level == "WARNING")
-        return Tracking::logWARNING;
+        return pgmlink::logWARNING;
     if (level == "ERROR")
-        return Tracking::logERROR;
+        return pgmlink::logERROR;
     if (level == "NO_LOGGING")
-        return Tracking::logNO_LOGGING;
+        return pgmlink::logNO_LOGGING;
 
     // else
-    Tracking::Log<T>().get(Tracking::logWARNING) << "Log<T>::fromString(): Unknown logging level '" << level << "'. Using INFO level as default.";
-    return Tracking::logINFO;
+    pgmlink::Log<T>().get(pgmlink::logWARNING) << "Log<T>::fromString(): Unknown logging level '" << level << "'. Using INFO level as default.";
+    return pgmlink::logINFO;
 }
 
 
@@ -364,7 +364,7 @@ class FILELOG_DECLSPEC FILELog : public Log<Output2FILE> {};
  *
  * Every logging message depper than that level will not be compiled into the code.
  */
-#define FILELOG_MAX_LEVEL Tracking::logDEBUG4
+#define FILELOG_MAX_LEVEL pgmlink::logDEBUG4
 #endif
 
 
@@ -384,8 +384,8 @@ class FILELOG_DECLSPEC FILELog : public Log<Output2FILE> {};
  */
 #define LOG(level) \
     if (level > FILELOG_MAX_LEVEL) ;\
-    else if (level > Tracking::FILELog::getReportingLevel() || !Tracking::Output2FILE::getRedirect()) ; \
-    else Tracking::FILELog().get(level)
+    else if (level > pgmlink::FILELog::getReportingLevel() || !pgmlink::Output2FILE::getRedirect()) ; \
+    else pgmlink::FILELog().get(level)
 
 
 
@@ -393,15 +393,15 @@ class FILELOG_DECLSPEC FILELog : public Log<Output2FILE> {};
 // We have to do the following yaketiyak, because the standard <ctime> is not thread safe.
 // (It is using static internal buffers in some functions like ctime() .)
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
-    } // Temporarily close Tracking namespace to include the external Windows headers.
+    } // Temporarily close pgmlink namespace to include the external Windows headers.
 
     // winsocks2.h has always to be included BEFORE windows.h
 	// We don't use winsocks2 here, but it may be used in a file including this header.
 	#include <winsock2.h>
 	#include <windows.h>
 
-// Reopen the Tracking namespace.
-namespace Tracking {
+// Reopen the pgmlink namespace.
+namespace pgmlink {
 inline std::string nowTime()
 {
     const int MAX_LEN = 200;
@@ -428,11 +428,11 @@ inline std::string nowTime()
 }
 
 #else
-} // Temporarily close Tracking namespace to inclue header files.
+} // Temporarily close pgmlink namespace to inclue header files.
 #include <sys/time.h>
 
-// Reopen namespace Tracking.
-namespace Tracking {
+// Reopen namespace pgmlink.
+namespace pgmlink {
 inline std::string nowTime()
 {
     // get time
@@ -467,5 +467,5 @@ inline std::string nowTime()
 
 
 
-} /* namespace Tracking */
+} /* namespace pgmlink */
 #endif /* LOG_H__ */

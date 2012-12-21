@@ -10,7 +10,7 @@
 #include "pgmlink/traxels.h"
 #include "pgmlink/field_of_view.h"
 
-namespace Tracking {
+namespace pgmlink {
   class MrfTracking {
   public:
     MrfTracking(const std::string& random_forest_filename = "none",

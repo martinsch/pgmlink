@@ -4,7 +4,7 @@
 #include <vector>
 
 
-namespace Tracking {
+namespace pgmlink {
 
   /** Field of view in 3d+t space as a rectangular cuboid. */
   class FieldOfView {
@@ -53,6 +53,6 @@ namespace Tracking {
     std::vector<double> ub_; // upper bound
   };
 
-} /* namespace Tracking */
+} /* namespace pgmlink */
 
 #endif /* FIELD_OF_VIEW_H */

@@ -22,7 +22,7 @@ using boost::vecS;
 using boost::bidirectionalS;
 using boost::shared_ptr;
 
-namespace Tracking {
+namespace pgmlink {
 template <typename VALUE>
   class OpengmBinaryFactor;
 
@@ -138,6 +138,6 @@ template <typename VALUE>
    ogmfunction_ = OpengmModel::ExplicitFunctionType( shape.begin(), shape.end(), init );
  }
 
-} /* namespace Tracking */
+} /* namespace pgmlink */
 
 #endif /* GRAPHICAL_MODEL_H */

@@ -13,7 +13,7 @@
 #include <boost/multi_index/member.hpp>
 #include <boost/multi_index/composite_key.hpp>
 
-namespace Tracking {
+namespace pgmlink {
 //
 // feature data structures
 //
@@ -197,7 +197,7 @@ Traxels traxel_map_from_traxel_sequence(InputIterator begin, InputIterator end) 
    return ts;
  }
 
-} /* namespace Tracking */
+} /* namespace pgmlink */
 
 
 #endif /* TRAXELS_H */

@@ -11,7 +11,7 @@
 #include "pgmlink/traxels.h"
 #include "pgmlink/event.h"
 
-using namespace Tracking;
+using namespace pgmlink;
 using namespace std;
 using namespace boost;
 using namespace vigra;

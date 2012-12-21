@@ -6,7 +6,7 @@
 
 using namespace std;
 
-namespace Tracking {
+namespace pgmlink {
     namespace RF {
 
         vigra::RandomForest<RF_LABEL_TYPE> getRandomForest(std::string filename)
@@ -14,7 +14,7 @@ namespace Tracking {
             // check if file exists
             FILE* pFile = fopen ( filename.c_str(), "r" );
             if ( pFile == NULL){
-                throw std::runtime_error("Tracking: Could not create Random Forest. Input file does not exist.");
+                throw std::runtime_error("pgmlink: Could not create Random Forest. Input file does not exist.");
             }
 
             // load the Random Forest
@@ -67,7 +67,7 @@ namespace Tracking {
                 }
                 else
                 {
-                    std::cout << "Warning: Tracking::RF::createFeatureVector: feature "<< *it << " not found.\n";
+                    std::cout << "Warning: pgmlink::RF::createFeatureVector: feature "<< *it << " not found.\n";
                 }
             }
 
@@ -88,7 +88,7 @@ namespace Tracking {
 
       namespace {
 	void save_as_feature(Traxel& tr, const string& name, feature_type value) {
-	  Tracking::feature_array feat;
+	  pgmlink::feature_array feat;
 	  feat.push_back(value);
           tr.features[name] = feat;
 	}
@@ -144,7 +144,7 @@ namespace Tracking {
         /*
          * Helper function. Read a certain feature entry from file.
          */
-        void loadFeature(vigra::HDF5File &f, Tracking::Traxels &ts, unsigned int label, std::string name, int size)
+        void loadFeature(vigra::HDF5File &f, pgmlink::Traxels &ts, unsigned int label, std::string name, int size)
         {
             feature_array feature;
             feature.reshape(array_shape(size));
@@ -153,7 +153,7 @@ namespace Tracking {
 
             try{
                 f.read(path.str(),feature);
-		Tracking::feature_array farr;
+		pgmlink::feature_array farr;
 		for(feature_array::iterator it = feature.begin(); it != feature.end(); ++it) {
 		  farr.push_back(*it);
 		}
@@ -177,7 +177,7 @@ namespace Tracking {
             f.read("/features/labelcontent",labelcontent);
 
             // init Traxels object
-            Tracking::Traxels ts;
+            pgmlink::Traxels ts;
 
             // go through all objects and load features
             for(int i = 0; i < labelcount; i++){
@@ -240,4 +240,4 @@ namespace Tracking {
         } /* loadTracklets */
 
     } /* namespace RF */
-} /* namespace Tracking */
+} /* namespace pgmlink */

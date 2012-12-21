@@ -3,7 +3,7 @@
 #include <vector>
 #include <ostream>
 
-namespace Tracking {
+namespace pgmlink {
    struct Event {
 	Event() : energy(0) { type = Void; };
 
@@ -28,6 +28,6 @@ namespace Tracking {
 	bool operator!=(const Event& other) const;
 	friend std::ostream& operator<< (std::ostream &out, const Event &e);
     };
-} /* namespace Tracking */
+} /* namespace pgmlink */
 
 #endif /* EVENT_H */

@@ -5,7 +5,7 @@
 #include "pgmlink/traxels.h"
 #include <cmath>
 
-namespace Tracking {
+namespace pgmlink {
 
 class GeometryDivision2 {
   /**
@@ -264,6 +264,6 @@ class BorderAwareConstant {
         double param_abs_c;
     };
 
-} /* Namespace Tracking */
+} /* Namespace pgmlink */
 
 #endif /* ENERGY_H */

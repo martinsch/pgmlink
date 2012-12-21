@@ -21,7 +21,7 @@
 #include "pgmlink/reasoner_opengm.h"
 #include "pgmlink/traxels.h"
 
-using namespace Tracking;
+using namespace pgmlink;
 using namespace std;
 using namespace boost;
 

@@ -7,7 +7,7 @@
 #include "pgmlink/hypotheses.h"
 #include "pgmlink/reasoner.h"
 
-namespace Tracking {
+namespace pgmlink {
 class Traxel;
 
 class SingleTimestepTraxelMrf : public Reasoner {
@@ -120,5 +120,5 @@ class SingleTimestepTraxelMrf : public Reasoner {
    mrf_->Model()->addFactor(id, first_idx, last_idx);
  }
  
-} /* namespace Tracking */
+} /* namespace pgmlink */
 #endif /* MRF_REASONER_H */

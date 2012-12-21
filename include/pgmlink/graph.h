@@ -8,7 +8,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
 
-namespace Tracking {
+namespace pgmlink {
   ////
   //// Graph Properties
   ////
@@ -103,5 +103,5 @@ namespace Tracking {
     return *this;	
     }
 
-} /* namespace Tracking */
+} /* namespace pgmlink */
 #endif /* GRAPH_H */

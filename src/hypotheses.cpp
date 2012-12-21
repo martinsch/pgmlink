@@ -8,7 +8,7 @@
 
 using namespace std;
 
-namespace Tracking {
+namespace pgmlink {
   ////
   //// class HypothesesGraph
   ////
@@ -303,4 +303,4 @@ namespace Tracking {
 	return graph;
   }
 
-} /* namespace Tracking */
+} /* namespace pgmlink */

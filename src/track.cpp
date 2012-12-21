@@ -17,7 +17,7 @@ using namespace std;
 using boost::shared_ptr;
 using boost::shared_array;
 
-namespace Tracking {
+namespace pgmlink {
 ////
 //// class MrfTracking
 ////

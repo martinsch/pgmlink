@@ -8,7 +8,7 @@
 
 using namespace std;
 
-namespace Tracking {
+namespace pgmlink {
 
   FieldOfView& FieldOfView::set_boundingbox(double lt,
 					    double lx,

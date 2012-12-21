@@ -7,7 +7,7 @@
 #include <utility>
 #include <vector>
 
-namespace Tracking {
+namespace pgmlink {
 
   namespace indexsorter {
     template <typename pair_t>
@@ -47,5 +47,5 @@ namespace Tracking {
 
   } /* namespace indexsorter */
 
-} /* namespace Tracking */
+} /* namespace pgmlink */
 #endif /* PGMLINK_UTIL_H */

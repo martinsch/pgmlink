@@ -16,7 +16,7 @@
 #include "../include/pgmlink/traxels.h"
 #include "../include/pgmlink/field_of_view.h"
 
-namespace Tracking {
+namespace pgmlink {
     using namespace std;
     using namespace vigra;
 
@@ -84,7 +84,7 @@ namespace Tracking {
 BOOST_PYTHON_MODULE( pgmlink )
 {
     using namespace boost::python;
-    using namespace Tracking;
+    using namespace pgmlink;
 
     // field_of_view.h
     class_< FieldOfView >("FieldOfView")

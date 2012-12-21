@@ -11,7 +11,7 @@
 #include "pgmlink/log.h"
 #include "pgmlink/traxels.h"
 
-namespace Tracking {
+namespace pgmlink {
   ////
   //// HypothesesGraph
   ////

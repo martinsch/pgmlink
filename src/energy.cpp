@@ -5,7 +5,7 @@
 
 using namespace std;
 
-namespace Tracking {
+namespace pgmlink {
 ////
 //// class DivisionEner
 ////
@@ -370,4 +370,4 @@ double NegLnOneMinusCellness::operator()(const Traxel& tr) const {
     }
 
 
-} /* namespace Tracking */
+} /* namespace pgmlink */

@@ -12,12 +12,12 @@
 
 #include "pgmlink/graph.h"
 
-using namespace Tracking;
+using namespace pgmlink;
 using namespace std;
 using namespace boost;
 
 
-namespace Tracking {
+namespace pgmlink {
 // graph property for testing purposes
 struct node_testprop {};
 template <typename Graph>

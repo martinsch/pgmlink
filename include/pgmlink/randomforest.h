@@ -12,7 +12,7 @@
 
 #include "pgmlink/traxels.h"
 
-namespace Tracking {
+namespace pgmlink {
 namespace RF {
     typedef unsigned int RF_LABEL_TYPE;
 

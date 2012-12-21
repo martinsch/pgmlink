@@ -9,7 +9,7 @@
 #include "pgmlink/traxels.h"
 #include "pgmlink/field_of_view.h"
 
-using namespace Tracking;
+using namespace pgmlink;
 using namespace std;
 using namespace boost;
 

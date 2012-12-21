@@ -13,12 +13,12 @@
 BOOST_AUTO_TEST_CASE( checkCreateFeatureVector )
 {
    // Set up one Traxel with some data
-    Tracking::Traxel tr;
+    pgmlink::Traxel tr;
     tr.Id = 1;
-    Tracking::feature_array feat1;
-    Tracking::feature_array feat2;
-    Tracking::feature_array feat3;
-    Tracking::feature_array feat4;
+    pgmlink::feature_array feat1;
+    pgmlink::feature_array feat2;
+    pgmlink::feature_array feat3;
+    pgmlink::feature_array feat4;
 
     feat1.push_back(1.5);
     for(int i = 0; i < 5; i++)
@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE( checkCreateFeatureVector )
         sel.push_back("feat1");
         sel.push_back("feat2");
         sel.push_back("feat4");
-        vigra::MultiArray<2,float> fta = Tracking::RF::createFeatureVector(tr,sel);
+        vigra::MultiArray<2,float> fta = pgmlink::RF::createFeatureVector(tr,sel);
 
         BOOST_CHECK_EQUAL( fta.shape(0), 1 );
         BOOST_CHECK_EQUAL( fta.shape(1), 1006 );
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE( checkCreateFeatureVector )
         std::vector<std::string> sel;
         sel.push_back("feat2");
         sel.push_back("feat1");
-        vigra::MultiArray<2,float> fta = Tracking::RF::createFeatureVector(tr,sel);
+        vigra::MultiArray<2,float> fta = pgmlink::RF::createFeatureVector(tr,sel);
 
         BOOST_CHECK_EQUAL( fta.shape(0), 1 );
         BOOST_CHECK_EQUAL( fta.shape(1), 6 );
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE( checkCreateFeatureVector )
 
         std::vector<std::string> sel;
         sel.push_back("feat_invalid");
-        vigra::MultiArray<2,float> fta = Tracking::RF::createFeatureVector(tr,sel);
+        vigra::MultiArray<2,float> fta = pgmlink::RF::createFeatureVector(tr,sel);
 
         BOOST_CHECK_EQUAL( fta.shape(0), 1 );
         BOOST_CHECK_EQUAL( fta.shape(1), 0 );
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE( checkCreateFeatureVector )
         sel.push_back("feat2");
         sel.push_back("feat_invalid");
         sel.push_back("feat1");
-        vigra::MultiArray<2,float> fta = Tracking::RF::createFeatureVector(tr,sel);
+        vigra::MultiArray<2,float> fta = pgmlink::RF::createFeatureVector(tr,sel);
 
         BOOST_CHECK_EQUAL( fta.shape(0), 1 );
         BOOST_CHECK_EQUAL( fta.shape(1), 6 );
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE( checkCreateFeatureVector )
 BOOST_AUTO_TEST_CASE( checkGetRandomForest )
 {
     // Read a Random Forest from the file "xorforest.h5"
-    vigra::RandomForest<Tracking::RF::RF_LABEL_TYPE> rf ( Tracking::RF::getRandomForest("@PROJECT_SOURCE_DIR@/tests/xorforest.h5"));
+    vigra::RandomForest<pgmlink::RF::RF_LABEL_TYPE> rf ( pgmlink::RF::getRandomForest("@PROJECT_SOURCE_DIR@/tests/xorforest.h5"));
 
     // Only two classes
     BOOST_CHECK_EQUAL( rf.class_count(), 2 );
@@ -110,13 +110,13 @@ BOOST_AUTO_TEST_CASE( checkGetRandomForest )
     BOOST_CHECK_EQUAL( rf.feature_count(), 2 );
 
     // XOR test data
-    vigra::MultiArray<2,float> test (Tracking::RF::matrix_shape(4,2));
+    vigra::MultiArray<2,float> test (pgmlink::RF::matrix_shape(4,2));
     test(0,0) = 0; test(0,1) = 0;
     test(1,0) = 1; test(1,1) = 0;
     test(2,0) = 0; test(2,1) = 1;
     test(3,0) = 1; test(3,1) = 1;
 
-    vigra::MultiArray<2,Tracking::RF::RF_LABEL_TYPE> pred (Tracking::RF::matrix_shape(4,1));
+    vigra::MultiArray<2,pgmlink::RF::RF_LABEL_TYPE> pred (pgmlink::RF::matrix_shape(4,1));
 
     rf.predictLabels(test,pred);
 
@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE( checkGetRandomForest )
 BOOST_AUTO_TEST_CASE( checkGetProbabilities )
 {
     // Read a Random Forest from the file "xorforest.h5"
-    vigra::RandomForest<Tracking::RF::RF_LABEL_TYPE> rf ( Tracking::RF::getRandomForest("@PROJECT_SOURCE_DIR@/tests/xorforest.h5"));
+    vigra::RandomForest<pgmlink::RF::RF_LABEL_TYPE> rf ( pgmlink::RF::getRandomForest("@PROJECT_SOURCE_DIR@/tests/xorforest.h5"));
 
     // Only two classes
     BOOST_CHECK_EQUAL( rf.class_count(), 2 );
@@ -140,13 +140,13 @@ BOOST_AUTO_TEST_CASE( checkGetProbabilities )
     BOOST_CHECK_EQUAL( rf.feature_count(), 2 );
 
     // XOR test data
-    vigra::MultiArray<2,float> test (Tracking::RF::matrix_shape(4,2));
+    vigra::MultiArray<2,float> test (pgmlink::RF::matrix_shape(4,2));
     test(0,0) = 0; test(0,1) = 0;
     test(1,0) = 1; test(1,1) = 0;
     test(2,0) = 0; test(2,1) = 1;
     test(3,0) = 1; test(3,1) = 1;
 
-    vigra::MultiArray<2,double> pred = Tracking::RF::getProbabilities(test,rf);
+    vigra::MultiArray<2,double> pred = pgmlink::RF::getProbabilities(test,rf);
 
     // test xor behaviour
     BOOST_CHECK( pred(0,0) > 0.5 );
@@ -158,18 +158,18 @@ BOOST_AUTO_TEST_CASE( checkGetProbabilities )
 
 BOOST_AUTO_TEST_CASE( checkPredictTracklets)
 {
-    Tracking::feature_array f;
-    Tracking::Traxels ts;
+    pgmlink::feature_array f;
+    pgmlink::Traxels ts;
 
     // Create 4 tracklets with 2 features each
-    Tracking::Traxel t1;
+    pgmlink::Traxel t1;
     t1.Id = 1;
     f.push_back(0.);
     t1.features["first"] = f;
     t1.features["second"] = f;
     ts[1] = t1;
 
-    Tracking::Traxel t2;
+    pgmlink::Traxel t2;
     t2.Id = 2;
     f[0] = 0;
     t2.features["first"] = f;
@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE( checkPredictTracklets)
     t2.features["second"] = f;
     ts[2] = t2;
 
-    Tracking::Traxel t3;
+    pgmlink::Traxel t3;
     t3.Id = 3;
     f[0] = 1;
     t3.features["first"] = f;
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE( checkPredictTracklets)
     t3.features["second"] = f;
     ts[3] = t3;
 
-    Tracking::Traxel t4;
+    pgmlink::Traxel t4;
     t4.Id = 4;
     f[0] = 1;
     t4.features["first"] = f;
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE( checkPredictTracklets)
 
 
     // Read a Random Forest from the file "xorforest.h5"
-    vigra::RandomForest<Tracking::RF::RF_LABEL_TYPE> rf ( Tracking::RF::getRandomForest("@PROJECT_SOURCE_DIR@/tests/xorforest.h5"));
+    vigra::RandomForest<pgmlink::RF::RF_LABEL_TYPE> rf ( pgmlink::RF::getRandomForest("@PROJECT_SOURCE_DIR@/tests/xorforest.h5"));
 
     // Only two classes
     BOOST_CHECK_EQUAL( rf.class_count(), 2 );
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE( checkPredictTracklets)
     std::vector<std::string> sel;
     sel.push_back("first"); sel.push_back("second");
 
-    Tracking::RF::predictTracklets(ts,rf,sel,1,"prediction");
+    pgmlink::RF::predictTracklets(ts,rf,sel,1,"prediction");
 
     // check if tracklets have the desired feature
     BOOST_CHECK( ts[1].features.find("prediction") != ts[1].features.end());
@@ -228,7 +228,7 @@ BOOST_AUTO_TEST_CASE( checkLoadTracklets )
     // load the sample hdf5 file
     std::string filename = "@PROJECT_SOURCE_DIR@/tests/loadtest.h5";
 
-    Tracking::Traxels ts = Tracking::RF::loadTracklets(filename);
+    pgmlink::Traxels ts = pgmlink::RF::loadTracklets(filename);
 
     BOOST_CHECK( ts.size() == 5 );
 

@@ -14,7 +14,7 @@
 
 using namespace std;
 
-namespace Tracking {
+namespace pgmlink {
   SingleTimestepTraxelMrf::~SingleTimestepTraxelMrf() {
    if(mrf_ != NULL) {
 	delete mrf_;
@@ -389,4 +389,4 @@ void SingleTimestepTraxelMrf::couple(HypothesesGraph::Node& n, HypothesesGraph::
     LOG(logDEBUG) << "SingleTimestepTraxelMrf::add_incoming_factor(): leaving";
   }
 
-} /* namespace Tracking */ 
+} /* namespace pgmlink */ 

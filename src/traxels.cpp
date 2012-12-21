@@ -8,7 +8,7 @@
 
 using namespace std;
 
-namespace Tracking {
+namespace pgmlink {
   ////
   //// class Locator
   ////
@@ -210,5 +210,5 @@ namespace Tracking {
     }
     return n;
   }
-} /* namespace Tracking */
+} /* namespace pgmlink */
 

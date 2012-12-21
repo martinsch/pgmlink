@@ -3,7 +3,7 @@
 
 using namespace std;
 
-namespace Tracking {
+namespace pgmlink {
 
 ///
 /// class Event
@@ -55,4 +55,4 @@ ostream& operator<< (ostream &out, const Event &e)
     return out;
 }
 
-} /* namespace Tracking */
+} /* namespace pgmlink */

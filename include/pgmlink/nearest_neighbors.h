@@ -4,7 +4,7 @@
 #include <ANN/ANN.h>
 #include <boost/shared_ptr.hpp>
 
-namespace Tracking {
+namespace pgmlink {
     class Traxel;
 
     class NearestNeighborSearch {
@@ -36,7 +36,7 @@ namespace Tracking {
 	    boost::shared_ptr<ANNkd_tree> kd_tree_;
     };
 
-} /* namespace Tracking */
+} /* namespace pgmlink */
 
 
 
@@ -51,7 +51,7 @@ namespace Tracking {
 using namespace std;
 using namespace boost;
 
-namespace Tracking {
+namespace pgmlink {
 
 template <typename InputIt>
 NearestNeighborSearch::NearestNeighborSearch(InputIt traxel_begin, InputIt traxel_end) : 
@@ -220,6 +220,6 @@ ANNpoint NearestNeighborSearch::point_from_traxel( const Traxel& traxel ) {
     return point;
 }
 
-} /* namespace Tracking */
+} /* namespace pgmlink */
 
 #endif

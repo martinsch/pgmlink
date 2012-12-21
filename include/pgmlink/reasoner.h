@@ -1,7 +1,7 @@
 #ifndef REASONER_H
 #define REASONER_H
 
-namespace Tracking {
+namespace pgmlink {
 
 class HypothesesGraph;
 
@@ -26,6 +26,6 @@ class Reasoner {
     virtual void conclude( HypothesesGraph& ) = 0;
  };
 
-} /* namespace Tracking */
+} /* namespace pgmlink */
 
 #endif /* REASONER_H */
