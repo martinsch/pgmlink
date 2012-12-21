@@ -20,8 +20,10 @@ class SingleTimestepTraxelConservation : public Reasoner {
                 double forbidden_cost = 0,
 			    bool with_constraints = true,
 			    bool fixed_detections = false,
-			    double ep_gap = 0.01
-    ) 
+			    double ep_gap = 0.01,
+			    bool with_appearance = false,
+			    bool with_disappearance = false
+    )
     : max_number_objects_(max_number_objects),
     detection_(detection),
     division_(division),
@@ -31,7 +33,11 @@ class SingleTimestepTraxelConservation : public Reasoner {
     optimizer_(NULL),
     with_constraints_(with_constraints),
     fixed_detections_(fixed_detections),
-    ep_gap_(ep_gap)
+    ep_gap_(ep_gap),
+    with_appearance_(with_appearance),
+    with_disappearance_(with_disappearance),
+    number_of_appearance_nodes_(0),
+    number_of_disappearance_nodes_(0)
     { };
     ~SingleTimestepTraxelConservation();
 
@@ -70,12 +76,14 @@ class SingleTimestepTraxelConservation : public Reasoner {
     void reset();
     void add_constraints( const HypothesesGraph& );
     void add_detection_nodes( const HypothesesGraph& );
+    void add_appearance_nodes( const HypothesesGraph& );
+    void add_disappearance_nodes( const HypothesesGraph& );
     void add_transition_nodes( const HypothesesGraph& );
     void add_division_nodes(const HypothesesGraph& );
     void add_finite_factors( const HypothesesGraph& );
 
     // helper
-    void fix_detections( const HypothesesGraph&, size_t value );
+    void fix_detections( const HypothesesGraph& );
     size_t cplex_id(size_t opengm_id, size_t state);
 //    template<typename table_t, typename const_iter>
 //      void add_factor( const table_t& table, const_iter first_idx, const_iter last_idx );
@@ -95,14 +103,19 @@ class SingleTimestepTraxelConservation : public Reasoner {
 
     std::map<HypothesesGraph::Node, size_t> node_map_;
     std::map<HypothesesGraph::Node, size_t> div_node_map_;
+    std::map<HypothesesGraph::Node, size_t> app_node_map_;
+    std::map<HypothesesGraph::Node, size_t> dis_node_map_;
     std::map<HypothesesGraph::Arc, size_t> arc_map_;
 
     bool with_constraints_;
     bool fixed_detections_;
+    double ep_gap_;
+
+    bool with_appearance_;
+    bool with_disappearance_;
 
     unsigned int number_of_detection_nodes_, number_of_transition_nodes_, number_of_division_nodes_;
-
-    double ep_gap_;
+    unsigned int number_of_appearance_nodes_, number_of_disappearance_nodes_;
 };
 
 
