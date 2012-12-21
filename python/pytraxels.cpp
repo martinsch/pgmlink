@@ -1,0 +1,131 @@
+#include <vector>
+
+#include <boost/python.hpp>
+#include <boost/python/suite/indexing/map_indexing_suite.hpp>
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#include <boost/utility.hpp>
+
+#include <vigra/numpy_array.hxx>
+#include <vigra/numpy_array_converters.hxx>
+#include <vigra/multi_array.hxx>
+
+#include "../include/pgmlink/traxels.h"
+
+using namespace pgmlink;
+using namespace boost::python;
+
+namespace pgmlink {
+  using namespace std;
+  using namespace vigra;
+
+  // extending Traxel
+  void set_intmaxpos_locator(Traxel& t) {
+    Locator* l = new IntmaxposLocator();
+    t.set_locator(l); // takes ownership of pointer
+  }
+
+  void set_x_scale(Traxel& t, double s) {
+    t.locator()->x_scale = s;
+  }
+  void set_y_scale(Traxel& t, double s) {
+    t.locator()->y_scale = s;
+  }
+  void set_z_scale(Traxel& t, double s) {
+    t.locator()->z_scale = s;
+  }
+
+  void add_feature_array(Traxel& t, string key, size_t size) {
+    t.features[key] = feature_array(size, 0);
+  }
+
+  float get_feature_value(Traxel& t, string key, MultiArrayIndex i) {
+    FeatureMap::const_iterator it = t.features.find(key);
+    if(it == t.features.end()) {
+      throw std::runtime_error("key not present in feature map");
+    }
+    if( !(static_cast<size_t>(i) < it->second.size())) {
+      throw std::runtime_error("index out of range");
+    }
+
+    return it->second[i];
+  }
+
+  void set_feature_value(Traxel& t, string key, MultiArrayIndex i, float value) {
+    FeatureMap::iterator it = t.features.find(key);
+    if(it == t.features.end()) {
+      throw std::runtime_error("key not present in feature map");
+    }
+    if( !(static_cast<size_t>(i) < it->second.size())) {
+      throw std::runtime_error("index out of range");
+    }
+    it->second[i] = value;
+  }
+
+  // extending Traxels
+  void add_traxel(Traxels& ts, const Traxel& t) {
+    ts[t.Id] = t;
+  }
+
+  // extending TraxelStore
+  void add_traxel_to_traxelstore(TraxelStore& ts, const Traxel& t) {
+    add(ts, t);
+  }
+
+  void add_Traxels_to_traxelstore(TraxelStore& ts, const Traxels& traxels) {
+    for(Traxels::const_iterator it = traxels.begin(); it!= traxels.end(); ++it){
+      add(ts, it->second);
+    }
+  }
+
+} /* namespace pgmlink */
+
+void export_traxels() {
+    class_< feature_array >("feature_array");
+
+    class_< ComLocator >("ComLocator")
+      .def_readwrite("x_scale", &ComLocator::x_scale)
+      .def_readwrite("y_scale", &ComLocator::y_scale)
+      .def_readwrite("z_scale", &ComLocator::z_scale)
+    ;
+
+    class_< IntmaxposLocator >("IntmaxposLocator")
+      .def_readwrite("x_scale", &ComLocator::x_scale)
+      .def_readwrite("y_scale", &ComLocator::y_scale)
+      .def_readwrite("z_scale", &ComLocator::z_scale)
+    ;
+
+    class_< std::map<std::string,feature_array> >("FeatureMap")
+	.def(map_indexing_suite<std::map<std::string,feature_array> >())
+    ;
+    class_<Traxel>("Traxel")
+	.def_readwrite("Id", &Traxel::Id)
+	.def_readwrite("Timestep", &Traxel::Timestep)
+        //.def("set_locator", &Traxel::set_locator, return_self<>())
+        .def("set_x_scale", &set_x_scale)
+        .def("set_y_scale", &set_y_scale)
+        .def("set_z_scale", &set_z_scale)
+        .def("set_intmaxpos_locator", &set_intmaxpos_locator, args("self"))
+        .def("X", &Traxel::X)
+        .def("Y", &Traxel::Y)
+        .def("Z", &Traxel::Z)
+	.def_readwrite("features", &Traxel::features)
+        .def("add_feature_array", &add_feature_array, args("self","name", "size"), "Add a new feature array to the features map; initialize with zeros. If the name is already present, the old feature array will be replaced.")
+	.def("get_feature_value", &get_feature_value, args("self", "name", "index"))
+	.def("set_feature_value", &set_feature_value, args("self", "name", "index", "value"))
+    ;
+
+    class_<map<unsigned int, Traxel> >("Traxels")
+	.def("add_traxel", &add_traxel)
+	.def("__len__", &Traxels::size)
+    ;
+
+    class_< std::vector<double> >("VectorOfDouble")
+    .def(vector_indexing_suite< std::vector<double> >() )
+    ;
+
+    class_<TraxelStore>("TraxelStore")
+      .def("add", &add_traxel_to_traxelstore)
+      .def("add_from_Traxels", &add_Traxels_to_traxelstore)
+      .def("bounding_box", &bounding_box)
+      ;
+}

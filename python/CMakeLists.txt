@@ -26,7 +26,13 @@ ADD_DEFINITIONS(-DHasHDF5)
 ### wrapper ###
 ###############
 
-set(PYPGMLINK_SRCS pypgmlink.cpp)
+set(PYPGMLINK_SRCS
+  pyfield_of_view.cpp
+  pyhypotheses.cpp
+  pypgmlink.cpp
+  pytrack.cpp
+  pytraxels.cpp
+  )
 
 add_library(pypgmlink SHARED ${PYPGMLINK_SRCS})
 target_link_libraries(pypgmlink ${Boost_PYTHON_LIBRARIES} track_lib ilocplex vigraimpex)
