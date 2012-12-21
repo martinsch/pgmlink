@@ -101,8 +101,8 @@ INCLUDE_DIRECTORIES(
 
 FILE(GLOB LIB_SOURCES src/*.cpp)
 
-ADD_LIBRARY(track_lib SHARED ${LIB_SOURCES})
-TARGET_LINK_LIBRARIES(track_lib ${HD5_LIBRARIES} ${HDF5_HL_LIBRARIES} ann cplex ilocplex pthread concert ${VIGRA_IMPEX_LIBRARY} ${LEMON_LIBRARIES})
+ADD_LIBRARY(pgmlink SHARED ${LIB_SOURCES})
+TARGET_LINK_LIBRARIES(pgmlink ${HD5_LIBRARIES} ${HDF5_HL_LIBRARIES} ann cplex ilocplex pthread concert ${VIGRA_IMPEX_LIBRARY} ${LEMON_LIBRARIES})
 
 
 
@@ -141,7 +141,7 @@ if(WITH_PYTHON)
   add_subdirectory(python/)
 endif()
 
-# Install target track_lib
-INSTALL(TARGETS track_lib
+# Install target pgmlink
+INSTALL(TARGETS pgmlink
         DESTINATION lib)
 
