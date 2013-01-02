@@ -24,31 +24,41 @@ node_traxel_m& getNodeTraxelMap(HypothesesGraph* g) {
 
 inline object pass_through(object const& o) { return o; }
 
-struct lemon_iterator_wrapper {
-  lemon_iterator_wrapper( node_traxel_m::ValueIt endValue )
-    : endValue_(endValue) {}
-
-  static node_traxel_m::Value
-  next( node_traxel_m::ValueIt& it ){
-    if( it == endValue_) {
+template < typename ITERABLE_VALUE_MAP >
+struct IterableValueMap_ValueIterator {
+  typedef ITERABLE_VALUE_MAP map_type;
+  IterableValueMap_ValueIterator( const map_type& m ) {
+    it_ = m.beginValue();
+    end_ = m.endValue();
+  }
+  typename map_type::Value next() {
+    if( it_ == end_) {
         PyErr_SetString(PyExc_StopIteration, "No more data.");
         boost::python::throw_error_already_set();
     }
-    const node_traxel_m::Value& result = *it;
-    ++it;
+    const typename map_type::Value& result = *it_;
+    ++it_;
     return result;
+  }
+
+  static IterableValueMap_ValueIterator<map_type>
+  values ( const map_type& m ) {
+    return IterableValueMap_ValueIterator<map_type>( m );
   }
 
   static void
   wrap( const char* python_name) {
-    class_<typename node_traxel_m::ValueIt>( python_name )
-      .def("next", next)
-      .def("__iter__", pass_through) 
+    class_<IterableValueMap_ValueIterator<map_type> >( python_name, init<const map_type&>(args("iterable_value_map")) )
+      .def("next", &IterableValueMap_ValueIterator::next)
+      .def("__iter__", &pass_through) 
       ;
   }
 
-  node_traxel_m::ValueIt endValue_;
+  typename map_type::ValueIt it_;
+  typename map_type::ValueIt end_;
 };
+
+
 
 void export_hypotheses() {
   class_<typename HypothesesGraph::Arc>("Arc");
@@ -58,15 +68,14 @@ void export_hypotheses() {
   class_<typename HypothesesGraph::InArcIt>("InArcIt");
   class_<typename HypothesesGraph::OutArcIt>("OutArcIt");
 
-  // NodeTraxelMap
-  // class_<typename node_traxel_m::ValueIt>("NodeTraxelMap_ValueIt")
-  //   .def("next", &node_traxel_m::ValueIt::operator++)
-  //   ;
+
+  IterableValueMap_ValueIterator<node_traxel_m>::wrap("NodeTraxelMap_ValueIt");
 
   class_<node_traxel_m, boost::noncopyable>("NodeTraxelMap", init<const HypothesesGraph&>(args("hypotheses_graph")))
     .def("__getitem__", &node_traxel_m::operator[],
 	 return_internal_reference<>())
     .def("__setitem__", &node_traxel_m::set)
+    .def("values", &IterableValueMap_ValueIterator<node_traxel_m>::values)
     ;
 
 
