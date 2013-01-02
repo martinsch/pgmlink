@@ -1,17 +1,18 @@
 #ifndef TRAXELS_H
 #define TRAXELS_H
 
-#include <map>
-#include <vector>
 #include <set>
 #include <string>
 #include <iostream>
 #include <ostream>
+
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/ordered_index.hpp>
 #include <boost/multi_index/hashed_index.hpp>
 #include <boost/multi_index/member.hpp>
 #include <boost/multi_index/composite_key.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/map.hpp>
 
 namespace pgmlink {
 //
@@ -46,6 +47,12 @@ class Locator {
  protected:
   std::string feature_name_;
   double coordinate_from(const FeatureMap&, size_t idx) const;
+
+ private:
+  // boost serialize
+  friend class boost::serialization::access;
+  template< typename Archive >
+    void serialize( Archive&, const unsigned int /*version*/ );
 };
 
 class ComLocator : public Locator {
@@ -55,6 +62,12 @@ class ComLocator : public Locator {
   double X(const FeatureMap& m) const { return x_scale * coordinate_from(m, 0); };
   double Y(const FeatureMap& m) const { return y_scale * coordinate_from(m, 1); };
   double Z(const FeatureMap& m) const { return z_scale * coordinate_from(m, 2); };
+
+ private:
+  // boost serialize
+  friend class boost::serialization::access;
+  template< typename Archive >
+    void serialize( Archive&, const unsigned int /*version*/ );
 };
 
 class IntmaxposLocator : public Locator {
@@ -63,7 +76,13 @@ class IntmaxposLocator : public Locator {
   virtual IntmaxposLocator* clone() { return new IntmaxposLocator(*this); };
   double X(const FeatureMap& m) const { return x_scale * coordinate_from(m, 1); };
   double Y(const FeatureMap& m) const { return y_scale * coordinate_from(m, 2); };
-  double Z(const FeatureMap& m) const { return z_scale * coordinate_from(m, 3); };  
+  double Z(const FeatureMap& m) const { return z_scale * coordinate_from(m, 3); };
+
+ private:
+  // boost serialize
+  friend class boost::serialization::access;
+  template< typename Archive >
+    void serialize( Archive&, const unsigned int /*version*/ );  
 };
 
 
@@ -97,13 +116,21 @@ class IntmaxposLocator : public Locator {
    double distance_to(const Traxel& other) const;
    double angle(const Traxel& leg1, const Traxel& leg2) const;
    friend std::ostream& operator<< (std::ostream &out, const Traxel &t);
+
  private:
+   // boost serialize for Traxel datatype
+   friend class boost::serialization::access;
+   template< typename Archive >
+     void serialize( Archive&, const unsigned int /*version*/ );
+
    Locator* locator_;
  };
+
  // compare by (time,id) (Traxels can be used as keys (for instance in a std::map) )
  bool operator<(const Traxel& t1, const Traxel& t2);
  bool operator>(const Traxel& t1, const Traxel& t2);
- 
+
+
 
  //
  // Traxel collections
@@ -182,6 +209,34 @@ class IntmaxposLocator : public Locator {
 /**/
 /* implementation */
 /**/
+
+template< typename Archive >
+void Locator::serialize( Archive& ar, const unsigned int /*version*/ ) {
+  ar & x_scale;
+  ar & y_scale;
+  ar & z_scale;
+  ar & feature_name_;
+}
+template< typename Archive >
+void ComLocator::serialize( Archive& ar, const unsigned int /*version*/ ) {
+  ar & boost::serialization::base_object<Locator>(*this);
+}
+template< typename Archive >
+void IntmaxposLocator::serialize( Archive& ar, const unsigned int /*version*/ ) {
+  ar & boost::serialization::base_object<Locator>(*this);
+}
+
+template< typename Archive >
+void Traxel::serialize( Archive& ar, const unsigned int /*version*/ ) {
+  ar.template register_type<ComLocator>();
+  ar.template register_type<IntmaxposLocator>();
+
+  ar & Id;
+  ar & Timestep;
+  ar & features;
+  ar & locator_;
+}
+
 template<typename InputIterator>
 Traxels traxel_map_from_traxel_sequence(InputIterator begin, InputIterator end) {
     Traxels ret;
@@ -191,11 +246,11 @@ Traxels traxel_map_from_traxel_sequence(InputIterator begin, InputIterator end) 
     return ret;
 }
 
- template<typename InputIt>
-   TraxelStore& add(TraxelStore& ts, InputIt begin, InputIt end) {
-   ts.get<by_timestep>().insert(begin, end);
-   return ts;
- }
+template<typename InputIt>
+  TraxelStore& add(TraxelStore& ts, InputIt begin, InputIt end) {
+  ts.get<by_timestep>().insert(begin, end);
+  return ts;
+}
 
 } /* namespace pgmlink */
 

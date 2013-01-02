@@ -1,7 +1,11 @@
 #define BOOST_TEST_MODULE traxels_test
 
 #include <iostream>
+#include <sstream>
+#include <string>
 
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/tuple/tuple.hpp>
@@ -12,6 +16,61 @@
 using namespace pgmlink;
 using namespace std;
 using namespace boost;
+
+BOOST_AUTO_TEST_CASE( Locator_serialize )
+{
+  ComLocator* cl = new ComLocator;
+  cl->x_scale = 2.;
+  cl->y_scale = 3.;
+  cl->z_scale = 4.;
+
+  IntmaxposLocator* il = new IntmaxposLocator;
+  il->x_scale = 20.;
+  il->y_scale = 30.;
+  il->z_scale = 40.;
+
+  FeatureMap com_m;
+  FeatureMap intmaxpos_m;
+  feature_array f;
+  f.push_back(4);
+  f.push_back(5);
+  f.push_back(6);
+  com_m["com"] = f;
+  intmaxpos_m["intmaxpos"] = f;
+
+  // save to string
+  string s;
+  {
+    stringstream ss;
+    boost::archive::text_oarchive oa(ss);
+    oa << cl << il;
+    s = ss.str();
+  }
+  
+  // load from string and compare
+  ComLocator* loaded_com;
+  IntmaxposLocator* loaded_int;
+  {
+    stringstream ss(s);
+    boost::archive::text_iarchive ia(ss);
+    ia >> loaded_com >> loaded_int;
+  }
+  
+  BOOST_CHECK( loaded_com != cl );
+  BOOST_CHECK( loaded_int != il );
+
+  BOOST_REQUIRE(loaded_com->is_applicable(com_m));
+  BOOST_REQUIRE(!loaded_com->is_applicable(intmaxpos_m));
+  BOOST_REQUIRE(!loaded_int->is_applicable(com_m));
+  BOOST_REQUIRE(loaded_int->is_applicable(intmaxpos_m));
+
+  BOOST_CHECK_EQUAL(loaded_com->x_scale, cl->x_scale);
+  BOOST_CHECK_EQUAL(loaded_com->y_scale, cl->y_scale);
+  BOOST_CHECK_EQUAL(loaded_com->z_scale, cl->z_scale);
+  BOOST_CHECK_EQUAL(loaded_int->x_scale, il->x_scale);
+  BOOST_CHECK_EQUAL(loaded_int->y_scale, il->y_scale);
+  BOOST_CHECK_EQUAL(loaded_int->z_scale, il->z_scale);
+}
 
 BOOST_AUTO_TEST_CASE( Traxel_assignment_op )
 {
@@ -139,6 +198,44 @@ BOOST_AUTO_TEST_CASE( Traxel_angle )
     angle = vertex.angle(leg2, leg1);
     BOOST_CHECK_CLOSE( angle, 3.1415, 0.01);
 
+}
+
+BOOST_AUTO_TEST_CASE( Traxel_serialize )
+{
+    Traxel t1;
+    t1.Timestep = 2;
+    t1.Id = 12;
+    t1.set_locator( new IntmaxposLocator );
+    feature_array intmaxpos;
+    intmaxpos.push_back(4);
+    intmaxpos.push_back(5);
+    intmaxpos.push_back(6);
+    t1.features["intmaxpos"] = intmaxpos;
+
+    // save to string
+    string s;
+    {
+      stringstream ss;
+      boost::archive::text_oarchive oa(ss);
+      oa << t1;
+      s = ss.str();
+    }
+    
+    // load from string and compare
+    Traxel loaded;
+    {
+      stringstream ss(s);
+      boost::archive::text_iarchive ia(ss);
+      ia >> loaded;
+    }
+    BOOST_CHECK_EQUAL(loaded.Id, t1.Id);
+    BOOST_CHECK_EQUAL(loaded.Timestep, t1.Timestep);
+    BOOST_REQUIRE(loaded.features.count("intmaxpos")==1);
+    BOOST_CHECK_EQUAL_COLLECTIONS(loaded.features["intmaxpos"].begin(),
+				  loaded.features["intmaxpos"].end(),
+				  intmaxpos.begin(),
+				  intmaxpos.end());
+    BOOST_CHECK( typeid(*loaded.locator()) == typeid(*t1.locator()) );
 }
 
 BOOST_AUTO_TEST_CASE( Traxel_strict_weak_ordering )
