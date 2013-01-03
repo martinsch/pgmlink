@@ -9,7 +9,7 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_extensions/)
 ####################
 
 find_package( VIGRA REQUIRED )
-find_package( Boost REQUIRED COMPONENTS python )
+find_package( Boost REQUIRED COMPONENTS python serialization )
 find_package( PythonLibs REQUIRED )
 
 if(VIGRA_FOUND AND Boost_FOUND AND PYTHONLIBS_FOUND)
@@ -35,7 +35,7 @@ set(PYPGMLINK_SRCS
   )
 
 add_library(pypgmlink SHARED ${PYPGMLINK_SRCS})
-target_link_libraries(pypgmlink ${Boost_PYTHON_LIBRARIES} pgmlink ilocplex vigraimpex)
+target_link_libraries(pypgmlink ${Boost_LIBRARIES} pgmlink ilocplex vigraimpex)
 set_target_properties(pypgmlink PROPERTIES PREFIX "" OUTPUT_NAME "pgmlink")
 
 

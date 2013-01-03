@@ -1,3 +1,8 @@
+#include <string>
+#include <sstream>
+
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
 #include <boost/python.hpp>
 #include <boost/python/iterator.hpp>
 #include <boost/python/return_internal_reference.hpp>
@@ -21,9 +26,22 @@ node_traxel_m& getNodeTraxelMap(HypothesesGraph* g) {
   return g->get(node_traxel());
 }
 
+struct HypothesesGraph_pickle_suite : pickle_suite {
+  static std::string getstate( const HypothesesGraph& g ) {
+    std::stringstream ss;
+    boost::archive::text_oarchive oa(ss);
+    oa & g;
+    return ss.str();
+  }
+
+  static void setstate( HypothesesGraph& g, const std::string& state ) {
+    std::stringstream ss(state);
+    boost::archive::text_iarchive ia(ss);
+    ia & g;
+  }
+};
 
 inline object pass_through(object const& o) { return o; }
-
 template < typename ITERABLE_VALUE_MAP >
 struct IterableValueMap_ValueIterator {
   typedef ITERABLE_VALUE_MAP map_type;
@@ -128,7 +146,8 @@ void export_hypotheses() {
     .def("addNodeTraxelMap", &addNodeTraxelMap,
 	 return_internal_reference<>())
     .def("getNodeTraxelMap", &getNodeTraxelMap,
-	 return_internal_reference<>()) 
+	 return_internal_reference<>())
+    .def_pickle(HypothesesGraph_pickle_suite())
     ;
 
   //
