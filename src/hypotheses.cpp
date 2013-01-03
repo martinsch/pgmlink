@@ -1,7 +1,15 @@
 #include <cassert>
+#include <iostream>
+#include <string>
+#include <sstream>
 #include <utility>
 #include <vector>
+
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
 #include <boost/tuple/tuple.hpp>
+#include <lemon/lgf_reader.h>
+#include <lemon/lgf_writer.h>
 #include "pgmlink/hypotheses.h"
 #include "pgmlink/log.h"
 #include "pgmlink/nearest_neighbors.h"
@@ -78,6 +86,7 @@ namespace pgmlink {
 
       return g;
   }
+
 
 
   boost::shared_ptr<std::vector< std::vector<Event> > > events(const HypothesesGraph& g) {
@@ -199,7 +208,64 @@ namespace pgmlink {
 
     return ret;
   }
-    
+
+
+  //
+  // write_lgf()
+  //
+  namespace {
+    struct TraxelToStrConverter {
+      std::string operator()(const Traxel& t) {
+	stringstream ss;
+	boost::archive::text_oarchive oa(ss);
+	oa & t;
+	return ss.str();
+      }
+    };
+  }
+
+  void write_lgf( const HypothesesGraph& g, std::ostream& os, bool with_n_traxel ) {
+    lemon::DigraphWriter<HypothesesGraph> writer( g, os );
+    writer.
+      nodeMap("timestep", g.get(node_timestep())).
+      arcMap("from_timestep", g.get(arc_from_timestep())).
+      arcMap("to_timestep", g.get(arc_to_timestep()));
+    if(with_n_traxel) {
+      writer.nodeMap("traxel", g.get(node_traxel()), TraxelToStrConverter());
+    }
+    writer.run();
+  }
+
+
+
+  //
+  // read_lgf()
+  //
+  namespace {
+    struct StrToTraxelConverter {
+      Traxel operator()(const std::string& s) {
+	stringstream ss(s);
+	boost::archive::text_iarchive ia(ss);
+	Traxel t;
+	ia & t;
+	return t;
+      }
+    };
+  }
+
+void read_lgf( HypothesesGraph& g, std::istream& is, bool with_n_traxel ) {
+    lemon::DigraphReader<HypothesesGraph> reader( g, is );
+    reader.
+      nodeMap("timestep", g.get(node_timestep())).
+      arcMap("from_timestep", g.get(arc_from_timestep())).
+      arcMap("to_timestep", g.get(arc_to_timestep()));
+    if( with_n_traxel ) {
+      g.add(node_traxel());
+      reader.nodeMap("traxel", g.get(node_traxel()), StrToTraxelConverter());
+    }
+    reader.run();
+  }
+
 
 
   ////

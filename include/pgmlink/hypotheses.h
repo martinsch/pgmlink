@@ -1,8 +1,11 @@
 #ifndef HYPOTHESES_H
 #define HYPOTHESES_H
 
-#include <set>
 #include <vector>
+#include <iostream>
+#include <sstream>
+#include <stdexcept>
+#include <boost/serialization/set.hpp>
 #include <boost/shared_ptr.hpp>
 #include <lemon/list_graph.h>
 #include <lemon/maps.h>
@@ -99,13 +102,28 @@ namespace pgmlink {
     node_timestep_map::Value earliest_timestep() const;
     node_timestep_map::Value latest_timestep() const;
     
-    private:
+  private:
+    // boost serialize
+    friend class boost::serialization::access;
+    template< typename Archive >
+      void save( Archive&, const unsigned int /*version*/ ) const;
+    template< typename Archive >
+      void load( Archive&, const unsigned int /*version*/ );
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
+
     std::set<node_timestep_map::Value> timesteps_;      
   };
 
   HypothesesGraph& prune_inactive(HypothesesGraph&);
   boost::shared_ptr<std::vector< std::vector<Event> > > events(const HypothesesGraph&);
   boost::shared_ptr<std::vector< std::map<unsigned int, bool> > > state_of_nodes(const HypothesesGraph&);
+
+  // lemon graph format (lgf) serialization
+  void write_lgf( const HypothesesGraph&, std::ostream& os=std::cout,
+		  bool with_n_traxel=false );
+  void read_lgf( HypothesesGraph&, std::istream& is=std::cin,
+		 bool with_n_traxel=false);
+
 
 
   ////
@@ -150,5 +168,47 @@ namespace pgmlink {
     const TraxelStore* ts_;
     Options options_;
   };
+
+
+
+
+  /**/
+  /* implementation */
+  /**/
+  template< typename Archive >
+    void HypothesesGraph::save( Archive& ar, const unsigned int /*version*/ ) const {
+    ar & timesteps_;
+    
+    bool with_n_traxel = false;
+    try {
+      this->get(node_traxel());
+      with_n_traxel = true;
+    } catch( std::runtime_error& e ) {}
+    ar & with_n_traxel;
+
+    std::string lgf;
+    {
+      std::stringstream ss;
+      write_lgf(*this, ss, with_n_traxel);
+      lgf = ss.str();
+    }
+    ar & lgf;
+  }
+
+  template< typename Archive >
+    void HypothesesGraph::load( Archive& ar, const unsigned int /*version*/ ) {
+    ar & timesteps_;
+
+    bool with_n_traxel;
+    ar & with_n_traxel;
+
+    std::string lgf;
+    ar & lgf;
+    {
+      std::stringstream ss(lgf);
+      read_lgf(*this, ss, with_n_traxel);
+    }
+   }
+
 }
 #endif /* HYPOTHESES_H */

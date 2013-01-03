@@ -24,7 +24,7 @@ if(Boost_FOUND)
   ADD_DEFINITIONS(-DHasHDF5)
   configure_file(randomforest_test.cpp.cmake randomforest_test.cpp)
   add_executable(randomforest_test ${PROJECT_BINARY_DIR}/tests/randomforest_test.cpp)
-  target_link_libraries(randomforest_test pgmlink ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} hdf5 hdf5_hl vigraimpex)
+  target_link_libraries(randomforest_test pgmlink ${Boost_LIBRARIES} hdf5 hdf5_hl vigraimpex)
   add_test(randomforest randomforest_test)
 
 endif()
