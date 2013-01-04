@@ -168,14 +168,10 @@ class BorderAwareConstant {
     
     class SquaredDistance : public BinaryEnergy {
 	public:
-	SquaredDistance(std::string localisation_feature = "com") : loc_feat_(localisation_feature) {};
-
         virtual double operator()(const Traxel& from,
                           const Traxel& to,
                           const Traxels& prev,
                           const Traxels& curr) const;
-	private:
-	std::string loc_feat_;
     };
 
 

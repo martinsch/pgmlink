@@ -118,14 +118,10 @@ double NegLnOneMinusCellness::operator()(const Traxel& tr) const {
     //// class SquaredDistance
     ////
     double SquaredDistance::operator()(const Traxel& t1,
-	const Traxel& t2,
+				       const Traxel& t2,
 				       const Traxels& /*prev*/,
 				       const Traxels& /*curr*/) const {
-	double dx = abs(t1.features.find(loc_feat_)->second[0] - t2.features.find(loc_feat_)->second[0]);
-	double dy = abs(t1.features.find(loc_feat_)->second[1] - t2.features.find(loc_feat_)->second[1]);
-	double dz = abs(t1.features.find(loc_feat_)->second[2] - t2.features.find(loc_feat_)->second[2]);
-    
-	return dx*dx + dy*dy + dz*dz;
+	return t1.distance_to(t2);
     }
     
 
