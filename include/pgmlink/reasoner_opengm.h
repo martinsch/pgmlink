@@ -13,16 +13,16 @@ class Traxel;
 class Chaingraph : public Reasoner {
     public:
     Chaingraph(boost::function<double (const Traxel&)> detection,
-			    boost::function<double (const Traxel&)> non_detection,
-			    boost::function<double (const Traxel&)> appearance,
-			    boost::function<double (const Traxel&)> disappearance,
-			    boost::function<double (const Traxel&, const Traxel&)> move,
-			    boost::function<double (const Traxel&, const Traxel&, const Traxel&)> division,
-			    double opportunity_cost = 0,
-                double forbidden_cost = 0,
-			    bool with_constraints = true,
-			    bool fixed_detections = false,
-			    double ep_gap = 0.01
+	       boost::function<double (const Traxel&)> non_detection,
+	       boost::function<double (const Traxel&)> appearance,
+	       boost::function<double (const Traxel&)> disappearance,
+	       boost::function<double (const Traxel&, const Traxel&)> move,
+	       boost::function<double (const Traxel&, const Traxel&, const Traxel&)> division,
+	       double opportunity_cost = 0,
+	       double forbidden_cost = 0,
+	       bool with_constraints = true,
+	       bool fixed_detections = false,
+	       double ep_gap = 0.01
     ) 
     : detection_(detection), 
     non_detection_(non_detection),

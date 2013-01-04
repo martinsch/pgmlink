@@ -42,6 +42,10 @@ namespace pgmlink {
       PropertyGraph& 
       add(PropertyTag);
 
+    template<typename PropertyTag>
+      bool 
+      has_property(PropertyTag) const;
+
     /**
      * Attach existing property_map to graph.
      *
@@ -90,6 +94,14 @@ namespace pgmlink {
     boost::any property = boost::make_shared<typename property_map<PropertyTag, Graph>::type >(*this);
     properties_.insert(properties_map::value_type(name, property));
     return *this;
+  }
+
+  template <typename Graph>
+    template <typename PropertyTag>
+    bool 
+    PropertyGraph<Graph>::has_property(PropertyTag) const {
+    std::string name = property_map<PropertyTag, Graph>::name;
+    return properties_.count(name) ? true : false;
   }
   
   template <typename Graph>
