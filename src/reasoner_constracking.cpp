@@ -72,8 +72,8 @@ void SingleTimestepTraxelConservation::formulate(const HypothesesGraph& hypothes
 	}
 
 	if (fixed_detections_) {
-		assert(with_appearance_ || with_disappearance_);
 		LOG(logDEBUG) << "SingleTimestepTraxelConservation::formulate: fix_detections";
+		assert(with_appearance_ || with_disappearance_);
 		fix_detections(hypotheses);
 	}
 }
@@ -115,16 +115,20 @@ void SingleTimestepTraxelConservation::conclude(HypothesesGraph& g) {
 	// the node is also active if its appearance node is active
 	for (std::map<HypothesesGraph::Node, size_t>::const_iterator it =
 			app_node_map_.begin(); it != app_node_map_.end(); ++it) {
-		++count_objects[solution[it->second]];
 		if (solution[it->second] > 0) {
+			++count_objects[solution[it->second]];
+			--count_objects[0];
+			assert(active_nodes[it->first]==0);
 			active_nodes.set(it->first, solution[it->second]);
 		}
 	}
 	// the node is also active if its disappearance node is active
 	for (std::map<HypothesesGraph::Node, size_t>::const_iterator it =
 			dis_node_map_.begin(); it != dis_node_map_.end(); ++it) {
-		++count_objects[solution[it->second]];
 		if (solution[it->second] > 0) {
+			++count_objects[solution[it->second]];
+			--count_objects[0];
+			assert(active_nodes[it->first]==0);
 			active_nodes.set(it->first, solution[it->second]);
 		}
 	}
@@ -143,10 +147,11 @@ void SingleTimestepTraxelConservation::conclude(HypothesesGraph& g) {
 	}
 	for (std::map<HypothesesGraph::Node, size_t>::const_iterator it =
 			div_node_map_.begin(); it != div_node_map_.end(); ++it) {
-		bool state = false;
-		if (solution[it->second] >=1)
-			state = true;
-		division_nodes.set(it->first, state);
+//		bool state = false;
+		if (solution[it->second] >=1) {
+//			state = true;
+			division_nodes.set(it->first, true);
+		}
 	}
 
 	LOG(logINFO) << "SingleTimestepTraxelConservation::conclude: number of objects in node:";
@@ -291,8 +296,8 @@ void SingleTimestepTraxelConservation::add_finite_factors(const HypothesesGraph&
 				coords[var_idx] = state;
 				table.set_value(coords, energy);
 				coords[var_idx] = 0;
-				LOG(logDEBUG3) << "SingleTimestepTraxelConservation::add_finite_factors: var_idx " << var_idx <<
-									"] = " << energy;
+				LOG(logDEBUG4) << "SingleTimestepTraxelConservation::add_finite_factors: var_idx " << var_idx <<
+									" = " << energy;
 			}
 		}
 
@@ -389,7 +394,7 @@ void SingleTimestepTraxelConservation::add_constraints(const HypothesesGraph& g)
 					dynamic_cast<cplex*>(optimizer_)->addConstraint(cplex_idxs.begin(),
 								cplex_idxs.end(), coeffs.begin(), 0, 1);
 					LOG(logDEBUG3) << "SingleTimestepTraxelConservation::add_constraints:" <<
-							" Y_ij <= X_ij + App_i added for "
+							" Y_ij <= X_i + App_i added for "
 							<< "n = " << node_map_[n] << ", a = " << arc_map_[a] << ", nu = " << nu << ", mu = " << mu;
 				}
 			}
@@ -525,11 +530,11 @@ void SingleTimestepTraxelConservation::add_constraints(const HypothesesGraph& g)
 				}
 			}
 
-			// 0 <= sum_nu [ nu * sum_i (Y_ij[nu] ) ] - sum_nu ( nu * X_j[nu] ) <= 0
+			// 0 <= sum_nu [ nu * sum_i (Y_ij[nu] ) ] - sum_nu ( nu * X_j[nu] ) - sum_nu ( nu * Dis_j[nu] ) <= 0
 			dynamic_cast<cplex*>(optimizer_)->addConstraint(cplex_idxs.begin(),
 					cplex_idxs.end(), coeffs.begin(), 0, 0);
 			LOG(logDEBUG3) << "SingleTimestepTraxelConservation::add_constraints:" <<
-					" sum_k(Y_kj) = X_j added for "	<< "n = " << node_map_[n];
+					" sum_k(Y_kj) = X_j + Dis_j added for " << "n = " << node_map_[n];
 		}
 
 
@@ -565,8 +570,48 @@ void SingleTimestepTraxelConservation::add_constraints(const HypothesesGraph& g)
 			LOG(logDEBUG3) << "SingleTimestepTraxelConservation::add_constraints:" <<
 					" X_i>0 v` App_i>0 v` Dis_i>0 added for " << "n = " << node_map_[n];
 		}
-
 	}
+
+
+//	if (with_appearance_) {
+//		// set appearances in last time step zero
+//		typedef property_map<node_timestep, HypothesesGraph::base_graph>::type node_timestep_map_t;
+//		node_timestep_map_t& node_timestep_map = g.get(node_timestep());
+//		property_map<node_traxel, HypothesesGraph::base_graph>::type& node_traxel_map = g.get(node_traxel());
+//		int t = g.latest_timestep();
+//		vector<int> cplex_idxs;
+//		vector<size_t> coeffs;
+//		for(node_timestep_map_t::ItemIt n(node_timestep_map, t); n!=lemon::INVALID; ++n) {
+//			assert(node_traxel_map[n].Timestep == g.latest_timestep());
+//			coeffs.push_back(1);
+//			cplex_idxs.push_back(cplex_id(app_node_map_[n],0));
+//			// 1 <= App_i[0]<= 1
+//			dynamic_cast<cplex*>(optimizer_)->addConstraint(cplex_idxs.begin(),
+//						cplex_idxs.end(), coeffs.begin(), 1, 1);
+//			LOG(logDEBUG3) << "SingleTimestepTraxelConservation::add_constraints:" <<
+//					" 0 <= App_i <= 0 added for " << "n = " << node_map_[n]  << ", node.Id = " << node_traxel_map[n].Id;
+//		}
+//	}
+
+//	if (with_disappearance_) {
+//		// set disappearances in last time step zero
+//		typedef property_map<node_timestep, HypothesesGraph::base_graph>::type node_timestep_map_t;
+//		node_timestep_map_t& node_timestep_map = g.get(node_timestep());
+//		property_map<node_traxel, HypothesesGraph::base_graph>::type& node_traxel_map = g.get(node_traxel());
+//		int t = g.latest_timestep();
+//		vector<int> cplex_idxs;
+//		vector<size_t> coeffs;
+//		for(node_timestep_map_t::ItemIt n(node_timestep_map, t); n!=lemon::INVALID; ++n) {
+//			assert(node_traxel_map[n].Timestep == g.latest_timestep());
+//			coeffs.push_back(1);
+//			cplex_idxs.push_back(cplex_id(dis_node_map_[n],1));
+//			// 1 <= Dis_i[0]<= 1
+//			dynamic_cast<cplex*>(optimizer_)->addConstraint(cplex_idxs.begin(),
+//						cplex_idxs.end(), coeffs.begin(), 1, 1);
+//			LOG(logDEBUG3) << "SingleTimestepTraxelConservation::add_constraints:" <<
+//					" 0 <= Dis_i <= 0 added for " << "n = " << node_map_[n] << ", node.Id = " << node_traxel_map[n].Id;
+//		}
+//	}
 }
 
 
@@ -583,21 +628,65 @@ void SingleTimestepTraxelConservation::fix_detections(const HypothesesGraph& g) 
 			energies.push_back((double) detection_(traxel_map[n], state));
 		}
 		size_t max_state = std::min_element(energies.begin(), energies.end()) - energies.begin();
-		cplex_idxs.push_back(cplex_id(node_map_[n], max_state));
-		coeffs.push_back(1);
-		if (with_appearance_) {
-			cplex_idxs.push_back(cplex_id(app_node_map_[n],max_state));
+
+		// if it is most probable that it is a misdetection (max_state == 0), then fix all X_i, App_i, Dis_i to 0
+		// otherwise, add constraint that one of those must be greater than 0
+		// (Detections cannot be fixed to their max_state, example: 1 --- 2 --- 1 would be invalid)
+
+		if (max_state == 0) {
+//			cplex_idxs.push_back(cplex_id(node_map_[n], 0));
+//			coeffs.push_back(1);
+//			// X_i[0] = 1
+//			dynamic_cast<cplex*>(optimizer_)->addConstraint(cplex_idxs.begin(),
+//					cplex_idxs.end(), coeffs.begin(), 1, 1);
+//			LOG(logDEBUG3) << "SingleTimestepTraxelConservation::fix_detections:" <<
+//								" X_i set to 0 for n = " << node_map_[n];
+//			if (with_appearance_) {
+//				cplex_idxs.clear();
+//				coeffs.clear();
+//				cplex_idxs.push_back(cplex_id(app_node_map_[n],0));
+//				coeffs.push_back(1);
+//				// App_i[0] = 1
+//				dynamic_cast<cplex*>(optimizer_)->addConstraint(cplex_idxs.begin(),
+//						cplex_idxs.end(), coeffs.begin(), 1, 1);
+//				LOG(logDEBUG3) << "SingleTimestepTraxelConservation::fix_detections:" <<
+//									" App_i set to 0 for n = " << node_map_[n];
+//			}
+//			if (with_disappearance_) {
+//				cplex_idxs.clear();
+//				coeffs.clear();
+//				cplex_idxs.push_back(cplex_id(dis_node_map_[n],0));
+//				coeffs.push_back(1);
+//				// Dis_i[0] = 1
+//				dynamic_cast<cplex*>(optimizer_)->addConstraint(cplex_idxs.begin(),
+//						cplex_idxs.end(), coeffs.begin(), 1, 1);
+//				LOG(logDEBUG3) << "SingleTimestepTraxelConservation::fix_detections:" <<
+//									" Dis_i set to 0 for n = " << node_map_[n];
+//			}
+
+//		}
+		} else {  // max_state > 0
+			// one of X_i, App_i or Dis_i must be greater than 0
+			cplex_idxs.push_back(cplex_id(node_map_[n], 0));
 			coeffs.push_back(1);
+			size_t num_vars = 1;
+
+			if (with_appearance_) {
+				cplex_idxs.push_back(cplex_id(app_node_map_[n],0));
+				coeffs.push_back(1);
+				++num_vars;
+			}
+			if (with_disappearance_) {
+				cplex_idxs.push_back(cplex_id(dis_node_map_[n],0));
+				coeffs.push_back(1);
+				++num_vars;
+			}
+			// 2 <= 1*X_i[0] + 1*App_i[0] + 1*Dis_i[0] <= 2
+			dynamic_cast<cplex*>(optimizer_)->addConstraint(cplex_idxs.begin(),
+					cplex_idxs.end(), coeffs.begin(), num_vars-1, num_vars-1);
+			LOG(logDEBUG3) << "SingleTimestepTraxelConservation::fix_detections:" <<
+								" X_i != 0 added for " << "n = " << node_map_[n];
 		}
-		if (with_disappearance_) {
-			cplex_idxs.push_back(cplex_id(dis_node_map_[n],max_state));
-			coeffs.push_back(1);
-		}
-		// 1 <= 1*X_i[max_state] + 1*App_i[max_state] + 1*Dis_i[max_state] <= val
-		dynamic_cast<cplex*>(optimizer_)->addConstraint(cplex_idxs.begin(),
-				cplex_idxs.end(), coeffs.begin(), 1, 1);
-		LOG(logDEBUG3) << "SingleTimestepTraxelConservation::fix_detections:" <<
-							" fix_Detection to " << max_state << " added for " << "n = " << node_map_[n];
 	}
 }
 
