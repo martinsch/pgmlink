@@ -244,6 +244,21 @@ namespace pgmlink {
 	    }
 	}
     }
+//    // mergers in last timestep
+//	if(with_mergers) {
+//		LOG(logDEBUG2) << "events(): mergers in last timestep";
+//		int t = g.latest_timestep();
+//		for(node_timestep_map_t::ItemIt node_at(node_timestep_map, t); node_at!=lemon::INVALID; ++node_at) {
+//			if((*node_number_of_objects)[node_at] > 1) {
+//				Event e;
+//				e.type = Event::Merger;
+//				e.traxel_ids.push_back(node_traxel_map[node_at].Id);
+//				e.traxel_ids.push_back((*node_number_of_objects)[node_at]);
+//				(*ret)[t-g.earliest_timestep()].push_back(e);
+//				LOG(logDEBUG3) << e;
+//			}
+//		}
+//	}
 
     return ret;
   }
