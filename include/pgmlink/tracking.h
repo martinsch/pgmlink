@@ -131,14 +131,16 @@ namespace pgmlink {
   	      double ep_gap=0.01,
   	      double avg_obj_size=30.0,
   	      bool with_appearance=false,
-  	      bool with_disappearance=false
+  	      bool with_disappearance=false,
+  	      bool with_tracklets=false
   	      )
         : max_number_objects_(max_number_objects),
         	max_dist_(max_neighbor_distance), division_threshold_(division_threshold),
         detection_rf_fn_(random_forest_filename), use_size_dependent_detection_(size_dependent_detection_prob),
         forbidden_cost_(forbidden_cost), with_constraints_(with_constraints),
         fixed_detections_(fixed_detections), ep_gap_(ep_gap), avg_obj_size_(avg_obj_size),
-        with_appearance_(with_appearance),with_disappearance_(with_disappearance){}
+        with_appearance_(with_appearance),with_disappearance_(with_disappearance),
+        with_tracklets_(with_tracklets){}
       std::vector< std::vector<Event> > operator()(TraxelStore&);
 
       /**
@@ -157,7 +159,7 @@ namespace pgmlink {
       bool fixed_detections_;
       double ep_gap_;
       double avg_obj_size_;
-      bool with_appearance_, with_disappearance_;
+      bool with_appearance_, with_disappearance_, with_tracklets_;
       shared_ptr<std::vector< std::map<unsigned int, bool> > > last_detections_;
     };
 }

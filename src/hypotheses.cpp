@@ -402,6 +402,146 @@ namespace pgmlink {
   	}
   }
 
+namespace {
+std::vector<HypothesesGraph::Arc> getOutgoingArcs(const HypothesesGraph& graph, const HypothesesGraph::Node& n) {
+	std::vector<HypothesesGraph::Arc> result;
+	for(HypothesesGraph::OutArcIt a(graph, n); a != lemon::INVALID; ++a) {
+		result.push_back(a);
+	}
+	return result;
+}
+
+std::vector<HypothesesGraph::Arc> getIncomingArcs(const HypothesesGraph& graph, const HypothesesGraph::Node& n) {
+	std::vector<HypothesesGraph::Arc> result;
+	for(HypothesesGraph::InArcIt a(graph, n); a != lemon::INVALID; ++a) {
+		result.push_back(a);
+	}
+	return result;
+}
+
+void addNodeToTracklet(const HypothesesGraph& traxel_graph, HypothesesGraph& tracklet_graph,
+		const HypothesesGraph::Node& traxel_node, const HypothesesGraph::Node& ancestor_traxel_node,
+		std::map<HypothesesGraph::Node, HypothesesGraph::Node>& traxel2tracklet, double traxel_arc_dist,
+		std::map<HypothesesGraph::Node, std::vector<HypothesesGraph::Node> >& tracklet2traxel, const int arc_id) {
+	property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = traxel_graph.get(node_traxel());
+	property_map<node_tracklet, HypothesesGraph::base_graph>::type& tracklet_map = tracklet_graph.get(node_tracklet());
+	property_map<tracklet_intern_dist, HypothesesGraph::base_graph>::type& tracklet_arc_dist_map = tracklet_graph.get(tracklet_intern_dist());
+	property_map<tracklet_intern_arc_ids, HypothesesGraph::base_graph>::type& tracklet_arc_id_map = tracklet_graph.get(tracklet_intern_arc_ids());
+
+//	property_map<node_timestep, HypothesesGraph::base_graph>::type& timestep_map = tracklet_graph.get(node_timestep());
+
+	assert(traxel2tracklet.find(ancestor_traxel_node) != traxel2tracklet.end());
+	HypothesesGraph::Node tracklet_node = traxel2tracklet[ancestor_traxel_node];
+	std::vector<Traxel> tracklet = tracklet_map[tracklet_node];
+	Traxel tr = traxel_map[traxel_node];
+	tracklet.push_back(tr);
+	tracklet_map.set(tracklet_node, tracklet);
+	traxel2tracklet[traxel_node] = tracklet_node;
+//	size_t timestep = tr.Timestep;
+//	timestep_map[tracklet_node].add(timestep);
+//	tracklet_graph.timesteps_.insert(timestep);
+
+	// add internal arc
+	std::vector<double> arc_dists = tracklet_arc_dist_map[tracklet_node];
+	arc_dists.push_back(traxel_arc_dist);
+	tracklet_arc_dist_map.set(tracklet_node,arc_dists);
+
+	tracklet2traxel[tracklet_node].push_back(traxel_node);
+
+	std::vector<int> arc_ids = tracklet_arc_id_map[tracklet_node];
+	arc_ids.push_back(arc_id);
+	tracklet_arc_id_map.set(tracklet_node, arc_ids);
+	LOG(logDEBUG) << "addNodeToTracklet: added arc_id " << arc_id;
+}
+
+void addNodeToGraph(const HypothesesGraph& traxel_graph, HypothesesGraph& tracklet_graph,
+		const HypothesesGraph::Node& traxel_node, std::map<HypothesesGraph::Node, HypothesesGraph::Node>& traxel2tracklet,
+		std::map<HypothesesGraph::Node, std::vector<HypothesesGraph::Node> >& tracklet2traxel) {
+	property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = traxel_graph.get(node_traxel());
+	property_map<node_tracklet, HypothesesGraph::base_graph>::type& tracklet_map = tracklet_graph.get(node_tracklet());
+	property_map<tracklet_intern_dist, HypothesesGraph::base_graph>::type& tracklet_intern_dist_map = tracklet_graph.get(tracklet_intern_dist());
+	std::vector<Traxel> tracklet;
+	Traxel tr = traxel_map[traxel_node];
+	tracklet.push_back(tr);
+	size_t timestep = tr.Timestep;
+	HypothesesGraph::Node tracklet_node = tracklet_graph.add_node(timestep);
+	LOG(logDEBUG) << "added tracklet node " << tracklet_graph.id(tracklet_node);
+	tracklet_map.set(tracklet_node, tracklet);
+	traxel2tracklet[traxel_node] = tracklet_node;
+	std::vector<double> arc_dists;
+	tracklet_intern_dist_map.set(tracklet_node, arc_dists);
+
+	tracklet2traxel[tracklet_node].push_back(traxel_node);
+}
+
+void addArcsToGraph(const HypothesesGraph& traxel_graph, HypothesesGraph& tracklet_graph,
+		const std::vector<HypothesesGraph::Arc>& incoming_arcs, std::map<HypothesesGraph::Node, HypothesesGraph::Node>& traxel2tracklet) {
+	property_map<arc_distance, HypothesesGraph::base_graph>::type& traxel_arc_distances = traxel_graph.get(arc_distance());
+	property_map<arc_distance, HypothesesGraph::base_graph>::type& tracklet_arc_distances = tracklet_graph.get(arc_distance());
+	property_map<traxel_arc_id, HypothesesGraph::base_graph>::type& traxel_arc_ids = tracklet_graph.get(traxel_arc_id());
+
+	for(std::vector<HypothesesGraph::Arc>::const_iterator a = incoming_arcs.begin(); a!=incoming_arcs.end(); ++a) {
+		HypothesesGraph::Arc arc = *a;
+		LOG(logDEBUG) << "traxel arc source " << traxel_graph.id(traxel_graph.source(arc));
+		LOG(logDEBUG) << "traxel arc target " << traxel_graph.id(traxel_graph.target(arc));
+		HypothesesGraph::Node from = traxel2tracklet[traxel_graph.source(arc)];
+		HypothesesGraph::Node to = traxel2tracklet[traxel_graph.target(arc)];
+		LOG(logDEBUG) << "tracklet node from " << tracklet_graph.id(traxel2tracklet[traxel_graph.source(arc)]);
+		LOG(logDEBUG) << "tracklet node to " << tracklet_graph.id(traxel2tracklet[traxel_graph.target(arc)]);
+		assert(from != to);
+		HypothesesGraph::Arc tracklet_arc = tracklet_graph.addArc(from, to);
+		tracklet_arc_distances.set(tracklet_arc,traxel_arc_distances[arc]);
+		traxel_arc_ids.set(tracklet_arc, (int) traxel_graph.id(arc));
+	}
+}
+
+} // anonymous namespace
+
+  std::map<HypothesesGraph::Node, std::vector<HypothesesGraph::Node> > generateTrackletGraph2(const HypothesesGraph& traxel_graph, HypothesesGraph& tracklet_graph) {
+  	property_map<arc_distance, HypothesesGraph::base_graph>::type& traxel_arc_dist_map = traxel_graph.get(arc_distance());
+
+	typedef property_map<node_timestep, HypothesesGraph::base_graph>::type node_timestep_map_t;
+  	node_timestep_map_t& node_timestep_map = traxel_graph.get(node_timestep());
+
+  	// add empty traxel_map to the tracklet graph in order to make the tracklet graph equivalent to traxelgraphs
+  	tracklet_graph.add(node_traxel()).add(arc_distance());
+
+	tracklet_graph.add(node_tracklet()).add(tracklet_intern_dist()).add(tracklet_intern_arc_ids()).add(traxel_arc_id());
+
+	std::map<HypothesesGraph::Node, std::vector<HypothesesGraph::Node> > tracklet_node_to_traxel_nodes;
+	// maps traxel_nodes to tracklet_nodes
+	std::map<HypothesesGraph::Node, HypothesesGraph::Node > traxel_node_to_tracklet_node;
+
+	for(int t = traxel_graph.earliest_timestep(); t <= traxel_graph.latest_timestep(); ++t) {
+	for(node_timestep_map_t::ItemIt traxel_node(node_timestep_map, t); traxel_node!=lemon::INVALID; ++traxel_node) {
+		LOG(logDEBUG) << "traxel_node = " << traxel_graph.id(traxel_node);
+		vector<HypothesesGraph::Arc> incoming_arcs = getIncomingArcs(traxel_graph, traxel_node);
+		if(incoming_arcs.size() != 1) {
+			addNodeToGraph(traxel_graph, tracklet_graph, traxel_node, traxel_node_to_tracklet_node, tracklet_node_to_traxel_nodes);
+			addArcsToGraph(traxel_graph, tracklet_graph, incoming_arcs, traxel_node_to_tracklet_node);
+			LOG(logDEBUG) << "traxel2tracklet.size(): " << traxel_node_to_tracklet_node.size();
+			continue;
+		}
+
+		HypothesesGraph::Node ancestor = traxel_graph.source(incoming_arcs[0]);
+		if(getOutgoingArcs(traxel_graph, ancestor).size() > 1) {
+			addNodeToGraph(traxel_graph, tracklet_graph, traxel_node, traxel_node_to_tracklet_node, tracklet_node_to_traxel_nodes);
+			assert(incoming_arcs.size() == 1);
+			addArcsToGraph(traxel_graph, tracklet_graph, incoming_arcs, traxel_node_to_tracklet_node);
+			LOG(logDEBUG) << "traxel2tracklet.size(): " << traxel_node_to_tracklet_node.size();
+			continue;
+		}
+
+		double dist = traxel_arc_dist_map[incoming_arcs[0]];
+		int arc_id = traxel_graph.id(incoming_arcs[0]);
+		addNodeToTracklet(traxel_graph, tracklet_graph, traxel_node, ancestor, traxel_node_to_tracklet_node, dist,
+				tracklet_node_to_traxel_nodes, arc_id);
+	}
+	}
+
+	return tracklet_node_to_traxel_nodes;
+    }
+
 
 
 

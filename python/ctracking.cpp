@@ -181,11 +181,11 @@ BOOST_PYTHON_MODULE( ctracking )
     ;
 
     class_<ConsTracking>("ConsTracking",
-			init<int,double,double,string,bool,double,bool,bool,double,double,bool,bool>(
+			init<int,double,double,string,bool,double,bool,bool,double,double,bool,bool,bool>(
 					args("max_number_objects", "max_neighbor_distance", "division_threshold",
 							"detection_rf_filename", "size_dependent_detection_prob", "forbidden_cost",
 							"with_constraints", "fixed_detections", "ep_gap", "avg_obj_size",
-							"with_appearance", "with_disappearance")))
+							"with_appearance", "with_disappearance", "with_tracklets")))
 	  .def("__call__", &ConsTracking::operator())
 	  .def("detections", &ConsTracking::detections)
 	;

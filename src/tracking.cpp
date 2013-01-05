@@ -443,7 +443,7 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 
 	LOG(logDEBUG1) << "ConsTracking(): adding distance property to edges";
 	HypothesesGraph& g = *graph;
-	g.add(arc_distance());
+	g.add(arc_distance()).add(tracklet_intern_dist()).add(node_tracklet()).add(tracklet_intern_arc_ids()).add(traxel_arc_id());
 	property_map<arc_distance, HypothesesGraph::base_graph>::type& arc_distances = g.get(arc_distance());
 	property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g.get(node_traxel());
 	for(HypothesesGraph::ArcIt a(g); a!=lemon::INVALID; ++a) {
@@ -467,7 +467,8 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 			fixed_detections_,
 			ep_gap_,
 			with_appearance_,
-			with_disappearance_
+			with_disappearance_,
+			with_tracklets_
 			);
 
 	cout << "-> formulate ConservationTracking model" << endl;
