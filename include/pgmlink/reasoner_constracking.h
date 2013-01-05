@@ -22,7 +22,8 @@ class SingleTimestepTraxelConservation : public Reasoner {
 			    bool fixed_detections = false,
 			    double ep_gap = 0.01,
 			    bool with_appearance = false,
-			    bool with_disappearance = false
+			    bool with_disappearance = false,
+			    bool with_tracklets = false
     )
     : max_number_objects_(max_number_objects),
     detection_(detection),
@@ -36,6 +37,7 @@ class SingleTimestepTraxelConservation : public Reasoner {
     ep_gap_(ep_gap),
     with_appearance_(with_appearance),
     with_disappearance_(with_disappearance),
+    with_tracklets_(with_tracklets),
     number_of_appearance_nodes_(0),
     number_of_disappearance_nodes_(0)
     { };
@@ -114,8 +116,13 @@ class SingleTimestepTraxelConservation : public Reasoner {
     bool with_appearance_;
     bool with_disappearance_;
 
+    bool with_tracklets_;
+
     unsigned int number_of_detection_nodes_, number_of_transition_nodes_, number_of_division_nodes_;
     unsigned int number_of_appearance_nodes_, number_of_disappearance_nodes_;
+
+    HypothesesGraph tracklet_graph_;
+    std::map<HypothesesGraph::Node, std::vector<HypothesesGraph::Node> > tracklet2traxel_node_map_;
 };
 
 

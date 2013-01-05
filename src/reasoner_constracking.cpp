@@ -37,25 +37,32 @@ void SingleTimestepTraxelConservation::formulate(const HypothesesGraph& hypothes
 	reset();
 	pgm_ = new OpengmModel();
 
+	HypothesesGraph const *graph;
+	if (with_tracklets_) {
+		tracklet2traxel_node_map_ = generateTrackletGraph2(hypotheses,tracklet_graph_);
+		graph = &tracklet_graph_;
+	} else {
+		graph = &hypotheses;
+	}
 	LOG(logDEBUG) << "SingleTimestepTraxelConservation::formulate: add_detection_nodes";
-	add_detection_nodes(hypotheses);
+	add_detection_nodes(*graph);
 	LOG(logDEBUG) << "SingleTimestepTraxelConservation::formulate: add_transition_nodes";
-	add_transition_nodes(hypotheses);
+	add_transition_nodes(*graph);
 	if (with_appearance_) {
 		LOG(logDEBUG) << "SingleTimestepTraxelConservation::formulate: add_appearance_nodes";
-		add_appearance_nodes(hypotheses);
+		add_appearance_nodes(*graph);
 	}
 	if (with_disappearance_) {
 		LOG(logDEBUG) << "SingleTimestepTraxelConservation::formulate: add_disappearance_nodes";
-		add_disappearance_nodes(hypotheses);
+		add_disappearance_nodes(*graph);
 	}
 	LOG(logDEBUG) << "SingleTimestepTraxelConservation::formulate: add_division_nodes";
-	add_division_nodes(hypotheses);
+	add_division_nodes(*graph);
 
 	OpengmModel::ogmGraphicalModel* model = pgm_->Model();
 
 	LOG(logDEBUG) << "SingleTimestepTraxelConservation::formulate: add_finite_factors";
-	add_finite_factors(hypotheses);
+	add_finite_factors(*graph);
 
 	typedef opengm::LPCplex<OpengmModel::ogmGraphicalModel,OpengmModel::ogmAccumulator> cplex_optimizer;
 	cplex_optimizer::Parameter param;
@@ -68,13 +75,13 @@ void SingleTimestepTraxelConservation::formulate(const HypothesesGraph& hypothes
 
 	if (with_constraints_) {
 		LOG(logDEBUG) << "SingleTimestepTraxelConservation::formulate: add_constraints";
-		add_constraints(hypotheses);
+		add_constraints(*graph);
 	}
 
 	if (fixed_detections_) {
 		LOG(logDEBUG) << "SingleTimestepTraxelConservation::formulate: fix_detections";
 		assert(with_appearance_ || with_disappearance_);
-		fix_detections(hypotheses);
+		fix_detections(*graph);
 	}
 }
 
@@ -97,48 +104,127 @@ void SingleTimestepTraxelConservation::conclude(HypothesesGraph& g) {
 
 	// add 'active' properties to graph
 	g.add(node_active2()).add(arc_active()).add(division_active());
+
 	property_map<node_active2, HypothesesGraph::base_graph>::type& active_nodes =
 			g.get(node_active2());
 	property_map<arc_active, HypothesesGraph::base_graph>::type& active_arcs =
 			g.get(arc_active());
 	property_map<division_active, HypothesesGraph::base_graph>::type& division_nodes =
 				g.get(division_active());
+	if (!with_tracklets_) {
+		tracklet_graph_.add(tracklet_intern_arc_ids()).add(traxel_arc_id());
+	}
+	property_map<tracklet_intern_arc_ids, HypothesesGraph::base_graph>::type& tracklet_arc_id_map =
+			tracklet_graph_.get(tracklet_intern_arc_ids());
+	property_map<traxel_arc_id, HypothesesGraph::base_graph>::type& traxel_arc_id_map =
+				tracklet_graph_.get(traxel_arc_id());
 
 	vector<size_t> count_objects(max_number_objects_+1,0);
+
+	for (HypothesesGraph::ArcIt a(g); a!=lemon::INVALID; ++a) {
+		active_arcs.set(a, false);
+	}
 
 	// write state after inference into 'active'-property maps
 	for (std::map<HypothesesGraph::Node, size_t>::const_iterator it =
 			node_map_.begin(); it != node_map_.end(); ++it) {
-		++count_objects[solution[it->second]];
-		active_nodes.set(it->first, solution[it->second]);
+		if (with_tracklets_) {
+			// set state of tracklet nodes
+			std::vector<HypothesesGraph::Node> traxel_nodes = tracklet2traxel_node_map_[it->first];
+			for(std::vector<HypothesesGraph::Node>::const_iterator tr_n_it = traxel_nodes.begin(); tr_n_it != traxel_nodes.end(); ++tr_n_it) {
+				HypothesesGraph::Node n = *tr_n_it;
+				active_nodes.set(n, solution[it->second]);
+				++count_objects[solution[it->second]];
+			}
+			// set state of tracklet internal arcs
+			std::vector<int> arc_ids = tracklet_arc_id_map[it->first];
+			LOG(logDEBUG) << "arc_ids.size() = " << arc_ids.size();
+			LOG(logDEBUG) << "traxel_nodes.size() = " << traxel_nodes.size();
+			assert(arc_ids.size() == traxel_nodes.size() -1);
+			for(std::vector<int>::const_iterator arc_id_it = arc_ids.begin(); arc_id_it != arc_ids.end(); ++arc_id_it) {
+				HypothesesGraph::Arc a = g.arcFromId(*arc_id_it);
+				if (solution[it->second] > 0) {
+					active_arcs.set(a, true);
+				}
+			}
+		} else {
+			++count_objects[solution[it->second]];
+			active_nodes.set(it->first, solution[it->second]);
+		}
 	}
 	// the node is also active if its appearance node is active
 	for (std::map<HypothesesGraph::Node, size_t>::const_iterator it =
 			app_node_map_.begin(); it != app_node_map_.end(); ++it) {
 		if (solution[it->second] > 0) {
-			++count_objects[solution[it->second]];
-			--count_objects[0];
-			assert(active_nodes[it->first]==0);
-			active_nodes.set(it->first, solution[it->second]);
+			if (with_tracklets_) {
+				// set state of tracklet nodes
+				std::vector<HypothesesGraph::Node> traxel_nodes = tracklet2traxel_node_map_[it->first];
+				for(std::vector<HypothesesGraph::Node>::const_iterator tr_n_it = traxel_nodes.begin(); tr_n_it != traxel_nodes.end(); ++tr_n_it) {
+					++count_objects[solution[it->second]];
+					--count_objects[0];
+					HypothesesGraph::Node n = *tr_n_it;
+					assert(active_nodes[n] == 0);
+					active_nodes.set(n, solution[it->second]);
+				}
+				// set state of tracklet internal arcs
+				std::vector<int> arc_ids = tracklet_arc_id_map[it->first];
+				for(std::vector<int>::const_iterator arc_id_it = arc_ids.begin(); arc_id_it != arc_ids.end(); ++arc_id_it) {
+					HypothesesGraph::Arc a = g.arcFromId(*arc_id_it);
+					assert(active_arcs[a] == false);
+					if(solution[it->second] > 0) {
+						active_arcs.set(a, true);
+					}
+				}
+			} else {
+				++count_objects[solution[it->second]];
+				--count_objects[0];
+				assert(active_nodes[it->first]==0);
+				active_nodes.set(it->first, solution[it->second]);
+			}
 		}
 	}
+
 	// the node is also active if its disappearance node is active
 	for (std::map<HypothesesGraph::Node, size_t>::const_iterator it =
 			dis_node_map_.begin(); it != dis_node_map_.end(); ++it) {
 		if (solution[it->second] > 0) {
-			++count_objects[solution[it->second]];
-			--count_objects[0];
-			assert(active_nodes[it->first]==0);
-			active_nodes.set(it->first, solution[it->second]);
+			if (with_tracklets_) {
+				// set state of tracklet nodes
+				std::vector<HypothesesGraph::Node> traxel_nodes = tracklet2traxel_node_map_[it->first];
+				for(std::vector<HypothesesGraph::Node>::const_iterator tr_n_it = traxel_nodes.begin(); tr_n_it != traxel_nodes.end(); ++tr_n_it) {
+					++count_objects[solution[it->second]];
+					--count_objects[0];
+					HypothesesGraph::Node n = *tr_n_it;
+					assert(active_nodes[n] == 0);
+					active_nodes.set(n, solution[it->second]);
+				}
+				// set state of tracklet internal arcs
+				std::vector<int> arc_ids = tracklet_arc_id_map[it->first];
+				for(std::vector<int>::const_iterator arc_id_it = arc_ids.begin(); arc_id_it != arc_ids.end(); ++arc_id_it) {
+					HypothesesGraph::Arc a = g.arcFromId(*arc_id_it);
+					assert(active_arcs[a] == false);
+					if (solution[it->second] > 0) {
+						active_arcs.set(a, true);
+					}
+				}
+			} else {
+				++count_objects[solution[it->second]];
+				--count_objects[0];
+				assert(active_nodes[it->first]==0);
+				active_nodes.set(it->first, solution[it->second]);
+			}
 		}
 	}
 
 	for (std::map<HypothesesGraph::Arc, size_t>::const_iterator it =
 			arc_map_.begin(); it != arc_map_.end(); ++it) {
-		bool state = false;
-		if (solution[it->second] >= 1)
-			state = true;
-		active_arcs.set(it->first, state);
+		if (solution[it->second] >= 1) {
+			if (with_tracklets_) {
+				active_arcs.set(g.arcFromId((traxel_arc_id_map[it->first])), true);
+			} else {
+				active_arcs.set(it->first, true);
+			}
+		}
 	}
 	// initialize division node map
 	for (std::map<HypothesesGraph::Node, size_t>::const_iterator it =
@@ -147,10 +233,13 @@ void SingleTimestepTraxelConservation::conclude(HypothesesGraph& g) {
 	}
 	for (std::map<HypothesesGraph::Node, size_t>::const_iterator it =
 			div_node_map_.begin(); it != div_node_map_.end(); ++it) {
-//		bool state = false;
 		if (solution[it->second] >=1) {
-//			state = true;
-			division_nodes.set(it->first, true);
+			if (with_tracklets_) {
+				// set division property for the last node in the tracklet
+				division_nodes.set(tracklet2traxel_node_map_[it->first].back(), true);
+			} else {
+				division_nodes.set(it->first, true);
+			}
 		}
 	}
 
@@ -266,6 +355,8 @@ double get_transition_prob(double distance, size_t state) {
 void SingleTimestepTraxelConservation::add_finite_factors(const HypothesesGraph& g) {
 	LOG(logDEBUG) << "SingleTimestepTraxelConservation::add_finite_factors: entered";
 	property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g.get(node_traxel());
+	property_map<node_tracklet, HypothesesGraph::base_graph>::type& tracklet_map = g.get(node_tracklet());
+	property_map<tracklet_intern_dist, HypothesesGraph::base_graph>::type& tracklet_intern_dist_map = g.get(tracklet_intern_dist());
 
 	////
 	//// add detection factors
@@ -289,7 +380,20 @@ void SingleTimestepTraxelConservation::add_finite_factors(const HypothesesGraph&
 		// ITER first_ogm_idx, ITER last_ogm_idx, VALUE init, size_t states_per_var
 		OpengmExplicitFactor<double> table(vi.begin(), vi.end(), 0, (max_number_objects_ + 1));
 		for (size_t state = 0; state <= max_number_objects_; ++state) {
-			double energy = detection_(traxel_map[n], state);
+			double energy = 0;
+			if (with_tracklets_) {
+				// add all detection factors of the internal nodes
+				for (std::vector<Traxel>::const_iterator trax_it = tracklet_map[n].begin(); trax_it != tracklet_map[n].end(); ++trax_it){
+					energy += detection_(*trax_it, state);
+				}
+				// add all transition factors of the internal arcs
+				for (std::vector<double>::const_iterator intern_dist_it = tracklet_intern_dist_map[n].begin();
+						intern_dist_it != tracklet_intern_dist_map[n].end(); ++intern_dist_it) {
+					energy += transition_(get_transition_prob(*intern_dist_it, state));
+				}
+			} else {
+				energy = detection_(traxel_map[n], state);
+			}
 			LOG(logDEBUG2) << "SingleTimestepTraxelConservation::add_finite_factors: detection[" << state <<
 							"] = " << energy;
 			for (size_t var_idx = 0; var_idx < num_vars; ++var_idx) {
@@ -339,7 +443,12 @@ void SingleTimestepTraxelConservation::add_finite_factors(const HypothesesGraph&
 		// ITER first_ogm_idx, ITER last_ogm_idx, VALUE init, size_t states_per_var
 		OpengmExplicitFactor<double> table(vi, vi + 1, 0, 2);
 		for (size_t state = 0; state <= 1; ++state) {
-			double energy = division_(traxel_map[n], state);
+			double energy = 0;
+			if (with_tracklets_) {
+				energy = division_(tracklet_map[n].back(), state);
+			} else {
+				energy = division_(traxel_map[n], state);
+			}
 			LOG(logDEBUG2) << "SingleTimestepTraxelConservation::add_finite_factors: division[" << state <<
 					"] = " << energy;
 			coords[0] = state;
@@ -619,13 +728,29 @@ void SingleTimestepTraxelConservation::add_constraints(const HypothesesGraph& g)
 void SingleTimestepTraxelConservation::fix_detections(const HypothesesGraph& g) {
 	typedef opengm::LPCplex<OpengmModel::ogmGraphicalModel,OpengmModel::ogmAccumulator> cplex;
 	property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g.get(node_traxel());
+	property_map<node_tracklet, HypothesesGraph::base_graph>::type& tracklet_map = g.get(node_tracklet());
+	property_map<tracklet_intern_dist, HypothesesGraph::base_graph>::type& tracklet_intern_dist_map = g.get(tracklet_intern_dist());
 
 	for (HypothesesGraph::NodeIt n(g); n != lemon::INVALID; ++n) {
 		vector<size_t> cplex_idxs;
 		vector<int> coeffs;
 		vector<double> energies;
 		for (size_t state = 0; state <= max_number_objects_; ++state) {
-			energies.push_back((double) detection_(traxel_map[n], state));
+			if (with_tracklets_) {
+				double e = 0;
+				// add all detection factors of the internal nodes
+				for (std::vector<Traxel>::const_iterator trax_it = tracklet_map[n].begin(); trax_it != tracklet_map[n].end(); ++trax_it){
+					e += detection_(*trax_it, state);
+				}
+				// add all transition factors of the internal arcs
+				for (std::vector<double>::const_iterator intern_dist_it = tracklet_intern_dist_map[n].begin();
+						intern_dist_it != tracklet_intern_dist_map[n].end(); ++intern_dist_it) {
+					e += transition_(get_transition_prob(*intern_dist_it, state));
+				}
+				energies.push_back(e);
+			} else {
+				energies.push_back((double) detection_(traxel_map[n], state));
+			}
 		}
 		size_t max_state = std::min_element(energies.begin(), energies.end()) - energies.begin();
 

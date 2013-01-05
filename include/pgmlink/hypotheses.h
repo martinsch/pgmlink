@@ -58,6 +58,27 @@ namespace pgmlink {
 	template <typename Graph>
 	  const std::string property_map<node_tracklet,Graph>::name = "node_tracklet";
 
+
+	// tracklet_arcs
+	struct tracklet_intern_dist {};
+	template <typename Graph>
+	  struct property_map<tracklet_intern_dist, Graph> {
+	  typedef lemon::IterableValueMap< Graph, typename Graph::Node, std::vector<double> > type;
+	  static const std::string name;
+	};
+	template <typename Graph>
+	  const std::string property_map<tracklet_intern_dist,Graph>::name = "tracklet_intern_dist";
+
+	// tracklet_arcs
+	struct tracklet_intern_arc_ids {};
+	template <typename Graph>
+	  struct property_map<tracklet_intern_arc_ids, Graph> {
+	  typedef lemon::IterableValueMap< Graph, typename Graph::Node, std::vector<int> > type;
+	  static const std::string name;
+	};
+	template <typename Graph>
+	  const std::string property_map<tracklet_intern_arc_ids,Graph>::name = "tracklet_intern_arc_ids";
+
   // node_active
   struct node_active {};
   template <typename Graph>
@@ -97,6 +118,16 @@ namespace pgmlink {
   };
   template <typename Graph>
     const std::string property_map<arc_distance,Graph>::name = "arc_distance";
+
+  // traxel_arc_id
+  struct traxel_arc_id {};
+    template <typename Graph>
+      struct property_map<traxel_arc_id, Graph> {
+      typedef lemon::IterableValueMap< Graph, typename Graph::Arc, int> type;
+      static const std::string name;
+    };
+    template <typename Graph>
+      const std::string property_map<traxel_arc_id,Graph>::name = "traxel_arc_id";
 
   struct arc_vol_ratio {};
     template <typename Graph>
@@ -192,6 +223,8 @@ namespace pgmlink {
   };
 
   void generateTrackletGraph(const HypothesesGraph& traxel_graph, HypothesesGraph& tracklet_graph);
+  std::map<HypothesesGraph::Node, std::vector<HypothesesGraph::Node> > generateTrackletGraph2(
+		  const HypothesesGraph& traxel_graph, HypothesesGraph& tracklet_graph);
   HypothesesGraph& prune_inactive(HypothesesGraph&);
   boost::shared_ptr<std::vector< std::vector<Event> > > events(const HypothesesGraph&);
   boost::shared_ptr<std::vector< std::map<unsigned int, bool> > > state_of_nodes(const HypothesesGraph&);
