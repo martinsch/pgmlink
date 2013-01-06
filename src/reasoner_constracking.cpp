@@ -39,6 +39,7 @@ void SingleTimestepTraxelConservation::formulate(const HypothesesGraph& hypothes
 
 	HypothesesGraph const *graph;
 	if (with_tracklets_) {
+		LOG(logINFO) << "SingleTimestepTraxelConservation::formulate: generating tracklet graph";
 		tracklet2traxel_node_map_ = generateTrackletGraph2(hypotheses,tracklet_graph_);
 		graph = &tracklet_graph_;
 	} else {
