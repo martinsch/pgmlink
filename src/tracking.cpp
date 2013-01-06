@@ -332,10 +332,7 @@ std::vector<double> computeDetProb(double vol, double avg_vol, vector<double> s2
 	size_t k = 0;
 	for (vector<double>::const_iterator it = s2.begin(); it != s2.end(); ++it) {
 		double val = vol - k*avg_vol;
-		val = exp(-(val*val)/(2*(*it)));
-//		if (k==0) {
-//			val *= 1.5;
-//		}
+		val = exp(-(val*val)/(*it));
 		result.push_back(val);
 		sum += val;
 		++k;
