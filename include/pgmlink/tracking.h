@@ -132,7 +132,7 @@ namespace pgmlink {
   	      double avg_obj_size=30.0,
   	      bool with_appearance=false,
   	      bool with_disappearance=false,
-  	      bool with_tracklets=false
+  	      bool with_tracklets=true
   	      )
         : max_number_objects_(max_number_objects),
         	max_dist_(max_neighbor_distance), division_threshold_(division_threshold),
