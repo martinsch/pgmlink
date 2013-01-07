@@ -64,8 +64,9 @@ template <typename OGM_FUNCTION>
   typename FunctionType::ValueType get_value( std::vector<size_t> coords ) const;
   void add_to( OpengmModel& ) const;
 
+  FunctionType& function() { return ogmfunction_; }
   const FunctionType& function() const { return ogmfunction_; }
-  const std::vector<size_t>& var_indices() const { return ogmfunction_; }
+  const std::vector<size_t>& var_indices() const { return vi_; }
 
  protected:
   FunctionType ogmfunction_;
