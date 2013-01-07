@@ -37,7 +37,7 @@ bool Chaingraph::with_constraints() const {
 void Chaingraph::formulate( const HypothesesGraph& hypotheses ) {
     LOG(logDEBUG) << "Chaingraph::formulate: entered";
     reset();
-    mrf_ = new OpengmModel();
+    mrf_ = new OpengmModel<>::ogmGraphicalModel();
 
     LOG(logDEBUG) << "Chaingraph::formulate: add_detection_nodes";
     add_detection_nodes( hypotheses );
@@ -46,15 +46,14 @@ void Chaingraph::formulate( const HypothesesGraph& hypotheses ) {
     LOG(logDEBUG) << "Chaingraph::formulate: add_finite_factors";
     add_finite_factors( hypotheses );
 
-    typedef opengm::LPCplex<OpengmModel::ogmGraphicalModel, OpengmModel::ogmAccumulator> cplex_optimizer;
+    typedef opengm::LPCplex<OpengmModel<>::ogmGraphicalModel, OpengmModel<>::ogmAccumulator> cplex_optimizer;
     cplex_optimizer::Parameter param;
     param.verbose_ = true;
     param.integerConstraint_ = true;
     param.epGap_ = ep_gap_;
     LOG(logDEBUG) << "Chaingraph::formulate ep_gap = " << param.epGap_;
 
-    OpengmModel::ogmGraphicalModel* model = mrf_->Model();
-    optimizer_ = new cplex_optimizer(*model, param);
+    optimizer_ = new cplex_optimizer(*mrf_, param);
 
 	if (with_constraints_) {
 		LOG(logDEBUG) << "Chaingraph::formulate: add_constraints";
@@ -79,7 +78,7 @@ void Chaingraph::infer() {
 
 void Chaingraph::conclude( HypothesesGraph& g ) {
     // extract solution from optimizer
-    vector<OpengmModel::ogmInference::LabelType> solution;
+    vector<OpengmModel<>::ogmInference::LabelType> solution;
     opengm::InferenceTermination status = optimizer_->arg(solution);
     if(status != opengm::NORMAL) {
 	throw runtime_error("GraphicalModel::infer(): solution extraction terminated unnormally");
@@ -103,7 +102,7 @@ void Chaingraph::conclude( HypothesesGraph& g ) {
     }
 }
 
-  const OpengmModel* Chaingraph::get_graphical_model() const {
+  const OpengmModel<>::ogmGraphicalModel* Chaingraph::get_graphical_model() const {
     return mrf_;
   }
 
@@ -130,14 +129,14 @@ void Chaingraph::reset() {
 
 void Chaingraph::add_detection_nodes( const HypothesesGraph& g) {
     for(HypothesesGraph::NodeIt n(g); n!=lemon::INVALID; ++n) {
-	mrf_->Model()->addVariable(2);
-	node_map_[n] = mrf_->Model()->numberOfVariables() - 1; 
+	mrf_->addVariable(2);
+	node_map_[n] = mrf_->numberOfVariables() - 1; 
     }
 }
 void Chaingraph::add_transition_nodes( const HypothesesGraph& g) {
     for(HypothesesGraph::ArcIt a(g); a!=lemon::INVALID; ++a) {
-	mrf_->Model()->addVariable(2);
-	arc_map_[a] = mrf_->Model()->numberOfVariables() - 1; 
+	mrf_->addVariable(2);
+	arc_map_[a] = mrf_->numberOfVariables() - 1; 
     }
 }
 
@@ -177,7 +176,7 @@ namespace {
 
 void Chaingraph::add_constraints( const HypothesesGraph& g ) {
     LOG(logDEBUG) << "Chaingraph::add_constraints: entered";
-    typedef opengm::LPCplex<OpengmModel::ogmGraphicalModel, OpengmModel::ogmAccumulator> cplex;
+    typedef opengm::LPCplex<OpengmModel<>::ogmGraphicalModel, OpengmModel<>::ogmAccumulator> cplex;
     ////
     //// outgoing transitions
     ////
@@ -219,7 +218,7 @@ void Chaingraph::add_constraints( const HypothesesGraph& g ) {
 }
 
 void Chaingraph::couple(HypothesesGraph::Node& n, HypothesesGraph::Arc& a) {
-	    typedef opengm::LPCplex<OpengmModel::ogmGraphicalModel, OpengmModel::ogmAccumulator> cplex;
+	    typedef opengm::LPCplex<OpengmModel<>::ogmGraphicalModel, OpengmModel<>::ogmAccumulator> cplex;
     	    vector<size_t> cplex_idxs; 
 	    cplex_idxs.push_back(cplex_id(node_map_[n]));
 	    cplex_idxs.push_back(cplex_id(arc_map_[a]));
@@ -231,7 +230,7 @@ void Chaingraph::couple(HypothesesGraph::Node& n, HypothesesGraph::Arc& a) {
 }
 
   void Chaingraph::fix_detections( const HypothesesGraph& g, size_t val ) {
-	    typedef opengm::LPCplex<OpengmModel::ogmGraphicalModel, OpengmModel::ogmAccumulator> cplex;
+	    typedef opengm::LPCplex<OpengmModel<>::ogmGraphicalModel, OpengmModel<>::ogmAccumulator> cplex;
 	    for(HypothesesGraph::NodeIt n(g); n!=lemon::INVALID; ++n) {
 	      vector<size_t> cplex_idxs; 
 	      cplex_idxs.push_back(cplex_id(node_map_[n]));

@@ -1,54 +1,37 @@
 #ifndef GRAPHICAL_MODEL_H
 #define GRAPHICAL_MODEL_H
 
-#include <algorithm>
 #include <vector>
-#include <utility>
-#include <string>
-#include <stdexcept>
-#include <boost/shared_ptr.hpp>
-#include <boost/function.hpp>
-#include <boost/graph/adjacency_list.hpp>
 #include <opengm/functions/explicit_function.hxx>
-#include <opengm/operations/adder.hxx>
 #include <opengm/graphicalmodel/graphicalmodel.hxx>
-#include <opengm/inference/lpcplex.hxx>
-#include <vigra/multi_array.hxx>
+#include <opengm/inference/inference.hxx>
+#include <opengm/operations/adder.hxx>
 
 #include "pgmlink/hypotheses.h"
 #include "pgmlink/graph.h"
 #include "pgmlink/util.h"
 
-using boost::vecS;
-using boost::bidirectionalS;
-using boost::shared_ptr;
-
 namespace pgmlink {
-template <typename VALUE>
-  class OpengmBinaryFactor;
 
-class OpengmModel {
-   public:
-   typedef double Energy;
-   typedef opengm::GraphicalModel<Energy, opengm::Adder> ogmGraphicalModel;
-   typedef opengm::Factor<ogmGraphicalModel> ogmFactor;
-   typedef opengm::Minimizer ogmAccumulator;
-   typedef opengm::Inference<ogmGraphicalModel, ogmAccumulator> ogmInference;
-   typedef opengm::meta::TypeAtTypeList<ogmGraphicalModel::FunctionTypeList, 0>::type ExplicitFunctionType;
-   typedef ogmGraphicalModel::FunctionIdentifier FunctionIdentifier;
-   
-   OpengmModel();
-   ~OpengmModel();
+  /**
+     \brief Collection of opengm template parameters constituting a model.
 
-   ogmGraphicalModel* Model() {return model_; }
-   const ogmGraphicalModel* Model() const {return model_; }
- 
-   private:
-   OpengmModel(const OpengmModel&);
-   OpengmModel& operator=(const OpengmModel&);
-   
-   ogmGraphicalModel* model_;
-};
+     Auxiliary class for easier handling of template parameters.
+   */  
+  template <
+    typename VALUE=double,
+    typename GM=opengm::GraphicalModel<VALUE, opengm::Adder>,
+    typename ACC=opengm::Minimizer
+    >
+    struct OpengmModel {
+      typedef VALUE ValueType;
+      typedef GM ogmGraphicalModel;
+      typedef opengm::Factor<ogmGraphicalModel> ogmFactor;
+      typedef ACC ogmAccumulator;
+      typedef opengm::Inference<ogmGraphicalModel, ogmAccumulator> ogmInference;
+      typedef opengm::ExplicitFunction<ValueType> ExplicitFunctionType;
+      typedef typename ogmGraphicalModel::FunctionIdentifier FunctionIdentifier;
+    };
 
 
 
@@ -62,7 +45,8 @@ template <typename OGM_FUNCTION>
     OpengmFactor( const FunctionType&, ITER first_ogm_idx, ITER last_ogm_idx );
 
   typename FunctionType::ValueType get_value( std::vector<size_t> coords ) const;
-  void add_to( OpengmModel& ) const;
+  template <typename OGM_GRAPHICAL_MODEL>
+    void add_to( OGM_GRAPHICAL_MODEL& ) const;
 
   FunctionType& function() { return ogmfunction_; }
   const FunctionType& function() const { return ogmfunction_; }
@@ -122,16 +106,17 @@ template <typename VALUE>
  }
 
  template <typename OGM_FUNCTION>
-   void OpengmFactor<OGM_FUNCTION>::add_to( OpengmModel& m ) const {
+   template <typename OGM_GRAPHICAL_MODEL>
+   void OpengmFactor<OGM_FUNCTION>::add_to( OGM_GRAPHICAL_MODEL& m ) const {
    std::vector<size_t> sorted_vi(vi_);
    std::sort(sorted_vi.begin(), sorted_vi.end());
    // opengm expects a monotonic increasing sequence
-   if(!(m.Model()->isValidIndexSequence(sorted_vi.begin(), sorted_vi.end()))) {
+   if(!(m.isValidIndexSequence(sorted_vi.begin(), sorted_vi.end()))) {
       throw std::runtime_error("OpengmExplicitFactor::add_to(): invalid index sequence");
    }
 
-   OpengmModel::FunctionIdentifier id=m.Model()->addFunction( ogmfunction_ );
-   m.Model()->addFactor(id, sorted_vi.begin(), sorted_vi.end());
+   typename OGM_GRAPHICAL_MODEL::FunctionIdentifier id=m.addFunction( ogmfunction_ );
+   m.addFactor(id, sorted_vi.begin(), sorted_vi.end());
  }
 
 
@@ -167,7 +152,7 @@ template <typename VALUE>
  template <typename VALUE>
    void OpengmExplicitFactor<VALUE>::init_( VALUE init, size_t states_per_var ) {
    std::vector<size_t> shape( this->vi_.size(), states_per_var );
-   this->ogmfunction_ = OpengmModel::ExplicitFunctionType( shape.begin(), shape.end(), init );
+   this->ogmfunction_ = opengm::ExplicitFunction<VALUE>( shape.begin(), shape.end(), init );
  }
 } /* namespace pgmlink */
 

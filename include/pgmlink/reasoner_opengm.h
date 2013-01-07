@@ -3,12 +3,28 @@
 
 #include <map>
 #include <boost/function.hpp>
+#include <boost/shared_ptr.hpp>
 #include "pgmlink/graphical_model.h"
 #include "pgmlink/hypotheses.h"
 #include "pgmlink/reasoner.h"
 
 namespace pgmlink {
 class Traxel;
+
+ /* class ChaingraphModelBuilder { */
+ /*   ChaingraphModelBuilder( */
+ /* 	       double opportunity_cost = 0, */
+ /* 	       double forbidden_cost = 0 */
+ /* 			  ) */
+
+ /*   ChaingraphModelBuilder& opportunity_cost(double); */
+ /*   ChaingraphModelBuilder& forbidden_cost(double); */
+ /*   shared_ptr<GraphicalModelType> build(); */
+
+ /* private: */
+ /*   double opportunity_cost_; */
+ /*   double forbidden_cost_; */
+ /* }; */
 
 class Chaingraph : public Reasoner {
     public:
@@ -52,7 +68,7 @@ class Chaingraph : public Reasoner {
      * The returned pointer may be NULL before formulate() is called
      * the first time.
      **/
-    const OpengmModel* get_graphical_model() const;
+    const OpengmModel<>::ogmGraphicalModel* get_graphical_model() const;
 
     /** Return mapping from HypothesesGraph nodes to graphical model variable ids
      *
@@ -96,8 +112,8 @@ class Chaingraph : public Reasoner {
     double opportunity_cost_;
     double forbidden_cost_;
     
-    OpengmModel* mrf_;
-    OpengmModel::ogmInference* optimizer_;
+    OpengmModel<>::ogmGraphicalModel* mrf_;
+    OpengmModel<>::ogmInference* optimizer_;
 
     std::map<HypothesesGraph::Node, size_t> node_map_;
     std::map<HypothesesGraph::Arc, size_t> arc_map_;
@@ -116,8 +132,8 @@ class Chaingraph : public Reasoner {
  
  template< typename table_t, typename const_iter >
    void Chaingraph::add_factor( const table_t& table, const_iter first_idx, const_iter last_idx ){
-   OpengmModel::FunctionIdentifier id=mrf_->Model()->addFunction(table);
-   mrf_->Model()->addFactor(id, first_idx, last_idx);
+   OpengmModel<>::FunctionIdentifier id=mrf_->addFunction(table);
+   mrf_->addFactor(id, first_idx, last_idx);
  }
  
 } /* namespace pgmlink */

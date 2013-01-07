@@ -19,7 +19,7 @@ using namespace opengm;
 
 BOOST_AUTO_TEST_CASE( ogm_model_building )
 {
-   OpengmModel::ogmGraphicalModel gm;
+  OpengmModel<>::ogmGraphicalModel gm;
    gm.addVariable(2);
    gm.addVariable(2);
    gm.addVariable(2);
@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE( ogm_model_building )
          gm.numberOfLabels(variable2),
          gm.numberOfLabels(variable3)
       };
-      OpengmModel::ExplicitFunctionType f(shape, shape + 3);
+      OpengmModel<>::ExplicitFunctionType f(shape, shape + 3);
       for(size_t state1 = 0; state1 < gm.numberOfLabels(variable1); ++state1)
       for(size_t state2 = 0; state2 < gm.numberOfLabels(variable2); ++state2)
       for(size_t state3 = 0; state3 < gm.numberOfLabels(variable3); ++state3) {
@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE( ogm_model_building )
 	 f(0,1,1)=float(vv[6]);
 	 f(1,1,1)=float(vv[7]);
       }
-      OpengmModel::FunctionIdentifier id = gm.addFunction(f);
+      OpengmModel<>::FunctionIdentifier id = gm.addFunction(f);
       size_t variableIndexSequence[] = {variable1, variable2, variable3};
       gm.addFactor(id, variableIndexSequence, variableIndexSequence + 3);
       BOOST_CHECK_EQUAL(f(0,0,0), 1);
