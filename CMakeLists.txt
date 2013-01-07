@@ -129,18 +129,33 @@ IF("${isSystemDir}" STREQUAL "-1")
    SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 ENDIF("${isSystemDir}" STREQUAL "-1")
 
+##
 # Tests
 if(WITH_TESTS)
   enable_testing()
   add_subdirectory(tests/)
 endif()
 
+##
 # Python
 SET(WITH_PYTHON true CACHE BOOL "build with python wrapper")
 if(WITH_PYTHON)
   add_subdirectory(python/)
 endif()
 
+##
+# API documentation with Doxygen
+find_package(Doxygen)
+if(DOXYGEN_FOUND)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/doc/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/doc/Doxyfile @ONLY)
+add_custom_target(doc
+${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/doc/Doxyfile
+WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doc/
+COMMENT "Generating API documentation with Doxygen" VERBATIM
+)
+endif(DOXYGEN_FOUND)
+
+##
 # Install target pgmlink
 INSTALL(TARGETS pgmlink
         DESTINATION lib)
