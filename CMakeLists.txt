@@ -74,7 +74,7 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_extensions/)
 	FORCE)
     ENDIF(NOT CMAKE_BUILD_TYPE)
 
-    SET(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++98 -pedantic -pthread")
+    SET(CMAKE_CXX_FLAGS "-Wall -Wextra -Wfatal-errors -std=c++98 -pedantic -pthread")
     SET(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
     SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -Werror")
 
