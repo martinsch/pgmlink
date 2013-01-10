@@ -1,13 +1,51 @@
 #include "pgmlink/event.h"
-#include <string>
+#include <cassert>
+#include <sstream>
+#include <stdexcept>
 
 using namespace std;
 
 namespace pgmlink {
 
-///
-/// class Event
-///
+  ///
+  /// class Event
+  ///
+  double Event::energy() const {
+    assert(weights_.size() == features_.size());
+    double energy = 0;
+    for(size_t i=0; i != weights_.size(); ++i) {
+      energy += weights_[i] * features_[i];
+    }
+    return energy;
+  }
+
+  Event& Event::number_of_features( unsigned int n ) {
+    n_features_ = n;
+    weights_.resize(n, 0);
+    features_.resize(n, 0);
+    return *this;
+  }
+
+  Event& Event::features( const std::vector<double>& v ) {
+    if(v.size() != n_features_) {
+      stringstream msg;
+      msg << "Event::features(): expected argument length [" << v.size() << " ] equal to number of features [ " << n_features_ << " ]";
+      throw invalid_argument(msg.str());
+    }
+    features_ = v;
+    return *this;
+  }
+
+  Event& Event::weights(const std::vector<double>& v ) {
+    if(v.size() != n_features_) {
+      stringstream msg;
+      msg << "Event::features(): expected argument length [" << v.size() << " ] equal to number of features [ " << n_features_ << " ]";
+      throw invalid_argument(msg.str());
+    }
+    weights_ = v;
+    return *this;
+  }
+
 bool Event::operator==(const Event& other) const {
     bool same = false;
     if(
@@ -51,7 +89,7 @@ ostream& operator<< (ostream &out, const Event &e)
     for(size_t i = 0; i < e.traxel_ids.size(); ++i) {
 	out << " " << e.traxel_ids[i]; 
     }
-    out << ", energy: " << e.energy << ")";
+    out << ", energy: " << e.energy() << ")";
     return out;
 }
 
