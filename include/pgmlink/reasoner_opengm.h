@@ -8,31 +8,155 @@
 #define MRF_REASONER_H
 
 #include <map>
+#include <vector>
 #include <boost/function.hpp>
 #include <boost/shared_ptr.hpp>
+#include <opengm/graphicalmodel/graphicalmodel.hxx>
+#include <opengm/operations/adder.hxx>
+#include <opengm/graphicalmodel/loglinearmodel.hxx>
+
+#include "pgmlink/event.h"
 #include "pgmlink/graphical_model.h"
 #include "pgmlink/hypotheses.h"
 #include "pgmlink/reasoner.h"
 
 namespace pgmlink {
-class Traxel;
+  class Traxel;
 
- /* class ChaingraphModelBuilder { */
- /*   ChaingraphModelBuilder( */
- /* 	       double opportunity_cost = 0, */
- /* 	       double forbidden_cost = 0 */
- /* 			  ) */
+  namespace gm {
+    //typedef opengm::LoglinearModel<double> OpengmModel;
+    typedef opengm::GraphicalModel<double, opengm::Adder> OpengmModel;
+    using boost::shared_ptr;
+    using boost::function;
+    using std::map;
+    using std::vector;
 
- /*   ChaingraphModelBuilder& opportunity_cost(double); */
- /*   ChaingraphModelBuilder& forbidden_cost(double); */
- /*   shared_ptr<GraphicalModelType> build(); */
+    struct TrackingModel {
+    TrackingModel()
+    : opengm_model( new OpengmModel() ),
+	hypotheses( new HypothesesGraph() ) {}
+    TrackingModel( shared_ptr<OpengmModel> m,
+		   shared_ptr<HypothesesGraph> g,
+		   map<HypothesesGraph::Node, OpengmModel::IndexType> node_var,
+		   map<HypothesesGraph::Arc, OpengmModel::IndexType> arc_var)
+    : opengm_model(m), hypotheses(g), node_var(node_var), arc_var(arc_var) {}
+      
+      shared_ptr<OpengmModel> opengm_model;
+      shared_ptr<HypothesesGraph> hypotheses;
 
- /* private: */
- /*   double opportunity_cost_; */
- /*   double forbidden_cost_; */
- /* }; */
+      map<HypothesesGraph::Node, OpengmModel::IndexType> node_var;
+      map<HypothesesGraph::Arc, OpengmModel::IndexType> arc_var;
+    };
 
-class Chaingraph : public Reasoner {
+    void add_detection_vars( TrackingModel&, const HypothesesGraph& );
+
+    void add_assignment_vars( TrackingModel&, const HypothesesGraph& );
+
+    void add_detection_factor( TrackingModel&,
+			       const HypothesesGraph&,
+			       const HypothesesGraph::Node&,
+			       boost::function<double (const Traxel&)> detection,
+			       boost::function<double (const Traxel&)> non_detection);
+
+    void add_outgoing_factor( TrackingModel&,
+			      const HypothesesGraph&,
+			      const HypothesesGraph::Node&,
+			      boost::function<double (const Traxel&)> disappearance,
+			      boost::function<double (const Traxel&, const Traxel&)> move,
+			      boost::function<double (const Traxel&, const Traxel&, const Traxel&)> division,
+			      double opportunity_cost = 0,
+			      double forbidden_cost = 10000000);
+
+    void add_incoming_factor( TrackingModel&,
+			      const HypothesesGraph&,
+			      const HypothesesGraph::Node&,
+			      boost::function<double (const Traxel&)> appearance,
+			      double forbidden_cost = 10000000);
+
+
+
+    /**
+       \brief Accessing entries of a Factor/Function that was already added to a graphical model.
+
+       Manages a pointer to an element of an array-like opengm function (usually opengm::ExplicitFunction).
+       Validity of the pointer is ensured by owning a smart pointer to the full model.
+
+       Use this class to modify factor elements of an already instantiated opengm graphical model.
+     */
+    class FactorEntry {
+    public:
+    FactorEntry() : entry_(NULL) {}
+    FactorEntry( shared_ptr<OpengmModel> m, /**< has to be valid */
+		 OpengmModel::ValueType* entry /**< has to point into the opengm model to ensure the same lifetime */
+		 ) :
+      m_(m), entry_(entry) {}
+      
+      void set( OpengmModel::ValueType );
+      OpengmModel::ValueType get() const;
+
+      shared_ptr<OpengmModel> model() const { return m_; }
+
+    private:
+      shared_ptr<OpengmModel> m_;
+      OpengmModel::ValueType* entry_;
+    };
+
+
+
+    class ChaingraphModelBuilder {
+    public:
+      ChaingraphModelBuilder(shared_ptr<HypothesesGraph> g,
+    			     boost::function<Event (int)> detection,
+    			     boost::function<Event (int)> non_detection,
+    			     boost::function<Event (int)> appearance,
+    			     boost::function<Event (int)> disappearance,
+    			     boost::function<Event (int)> move,
+    			     double opportunity_cost = 0,
+    			     double forbidden_cost = 100000)
+    	: hypotheses_(g),
+    	detection_(detection),
+    	non_detection_(non_detection),
+    	appearance_(appearance),
+    	disappearance_(disappearance),
+    	move_(move),
+    	opportunity_cost_(opportunity_cost),
+    	forbidden_cost_(forbidden_cost) {}
+
+    /*   ChaingraphModelBuilder& with_detection_vars( function<Event (int)> ); */
+    /*   ChaingraphModelBuilder& without_detection_vars(); */
+
+    /*   ChaingraphModelBuilder& with_divisions( function<Event (int, int)> ); */
+    /*   ChaingraphModelBuilder& without_divisions(); */
+      
+    /*   ChaingraphModelBuilder& with_hard_constraints( shared_ptr<opengm::cplex> ); */
+    /*   ChaingraphModelBuilder& without_hard_constraints(); */
+
+      shared_ptr<TrackingModel> build();
+
+    /*   bool with_detection_vars(); */
+    /*   bool with_assignment_vars(); */
+    /*   bool with_hard_constraints(); */
+
+    /*   shared_ptr<opengm::cplex> cplex(); */
+      
+    private:
+      shared_ptr<HypothesesGraph> hypotheses_;
+      //shared_ptr<opengm::cplex> cplex_;
+      
+      function<Event (int)> detection_;
+      function<Event (int)> non_detection_;
+      function<Event (int)> appearance_;
+      function<Event (int)> disappearance_;
+      function<Event (int)> move_;
+      function<Event (int,int)> division_;
+      double opportunity_cost_;
+      double forbidden_cost_;
+    };
+  } /* namespace gm */
+
+
+
+  class Chaingraph : public Reasoner {
     public:
     Chaingraph(boost::function<double (const Traxel&)> detection,
 	       boost::function<double (const Traxel&)> non_detection,
@@ -105,8 +229,6 @@ class Chaingraph : public Reasoner {
     void fix_detections( const HypothesesGraph&, size_t value );
     void add_outgoing_factor( const HypothesesGraph&, const HypothesesGraph::Node& );
     void add_incoming_factor( const HypothesesGraph&, const HypothesesGraph::Node& );
-    template<typename table_t, typename const_iter>
-      void add_factor( const table_t& table, const_iter first_idx, const_iter last_idx );
 
     // energy functions
     boost::function<double (const Traxel&)> detection_;
@@ -130,17 +252,5 @@ class Chaingraph : public Reasoner {
     double ep_gap_;
 };
 
-
-
-/******************/
-/* Implementation */
-/******************/
- 
- template< typename table_t, typename const_iter >
-   void Chaingraph::add_factor( const table_t& table, const_iter first_idx, const_iter last_idx ){
-   OpengmModel<>::FunctionIdentifier id=mrf_->addFunction(table);
-   mrf_->addFactor(id, first_idx, last_idx);
- }
- 
 } /* namespace pgmlink */
 #endif /* MRF_REASONER_H */
