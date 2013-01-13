@@ -1,3 +1,9 @@
+/**
+   @file
+   @ingroup tracking
+   @brief field-of-view filtering of a traxelstore 
+*/
+
 #ifndef FIELD_OF_VIEW_H
 #define FIELD_OF_VIEW_H
 

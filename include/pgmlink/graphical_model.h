@@ -1,3 +1,9 @@
+/**
+   @file
+   @ingroup pgm
+   @brief opengm extensions
+*/
+
 #ifndef GRAPHICAL_MODEL_H
 #define GRAPHICAL_MODEL_H
 

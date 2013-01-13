@@ -1,3 +1,9 @@
+/**
+   @file
+   @ingroup pgm
+   @brief energy functions
+*/
+
 #ifndef ENERGY_H
 #define ENERGY_H
 

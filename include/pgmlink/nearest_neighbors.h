@@ -1,3 +1,10 @@
+/**
+   @file
+   @ingroup tracking
+   @brief nearest neighbors of traxels
+*/
+
+
 #ifndef NEAREST_NEIGHBORS_H
 #define NEAREST_NEIGHBORS_H
 #include <map>

@@ -1,0 +1,13 @@
+/**                                                                         
+@defgroup tracking Tracking
+Code for tracking-by-assignment.
+
+@defgroup matching Hypotheses Matching
+Tracking-by-assignment (see module @ref tracking) is one application of the more abstract matching problem in a Hypotheses Grapha. The solution to the matching problem is an optimal labeling of nodes and edges according to a local energy function and global consistency constraints.
+
+@defgroup pgm Probabilistic Graphical Models
+Solving the matching problem (see module @ref matching) in terms of probabilistic graphical models ("pgm").
+
+@defgroup util Utilities
+General utilities.
+*/

@@ -1,3 +1,9 @@
+/**
+   @file
+   @ingroup util
+   @brief utilities
+*/
+
 #ifndef PGMLINK_UTIL_H
 #define PGMLINK_UTIL_H
 

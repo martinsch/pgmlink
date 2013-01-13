@@ -1,3 +1,9 @@
+/**
+   @file
+   @ingroup tracking
+   @brief tracking events like Move and Division
+*/
+
 #ifndef EVENT_H
 #define EVENT_H
 #include <vector>

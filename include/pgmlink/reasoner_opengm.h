@@ -1,3 +1,9 @@
+/**
+   @file
+   @ingroup pgm
+   @brief graphical model-based reasoner
+*/
+
 #ifndef MRF_REASONER_H
 #define MRF_REASONER_H
 

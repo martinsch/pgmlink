@@ -1,3 +1,9 @@
+/**
+   @file
+   @ingroup util
+   @brief lemon graph extensions
+*/
+
 #ifndef GRAPH_H
 #define GRAPH_H
 

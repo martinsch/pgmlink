@@ -1,3 +1,9 @@
+/**
+   @file
+   @ingroup matching
+   @brief Hypotheses Graph
+*/
+
 #ifndef HYPOTHESES_H
 #define HYPOTHESES_H
 

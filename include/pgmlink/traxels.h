@@ -1,3 +1,9 @@
+/**
+   @file
+   @ingroup tracking
+   @brief tracking datastructures
+*/
+
 #ifndef TRAXELS_H
 #define TRAXELS_H
 

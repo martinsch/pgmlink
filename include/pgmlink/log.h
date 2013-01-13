@@ -1,3 +1,9 @@
+/**
+   @file
+   @ingroup util
+   @brief logger
+*/
+
 /*
  * Log.h
  *

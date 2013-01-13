@@ -1,3 +1,9 @@
+/**
+   @file
+   @ingroup matching
+   @brief interface for solvers of the Hypotheses Graph matching problem
+*/
+
 #ifndef REASONER_H
 #define REASONER_H
 

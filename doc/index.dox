@@ -1,0 +1,7 @@
+/**
+ \mainpage pgmLink
+ - implements tracking-by-assignment mostly in terms of graphical models
+ - tracking of many thousand objects that may divide at any time - for example cell nuclei in a biological context.
+ - written in C++ with Python bindings 
+
+*/
