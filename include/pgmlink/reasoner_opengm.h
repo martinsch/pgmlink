@@ -64,8 +64,19 @@ namespace pgmlink {
     /**
        @brief Linking model formulated as an Opengm graphical model.
 
-       An opengm model to solve the matching problem in a HypothesesGraph.
-       Use a ChaingraphModelBuilder to construct the model.
+       Represents an opengm model to solve the matching problem in a
+       HypothesesGraph. Use a ChaingraphModelBuilder to construct the
+       model. During construction of the LinkingModel a random
+       variable is added to the graphical model for every node and
+       every arc in the HypothesesGraph. The mapping between nodes
+       resp. arcs and random variables is stored in the fields
+       node_var and arc_var.
+
+       A node in the HypothesesGraph describes a detection in the link
+       model. The corresponding random variable determines wether it
+       is an actual object or a misdetection. Similarly, an arc is
+       interpreted as a possible link between two objects whose state is
+       determined by the corresponding random variable.
 
        @see ChaingraphModelBuilder
        @see HypothesesGraph
@@ -78,12 +89,10 @@ namespace pgmlink {
 		   )
     : opengm_model(m), node_var(node_var), arc_var(arc_var) {}
       
-      shared_ptr<OpengmModel> opengm_model;
-      map<HypothesesGraph::Node, OpengmModel::IndexType> node_var;
-      map<HypothesesGraph::Arc, OpengmModel::IndexType> arc_var;
+      shared_ptr<OpengmModel> opengm_model; ///< opengm model usually constructed by ChaingraphModelBuilder
+      map<HypothesesGraph::Node, OpengmModel::IndexType> node_var; ///< maps nodes to random variables representing detections
+      map<HypothesesGraph::Arc, OpengmModel::IndexType> arc_var; ///< maps arcs to random variables representing links
     };
-
-
 
     class ChaingraphModelBuilder {
     public:
@@ -165,8 +174,8 @@ namespace pgmlink {
       double opportunity_cost_;
       double forbidden_cost_;
     };
+    /**@}*/ // @ingroup pgm
   } /* namespace pgm */
-
 
 
   class Chaingraph : public Reasoner {
