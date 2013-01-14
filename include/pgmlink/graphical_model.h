@@ -68,6 +68,8 @@ template <typename OGM_FUNCTION>
 template <typename VALUE>
   class OpengmExplicitFactor : public OpengmFactor<opengm::ExplicitFunction<VALUE> > {
  public:
+  typedef typename OpengmFactor<opengm::ExplicitFunction<VALUE> >::FunctionType FunctionType; 
+
   OpengmExplicitFactor( const std::vector<size_t>& ogm_var_indices, VALUE init=0, size_t states_per_var=2 );
   template <typename ITER>
     OpengmExplicitFactor( ITER first_ogm_idx, ITER last_ogm_idx, VALUE init=0, size_t states_per_var=2 );  
@@ -118,13 +120,12 @@ template <typename VALUE>
    std::sort(sorted_vi.begin(), sorted_vi.end());
    // opengm expects a monotonic increasing sequence
    if(!(m.isValidIndexSequence(sorted_vi.begin(), sorted_vi.end()))) {
-      throw std::runtime_error("OpengmExplicitFactor::add_to(): invalid index sequence");
+     throw std::runtime_error("OpengmExplicitFactor::add_to(): invalid index sequence");
    }
-
+   
    typename OGM_GRAPHICAL_MODEL::FunctionIdentifier id=m.addFunction( ogmfunction_ );
    m.addFactor(id, sorted_vi.begin(), sorted_vi.end());
  }
-
 
  
 ////
