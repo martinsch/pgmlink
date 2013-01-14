@@ -35,7 +35,7 @@ namespace pgmlink {
     using std::vector;
 
     /**
-       \brief Accessing entries of a Factor/Function that was already added to a graphical model.
+       @brief Accessing entries of a Factor/Function that was already added to a graphical model.
 
        Manages a pointer to an element of an array-like opengm function (usually opengm::ExplicitFunction).
        Validity of the pointer is ensured by owning a smart pointer to the full model.
@@ -61,10 +61,18 @@ namespace pgmlink {
     };
 
 
+    /**
+       @brief Linking model formulated as an Opengm graphical model.
 
-    struct TrackingModel {
-    TrackingModel() : opengm_model( new OpengmModel() ) {}
-    TrackingModel( shared_ptr<OpengmModel> m,
+       An opengm model to solve the matching problem in a HypothesesGraph.
+       Use a ChaingraphModelBuilder to construct the model.
+
+       @see ChaingraphModelBuilder
+       @see HypothesesGraph
+     */
+    struct LinkingModel {
+    LinkingModel() : opengm_model( new OpengmModel() ) {}
+    LinkingModel( shared_ptr<OpengmModel> m,
 		   map<HypothesesGraph::Node, OpengmModel::IndexType> node_var = map<HypothesesGraph::Node, OpengmModel::IndexType>(),
 		   map<HypothesesGraph::Arc, OpengmModel::IndexType> arc_var = map<HypothesesGraph::Arc, OpengmModel::IndexType>()
 		   )
@@ -129,19 +137,19 @@ namespace pgmlink {
       function<double (const Traxel&,const Traxel&,const Traxel&)> division() { return division_; }
 
       // build
-      shared_ptr<TrackingModel> build() const;
+      shared_ptr<LinkingModel> build() const;
 
       // refinement
-      static void add_hard_constraints( const TrackingModel&, const HypothesesGraph&, OpengmLPCplex& );
-      static void fix_detections( const TrackingModel&, const HypothesesGraph&, OpengmLPCplex& );
+      static void add_hard_constraints( const LinkingModel&, const HypothesesGraph&, OpengmLPCplex& );
+      static void fix_detections( const LinkingModel&, const HypothesesGraph&, OpengmLPCplex& );
 
     private:
-      void add_detection_vars( TrackingModel& ) const;
-      void add_assignment_vars( TrackingModel& ) const;
-      void add_detection_factor( TrackingModel&, const HypothesesGraph::Node& ) const;
-      void add_outgoing_factor( TrackingModel&, const HypothesesGraph::Node&) const;
-      void add_incoming_factor( TrackingModel&, const HypothesesGraph::Node&) const;
-      static void couple( const TrackingModel&, const HypothesesGraph::Node&, const HypothesesGraph::Arc&, OpengmLPCplex& );
+      void add_detection_vars( LinkingModel& ) const;
+      void add_assignment_vars( LinkingModel& ) const;
+      void add_detection_factor( LinkingModel&, const HypothesesGraph::Node& ) const;
+      void add_outgoing_factor( LinkingModel&, const HypothesesGraph::Node&) const;
+      void add_incoming_factor( LinkingModel&, const HypothesesGraph::Node&) const;
+      static void couple( const LinkingModel&, const HypothesesGraph::Node&, const HypothesesGraph::Arc&, OpengmLPCplex& );
 
       shared_ptr<const HypothesesGraph> hypotheses_;
       
@@ -157,7 +165,7 @@ namespace pgmlink {
       double opportunity_cost_;
       double forbidden_cost_;
     };
-  } /* namespace gm */
+  } /* namespace pgm */
 
 
 
@@ -234,7 +242,7 @@ namespace pgmlink {
     double forbidden_cost_;
     
     OpengmModel<>::ogmInference* optimizer_;
-    shared_ptr<pgm::TrackingModel> tracking_model_;
+    shared_ptr<pgm::LinkingModel> linking_model_;
 
     bool with_constraints_;
     bool fixed_detections_;

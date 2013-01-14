@@ -103,7 +103,7 @@ namespace pgmlink {
       return *this;
     }
 
-    boost::shared_ptr<TrackingModel> ChaingraphModelBuilder::build() const {
+    boost::shared_ptr<LinkingModel> ChaingraphModelBuilder::build() const {
       using boost::shared_ptr;
       using std::map;
 
@@ -115,7 +115,7 @@ namespace pgmlink {
 	throw std::runtime_error("ChaingraphModelBuilder::build(): option without divisions not yet implemented");
       }
 
-      shared_ptr<TrackingModel> model( new TrackingModel() );
+      shared_ptr<LinkingModel> model( new LinkingModel() );
       
       if( with_detection_vars_ ) {
 	add_detection_vars( *model );
@@ -141,7 +141,7 @@ namespace pgmlink {
       }
     }
 
-    void ChaingraphModelBuilder::add_hard_constraints( const TrackingModel& m, const HypothesesGraph& hypotheses, OpengmLPCplex& cplex ) {
+    void ChaingraphModelBuilder::add_hard_constraints( const LinkingModel& m, const HypothesesGraph& hypotheses, OpengmLPCplex& cplex ) {
       LOG(logDEBUG) << "Chaingraph::add_constraints: entered";
       ////
       //// outgoing transitions
@@ -183,21 +183,21 @@ namespace pgmlink {
       }
     }
 
-    inline void ChaingraphModelBuilder::add_detection_vars( TrackingModel& m ) const {
+    inline void ChaingraphModelBuilder::add_detection_vars( LinkingModel& m ) const {
       for(HypothesesGraph::NodeIt n(*hypotheses_); n!=lemon::INVALID; ++n) {
 	m.opengm_model->addVariable(2);
 	m.node_var[n] = m.opengm_model->numberOfVariables() - 1; 
       }
     }
 
-    inline void ChaingraphModelBuilder::add_assignment_vars( TrackingModel& m ) const {
+    inline void ChaingraphModelBuilder::add_assignment_vars( LinkingModel& m ) const {
       for(HypothesesGraph::ArcIt a(*hypotheses_); a!=lemon::INVALID; ++a) {
 	m.opengm_model->addVariable(2);
 	m.arc_var[a] = m.opengm_model->numberOfVariables() - 1; 
       }
     }
 
-    void ChaingraphModelBuilder::add_detection_factor( TrackingModel& m, const HypothesesGraph::Node& n) const {
+    void ChaingraphModelBuilder::add_detection_factor( LinkingModel& m, const HypothesesGraph::Node& n) const {
       property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = hypotheses_->get(node_traxel());
       size_t vi[] = {m.node_var[n]};
       vector<size_t> coords(1,0);
@@ -212,7 +212,7 @@ namespace pgmlink {
       table.add_to( *(m.opengm_model) );
     }
 
-    inline void ChaingraphModelBuilder::add_outgoing_factor( TrackingModel& m, 
+    inline void ChaingraphModelBuilder::add_outgoing_factor( LinkingModel& m, 
 			      const HypothesesGraph::Node& n ) const {
       using namespace std;
 
@@ -319,7 +319,7 @@ namespace pgmlink {
       LOG(logDEBUG) << "ChaingraphModelBuilder::add_outgoing_factor(): leaving";
     }
 
-    inline void ChaingraphModelBuilder::add_incoming_factor( TrackingModel& m,
+    inline void ChaingraphModelBuilder::add_incoming_factor( LinkingModel& m,
 			      const HypothesesGraph::Node& n) const {
       using namespace std;
 
@@ -366,7 +366,7 @@ namespace pgmlink {
       LOG(logDEBUG) << "ChaingraphModelBuilder::add_incoming_factor(): leaving";
     }
 
-    void ChaingraphModelBuilder::couple(const TrackingModel& m, const HypothesesGraph::Node& n, const HypothesesGraph::Arc& a, OpengmLPCplex& cplex ) {
+    void ChaingraphModelBuilder::couple(const LinkingModel& m, const HypothesesGraph::Node& n, const HypothesesGraph::Arc& a, OpengmLPCplex& cplex ) {
       vector<size_t> cplex_idxs; 
       cplex_idxs.push_back(cplex_id(m.node_var.find(n)->second));
       cplex_idxs.push_back(cplex_id(m.arc_var.find(a)->second));
@@ -377,7 +377,7 @@ namespace pgmlink {
       cplex.addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin() , 0, 1);
     }
 
-    void ChaingraphModelBuilder::fix_detections( const TrackingModel& m, const HypothesesGraph& g, OpengmLPCplex& cplex ) {
+    void ChaingraphModelBuilder::fix_detections( const LinkingModel& m, const HypothesesGraph& g, OpengmLPCplex& cplex ) {
       for(HypothesesGraph::NodeIt n(g); n!=lemon::INVALID; ++n) {
 	vector<size_t> cplex_idxs; 
 	cplex_idxs.push_back(cplex_id(m.node_var.find(n)->second));
@@ -427,7 +427,7 @@ void Chaingraph::formulate( const HypothesesGraph& hypotheses ) {
       .with_divisions( division_ );
 
     // build the model
-    tracking_model_ = builder.build();
+    linking_model_ = builder.build();
 
     // refine the model with hard constraints
     pgm::OpengmLPCplex::Parameter param;
@@ -435,17 +435,17 @@ void Chaingraph::formulate( const HypothesesGraph& hypotheses ) {
     param.integerConstraint_ = true;
     param.epGap_ = ep_gap_;
     LOG(logDEBUG) << "Chaingraph::formulate ep_gap = " << param.epGap_;
-    pgm::OpengmLPCplex* cplex = new pgm::OpengmLPCplex(*(tracking_model_->opengm_model), param);
+    pgm::OpengmLPCplex* cplex = new pgm::OpengmLPCplex(*(linking_model_->opengm_model), param);
     optimizer_ = cplex; // opengm::Inference optimizer_
 
     if (with_constraints_) {
       LOG(logDEBUG) << "Chaingraph::formulate: add_constraints";
-      pgm::ChaingraphModelBuilder::add_hard_constraints( *tracking_model_ , hypotheses, *cplex );
+      pgm::ChaingraphModelBuilder::add_hard_constraints( *linking_model_ , hypotheses, *cplex );
     }
     
     if (fixed_detections_) {
       LOG(logDEBUG) << "Chaingraph::formulate: fix_detections";
-      pgm::ChaingraphModelBuilder::fix_detections( *tracking_model_, hypotheses, *cplex );
+      pgm::ChaingraphModelBuilder::fix_detections( *linking_model_, hypotheses, *cplex );
     }
 }
 
@@ -473,12 +473,12 @@ void Chaingraph::conclude( HypothesesGraph& g ) {
     property_map<arc_active, HypothesesGraph::base_graph>::type& active_arcs = g.get(arc_active());
 
     // write state after inference into 'active'-property maps
-    for(std::map<HypothesesGraph::Node, size_t>::const_iterator it = tracking_model_->node_var.begin(); it != tracking_model_->node_var.end(); ++it) {
+    for(std::map<HypothesesGraph::Node, size_t>::const_iterator it = linking_model_->node_var.begin(); it != linking_model_->node_var.end(); ++it) {
 	bool state = false;
 	if(solution[it->second] == 1) state = true;
 	active_nodes.set(it->first, state);
     }
-    for(std::map<HypothesesGraph::Arc, size_t>::const_iterator it = tracking_model_->arc_var.begin(); it != tracking_model_->arc_var.end(); ++it) {
+    for(std::map<HypothesesGraph::Arc, size_t>::const_iterator it = linking_model_->arc_var.begin(); it != linking_model_->arc_var.end(); ++it) {
 	bool state = false;
 	if(solution[it->second] == 1) state = true;
 	active_arcs.set(it->first, state);
@@ -486,15 +486,15 @@ void Chaingraph::conclude( HypothesesGraph& g ) {
 }
 
   const OpengmModel<>::ogmGraphicalModel* Chaingraph::get_graphical_model() const {
-    return tracking_model_->opengm_model.get();
+    return linking_model_->opengm_model.get();
   }
 
   const std::map<HypothesesGraph::Node, size_t>& Chaingraph::get_node_map() const {
-    return tracking_model_->node_var;
+    return linking_model_->node_var;
   }
 
   const std::map<HypothesesGraph::Arc, size_t>& Chaingraph::get_arc_map() const {
-    return tracking_model_->arc_var;
+    return linking_model_->arc_var;
   }
 
 void Chaingraph::reset() {
