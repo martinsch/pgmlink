@@ -202,10 +202,10 @@ template<class ITERATOR>
    // replace function with a sorted variant
    std::vector<size_t> sorted_shape( shapeBegin, shapeEnd );
    indexsorter::reorder( sorted_shape, this->order_ );
-   std::vector<size_t> sorted_indicate( this->ogm_function_.indicate() );
+   std::vector<size_t> sorted_indicate( this->ogmfunction_.innerFunction()->indicate() );
    indexsorter::reorder( sorted_indicate, this->order_ );
 
-   this->ogm_function = FunctionType(new opengm::IndicatorFunction<VALUE>( sorted_shape.begin(),
+   this->ogmfunction_ = FunctionType(new opengm::IndicatorFunction<VALUE>( sorted_shape.begin(),
 									   sorted_shape.end(),
 									   sorted_indicate.begin(),
 									   indicate_value,
@@ -225,22 +225,22 @@ template<class VALUE>
 
 template<class VALUE>
   void OpengmWeightedFeature<VALUE>::indicate_value( VALUE v ) {
-  this->ogmfunction_.innerFunction->indicate_value(v);
+  this->ogmfunction_.innerFunction()->indicate_value(v);
  }
   
 template<class VALUE>
   VALUE OpengmWeightedFeature<VALUE>::indicate_value() const {
-  return this->ogmfunction_.innerFunction->indicate_value();
+  return this->ogmfunction_.innerFunction()->indicate_value();
  }
   
 template<class VALUE>    
   void OpengmWeightedFeature<VALUE>::default_value( VALUE v ) {
-  this->ogmfunction_.innerFunction->default_value(v);
+  this->ogmfunction_.innerFunction()->default_value(v);
  }
 
 template<class VALUE>
   VALUE OpengmWeightedFeature<VALUE>::default_value() const {
-  return this->ogmfunction_.innerFunction->default_value();
+  return this->ogmfunction_.innerFunction()->default_value();
  }
 
 } /* namespace pgm */
