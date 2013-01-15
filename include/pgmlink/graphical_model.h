@@ -48,6 +48,7 @@ template <typename OGM_FUNCTION>
   FunctionType& function() { return ogmfunction_; }
   const FunctionType& function() const { return ogmfunction_; }
   const std::vector<size_t>& var_indices() const { return vi_; }
+  const std::vector<size_t>& var_order() const { return order_; }
 
  protected:
   FunctionType ogmfunction_;
@@ -56,21 +57,45 @@ template <typename OGM_FUNCTION>
  };
 
 
-template <typename VALUE>
-  class OpengmExplicitFactor : public OpengmFactor<opengm::ExplicitFunction<VALUE> > {
+ template <typename VALUE>
+   class OpengmExplicitFactor : public OpengmFactor<opengm::ExplicitFunction<VALUE> > {
  public:
   typedef typename OpengmFactor<opengm::ExplicitFunction<VALUE> >::FunctionType FunctionType; 
-
+  
   OpengmExplicitFactor( const std::vector<size_t>& ogm_var_indices, VALUE init=0, size_t states_per_var=2 );
   template <typename ITER>
     OpengmExplicitFactor( ITER first_ogm_idx, ITER last_ogm_idx, VALUE init=0, size_t states_per_var=2 );  
-
+  
   void set_value( std::vector<size_t> coords, VALUE v);
-
+  
  private:
   void init_( VALUE init, size_t states_per_var );
 };    
+ 
+ template <typename VALUE>
+   class OpengmWeightedFeature
+   : public OpengmFactor< opengm::FunctionDecoratorWeighted< opengm::IndicatorFunction<VALUE> > >
+ {
+  public:
+    typedef typename opengm::FunctionDecoratorWeighted< opengm::IndicatorFunction<VALUE> > FunctionType;
 
+    template<class ITERATOR>
+      OpengmWeightedFeature(const std::vector<size_t>& ogm_var_indices,
+			    ITERATOR shapeBegin, ITERATOR shapeEnd,
+			    ITERATOR indicate,
+			    VALUE indicate_value = 1., 
+			    VALUE weight = 1.,
+			    VALUE default_value = 0);
+
+    void weight( VALUE w );
+    VALUE weight() const;
+
+    void indicate_value( VALUE v );
+    VALUE indicate_value() const;
+    
+    void default_value( VALUE v );
+    VALUE default_value() const;
+ };
 
 
 /******************/
@@ -151,6 +176,71 @@ template <typename VALUE>
    void OpengmExplicitFactor<VALUE>::init_( VALUE init, size_t states_per_var ) {
    std::vector<size_t> shape( this->vi_.size(), states_per_var );
    this->ogmfunction_ = opengm::ExplicitFunction<VALUE>( shape.begin(), shape.end(), init );
+ }
+
+
+
+////
+//// class OpengmWeightedFeature
+////
+template<class VALUE>
+template<class ITERATOR>
+  OpengmWeightedFeature<VALUE>::OpengmWeightedFeature(
+			  const std::vector<size_t>& ogm_var_indices,
+		          ITERATOR shapeBegin, ITERATOR shapeEnd,
+			  ITERATOR indicate,
+			  VALUE indicate_value, 
+			  VALUE weight,
+			  VALUE default_value)
+  : OpengmFactor<FunctionType >(FunctionType(new opengm::IndicatorFunction<VALUE>( shapeBegin,
+										   shapeEnd,
+										   indicate,
+										   indicate_value,
+										   default_value),
+					     weight)
+				, ogm_var_indices) {
+   // replace function with a sorted variant
+   std::vector<size_t> sorted_shape( shapeBegin, shapeEnd );
+   indexsorter::reorder( sorted_shape, this->order_ );
+   std::vector<size_t> sorted_indicate( this->ogm_function_.indicate() );
+   indexsorter::reorder( sorted_indicate, this->order_ );
+
+   this->ogm_function = FunctionType(new opengm::IndicatorFunction<VALUE>( sorted_shape.begin(),
+									   sorted_shape.end(),
+									   sorted_indicate.begin(),
+									   indicate_value,
+									   default_value),
+				     weight);
+ }
+
+template<class VALUE>
+  void OpengmWeightedFeature<VALUE>::weight( VALUE w ) {
+  this->ogmfunction_.weight(w);
+ }
+
+template<class VALUE>
+  VALUE OpengmWeightedFeature<VALUE>::weight() const {
+  return this->ogmfunction_.weight();
+ }
+
+template<class VALUE>
+  void OpengmWeightedFeature<VALUE>::indicate_value( VALUE v ) {
+  this->ogmfunction_.innerFunction->indicate_value(v);
+ }
+  
+template<class VALUE>
+  VALUE OpengmWeightedFeature<VALUE>::indicate_value() const {
+  return this->ogmfunction_.innerFunction->indicate_value();
+ }
+  
+template<class VALUE>    
+  void OpengmWeightedFeature<VALUE>::default_value( VALUE v ) {
+  this->ogmfunction_.innerFunction->default_value(v);
+ }
+
+template<class VALUE>
+  VALUE OpengmWeightedFeature<VALUE>::default_value() const {
+  return this->ogmfunction_.innerFunction->default_value();
  }
 
 } /* namespace pgm */
