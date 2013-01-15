@@ -12,11 +12,8 @@
 #include <utility>
 #include <boost/function.hpp>
 #include <boost/shared_ptr.hpp>
-#include <opengm/graphicalmodel/graphicalmodel.hxx>
 #include <opengm/inference/inference.hxx>
 #include <opengm/inference/lpcplex.hxx>
-#include <opengm/operations/adder.hxx>
-#include <opengm/graphicalmodel/loglinearmodel.hxx>
 
 #include "pgmlink/event.h"
 #include "pgmlink/graphical_model.h"
@@ -27,7 +24,6 @@ namespace pgmlink {
   class Traxel;
 
   namespace pgm {
-    typedef opengm::GraphicalModel<double, opengm::Adder> OpengmModel;
     typedef opengm::LPCplex<OpengmModel, opengm::Minimizer> OpengmLPCplex;
     using boost::shared_ptr;
     using boost::function;
@@ -234,7 +230,7 @@ namespace pgmlink {
      * The returned pointer may be NULL before formulate() is called
      * the first time.
      **/
-    const OpengmModel<>::ogmGraphicalModel* get_graphical_model() const;
+    const pgm::OpengmModel* get_graphical_model() const;
 
     /** Return mapping from HypothesesGraph nodes to graphical model variable ids
      *
@@ -265,7 +261,7 @@ namespace pgmlink {
     double opportunity_cost_;
     double forbidden_cost_;
     
-    OpengmModel<>::ogmInference* optimizer_;
+    pgm::OpengmLPCplex* optimizer_;
     shared_ptr<pgm::LinkingModel> linking_model_;
 
     bool with_constraints_;

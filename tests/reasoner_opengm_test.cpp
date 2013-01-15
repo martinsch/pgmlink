@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE( HypothesesGraph_build_hyp2 ) {
   ////
   //// check topology of graphical model
   ////
-  const OpengmModel<>::ogmGraphicalModel* model = mrf.get_graphical_model();
+  const pgm::OpengmModel* model = mrf.get_graphical_model();
   BOOST_CHECK( model != NULL );
   BOOST_CHECK_EQUAL( model->numberOfVariables(), 21);
   BOOST_CHECK_EQUAL( model->numberOfFactors(), 36);
@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE( HypothesesGraph_build_hyp2 ) {
   size_t det_var; // detection variable
   det_var = mrf.get_node_map().find(m2)->second;
   BOOST_CHECK_EQUAL(model->numberOfFactors(det_var), 3);
-  const OpengmModel<>::ogmGraphicalModel::FactorType f = (*model)[model->factorOfVariable(det_var, 2)];
+  const pgm::OpengmModel::FactorType f = (*model)[model->factorOfVariable(det_var, 2)];
   BOOST_CHECK_EQUAL(f.numberOfVariables(), 3);
   BOOST_CHECK_EQUAL(f.size(), 8);
   BOOST_CHECK_EQUAL(f.shape(0), 2);
@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE( HypothesesGraph_build_hyp2 ) {
   // outgoing factor
   det_var = mrf.get_node_map().find(m4)->second;
   BOOST_CHECK_EQUAL(model->numberOfFactors(det_var), 3);
-  const OpengmModel<>::ogmGraphicalModel::FactorType f2 = (*model)[model->factorOfVariable(det_var, 1)];
+  const pgm::OpengmModel::FactorType f2 = (*model)[model->factorOfVariable(det_var, 1)];
   BOOST_CHECK_EQUAL(f2.numberOfVariables(), 3);
   BOOST_CHECK_EQUAL(f2.size(), 8);
   BOOST_CHECK_EQUAL(f2.shape(0), 2);
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE( HypothesesGraph_build_hyp2 ) {
   // detection factor
   det_var = mrf.get_node_map().find(n4)->second;
   BOOST_CHECK_EQUAL(model->numberOfFactors(det_var), 3);
-  const OpengmModel<>::ogmGraphicalModel::FactorType f3 = (*model)[model->factorOfVariable(det_var, 0)];
+  const pgm::OpengmModel::FactorType f3 = (*model)[model->factorOfVariable(det_var, 0)];
   BOOST_CHECK_EQUAL(f3.numberOfVariables(), 1);
   BOOST_CHECK_EQUAL(f3.size(), 2);
   BOOST_CHECK_EQUAL(f3.shape(0), 2);

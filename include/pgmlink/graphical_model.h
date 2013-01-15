@@ -8,38 +8,29 @@
 #define GRAPHICAL_MODEL_H
 
 #include <vector>
-#include <opengm/functions/explicit_function.hxx>
+
 #include <opengm/graphicalmodel/graphicalmodel.hxx>
+#include <opengm/graphicalmodel/loglinearmodel.hxx>
 #include <opengm/inference/inference.hxx>
+#include <opengm/functions/explicit_function.hxx>
+#include <opengm/functions/decorator_weighted.hxx>
+#include <opengm/functions/indicator_function.hxx>
 #include <opengm/operations/adder.hxx>
+#include <opengm/utilities/metaprogramming.hxx>
 
 #include "pgmlink/hypotheses.h"
 #include "pgmlink/graph.h"
 #include "pgmlink/util.h"
 
 namespace pgmlink {
+namespace pgm {
 
-  /**
-     \brief Collection of opengm template parameters constituting a model.
-
-     Auxiliary class for easier handling of template parameters.
-   */  
-  template <
-    typename VALUE=double,
-    typename GM=opengm::GraphicalModel<VALUE, opengm::Adder>,
-    typename ACC=opengm::Minimizer
-    >
-    struct OpengmModel {
-      typedef VALUE ValueType;
-      typedef GM ogmGraphicalModel;
-      typedef opengm::Factor<ogmGraphicalModel> ogmFactor;
-      typedef ACC ogmAccumulator;
-      typedef opengm::Inference<ogmGraphicalModel, ogmAccumulator> ogmInference;
-      typedef opengm::ExplicitFunction<ValueType> ExplicitFunctionType;
-      typedef typename ogmGraphicalModel::FunctionIdentifier FunctionIdentifier;
-    };
-
-
+//typedef opengm::GraphicalModel<double, opengm::Adder> OpengmModel;
+typedef opengm::ExplicitFunction<double> ExplicitFunction;
+typedef opengm::FunctionDecoratorWeighted< opengm::IndicatorFunction<double> > FeatureFunction;
+typedef opengm::LoglinearModel<double,
+  opengm::meta::TypeList<ExplicitFunction,
+  opengm::meta::TypeList<FeatureFunction, opengm::meta::ListEnd > > > OpengmModel;
 
 template <typename OGM_FUNCTION>
  class OpengmFactor {
@@ -161,6 +152,8 @@ template <typename VALUE>
    std::vector<size_t> shape( this->vi_.size(), states_per_var );
    this->ogmfunction_ = opengm::ExplicitFunction<VALUE>( shape.begin(), shape.end(), init );
  }
+
+} /* namespace pgm */
 } /* namespace pgmlink */
 
 #endif /* GRAPHICAL_MODEL_H */

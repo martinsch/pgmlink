@@ -467,7 +467,7 @@ void Chaingraph::infer() {
 
 void Chaingraph::conclude( HypothesesGraph& g ) {
     // extract solution from optimizer
-    vector<OpengmModel<>::ogmInference::LabelType> solution;
+  vector<pgm::OpengmLPCplex::LabelType> solution;
     opengm::InferenceTermination status = optimizer_->arg(solution);
     if(status != opengm::NORMAL) {
 	throw runtime_error("GraphicalModel::infer(): solution extraction terminated unnormally");
@@ -491,7 +491,7 @@ void Chaingraph::conclude( HypothesesGraph& g ) {
     }
 }
 
-  const OpengmModel<>::ogmGraphicalModel* Chaingraph::get_graphical_model() const {
+  const pgm::OpengmModel* Chaingraph::get_graphical_model() const {
     return linking_model_->opengm_model.get();
   }
 
