@@ -2,6 +2,7 @@
 #include <cassert>
 #include <stdexcept>
 #include <utility>
+#include <boost/scoped_ptr.hpp>
 #include <opengm/inference/lpcplex.hxx>
 #include <opengm/datastructures/marray/marray.hxx>
 
@@ -103,44 +104,11 @@ namespace pgmlink {
       return *this;
     }
 
-    boost::shared_ptr<LinkingModel> ChaingraphModelBuilder::build() const {
-      using boost::shared_ptr;
-      using std::map;
-
-      LOG(logDEBUG) << "ChaingraphModelBuilder::build: entered";
-      if( !with_detection_vars_ ) {
-	throw std::runtime_error("ChaingraphModelBuilder::build(): option without detection vars not yet implemented");
-      }
-      if( !with_divisions_ ) {
-	throw std::runtime_error("ChaingraphModelBuilder::build(): option without divisions not yet implemented");
-      }
-
-      shared_ptr<LinkingModel> model( new LinkingModel() );
-      
-      if( with_detection_vars_ ) {
-	add_detection_vars( *model );
-      }
-      add_assignment_vars( *model );
-
-      if( with_detection_vars_ ) {
-	for(HypothesesGraph::NodeIt n(*hypotheses_); n!=lemon::INVALID; ++n) {
-	  add_detection_factor( *model, n );
-	}
-      }
-
-      for(HypothesesGraph::NodeIt n(*hypotheses_); n!=lemon::INVALID; ++n) {
-	add_outgoing_factor( *model, n );
- 	add_incoming_factor( *model, n );
-      }
-
-      return model;
-    }
     namespace {
       inline size_t cplex_id(size_t opengm_id) {
 	return 2*opengm_id + 1;
       }
     }
-
     void ChaingraphModelBuilder::add_hard_constraints( const LinkingModel& m, const HypothesesGraph& hypotheses, OpengmLPCplex& cplex ) {
       LOG(logDEBUG) << "Chaingraph::add_constraints: entered";
       ////
@@ -183,47 +151,107 @@ namespace pgmlink {
       }
     }
 
-    inline void ChaingraphModelBuilder::add_detection_vars( LinkingModel& m ) const {
-      for(HypothesesGraph::NodeIt n(*hypotheses_); n!=lemon::INVALID; ++n) {
+    void ChaingraphModelBuilder::fix_detections( const LinkingModel& m, const HypothesesGraph& g, OpengmLPCplex& cplex ) {
+      for(HypothesesGraph::NodeIt n(g); n!=lemon::INVALID; ++n) {
+	vector<size_t> cplex_idxs; 
+	cplex_idxs.push_back(cplex_id(m.node_var.find(n)->second));
+	vector<int> coeffs;
+	coeffs.push_back(1);
+	// 1 <= 1*detection <= 1
+	cplex.addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin() , 1, 1);
+      }
+    }
+
+    void ChaingraphModelBuilder::couple(const LinkingModel& m, const HypothesesGraph::Node& n, const HypothesesGraph::Arc& a, OpengmLPCplex& cplex ) {
+      vector<size_t> cplex_idxs; 
+      cplex_idxs.push_back(cplex_id(m.node_var.find(n)->second));
+      cplex_idxs.push_back(cplex_id(m.arc_var.find(a)->second));
+      vector<int> coeffs;
+      coeffs.push_back(1);
+      coeffs.push_back(-1);
+      // 0 <= 1*detection - 1*transition <= 1
+      cplex.addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin() , 0, 1);
+    }
+
+
+
+    ////
+    //// class ChaingraphModelBuilderECCV12
+    ////
+    boost::shared_ptr<LinkingModel> ChaingraphModelBuilderECCV12::build() const {
+      using boost::shared_ptr;
+      using std::map;
+
+      LOG(logDEBUG) << "ChaingraphModelBuilderECCV12::build: entered";
+      if( !has_detection_vars() ) {
+	throw std::runtime_error("ChaingraphModelBuilderECCV12::build(): option without detection vars not yet implemented");
+      }
+      if( !has_divisions() ) {
+	throw std::runtime_error("ChaingraphModelBuilderECCV12::build(): option without divisions not yet implemented");
+      }
+
+      shared_ptr<LinkingModel> model( new LinkingModel() );
+      
+      if( has_detection_vars() ) {
+	add_detection_vars( *model );
+      }
+      add_assignment_vars( *model );
+
+      if( has_detection_vars() ) {
+	for(HypothesesGraph::NodeIt n(*hypotheses()); n!=lemon::INVALID; ++n) {
+	  add_detection_factor( *model, n );
+	}
+      }
+
+      for(HypothesesGraph::NodeIt n(*hypotheses()); n!=lemon::INVALID; ++n) {
+	add_outgoing_factor( *model, n );
+ 	add_incoming_factor( *model, n );
+      }
+
+      return model;
+    }
+
+    inline void ChaingraphModelBuilderECCV12::add_detection_vars( LinkingModel& m ) const {
+      for(HypothesesGraph::NodeIt n(*hypotheses()); n!=lemon::INVALID; ++n) {
 	m.opengm_model->addVariable(2);
 	m.node_var[n] = m.opengm_model->numberOfVariables() - 1; 
       }
     }
 
-    inline void ChaingraphModelBuilder::add_assignment_vars( LinkingModel& m ) const {
-      for(HypothesesGraph::ArcIt a(*hypotheses_); a!=lemon::INVALID; ++a) {
+    inline void ChaingraphModelBuilderECCV12::add_assignment_vars( LinkingModel& m ) const {
+      for(HypothesesGraph::ArcIt a(*hypotheses()); a!=lemon::INVALID; ++a) {
 	m.opengm_model->addVariable(2);
 	m.arc_var[a] = m.opengm_model->numberOfVariables() - 1; 
       }
     }
 
-    void ChaingraphModelBuilder::add_detection_factor( LinkingModel& m, const HypothesesGraph::Node& n) const {
-      property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = hypotheses_->get(node_traxel());
+    void ChaingraphModelBuilderECCV12::add_detection_factor( LinkingModel& m, const HypothesesGraph::Node& n) const {
+      property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = hypotheses()->get(node_traxel());
       size_t vi[] = {m.node_var[n]};
       vector<size_t> coords(1,0);
       OpengmExplicitFactor<double> table( vi, vi+1 );
 
       coords[0] = 0;
-      table.set_value( coords, non_detection_(traxel_map[n]) ); 
+      table.set_value( coords, non_detection()(traxel_map[n]) ); 
 
       coords[0] = 1;
-      table.set_value( coords, detection_(traxel_map[n]) );
+      table.set_value( coords, detection()(traxel_map[n]) );
 
       table.add_to( *(m.opengm_model) );
     }
 
-    inline void ChaingraphModelBuilder::add_outgoing_factor( LinkingModel& m, 
+    inline void ChaingraphModelBuilderECCV12::add_outgoing_factor( LinkingModel& m, 
 			      const HypothesesGraph::Node& n ) const {
       using namespace std;
 
-      LOG(logDEBUG) << "ChaingraphModelBuilder::add_outgoing_factor(): entered";
-      property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = hypotheses_->get(node_traxel());
+      LOG(logDEBUG) << "ChaingraphModelBuilderECCV12::add_outgoing_factor(): entered";
+      property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = hypotheses()->get(node_traxel());
       // collect and count outgoing arcs
       vector<HypothesesGraph::Arc> arcs; 
       vector<size_t> vi; 		// opengm variable indeces
       vi.push_back(m.node_var[n]); // first detection node, remaining will be transition nodes
       int count = 0;
-      for(HypothesesGraph::OutArcIt a(*hypotheses_, n); a != lemon::INVALID; ++a) {
+      for(HypothesesGraph::OutArcIt a(*hypotheses(), n); a != lemon::INVALID; ++a) {
 	arcs.push_back(a);
 	vi.push_back(m.arc_var[a]);
 	++count;
@@ -238,12 +266,12 @@ namespace pgmlink {
 
 	// opportunity
 	coords = std::vector<size_t>(table_dim, 0); 		// (0)
-	table.set_value( coords, opportunity_cost_ );
+	table.set_value( coords, opportunity_cost() );
 
 	// disappearance 
 	coords = std::vector<size_t>(table_dim, 0);
 	coords[0] = 1; 						// (1)
-	table.set_value( coords, disappearance_(traxel_map[n]) );
+	table.set_value( coords, disappearance()(traxel_map[n]) );
 
 	table.add_to( *m.opengm_model );
 
@@ -251,21 +279,21 @@ namespace pgmlink {
 	// no division possible
 	size_t table_dim = 2; 		// detection var + 1 * transition var
 	std::vector<size_t> coords;
-	OpengmExplicitFactor<double> table( vi, forbidden_cost_ );
+	OpengmExplicitFactor<double> table( vi, forbidden_cost() );
 
 	// opportunity configuration
 	coords = std::vector<size_t>(table_dim, 0); // (0,0)
-	table.set_value( coords, opportunity_cost_ );
+	table.set_value( coords, opportunity_cost() );
 
 	// disappearance configuration
 	coords = std::vector<size_t>(table_dim, 0);
 	coords[0] = 1; // (1,0)
-	table.set_value( coords, disappearance_(traxel_map[n]) );
+	table.set_value( coords, disappearance()(traxel_map[n]) );
 
 	// move configurations
 	coords = std::vector<size_t>(table_dim, 1);
 	// (1,1)
-	table.set_value( coords, move_(traxel_map[n], traxel_map[hypotheses_->target(arcs[0])]) );
+	table.set_value( coords, move()(traxel_map[n], traxel_map[hypotheses()->target(arcs[0])]) );
 
 	table.add_to( *m.opengm_model );
 
@@ -273,16 +301,16 @@ namespace pgmlink {
 	// build value table
 	size_t table_dim = count + 1; 		// detection var + n * transition var
 	std::vector<size_t> coords;
-	OpengmExplicitFactor<double> table( vi, forbidden_cost_ );
+	OpengmExplicitFactor<double> table( vi, forbidden_cost() );
 
 	// opportunity configuration
 	coords = std::vector<size_t>(table_dim, 0); // (0,0,...,0)
-	table.set_value( coords, opportunity_cost_ );
+	table.set_value( coords, opportunity_cost() );
 
 	// disappearance configuration
 	coords = std::vector<size_t>(table_dim, 0);
 	coords[0] = 1; // (1,0,...,0)
-	table.set_value( coords, disappearance_(traxel_map[n]) );
+	table.set_value( coords, disappearance()(traxel_map[n]) );
 
 	// move configurations
 	coords = std::vector<size_t>(table_dim, 0);
@@ -290,7 +318,7 @@ namespace pgmlink {
 	// (1,0,0,0,1,0,0)
 	for(size_t i = 1; i < table_dim; ++i) {
 	  coords[i] = 1; 
-	  table.set_value( coords, move_(traxel_map[n], traxel_map[hypotheses_->target(arcs[i-1])]) );
+	  table.set_value( coords, move()(traxel_map[n], traxel_map[hypotheses()->target(arcs[i-1])]) );
 	  coords[i] = 0; // reset coords
 	}
       
@@ -302,9 +330,9 @@ namespace pgmlink {
 	  for(unsigned int j = i+1; j < table_dim; ++j) {
 	    coords[i] = 1;
 	    coords[j] = 1;
-	    table.set_value(coords, division_(traxel_map[n],
-					      traxel_map[hypotheses_->target(arcs[i-1])],
-					      traxel_map[hypotheses_->target(arcs[j-1])]
+	    table.set_value(coords, division()(traxel_map[n],
+					      traxel_map[hypotheses()->target(arcs[i-1])],
+					      traxel_map[hypotheses()->target(arcs[j-1])]
 					      ));
 	  
 	    // reset
@@ -316,19 +344,19 @@ namespace pgmlink {
 	table.add_to( *m.opengm_model );      
 
       }   
-      LOG(logDEBUG) << "ChaingraphModelBuilder::add_outgoing_factor(): leaving";
+      LOG(logDEBUG) << "ChaingraphModelBuilderECCV12::add_outgoing_factor(): leaving";
     }
 
-    inline void ChaingraphModelBuilder::add_incoming_factor( LinkingModel& m,
+    inline void ChaingraphModelBuilderECCV12::add_incoming_factor( LinkingModel& m,
 			      const HypothesesGraph::Node& n) const {
       using namespace std;
 
-      LOG(logDEBUG) << "ChaingraphModelBuilder::add_incoming_factor(): entered";
-      property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = hypotheses_->get(node_traxel());
+      LOG(logDEBUG) << "ChaingraphModelBuilderECCV12::add_incoming_factor(): entered";
+      property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = hypotheses()->get(node_traxel());
       // collect and count incoming arcs
       vector<size_t> vi; // opengm variable indeces
       int count = 0;
-      for(HypothesesGraph::InArcIt a(*hypotheses_, n); a != lemon::INVALID; ++a) {
+      for(HypothesesGraph::InArcIt a(*hypotheses(), n); a != lemon::INVALID; ++a) {
 	vi.push_back(m.arc_var[a]);
 	++count;
       }
@@ -338,7 +366,7 @@ namespace pgmlink {
       //// construct factor
       // build value table
       size_t table_dim = count + 1; // detection var + n * transition var
-      OpengmExplicitFactor<double> table( vi, forbidden_cost_ );
+      OpengmExplicitFactor<double> table( vi, forbidden_cost() );
       std::vector<size_t> coords;
 
       // allow opportunity configuration
@@ -349,8 +377,8 @@ namespace pgmlink {
       // appearance configuration
       coords = std::vector<size_t>(table_dim, 0);
       coords[0] = 1; // (1,0,...,0)
-      table.set_value( coords, appearance_(traxel_map[n]) );
-      assert(table.get_value( coords ) == appearance_(traxel_map[n]));
+      table.set_value( coords, appearance()(traxel_map[n]) );
+      assert(table.get_value( coords ) == appearance()(traxel_map[n]));
 
       // allow move configurations
       coords = std::vector<size_t>(table_dim, 0);
@@ -363,31 +391,9 @@ namespace pgmlink {
       }
 
       table.add_to( *m.opengm_model );
-      LOG(logDEBUG) << "ChaingraphModelBuilder::add_incoming_factor(): leaving";
+      LOG(logDEBUG) << "ChaingraphModelBuilderECCV12::add_incoming_factor(): leaving";
     }
 
-    void ChaingraphModelBuilder::couple(const LinkingModel& m, const HypothesesGraph::Node& n, const HypothesesGraph::Arc& a, OpengmLPCplex& cplex ) {
-      vector<size_t> cplex_idxs; 
-      cplex_idxs.push_back(cplex_id(m.node_var.find(n)->second));
-      cplex_idxs.push_back(cplex_id(m.arc_var.find(a)->second));
-      vector<int> coeffs;
-      coeffs.push_back(1);
-      coeffs.push_back(-1);
-      // 0 <= 1*detection - 1*transition <= 1
-      cplex.addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin() , 0, 1);
-    }
-
-    void ChaingraphModelBuilder::fix_detections( const LinkingModel& m, const HypothesesGraph& g, OpengmLPCplex& cplex ) {
-      for(HypothesesGraph::NodeIt n(g); n!=lemon::INVALID; ++n) {
-	vector<size_t> cplex_idxs; 
-	cplex_idxs.push_back(cplex_id(m.node_var.find(n)->second));
-	vector<int> coeffs;
-	coeffs.push_back(1);
-	// 1 <= 1*detection <= 1
-	cplex.addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin() , 1, 1);
-      }
-    }
-    
   } /* namespace pgm */
 
 
@@ -421,13 +427,13 @@ void Chaingraph::formulate( const HypothesesGraph& hypotheses ) {
 
     // configure the model builder
     shared_ptr<const HypothesesGraph> g(&hypotheses, NullDeleter() );
-    pgm::ChaingraphModelBuilder builder =
-      pgm::ChaingraphModelBuilder(g, appearance_,disappearance_,move_,opportunity_cost_, forbidden_cost_)
-      .with_detection_vars( detection_, non_detection_ )
-      .with_divisions( division_ );
+    boost::scoped_ptr<pgm::ChaingraphModelBuilder>
+      builder( new pgm::ChaingraphModelBuilderECCV12(g, appearance_,disappearance_,move_,opportunity_cost_, forbidden_cost_) );
+    (*builder).with_detection_vars( detection_, non_detection_ )
+              .with_divisions( division_ );
 
     // build the model
-    linking_model_ = builder.build();
+    linking_model_ = builder->build();
 
     // refine the model with hard constraints
     pgm::OpengmLPCplex::Parameter param;
