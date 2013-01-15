@@ -407,6 +407,10 @@ namespace pgmlink {
 	delete optimizer_;
 	optimizer_ = NULL;
     }
+    if( builder_ && destroy_builder_ ) {
+      delete builder_;
+      builder_ = NULL;
+    }
   }
 
 double Chaingraph::forbidden_cost() const {
@@ -427,8 +431,10 @@ void Chaingraph::formulate( const HypothesesGraph& hypotheses ) {
 
     // configure the model builder
     shared_ptr<const HypothesesGraph> g(&hypotheses, NullDeleter() );
-    boost::scoped_ptr<pgm::ChaingraphModelBuilder>
-      builder( new pgm::ChaingraphModelBuilderECCV12(g, appearance_,disappearance_,move_,opportunity_cost_, forbidden_cost_) );
+    if(!builder_) {
+	builder_ = new pgm::ChaingraphModelBuilderECCV12(g, appearance_,disappearance_,move_,opportunity_cost_, forbidden_cost_);
+	destroy_builder_ = true;
+    }
     (*builder).with_detection_vars( detection_, non_detection_ )
               .with_divisions( division_ );
 

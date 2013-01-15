@@ -201,7 +201,8 @@ namespace pgmlink {
 	       double forbidden_cost = 0,
 	       bool with_constraints = true,
 	       bool fixed_detections = false,
-	       double ep_gap = 0.01
+	       double ep_gap = 0.01,
+	       pgm::ChaingraphModelBuilder* builder = NULL
     ) 
     : detection_(detection), 
     non_detection_(non_detection),
@@ -214,7 +215,9 @@ namespace pgmlink {
     optimizer_(NULL),
     with_constraints_(with_constraints),
     fixed_detections_(fixed_detections),
-    ep_gap_(ep_gap)
+    ep_gap_(ep_gap),
+    builder_(builder),
+    destroy_builder_(false)
     { };
     ~Chaingraph();
 
@@ -268,6 +271,8 @@ namespace pgmlink {
     bool fixed_detections_;
 
     double ep_gap_;
+    pgm::ChaingraphModelBuilder* builder;
+    bool destroy_builder_;
 };
 
 } /* namespace pgmlink */
