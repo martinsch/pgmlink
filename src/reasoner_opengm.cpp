@@ -1,5 +1,7 @@
 #include <algorithm>
 #include <cassert>
+#include <cmath>
+#include <set>
 #include <stdexcept>
 #include <utility>
 #include <boost/scoped_ptr.hpp>
@@ -202,6 +204,9 @@ namespace pgmlink {
       }
 
       shared_ptr<LinkingModel> model( new LinkingModel() );
+      for(int i=0; i<1; ++i) {
+	model->opengm_model->incrementNumberOfWeights();
+      }
       
       if( has_detection_vars() ) {
 	add_detection_vars( *model );
@@ -230,11 +235,38 @@ namespace pgmlink {
 
       size_t indicate[] = {0};
       OpengmWeightedFeature<OpengmModel::ValueType>(var_indices, shape, shape+1, indicate, non_detection()(traxel_map[n]) )
-      	.add_to( *(m.opengm_model) );
+      	.add_as_feature_to( *(m.opengm_model), 0 );
 
       indicate[0] = 1;
       OpengmWeightedFeature<OpengmModel::ValueType>(var_indices, shape, shape+1, indicate, detection()(traxel_map[n]) )
-      	.add_to( *(m.opengm_model) );
+      	.add_as_feature_to( *(m.opengm_model), 0 );
+    }
+
+    namespace {
+      std::vector<size_t> DecToBin(size_t number)
+      {
+	if ( number == 0 ) return std::vector<size_t>(1,0);
+	if ( number == 1 ) return std::vector<size_t>(1,1);
+	
+	if ( number % 2 == 0 ) {
+	  std::vector<size_t> ret = DecToBin(number / 2);
+	  ret.push_back(0);
+	  return ret;
+	}
+	else {
+	  std::vector<size_t> ret = DecToBin(number / 2);
+	  ret.push_back(1);
+	  return ret;
+	}
+      }
+
+      int BinToDec(std::vector<size_t> number)
+      {
+	int result = 0, pow = 1;
+	for ( int i = number.size() - 1; i >= 0; --i, pow <<= 1 )
+	  result += number[i] * pow;
+	return result;
+      }
     }
 
     inline void TrainableChaingraphModelBuilder::add_outgoing_factor( LinkingModel& m, 
@@ -256,58 +288,68 @@ namespace pgmlink {
 
       // construct factor
       if(count == 0) {
-	// build value table
-	size_t table_dim = 1; 		// only one detection var
-	std::vector<size_t> coords;
-	OpengmExplicitFactor<double> table( vi );
+	size_t shape[] = {2}; // only one detection var
+	size_t indicate[] = {0};
 
-	// opportunity
-	coords = std::vector<size_t>(table_dim, 0); 		// (0)
-	table.set_value( coords, opportunity_cost() );
+	OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape, shape+1, indicate, opportunity_cost() )
+	  .add_as_feature_to( *(m.opengm_model), 0 );
 
-	// disappearance 
-	coords = std::vector<size_t>(table_dim, 0);
-	coords[0] = 1; 						// (1)
-	table.set_value( coords, disappearance()(traxel_map[n]) );
-
-	table.add_to( *m.opengm_model );
+	indicate[0] = 1;
+	OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape, shape+1, indicate, disappearance()(traxel_map[n]) )
+	  .add_as_feature_to( *(m.opengm_model), 0 );
 
       } else if(count == 1) {
 	// no division possible
-	size_t table_dim = 2; 		// detection var + 1 * transition var
+	assert( vi.size() == 2 );
+	size_t shape[] = {2,2};	// detection var + 1 * transition var
 	std::vector<size_t> coords;
-	OpengmExplicitFactor<double> table( vi, forbidden_cost() );
 
 	// opportunity configuration
-	coords = std::vector<size_t>(table_dim, 0); // (0,0)
-	table.set_value( coords, opportunity_cost() );
+	coords = std::vector<size_t>(2, 0); // (0,0)
+	OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape, shape+2, coords.begin(), opportunity_cost() )
+	  .add_as_feature_to( *(m.opengm_model), 0 );
 
 	// disappearance configuration
-	coords = std::vector<size_t>(table_dim, 0);
+	coords = std::vector<size_t>(2, 0);
 	coords[0] = 1; // (1,0)
-	table.set_value( coords, disappearance()(traxel_map[n]) );
+	OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape, shape+2, coords.begin(), disappearance()(traxel_map[n]) )
+	  .add_as_feature_to( *(m.opengm_model), 0 );
 
 	// move configurations
-	coords = std::vector<size_t>(table_dim, 1);
-	// (1,1)
-	table.set_value( coords, move()(traxel_map[n], traxel_map[hypotheses()->target(arcs[0])]) );
+	coords = std::vector<size_t>(2, 1); // (1,1)
+	OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape, shape+2, coords.begin(), move()(traxel_map[n], traxel_map[hypotheses()->target(arcs[0])]) )
+	  .add_as_feature_to( *(m.opengm_model), 0 );
 
-	table.add_to( *m.opengm_model );
+	// forbidden configuration
+	coords = std::vector<size_t>(2, 0); // (0,1)
+	coords[1] = 1;
+	OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape, shape+2, coords.begin(), forbidden_cost() )
+	  .add_as_feature_to( *(m.opengm_model), 0 );
 
       } else {
-	// build value table
 	size_t table_dim = count + 1; 		// detection var + n * transition var
 	std::vector<size_t> coords;
-	OpengmExplicitFactor<double> table( vi, forbidden_cost() );
+	std::vector<size_t> shape(table_dim, 2);
 
+	std::set<size_t > entries;
+	for(size_t i = 0; i < static_cast<size_t>(std::pow(2, table_dim)); ++i) {
+	  entries.insert( entries.end(), i );
+	}
+	
 	// opportunity configuration
 	coords = std::vector<size_t>(table_dim, 0); // (0,0,...,0)
-	table.set_value( coords, opportunity_cost() );
+	size_t check = entries.erase(BinToDec(coords));
+	assert(check == 1);
+	OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), opportunity_cost() )
+	  .add_as_feature_to( *(m.opengm_model), 0 );
 
 	// disappearance configuration
 	coords = std::vector<size_t>(table_dim, 0);
 	coords[0] = 1; // (1,0,...,0)
-	table.set_value( coords, disappearance()(traxel_map[n]) );
+	check = entries.erase(BinToDec(coords));
+	assert(check == 1);
+	OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), disappearance()(traxel_map[n]) )
+	  .add_as_feature_to( *(m.opengm_model), 0 );
 
 	// move configurations
 	coords = std::vector<size_t>(table_dim, 0);
@@ -315,22 +357,30 @@ namespace pgmlink {
 	// (1,0,0,0,1,0,0)
 	for(size_t i = 1; i < table_dim; ++i) {
 	  coords[i] = 1; 
-	  table.set_value( coords, move()(traxel_map[n], traxel_map[hypotheses()->target(arcs[i-1])]) );
+	  check = entries.erase(BinToDec(coords));
+	  assert(check == 1);
+	  OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), move()(traxel_map[n], traxel_map[hypotheses()->target(arcs[i-1])]) )
+	    .add_as_feature_to( *(m.opengm_model), 0 );
+
 	  coords[i] = 0; // reset coords
 	}
       
 	// division configurations
 	coords = std::vector<size_t>(table_dim, 0);
 	coords[0] = 1;
+
 	// (1,0,0,1,0,1,0,0) 
 	for(unsigned int i = 1; i < table_dim - 1; ++i) {
 	  for(unsigned int j = i+1; j < table_dim; ++j) {
 	    coords[i] = 1;
 	    coords[j] = 1;
-	    table.set_value(coords, division()(traxel_map[n],
+	    check = entries.erase(BinToDec(coords));
+	    assert(check == 1);
+	    OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), division()(traxel_map[n],
 					      traxel_map[hypotheses()->target(arcs[i-1])],
 					      traxel_map[hypotheses()->target(arcs[j-1])]
-					      ));
+					      ) )
+	      .add_as_feature_to( *(m.opengm_model), 0 );
 	  
 	    // reset
 	    coords[i] = 0;
@@ -338,7 +388,16 @@ namespace pgmlink {
 	  }
 	}
 
-	table.add_to( *m.opengm_model );      
+	// forbidden configurations
+	for(std::set<size_t>::iterator it = entries.begin(); it != entries.end(); ++it) {
+	  coords = DecToBin(*it);
+	  if(coords.size() < table_dim ) {
+	    coords.insert(coords.begin(), table_dim-coords.size(), 0);
+	  }
+	  assert( coords.size() == table_dim );
+	  OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), forbidden_cost())
+	    .add_as_feature_to( *(m.opengm_model), 0 );
+	}
 
       }   
       LOG(logDEBUG) << "TrainableChaingraphModelBuilder::add_outgoing_factor(): leaving";
@@ -361,21 +420,29 @@ namespace pgmlink {
       std::reverse(vi.begin(), vi.end());
     
       //// construct factor
-      // build value table
-      size_t table_dim = count + 1; // detection var + n * transition var
-      OpengmExplicitFactor<double> table( vi, forbidden_cost() );
+      size_t table_dim = count + 1; 		// detection var + n * transition var
       std::vector<size_t> coords;
+      std::vector<size_t> shape(table_dim, 2);
+      
+      std::set<size_t > entries;
+      for(size_t i = 0; i < static_cast<size_t>(std::pow(2, table_dim)); ++i) {
+	entries.insert( entries.end(), i );
+      }
+
 
       // allow opportunity configuration
       // (0,0,...,0)
       coords = std::vector<size_t>(table_dim, 0);
-      table.set_value( coords, 0 );
+      size_t check = entries.erase(BinToDec(coords));
+      assert(check == 1);
 
       // appearance configuration
       coords = std::vector<size_t>(table_dim, 0);
       coords[0] = 1; // (1,0,...,0)
-      table.set_value( coords, appearance()(traxel_map[n]) );
-      assert(table.get_value( coords ) == appearance()(traxel_map[n]));
+	check = entries.erase(BinToDec(coords));
+	assert(check == 1);
+	OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), appearance()(traxel_map[n]) )
+	  .add_as_feature_to( *(m.opengm_model), 0 );
 
       // allow move configurations
       coords = std::vector<size_t>(table_dim, 0);
@@ -383,11 +450,22 @@ namespace pgmlink {
       // (1,0,0,0,1,0,0)
       for(size_t i = 1; i < table_dim; ++i) {
 	coords[i] = 1; 
-	table.set_value( coords, 0 );
+	size_t check = entries.erase(BinToDec(coords));
+	assert(check == 1);
 	coords[i] = 0; // reset coords
       }
 
-      table.add_to( *m.opengm_model );
+      // forbidden configurations
+      for(std::set<size_t>::iterator it = entries.begin(); it != entries.end(); ++it) {
+	coords = DecToBin(*it);
+	if(coords.size() < table_dim ) {
+	  coords.insert(coords.begin(), table_dim-coords.size(), 0);
+	}
+	assert( coords.size() == table_dim );
+	OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), forbidden_cost())
+	  .add_as_feature_to( *(m.opengm_model), 0 );
+      }
+      
       LOG(logDEBUG) << "TrainableChaingraphModelBuilder::add_incoming_factor(): leaving";
     }
 
