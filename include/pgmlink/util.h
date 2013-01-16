@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <stdexcept>
+#include <sstream>
 #include <iterator>
 #include <utility>
 #include <vector>
@@ -41,7 +42,9 @@ namespace pgmlink {
     void reorder( std::vector<T> & data, const std::vector<std::size_t> & order )
     {
       if(data.size() != order.size()){
-	throw std::invalid_argument("indexsorter::reorder(): data and order vector must have the same size");
+	std::stringstream ss;
+	ss << "indexsorter::reorder(): data and order vector must have the same size (data size " << data.size()<< " vs. order size " << order.size()<< ")";
+	throw std::invalid_argument(ss.str());
       }
       std::vector<T> tmp;         
       tmp.reserve( data.size() ); 
