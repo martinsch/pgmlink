@@ -162,6 +162,20 @@ namespace pgmlink {
       }
     }
 
+    inline void ChaingraphModelBuilder::add_detection_vars( LinkingModel& m ) const {
+      for(HypothesesGraph::NodeIt n(*hypotheses()); n!=lemon::INVALID; ++n) {
+	m.opengm_model->addVariable(2);
+	m.node_var[n] = m.opengm_model->numberOfVariables() - 1; 
+      }
+    }
+
+    inline void ChaingraphModelBuilder::add_assignment_vars( LinkingModel& m ) const {
+      for(HypothesesGraph::ArcIt a(*hypotheses()); a!=lemon::INVALID; ++a) {
+	m.opengm_model->addVariable(2);
+	m.arc_var[a] = m.opengm_model->numberOfVariables() - 1; 
+      }
+    }
+
     void ChaingraphModelBuilder::couple(const LinkingModel& m, const HypothesesGraph::Node& n, const HypothesesGraph::Arc& a, OpengmLPCplex& cplex ) {
       vector<size_t> cplex_idxs; 
       cplex_idxs.push_back(cplex_id(m.node_var.find(n)->second));
@@ -209,20 +223,6 @@ namespace pgmlink {
       }
 
       return model;
-    }
-
-    inline void ChaingraphModelBuilderECCV12::add_detection_vars( LinkingModel& m ) const {
-      for(HypothesesGraph::NodeIt n(*hypotheses()); n!=lemon::INVALID; ++n) {
-	m.opengm_model->addVariable(2);
-	m.node_var[n] = m.opengm_model->numberOfVariables() - 1; 
-      }
-    }
-
-    inline void ChaingraphModelBuilderECCV12::add_assignment_vars( LinkingModel& m ) const {
-      for(HypothesesGraph::ArcIt a(*hypotheses()); a!=lemon::INVALID; ++a) {
-	m.opengm_model->addVariable(2);
-	m.arc_var[a] = m.opengm_model->numberOfVariables() - 1; 
-      }
     }
 
     void ChaingraphModelBuilderECCV12::add_detection_factor( LinkingModel& m, const HypothesesGraph::Node& n) const {

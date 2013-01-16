@@ -148,6 +148,10 @@ namespace pgmlink {
       static void add_hard_constraints( const LinkingModel&, const HypothesesGraph&, OpengmLPCplex& );
       static void fix_detections( const LinkingModel&, const HypothesesGraph&, OpengmLPCplex& );
 
+    protected:
+      void add_detection_vars( LinkingModel& ) const;
+      void add_assignment_vars( LinkingModel& ) const;
+
     private:
       static void couple( const LinkingModel&, const HypothesesGraph::Node&, const HypothesesGraph::Arc&, OpengmLPCplex& );
       shared_ptr<const HypothesesGraph> hypotheses_;
@@ -179,8 +183,6 @@ namespace pgmlink {
       virtual shared_ptr<LinkingModel> build() const;
 
     private:
-      void add_detection_vars( LinkingModel& ) const;
-      void add_assignment_vars( LinkingModel& ) const;
       void add_detection_factor( LinkingModel&, const HypothesesGraph::Node& ) const;
       void add_outgoing_factor( LinkingModel&, const HypothesesGraph::Node&) const;
       void add_incoming_factor( LinkingModel&, const HypothesesGraph::Node&) const;
