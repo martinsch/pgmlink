@@ -62,7 +62,7 @@ namespace pgmlink {
 
        Represents an opengm model to solve the matching problem in a
        HypothesesGraph. Use a ChaingraphModelBuilder to construct the
-       model. During construction of the LinkingModel a random
+       model. During construction of the ChaingraphModel a random
        variable is added to the graphical model for every node and
        every arc in the HypothesesGraph. The mapping between nodes
        resp. arcs and random variables is stored in the fields
@@ -77,9 +77,9 @@ namespace pgmlink {
        @see ChaingraphModelBuilder
        @see HypothesesGraph
      */
-    struct LinkingModel {
-    LinkingModel() : opengm_model( new OpengmModel() ) {}
-    LinkingModel( shared_ptr<OpengmModel> m,
+    struct ChaingraphModel {
+    ChaingraphModel() : opengm_model( new OpengmModel() ) {}
+    ChaingraphModel( shared_ptr<OpengmModel> m,
 		   map<HypothesesGraph::Node, OpengmModel::IndexType> node_var = map<HypothesesGraph::Node, OpengmModel::IndexType>(),
 		   map<HypothesesGraph::Arc, OpengmModel::IndexType> arc_var = map<HypothesesGraph::Arc, OpengmModel::IndexType>()
 		   )
@@ -142,18 +142,18 @@ namespace pgmlink {
       function<double (const Traxel&,const Traxel&,const Traxel&)> division() const { return division_; }
 
       // build
-      virtual shared_ptr<LinkingModel> build() const = 0;
+      virtual shared_ptr<ChaingraphModel> build() const = 0;
 
       // refinement
-      static void add_hard_constraints( const LinkingModel&, const HypothesesGraph&, OpengmLPCplex& );
-      static void fix_detections( const LinkingModel&, const HypothesesGraph&, OpengmLPCplex& );
+      static void add_hard_constraints( const ChaingraphModel&, const HypothesesGraph&, OpengmLPCplex& );
+      static void fix_detections( const ChaingraphModel&, const HypothesesGraph&, OpengmLPCplex& );
 
     protected:
-      void add_detection_vars( LinkingModel& ) const;
-      void add_assignment_vars( LinkingModel& ) const;
+      void add_detection_vars( ChaingraphModel& ) const;
+      void add_assignment_vars( ChaingraphModel& ) const;
 
     private:
-      static void couple( const LinkingModel&, const HypothesesGraph::Node&, const HypothesesGraph::Arc&, OpengmLPCplex& );
+      static void couple( const ChaingraphModel&, const HypothesesGraph::Node&, const HypothesesGraph::Arc&, OpengmLPCplex& );
       shared_ptr<const HypothesesGraph> hypotheses_;
       
       bool with_detection_vars_;
@@ -180,12 +180,12 @@ namespace pgmlink {
     	: ChaingraphModelBuilder(g, appearance, disappearance, move, opportunity_cost, forbidden_cost) {}
 
       // build
-      virtual shared_ptr<LinkingModel> build() const;
+      virtual shared_ptr<ChaingraphModel> build() const;
 
     private:
-      void add_detection_factor( LinkingModel&, const HypothesesGraph::Node& ) const;
-      void add_outgoing_factor( LinkingModel&, const HypothesesGraph::Node&) const;
-      void add_incoming_factor( LinkingModel&, const HypothesesGraph::Node&) const;
+      void add_detection_factor( ChaingraphModel&, const HypothesesGraph::Node& ) const;
+      void add_outgoing_factor( ChaingraphModel&, const HypothesesGraph::Node&) const;
+      void add_incoming_factor( ChaingraphModel&, const HypothesesGraph::Node&) const;
     };
 
     class ChaingraphModelBuilderECCV12 : public ChaingraphModelBuilder {
@@ -199,12 +199,12 @@ namespace pgmlink {
     	: ChaingraphModelBuilder(g, appearance, disappearance, move, opportunity_cost, forbidden_cost) {}
 
       // build
-      virtual shared_ptr<LinkingModel> build() const;
+      virtual shared_ptr<ChaingraphModel> build() const;
 
     private:
-      void add_detection_factor( LinkingModel&, const HypothesesGraph::Node& ) const;
-      void add_outgoing_factor( LinkingModel&, const HypothesesGraph::Node&) const;
-      void add_incoming_factor( LinkingModel&, const HypothesesGraph::Node&) const;
+      void add_detection_factor( ChaingraphModel&, const HypothesesGraph::Node& ) const;
+      void add_outgoing_factor( ChaingraphModel&, const HypothesesGraph::Node&) const;
+      void add_incoming_factor( ChaingraphModel&, const HypothesesGraph::Node&) const;
     };
 
   } /* namespace pgm */
@@ -286,7 +286,7 @@ namespace pgmlink {
     double forbidden_cost_;
     
     pgm::OpengmLPCplex* optimizer_;
-    shared_ptr<pgm::LinkingModel> linking_model_;
+    shared_ptr<pgm::ChaingraphModel> linking_model_;
 
     bool with_constraints_;
     bool fixed_detections_;

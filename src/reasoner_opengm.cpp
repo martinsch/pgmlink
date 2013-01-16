@@ -111,7 +111,7 @@ namespace pgmlink {
 	return 2*opengm_id + 1;
       }
     }
-    void ChaingraphModelBuilder::add_hard_constraints( const LinkingModel& m, const HypothesesGraph& hypotheses, OpengmLPCplex& cplex ) {
+    void ChaingraphModelBuilder::add_hard_constraints( const ChaingraphModel& m, const HypothesesGraph& hypotheses, OpengmLPCplex& cplex ) {
       LOG(logDEBUG) << "Chaingraph::add_constraints: entered";
       ////
       //// outgoing transitions
@@ -153,7 +153,7 @@ namespace pgmlink {
       }
     }
 
-    void ChaingraphModelBuilder::fix_detections( const LinkingModel& m, const HypothesesGraph& g, OpengmLPCplex& cplex ) {
+    void ChaingraphModelBuilder::fix_detections( const ChaingraphModel& m, const HypothesesGraph& g, OpengmLPCplex& cplex ) {
       for(HypothesesGraph::NodeIt n(g); n!=lemon::INVALID; ++n) {
 	vector<size_t> cplex_idxs; 
 	cplex_idxs.push_back(cplex_id(m.node_var.find(n)->second));
@@ -164,21 +164,21 @@ namespace pgmlink {
       }
     }
 
-    inline void ChaingraphModelBuilder::add_detection_vars( LinkingModel& m ) const {
+    inline void ChaingraphModelBuilder::add_detection_vars( ChaingraphModel& m ) const {
       for(HypothesesGraph::NodeIt n(*hypotheses()); n!=lemon::INVALID; ++n) {
 	m.opengm_model->addVariable(2);
 	m.node_var[n] = m.opengm_model->numberOfVariables() - 1; 
       }
     }
 
-    inline void ChaingraphModelBuilder::add_assignment_vars( LinkingModel& m ) const {
+    inline void ChaingraphModelBuilder::add_assignment_vars( ChaingraphModel& m ) const {
       for(HypothesesGraph::ArcIt a(*hypotheses()); a!=lemon::INVALID; ++a) {
 	m.opengm_model->addVariable(2);
 	m.arc_var[a] = m.opengm_model->numberOfVariables() - 1; 
       }
     }
 
-    void ChaingraphModelBuilder::couple(const LinkingModel& m, const HypothesesGraph::Node& n, const HypothesesGraph::Arc& a, OpengmLPCplex& cplex ) {
+    void ChaingraphModelBuilder::couple(const ChaingraphModel& m, const HypothesesGraph::Node& n, const HypothesesGraph::Arc& a, OpengmLPCplex& cplex ) {
       vector<size_t> cplex_idxs; 
       cplex_idxs.push_back(cplex_id(m.node_var.find(n)->second));
       cplex_idxs.push_back(cplex_id(m.arc_var.find(a)->second));
@@ -194,7 +194,7 @@ namespace pgmlink {
     ////
     //// class TrainableChaingraphModelBuilder
     ////
-    boost::shared_ptr<LinkingModel> TrainableChaingraphModelBuilder::build() const {
+    boost::shared_ptr<ChaingraphModel> TrainableChaingraphModelBuilder::build() const {
 
       if( !has_detection_vars() ) {
 	throw std::runtime_error("TrainableChaingraphModelBuilder::build(): option without detection vars not yet implemented");
@@ -203,7 +203,7 @@ namespace pgmlink {
 	throw std::runtime_error("TrainableChaingraphModelBuilder::build(): option without divisions not yet implemented");
       }
 
-      shared_ptr<LinkingModel> model( new LinkingModel() );
+      shared_ptr<ChaingraphModel> model( new ChaingraphModel() );
       for(int i=0; i<1; ++i) {
 	model->opengm_model->incrementNumberOfWeights();
       }
@@ -227,7 +227,7 @@ namespace pgmlink {
       return model;
     }
 
-    void TrainableChaingraphModelBuilder::add_detection_factor( LinkingModel& m, const HypothesesGraph::Node& n) const {
+    void TrainableChaingraphModelBuilder::add_detection_factor( ChaingraphModel& m, const HypothesesGraph::Node& n) const {
       property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = hypotheses()->get(node_traxel());
       std::vector<size_t> var_indices;
       var_indices.push_back(m.node_var[n]);
@@ -269,7 +269,7 @@ namespace pgmlink {
       }
     }
 
-    inline void TrainableChaingraphModelBuilder::add_outgoing_factor( LinkingModel& m, 
+    inline void TrainableChaingraphModelBuilder::add_outgoing_factor( ChaingraphModel& m, 
 			      const HypothesesGraph::Node& n ) const {
       using namespace std;
 
@@ -403,7 +403,7 @@ namespace pgmlink {
       LOG(logDEBUG) << "TrainableChaingraphModelBuilder::add_outgoing_factor(): leaving";
     }
 
-    inline void TrainableChaingraphModelBuilder::add_incoming_factor( LinkingModel& m,
+    inline void TrainableChaingraphModelBuilder::add_incoming_factor( ChaingraphModel& m,
 			      const HypothesesGraph::Node& n) const {
       using namespace std;
 
@@ -474,7 +474,7 @@ namespace pgmlink {
     ////
     //// class ChaingraphModelBuilderECCV12
     ////
-    boost::shared_ptr<LinkingModel> ChaingraphModelBuilderECCV12::build() const {
+    boost::shared_ptr<ChaingraphModel> ChaingraphModelBuilderECCV12::build() const {
       using boost::shared_ptr;
       using std::map;
 
@@ -486,7 +486,7 @@ namespace pgmlink {
 	throw std::runtime_error("ChaingraphModelBuilderECCV12::build(): option without divisions not yet implemented");
       }
 
-      shared_ptr<LinkingModel> model( new LinkingModel() );
+      shared_ptr<ChaingraphModel> model( new ChaingraphModel() );
       
       if( has_detection_vars() ) {
 	add_detection_vars( *model );
@@ -507,7 +507,7 @@ namespace pgmlink {
       return model;
     }
 
-    void ChaingraphModelBuilderECCV12::add_detection_factor( LinkingModel& m, const HypothesesGraph::Node& n) const {
+    void ChaingraphModelBuilderECCV12::add_detection_factor( ChaingraphModel& m, const HypothesesGraph::Node& n) const {
       property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = hypotheses()->get(node_traxel());
       size_t vi[] = {m.node_var[n]};
       vector<size_t> coords(1,0);
@@ -522,7 +522,7 @@ namespace pgmlink {
       table.add_to( *(m.opengm_model) );
     }
 
-    inline void ChaingraphModelBuilderECCV12::add_outgoing_factor( LinkingModel& m, 
+    inline void ChaingraphModelBuilderECCV12::add_outgoing_factor( ChaingraphModel& m, 
 			      const HypothesesGraph::Node& n ) const {
       using namespace std;
 
@@ -629,7 +629,7 @@ namespace pgmlink {
       LOG(logDEBUG) << "ChaingraphModelBuilderECCV12::add_outgoing_factor(): leaving";
     }
 
-    inline void ChaingraphModelBuilderECCV12::add_incoming_factor( LinkingModel& m,
+    inline void ChaingraphModelBuilderECCV12::add_incoming_factor( ChaingraphModel& m,
 			      const HypothesesGraph::Node& n) const {
       using namespace std;
 
