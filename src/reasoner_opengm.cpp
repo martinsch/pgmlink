@@ -203,10 +203,21 @@ namespace pgmlink {
 	throw std::runtime_error("TrainableChaingraphModelBuilder::build(): option without divisions not yet implemented");
       }
 
+      //// setup the model
       shared_ptr<ChaingraphModel> model( new ChaingraphModel() );
-      for(int i=0; i<1; ++i) {
-	model->opengm_model->incrementNumberOfWeights();
-      }
+
+      // we need six weights; one per event
+      assert(model->opengm_model->numberOfWeights() == 0);
+      model->opengm_model->increaseNumberOfWeights(6);
+
+      // assign the weight ids to event types
+      model->weight_map[ChaingraphModel::det_weight].push_back(0);
+      model->weight_map[ChaingraphModel::mov_weight].push_back(1);
+      model->weight_map[ChaingraphModel::div_weight].push_back(2);
+      model->weight_map[ChaingraphModel::app_weight].push_back(3);
+      model->weight_map[ChaingraphModel::dis_weight].push_back(4);
+      model->weight_map[ChaingraphModel::opp_weight].push_back(5);
+
       
       if( has_detection_vars() ) {
 	add_detection_vars( *model );
@@ -235,11 +246,11 @@ namespace pgmlink {
 
       size_t indicate[] = {0};
       OpengmWeightedFeature<OpengmModel::ValueType>(var_indices, shape, shape+1, indicate, non_detection()(traxel_map[n]) )
-      	.add_as_feature_to( *(m.opengm_model), 0 );
+      	.add_as_feature_to( *(m.opengm_model), m.weight_map[ChaingraphModel::det_weight].front() );
 
       indicate[0] = 1;
       OpengmWeightedFeature<OpengmModel::ValueType>(var_indices, shape, shape+1, indicate, detection()(traxel_map[n]) )
-      	.add_as_feature_to( *(m.opengm_model), 0 );
+      	.add_as_feature_to( *(m.opengm_model), m.weight_map[ChaingraphModel::det_weight].front() );
     }
 
     namespace {
@@ -292,11 +303,11 @@ namespace pgmlink {
 	size_t indicate[] = {0};
 
 	OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape, shape+1, indicate, opportunity_cost() )
-	  .add_as_feature_to( *(m.opengm_model), 0 );
+	  .add_as_feature_to( *(m.opengm_model), m.weight_map[ChaingraphModel::opp_weight].front() );
 
 	indicate[0] = 1;
 	OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape, shape+1, indicate, disappearance()(traxel_map[n]) )
-	  .add_as_feature_to( *(m.opengm_model), 0 );
+	  .add_as_feature_to( *(m.opengm_model), m.weight_map[ChaingraphModel::dis_weight].front() );
 
       } else if(count == 1) {
 	// no division possible
@@ -307,24 +318,24 @@ namespace pgmlink {
 	// opportunity configuration
 	coords = std::vector<size_t>(2, 0); // (0,0)
 	OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape, shape+2, coords.begin(), opportunity_cost() )
-	  .add_as_feature_to( *(m.opengm_model), 0 );
+	  .add_as_feature_to( *(m.opengm_model), m.weight_map[ChaingraphModel::opp_weight].front() );
 
 	// disappearance configuration
 	coords = std::vector<size_t>(2, 0);
 	coords[0] = 1; // (1,0)
 	OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape, shape+2, coords.begin(), disappearance()(traxel_map[n]) )
-	  .add_as_feature_to( *(m.opengm_model), 0 );
+	  .add_as_feature_to( *(m.opengm_model), m.weight_map[ChaingraphModel::dis_weight].front() );
 
 	// move configurations
 	coords = std::vector<size_t>(2, 1); // (1,1)
 	OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape, shape+2, coords.begin(), move()(traxel_map[n], traxel_map[hypotheses()->target(arcs[0])]) )
-	  .add_as_feature_to( *(m.opengm_model), 0 );
+	  .add_as_feature_to( *(m.opengm_model), m.weight_map[ChaingraphModel::mov_weight].front() );
 
 	// forbidden configuration
 	coords = std::vector<size_t>(2, 0); // (0,1)
 	coords[1] = 1;
 	OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape, shape+2, coords.begin(), forbidden_cost() )
-	  .add_as_feature_to( *(m.opengm_model), 0 );
+	  .add_to( *(m.opengm_model) );
 
       } else {
 	size_t table_dim = count + 1; 		// detection var + n * transition var
@@ -341,7 +352,7 @@ namespace pgmlink {
 	size_t check = entries.erase(BinToDec(coords));
 	assert(check == 1);
 	OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), opportunity_cost() )
-	  .add_as_feature_to( *(m.opengm_model), 0 );
+	  .add_as_feature_to( *(m.opengm_model), m.weight_map[ChaingraphModel::opp_weight].front() );
 
 	// disappearance configuration
 	coords = std::vector<size_t>(table_dim, 0);
@@ -349,7 +360,7 @@ namespace pgmlink {
 	check = entries.erase(BinToDec(coords));
 	assert(check == 1);
 	OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), disappearance()(traxel_map[n]) )
-	  .add_as_feature_to( *(m.opengm_model), 0 );
+	  .add_as_feature_to( *(m.opengm_model), m.weight_map[ChaingraphModel::dis_weight].front() );
 
 	// move configurations
 	coords = std::vector<size_t>(table_dim, 0);
@@ -360,7 +371,7 @@ namespace pgmlink {
 	  check = entries.erase(BinToDec(coords));
 	  assert(check == 1);
 	  OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), move()(traxel_map[n], traxel_map[hypotheses()->target(arcs[i-1])]) )
-	    .add_as_feature_to( *(m.opengm_model), 0 );
+	    .add_as_feature_to( *(m.opengm_model), m.weight_map[ChaingraphModel::mov_weight].front() );
 
 	  coords[i] = 0; // reset coords
 	}
@@ -380,7 +391,7 @@ namespace pgmlink {
 					      traxel_map[hypotheses()->target(arcs[i-1])],
 					      traxel_map[hypotheses()->target(arcs[j-1])]
 					      ) )
-	      .add_as_feature_to( *(m.opengm_model), 0 );
+	      .add_as_feature_to( *(m.opengm_model), m.weight_map[ChaingraphModel::div_weight].front() );
 	  
 	    // reset
 	    coords[i] = 0;
@@ -396,7 +407,7 @@ namespace pgmlink {
 	  }
 	  assert( coords.size() == table_dim );
 	  OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), forbidden_cost())
-	    .add_as_feature_to( *(m.opengm_model), 0 );
+	    .add_to( *(m.opengm_model) );
 	}
 
       }   
@@ -442,7 +453,7 @@ namespace pgmlink {
 	check = entries.erase(BinToDec(coords));
 	assert(check == 1);
 	OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), appearance()(traxel_map[n]) )
-	  .add_as_feature_to( *(m.opengm_model), 0 );
+	  .add_as_feature_to( *(m.opengm_model), m.weight_map[ChaingraphModel::app_weight].front() );
 
       // allow move configurations
       coords = std::vector<size_t>(table_dim, 0);
@@ -463,7 +474,7 @@ namespace pgmlink {
 	}
 	assert( coords.size() == table_dim );
 	OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), forbidden_cost())
-	  .add_as_feature_to( *(m.opengm_model), 0 );
+	  .add_to( *(m.opengm_model) );
       }
       
       LOG(logDEBUG) << "TrainableChaingraphModelBuilder::add_incoming_factor(): leaving";

@@ -83,11 +83,21 @@ namespace pgmlink {
 		   map<HypothesesGraph::Node, OpengmModel::IndexType> node_var = map<HypothesesGraph::Node, OpengmModel::IndexType>(),
 		   map<HypothesesGraph::Arc, OpengmModel::IndexType> arc_var = map<HypothesesGraph::Arc, OpengmModel::IndexType>()
 		   )
-    : opengm_model(m), node_var(node_var), arc_var(arc_var) {}
+    : opengm_model(m), node_var(node_var), arc_var(arc_var) {
+      weight_map[det_weight] = vector<OpengmModel::IndexType>();
+      weight_map[mov_weight] = vector<OpengmModel::IndexType>();
+      weight_map[div_weight] = vector<OpengmModel::IndexType>();
+      weight_map[app_weight] = vector<OpengmModel::IndexType>();
+      weight_map[dis_weight] = vector<OpengmModel::IndexType>();
+      weight_map[opp_weight] = vector<OpengmModel::IndexType>();
+    }
       
       shared_ptr<OpengmModel> opengm_model; ///< opengm model usually constructed by ChaingraphModelBuilder
       map<HypothesesGraph::Node, OpengmModel::IndexType> node_var; ///< maps nodes to random variables representing detections
       map<HypothesesGraph::Arc, OpengmModel::IndexType> arc_var; ///< maps arcs to random variables representing links
+      
+      enum WeightType {det_weight, mov_weight, div_weight, app_weight, dis_weight, opp_weight};
+      map<WeightType, vector<OpengmModel::IndexType> > weight_map; ///< associates events with their corresponding weight ids
     };
 
     class ChaingraphModelBuilder {
