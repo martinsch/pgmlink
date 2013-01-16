@@ -79,13 +79,16 @@ template <typename OGM_FUNCTION>
   public:
     typedef typename opengm::FunctionDecoratorWeighted< opengm::IndicatorFunction<VALUE> > FunctionType;
 
-    template<class ITERATOR>
+    template<class IT1, class IT2>
       OpengmWeightedFeature(const std::vector<size_t>& ogm_var_indices,
-			    ITERATOR shapeBegin, ITERATOR shapeEnd,
-			    ITERATOR indicate,
+			    IT1 shapeBegin, IT1 shapeEnd,
+			    IT2 indicate,
 			    VALUE indicate_value = 1., 
 			    VALUE weight = 1.,
 			    VALUE default_value = 0);
+
+    template <typename OGM_LOGLINEARMODEL>
+      void add_as_feature_to( OGM_LOGLINEARMODEL&, typename OGM_LOGLINEARMODEL::IndexType weight_index ) const;
 
     void weight( VALUE w );
     VALUE weight() const;
@@ -184,11 +187,11 @@ template <typename OGM_FUNCTION>
 //// class OpengmWeightedFeature
 ////
 template<class VALUE>
-template<class ITERATOR>
+  template<class IT1, class IT2>
   OpengmWeightedFeature<VALUE>::OpengmWeightedFeature(
 			  const std::vector<size_t>& ogm_var_indices,
-		          ITERATOR shapeBegin, ITERATOR shapeEnd,
-			  ITERATOR indicate,
+		          IT1 shapeBegin, IT1 shapeEnd,
+			  IT2 indicate,
 			  VALUE indicate_value, 
 			  VALUE weight,
 			  VALUE default_value)
@@ -211,6 +214,20 @@ template<class ITERATOR>
 									   indicate_value,
 									   default_value),
 				     weight);
+ }
+
+template<class VALUE>
+  template <typename OGM_LOGLINEARMODEL>
+  void OpengmWeightedFeature<VALUE>::add_as_feature_to( OGM_LOGLINEARMODEL& m, typename OGM_LOGLINEARMODEL::IndexType weight_index ) const {
+  std::vector<size_t> sorted_vi(this->vi_);
+  std::sort(sorted_vi.begin(), sorted_vi.end());
+  // opengm expects a monotonic increasing sequence
+  if(!(m.isValidIndexSequence(sorted_vi.begin(), sorted_vi.end()))) {
+    throw std::runtime_error("OpengmExplicitFactor::add_to(): invalid index sequence");
+  }
+  
+  typename OGM_LOGLINEARMODEL::FunctionIdentifier id=m.addFeature( this->ogmfunction_, weight_index );
+  m.addFactor(id, sorted_vi.begin(), sorted_vi.end());
  }
 
 template<class VALUE>
