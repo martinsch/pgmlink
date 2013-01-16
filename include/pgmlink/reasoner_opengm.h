@@ -292,7 +292,7 @@ namespace pgmlink {
     bool fixed_detections_;
 
     double ep_gap_;
-    pgm::ChaingraphModelBuilder* builder;
+    pgm::ChaingraphModelBuilder* builder_;
     bool destroy_builder_;
 };
 

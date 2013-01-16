@@ -6,6 +6,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/bind.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include <lemon/color.h>
 #include <lemon/graph_to_eps.h>
@@ -303,7 +304,7 @@ BOOST_AUTO_TEST_CASE( HypothesesGraph_build_hyp_mrf ) {
     add(ts,o5);
 
     SingleTimestepTraxel_HypothesesBuilder builder(&ts);
-    HypothesesGraph* graph = builder.build();
+    boost::shared_ptr<HypothesesGraph> graph = boost::shared_ptr<HypothesesGraph>(builder.build());
 
     Traxels empty;
     ConstantEnergy e1(10);	
@@ -320,11 +321,44 @@ BOOST_AUTO_TEST_CASE( HypothesesGraph_build_hyp_mrf ) {
 				bind<double>(e5, _1, _2, empty, empty),		//move
 				bind<double>(e6, _1, _2, _3, empty, empty)	//division
 			       );
+
+    pgm::TrainableChaingraphModelBuilder* b =
+      new pgm::TrainableChaingraphModelBuilder(graph,
+					       bind<double>(e3, _1, empty, empty),
+					       bind<double>(e4, _1, empty, empty),
+					       bind<double>(e5, _1, _2, empty, empty),
+					       0,
+					       0);
+
+    (*b).with_divisions(bind<double>(e6, _1, _2, _3, empty, empty))
+      .with_detection_vars(bind<double>(e1, _1, empty, empty), bind<double>(e2, _1, empty, empty));
+
+    Chaingraph new_builder(bind<double>(e1, _1, empty, empty),		//detection
+			        bind<double>(e2, _1, empty, empty),		//non_detection
+			        bind<double>(e3, _1, empty, empty),		//appearance
+			        bind<double>(e4, _1, empty, empty),		//disappearance
+				bind<double>(e5, _1, _2, empty, empty),		//move
+			   bind<double>(e6, _1, _2, _3, empty, empty),	//division
+			   0,
+			   0,
+			   true,
+			   false,
+			   0.01,
+			   b
+			   );
+
+
     cout << "-> workflow: formulating model" << endl; 
     mrf.formulate( *graph );
     cout << "-> workflow: infer" << endl; 
     mrf.infer();
+
+    cout << "-> new builder" << endl; 
+    new_builder.formulate( *graph );
+    new_builder.infer();
+
     cout << "-> workflow: conclude" << endl; 
     mrf.conclude(*graph);
     prune_inactive(*graph);
+
 }

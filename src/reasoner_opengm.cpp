@@ -230,11 +230,11 @@ namespace pgmlink {
 
       size_t indicate[] = {0};
       OpengmWeightedFeature<OpengmModel::ValueType>(var_indices, shape, shape+1, indicate, non_detection()(traxel_map[n]) )
-	.add_to( *(m.opengm_model) );
+      	.add_to( *(m.opengm_model) );
 
       indicate[0] = 1;
       OpengmWeightedFeature<OpengmModel::ValueType>(var_indices, shape, shape+1, indicate, detection()(traxel_map[n]) )
-	.add_to( *(m.opengm_model) );
+      	.add_to( *(m.opengm_model) );
     }
 
     inline void TrainableChaingraphModelBuilder::add_outgoing_factor( LinkingModel& m, 
@@ -638,12 +638,12 @@ void Chaingraph::formulate( const HypothesesGraph& hypotheses ) {
     if(!builder_) {
 	builder_ = new pgm::ChaingraphModelBuilderECCV12(g, appearance_,disappearance_,move_,opportunity_cost_, forbidden_cost_);
 	destroy_builder_ = true;
+	(*builder_).with_detection_vars( detection_, non_detection_ )
+	  .with_divisions( division_ );
     }
-    (*builder).with_detection_vars( detection_, non_detection_ )
-              .with_divisions( division_ );
 
     // build the model
-    linking_model_ = builder->build();
+    linking_model_ = builder_->build();
 
     // refine the model with hard constraints
     pgm::OpengmLPCplex::Parameter param;
