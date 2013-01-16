@@ -169,6 +169,25 @@ namespace pgmlink {
       double forbidden_cost_;
     };
 
+    class TrainableChaingraphModelBuilder : public ChaingraphModelBuilder {
+    public:
+      TrainableChaingraphModelBuilder(shared_ptr<const HypothesesGraph> g,
+    			     boost::function<double (const Traxel&)> appearance,
+    			     boost::function<double (const Traxel&)> disappearance,
+    			     boost::function<double (const Traxel&, const Traxel&)> move,
+    			     double opportunity_cost = 0,
+    			     double forbidden_cost = 100000)
+    	: ChaingraphModelBuilder(g, appearance, disappearance, move, opportunity_cost, forbidden_cost) {}
+
+      // build
+      virtual shared_ptr<LinkingModel> build() const;
+
+    private:
+      void add_detection_factor( LinkingModel&, const HypothesesGraph::Node& ) const;
+      void add_outgoing_factor( LinkingModel&, const HypothesesGraph::Node&) const;
+      void add_incoming_factor( LinkingModel&, const HypothesesGraph::Node&) const;
+    };
+
     class ChaingraphModelBuilderECCV12 : public ChaingraphModelBuilder {
     public:
       ChaingraphModelBuilderECCV12(shared_ptr<const HypothesesGraph> g,

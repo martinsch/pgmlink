@@ -190,6 +190,210 @@ namespace pgmlink {
 
 
     ////
+    //// class TrainableChaingraphModelBuilder
+    ////
+    boost::shared_ptr<LinkingModel> TrainableChaingraphModelBuilder::build() const {
+
+      if( !has_detection_vars() ) {
+	throw std::runtime_error("TrainableChaingraphModelBuilder::build(): option without detection vars not yet implemented");
+      }
+      if( !has_divisions() ) {
+	throw std::runtime_error("TrainableChaingraphModelBuilder::build(): option without divisions not yet implemented");
+      }
+
+      shared_ptr<LinkingModel> model( new LinkingModel() );
+      
+      if( has_detection_vars() ) {
+	add_detection_vars( *model );
+      }
+      add_assignment_vars( *model );
+
+      if( has_detection_vars() ) {
+      	for(HypothesesGraph::NodeIt n(*hypotheses()); n!=lemon::INVALID; ++n) {
+      	  add_detection_factor( *model, n );
+      	}
+      }
+
+      for(HypothesesGraph::NodeIt n(*hypotheses()); n!=lemon::INVALID; ++n) {
+      	add_outgoing_factor( *model, n );
+      	add_incoming_factor( *model, n );
+      }
+
+      return model;
+    }
+
+    void TrainableChaingraphModelBuilder::add_detection_factor( LinkingModel& m, const HypothesesGraph::Node& n) const {
+      property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = hypotheses()->get(node_traxel());
+      std::vector<size_t> var_indices;
+      var_indices.push_back(m.node_var[n]);
+      size_t shape[] = {2};
+
+      size_t indicate[] = {0};
+      OpengmWeightedFeature<OpengmModel::ValueType>(var_indices, shape, shape+1, indicate, non_detection()(traxel_map[n]) )
+	.add_to( *(m.opengm_model) );
+
+      indicate[0] = 1;
+      OpengmWeightedFeature<OpengmModel::ValueType>(var_indices, shape, shape+1, indicate, detection()(traxel_map[n]) )
+	.add_to( *(m.opengm_model) );
+    }
+
+    inline void TrainableChaingraphModelBuilder::add_outgoing_factor( LinkingModel& m, 
+			      const HypothesesGraph::Node& n ) const {
+      using namespace std;
+
+      LOG(logDEBUG) << "TrainableChaingraphModelBuilder::add_outgoing_factor(): entered";
+      property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = hypotheses()->get(node_traxel());
+      // collect and count outgoing arcs
+      vector<HypothesesGraph::Arc> arcs; 
+      vector<size_t> vi; 		// opengm variable indeces
+      vi.push_back(m.node_var[n]); // first detection node, remaining will be transition nodes
+      int count = 0;
+      for(HypothesesGraph::OutArcIt a(*hypotheses(), n); a != lemon::INVALID; ++a) {
+	arcs.push_back(a);
+	vi.push_back(m.arc_var[a]);
+	++count;
+      }
+
+      // construct factor
+      if(count == 0) {
+	// build value table
+	size_t table_dim = 1; 		// only one detection var
+	std::vector<size_t> coords;
+	OpengmExplicitFactor<double> table( vi );
+
+	// opportunity
+	coords = std::vector<size_t>(table_dim, 0); 		// (0)
+	table.set_value( coords, opportunity_cost() );
+
+	// disappearance 
+	coords = std::vector<size_t>(table_dim, 0);
+	coords[0] = 1; 						// (1)
+	table.set_value( coords, disappearance()(traxel_map[n]) );
+
+	table.add_to( *m.opengm_model );
+
+      } else if(count == 1) {
+	// no division possible
+	size_t table_dim = 2; 		// detection var + 1 * transition var
+	std::vector<size_t> coords;
+	OpengmExplicitFactor<double> table( vi, forbidden_cost() );
+
+	// opportunity configuration
+	coords = std::vector<size_t>(table_dim, 0); // (0,0)
+	table.set_value( coords, opportunity_cost() );
+
+	// disappearance configuration
+	coords = std::vector<size_t>(table_dim, 0);
+	coords[0] = 1; // (1,0)
+	table.set_value( coords, disappearance()(traxel_map[n]) );
+
+	// move configurations
+	coords = std::vector<size_t>(table_dim, 1);
+	// (1,1)
+	table.set_value( coords, move()(traxel_map[n], traxel_map[hypotheses()->target(arcs[0])]) );
+
+	table.add_to( *m.opengm_model );
+
+      } else {
+	// build value table
+	size_t table_dim = count + 1; 		// detection var + n * transition var
+	std::vector<size_t> coords;
+	OpengmExplicitFactor<double> table( vi, forbidden_cost() );
+
+	// opportunity configuration
+	coords = std::vector<size_t>(table_dim, 0); // (0,0,...,0)
+	table.set_value( coords, opportunity_cost() );
+
+	// disappearance configuration
+	coords = std::vector<size_t>(table_dim, 0);
+	coords[0] = 1; // (1,0,...,0)
+	table.set_value( coords, disappearance()(traxel_map[n]) );
+
+	// move configurations
+	coords = std::vector<size_t>(table_dim, 0);
+	coords[0] = 1;
+	// (1,0,0,0,1,0,0)
+	for(size_t i = 1; i < table_dim; ++i) {
+	  coords[i] = 1; 
+	  table.set_value( coords, move()(traxel_map[n], traxel_map[hypotheses()->target(arcs[i-1])]) );
+	  coords[i] = 0; // reset coords
+	}
+      
+	// division configurations
+	coords = std::vector<size_t>(table_dim, 0);
+	coords[0] = 1;
+	// (1,0,0,1,0,1,0,0) 
+	for(unsigned int i = 1; i < table_dim - 1; ++i) {
+	  for(unsigned int j = i+1; j < table_dim; ++j) {
+	    coords[i] = 1;
+	    coords[j] = 1;
+	    table.set_value(coords, division()(traxel_map[n],
+					      traxel_map[hypotheses()->target(arcs[i-1])],
+					      traxel_map[hypotheses()->target(arcs[j-1])]
+					      ));
+	  
+	    // reset
+	    coords[i] = 0;
+	    coords[j] = 0;
+	  }
+	}
+
+	table.add_to( *m.opengm_model );      
+
+      }   
+      LOG(logDEBUG) << "TrainableChaingraphModelBuilder::add_outgoing_factor(): leaving";
+    }
+
+    inline void TrainableChaingraphModelBuilder::add_incoming_factor( LinkingModel& m,
+			      const HypothesesGraph::Node& n) const {
+      using namespace std;
+
+      LOG(logDEBUG) << "TrainableChaingraphModelBuilder::add_incoming_factor(): entered";
+      property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = hypotheses()->get(node_traxel());
+      // collect and count incoming arcs
+      vector<size_t> vi; // opengm variable indeces
+      int count = 0;
+      for(HypothesesGraph::InArcIt a(*hypotheses(), n); a != lemon::INVALID; ++a) {
+	vi.push_back(m.arc_var[a]);
+	++count;
+      }
+      vi.push_back(m.node_var[n]); 
+      std::reverse(vi.begin(), vi.end());
+    
+      //// construct factor
+      // build value table
+      size_t table_dim = count + 1; // detection var + n * transition var
+      OpengmExplicitFactor<double> table( vi, forbidden_cost() );
+      std::vector<size_t> coords;
+
+      // allow opportunity configuration
+      // (0,0,...,0)
+      coords = std::vector<size_t>(table_dim, 0);
+      table.set_value( coords, 0 );
+
+      // appearance configuration
+      coords = std::vector<size_t>(table_dim, 0);
+      coords[0] = 1; // (1,0,...,0)
+      table.set_value( coords, appearance()(traxel_map[n]) );
+      assert(table.get_value( coords ) == appearance()(traxel_map[n]));
+
+      // allow move configurations
+      coords = std::vector<size_t>(table_dim, 0);
+      coords[0] = 1;
+      // (1,0,0,0,1,0,0)
+      for(size_t i = 1; i < table_dim; ++i) {
+	coords[i] = 1; 
+	table.set_value( coords, 0 );
+	coords[i] = 0; // reset coords
+      }
+
+      table.add_to( *m.opengm_model );
+      LOG(logDEBUG) << "TrainableChaingraphModelBuilder::add_incoming_factor(): leaving";
+    }
+
+
+
+    ////
     //// class ChaingraphModelBuilderECCV12
     ////
     boost::shared_ptr<LinkingModel> ChaingraphModelBuilderECCV12::build() const {
