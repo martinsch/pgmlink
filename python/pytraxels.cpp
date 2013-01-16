@@ -120,7 +120,11 @@ void export_traxels() {
     ;
 
     class_< std::vector<double> >("VectorOfDouble")
-    .def(vector_indexing_suite< std::vector<double> >() )
+      .def(vector_indexing_suite< std::vector<double> >() )
+    ;
+
+    class_< std::vector<int> >("VectorOfInt")
+      .def(vector_indexing_suite< std::vector<int> >() )
     ;
 
     class_<TraxelStore>("TraxelStore")
