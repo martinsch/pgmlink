@@ -49,3 +49,5 @@ tracking/
 ehthumbs.db
 Icon?
 Thumbs.db
+
+/build/
