@@ -22,6 +22,19 @@ class Test_Traxels( ut.TestCase ):
         self.assertEqual(t.get_feature_value("com", 1), 23)
         self.assertEqual(t.get_feature_value("com", 2), 12)
 
+class Test_TraxelStore( ut.TestCase ):
+    def test_pickle( self ):
+        import cPickle
+        t1 = mk_traxel(1,2,3,33)
+        t2 = mk_traxel(5,6,7,44)
+        ts = pgmlink.TraxelStore()
+        ts.add(t1)
+        ts.add(t2)
+
+        saved = cPickle.dumps(ts)
+        loaded = cPickle.loads(saved)
+
+
 class Test_HypothesesGraph( ut.TestCase ):
     def test_graph_interface( self ):
         # exercise the interface

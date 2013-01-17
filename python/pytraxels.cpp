@@ -1,8 +1,13 @@
 #include <vector>
+#include <string>
+#include <sstream>
 
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/map_indexing_suite.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#include <boost/python/return_internal_reference.hpp>
 #include <boost/utility.hpp>
 
 #include <vigra/numpy_array.hxx>
@@ -67,6 +72,21 @@ namespace pgmlink {
   }
 
   // extending TraxelStore
+  struct TraxelStore_pickle_suite : pickle_suite {
+    static std::string getstate( const TraxelStore& g ) {
+      std::stringstream ss;
+      boost::archive::text_oarchive oa(ss);
+      oa & g;
+      return ss.str();
+    }
+    
+    static void setstate( TraxelStore& g, const std::string& state ) {
+      std::stringstream ss(state);
+      boost::archive::text_iarchive ia(ss);
+      ia & g;
+    }
+  };
+
   void add_traxel_to_traxelstore(TraxelStore& ts, const Traxel& t) {
     add(ts, t);
   }
@@ -127,9 +147,13 @@ void export_traxels() {
       .def(vector_indexing_suite< std::vector<int> >() )
     ;
 
+    TraxelStoreByTimeid& (TraxelStore::*get_by_timeid)() = &TraxelStore::get<by_timeid>; 
     class_<TraxelStore>("TraxelStore")
       .def("add", &add_traxel_to_traxelstore)
       .def("add_from_Traxels", &add_Traxels_to_traxelstore)
       .def("bounding_box", &bounding_box)
+      .def("get_by_timeid", get_by_timeid, return_internal_reference<>())
+      .def("size", &TraxelStore::size)
+      .def_pickle(TraxelStore_pickle_suite())
       ;
 }
