@@ -79,41 +79,6 @@ double NegLnOneMinusCellness::operator()(const Traxel& tr) const {
 
 
 
-    NullaryEnergy::~NullaryEnergy() {}
-    UnaryEnergy::~UnaryEnergy() {}
-    BinaryEnergy::~BinaryEnergy() {}
-    TertiaryEnergy::~TertiaryEnergy() {}
-
-    ConstantEnergy::ConstantEnergy( double energy ) : theEnergy( energy ) {} 
-  double ConstantEnergy::operator()(const Traxel& /*t1*/,
-				    const Traxel& /*t2*/,
-				    const Traxel& /*t3*/,
-				    const Traxels& /*prev*/,
-				    const Traxels& /*curr*/) const {
-	return theEnergy;
-    }
-
-  double ConstantEnergy::operator()(const Traxel& /*t1*/,
-				    const Traxel& /*t2*/,
-				    const Traxels& /*prev*/,
-				    const Traxels& /*curr*/) const {
-	return theEnergy;
-    }
-
-  double ConstantEnergy::operator()(const Traxel& /*t*/,
-				    const Traxels& /*prev*/,
-				    const Traxels& /*curr*/) const {
-	return theEnergy;
-    }
-
-
-  double ConstantEnergy::operator()(const Traxels& /*prev*/,
-				    const Traxels& /*curr*/) const {
-	 return theEnergy;
-    }
-
-    
-
     ////
     //// class SquaredDistance
     ////

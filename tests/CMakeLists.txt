@@ -27,5 +27,11 @@ if(Boost_FOUND)
   target_link_libraries(randomforest_test pgmlink ${Boost_LIBRARIES} hdf5 hdf5_hl vigraimpex)
   add_test(randomforest randomforest_test)
 
+  ## system tests
+  configure_file( system/learning_systemtest.cpp.cmake learning_systemtest.cpp)
+  add_executable( learning_systemtest ${PROJECT_BINARY_DIR}/tests/learning_systemtest.cpp )
+  target_link_libraries( learning_systemtest pgmlink ${Boost_LIBRARIES} )   
+  add_test( learning_systemtest learning_systemtest )
+  
 endif()
 

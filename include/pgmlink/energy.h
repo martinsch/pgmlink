@@ -98,77 +98,26 @@ class BorderAwareConstant {
   int margin_t_;
 };
 
+/**
+   @brief Primitive fixed cost energy functor
+ */
+ class ConstantEnergy {
+ public:
+   ConstantEnergy( double energy = 0. );
 
-////
-//// Legacy Energy Functors
-////
+   double operator()( const Traxel& t1,
+		      const Traxel& t2,
+		      const Traxel& t3 ) const { return theEnergy; }
 
-    ///
-    /// Interfaces to general energy functors
-    ///
-    class NullaryEnergy {
-	public:
-        virtual double operator()(const Traxels& prev,
-                                  const Traxels& curr) const = 0;
-        virtual ~NullaryEnergy() = 0;
-    };
+   double operator()( const Traxel& t1,
+		      const Traxel& t2) const { return theEnergy; }
 
-    class UnaryEnergy {
-	public:
-        virtual double operator()(const Traxel& t,
-                                  const Traxels& prev,
-                                  const Traxels& curr) const = 0;
-        virtual ~UnaryEnergy() = 0;
-    };
+   double operator()( const Traxel& t ) const { return theEnergy; }
 
-    class BinaryEnergy {
-	public:
-        virtual double operator()(const Traxel& t1,
-                                  const Traxel& t2,
-                                  const Traxels& prev,
-                                  const Traxels& curr) const = 0;
-        virtual ~BinaryEnergy() = 0;
-    };
+   double operator()() const { return theEnergy; };
 
-    class TertiaryEnergy {
-	public:
-        virtual double operator()(const Traxel& t1,
-                                  const Traxel& t2,
-                                  const Traxel& t3,
-                                  const Traxels& prev,
-                                  const Traxels& curr) const = 0;
-        virtual ~TertiaryEnergy() = 0;
-    };
-
-
-    ///
-    /// Primitive fixed cost energy functor
-    ///
-    class ConstantEnergy : public NullaryEnergy, public UnaryEnergy, public BinaryEnergy, public TertiaryEnergy {
-	public:
-        ConstantEnergy( double energy = 0. );
-
-        virtual double operator()(const Traxel& t1,
-                                  const Traxel& t2,
-                                  const Traxel& t3,
-                                  const Traxels& prev,
-                                  const Traxels& curr) const;
-
-        virtual double operator()(const Traxel& t1,
-                                  const Traxel& t2,
-                                  const Traxels& prev,
-                                  const Traxels& curr) const;
-
-        virtual double operator()(const Traxel& t,
-                                  const Traxels& prev,
-                                  const Traxels& curr) const;
-
-
-        virtual double operator()(const Traxels& prev,
-                                  const Traxels& curr) const;
-
-        double theEnergy;
-    };
+   double theEnergy;
+ };
 
 
     
