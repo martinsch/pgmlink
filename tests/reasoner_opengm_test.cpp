@@ -18,7 +18,7 @@
 
 #include "pgmlink/graph.h"
 #include "pgmlink/hypotheses.h"
-#include "pgmlink/energy.h"
+#include "pgmlink/feature.h"
 #include "pgmlink/reasoner_opengm.h"
 #include "pgmlink/traxels.h"
 
@@ -92,22 +92,22 @@ BOOST_AUTO_TEST_CASE( HypothesesGraph_build_hyp2 ) {
 
 
    Traxels empty;
-   ConstantEnergy e1(1);
-   ConstantEnergy e2(2);
-   ConstantEnergy e3(3);
-   ConstantEnergy e4(4);
-   ConstantEnergy e5(5);
-   ConstantEnergy e6(6);
+   ConstantFeature e1(1);
+   ConstantFeature e2(2);
+   ConstantFeature e3(3);
+   ConstantFeature e4(4);
+   ConstantFeature e5(5);
+   ConstantFeature e6(6);
     
-   Chaingraph mrf(bind<double>(e1, _1, empty, empty),		//detection
-			       bind<double>(e2, _1, empty, empty),		//non_detection
-			       bind<double>(e3, _1, empty, empty),		//appearance
-			       bind<double>(e4, _1, empty, empty),		//disappearance
-			       bind<double>(e5, _1, _2, empty, empty),		//move
-			       bind<double>(e6, _1, _2, _3, empty, empty),	//division
-			       7,                                               //opportunity
-			       8                                                //forbidden cost 
-			       );
+   Chaingraph mrf(e1,		//detection
+		  e2,		//non_detection
+		  e3,		//appearance
+		  e4,		//disappearance
+		  e5,		//move
+		  e6,	//division
+		  7,                                               //opportunity
+		  8                                                //forbidden cost 
+		  );
 
   std::cout << "Formulating Factors" << std::endl;
   std::cout <<  std::endl;
@@ -307,38 +307,38 @@ BOOST_AUTO_TEST_CASE( HypothesesGraph_build_hyp_mrf ) {
     boost::shared_ptr<HypothesesGraph> graph = boost::shared_ptr<HypothesesGraph>(builder.build());
 
     Traxels empty;
-    ConstantEnergy e1(10);	
-    ConstantEnergy e2(90);	
-    ConstantEnergy e3(70);	
-    ConstantEnergy e4(50);	
-    ConstantEnergy e5(20);		
-    ConstantEnergy e6(5);	
+    ConstantFeature e1(10);	
+    ConstantFeature e2(90);	
+    ConstantFeature e3(70);	
+    ConstantFeature e4(50);	
+    ConstantFeature e5(20);		
+    ConstantFeature e6(5);	
     
-    Chaingraph mrf(bind<double>(e1, _1, empty, empty),		//detection
-			        bind<double>(e2, _1, empty, empty),		//non_detection
-			        bind<double>(e3, _1, empty, empty),		//appearance
-			        bind<double>(e4, _1, empty, empty),		//disappearance
-				bind<double>(e5, _1, _2, empty, empty),		//move
-				bind<double>(e6, _1, _2, _3, empty, empty)	//division
-			       );
+    Chaingraph mrf(e1,		//detection
+		   e2,		//non_detection
+		   e3,		//appearance
+		   e4,		//disappearance
+		   e5,		//move
+		   e6	        //division
+		   );
 
     pgm::TrainableChaingraphModelBuilder* b =
       new pgm::TrainableChaingraphModelBuilder(graph,
-					       bind<double>(e3, _1, empty, empty),
-					       bind<double>(e4, _1, empty, empty),
-					       bind<double>(e5, _1, _2, empty, empty),
+					       e3,
+					       e4,
+					       e5,
 					       0,
 					       0);
 
-    (*b).with_divisions(bind<double>(e6, _1, _2, _3, empty, empty))
-      .with_detection_vars(bind<double>(e1, _1, empty, empty), bind<double>(e2, _1, empty, empty));
+    (*b).with_divisions(e6)
+      .with_detection_vars(e1, e2);
 
-    Chaingraph new_builder(bind<double>(e1, _1, empty, empty),		//detection
-			        bind<double>(e2, _1, empty, empty),		//non_detection
-			        bind<double>(e3, _1, empty, empty),		//appearance
-			        bind<double>(e4, _1, empty, empty),		//disappearance
-				bind<double>(e5, _1, _2, empty, empty),		//move
-			   bind<double>(e6, _1, _2, _3, empty, empty),	//division
+    Chaingraph new_builder(e1,		//detection
+			   e2,		//non_detection
+			   e3,		//appearance
+			   e4,		//disappearance
+			   e5,		//move
+			   e6,   	//division
 			   0,
 			   0,
 			   true,

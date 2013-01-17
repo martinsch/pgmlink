@@ -6,7 +6,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/shared_array.hpp>
 
-#include "pgmlink/energy.h"
+#include "pgmlink/feature.h"
 #include "pgmlink/graphical_model.h"
 #include "pgmlink/hypotheses.h"
 #include "pgmlink/log.h"
@@ -22,7 +22,7 @@ namespace pgmlink {
 //// class ChaingraphTracking
 ////
 vector<vector<Event> > ChaingraphTracking::operator()(TraxelStore& ts) {
-	cout << "-> building energy functions " << endl;
+	cout << "-> building feature functions " << endl;
 	SquaredDistance move;
 	BorderAwareConstant appearance(app_, earliest_timestep(ts), true, 0);
 	BorderAwareConstant disappearance(dis_, latest_timestep(ts), false, 0);
@@ -57,9 +57,8 @@ vector<vector<Event> > ChaingraphTracking::operator()(TraxelStore& ts) {
 		detection = NegLnCellness(det_);
 		misdetection = NegLnOneMinusCellness(mis_);
 	} else {
-		detection = bind<double>(ConstantEnergy(det_), _1, empty, empty);
-		misdetection = bind<double>(ConstantEnergy(mis_), _1, empty, empty);
-		;
+	  detection = ConstantFeature(det_);
+	  misdetection = ConstantFeature(mis_);
 	}
 
 	cout << "-> building hypotheses" << endl;
@@ -68,17 +67,13 @@ vector<vector<Event> > ChaingraphTracking::operator()(TraxelStore& ts) {
 	shared_ptr<HypothesesGraph> graph = shared_ptr<HypothesesGraph>(hyp_builder.build());
 
 	cout << "-> init MRF reasoner" << endl;
-	//Chaingraph mrf(detection, misdetection, appearance,
-	//			disappearance, bind<double>(move, _1, _2, empty, empty), division,
-	//			opportunity_cost_, forbidden_cost_, with_constraints_,
-	//		fixed_detections_, ep_gap_);
 	pgm::TrainableChaingraphModelBuilder* b = NULL;
 	if(alternative_builder_) {
 	  pgm::TrainableChaingraphModelBuilder* b =
 	    new pgm::TrainableChaingraphModelBuilder(graph,
 						     appearance,
 						     disappearance,
-						     bind<double>(move, _1, _2, empty, empty),
+						     move,
 						     opportunity_cost_,
 						     forbidden_cost_);
 	  
@@ -86,7 +81,7 @@ vector<vector<Event> > ChaingraphTracking::operator()(TraxelStore& ts) {
 	    .with_detection_vars(detection, misdetection);
 	}
 	Chaingraph mrf(detection, misdetection, appearance,
-		       disappearance, bind<double>(move, _1, _2, empty, empty), division,
+		       disappearance, move, division,
 		       opportunity_cost_, forbidden_cost_, with_constraints_,
 		       fixed_detections_, ep_gap_, b);
 

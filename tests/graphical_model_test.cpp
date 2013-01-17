@@ -6,7 +6,7 @@
 #include <boost/test/floating_point_comparison.hpp>
 #include <vigra/multi_array.hxx>
 
-#include "pgmlink/energy.h"
+#include "pgmlink/feature.h"
 #include "pgmlink/graphical_model.h"
 #include "pgmlink/traxels.h"
 #include "pgmlink/event.h"

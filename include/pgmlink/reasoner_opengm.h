@@ -285,7 +285,7 @@ namespace pgmlink {
     Chaingraph& operator=(const Chaingraph&) { return *this;};
     void reset();
 
-    // energy functions
+    // feature functions
     boost::function<double (const Traxel&)> detection_;
     boost::function<double (const Traxel&)> non_detection_;
     boost::function<double (const Traxel&)> appearance_;

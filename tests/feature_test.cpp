@@ -5,7 +5,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/floating_point_comparison.hpp>
 
-#include "pgmlink/energy.h"
+#include "pgmlink/feature.h"
 
 using namespace pgmlink;
 using namespace std;
@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE( GeometryDivision_operator )
     curr[2] = descendant2;
 
     GeometryDivision energy;
-    energy(ancestor, descendant1, descendant2, prev, curr);
+    energy(ancestor, descendant1, descendant2);
     //BOOST_CHECK_EQUAL(e, 0);
 }
 

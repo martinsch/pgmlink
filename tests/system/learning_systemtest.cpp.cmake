@@ -14,6 +14,7 @@
 
 using namespace std;
 using namespace boost;
+using namespace pgmlink;
 
 BOOST_AUTO_TEST_CASE( learning_from_autolabels ) {
   ifstream ifs("@PROJECT_SOURCE_DIR@/tests/system/traxelstore_dros_0-5.boost");
