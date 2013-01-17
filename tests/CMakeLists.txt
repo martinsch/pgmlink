@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-find_package( Boost REQUIRED COMPONENTS unit_test_framework serialization )
+find_package( Boost REQUIRED COMPONENTS unit_test_framework )
 
 if(Boost_FOUND)
   add_definitions(-DBOOST_TEST_DYN_LINK)
