@@ -1,4 +1,5 @@
 #include <cassert>
+#include <memory>
 #include <set>
 #include <string>
 #include <iostream>
@@ -67,32 +68,38 @@ vector<vector<Event> > ChaingraphTracking::operator()(TraxelStore& ts) {
 	shared_ptr<HypothesesGraph> graph = shared_ptr<HypothesesGraph>(hyp_builder.build());
 
 	cout << "-> init MRF reasoner" << endl;
-	pgm::TrainableChaingraphModelBuilder* b = NULL;
+	std::auto_ptr<Chaingraph> mrf;
+
 	if(alternative_builder_) {
-	  pgm::TrainableChaingraphModelBuilder* b =
-	    new pgm::TrainableChaingraphModelBuilder(graph,
-						     appearance,
-						     disappearance,
-						     move,
-						     opportunity_cost_,
-						     forbidden_cost_);
+	  pgm::TrainableChaingraphModelBuilder b(appearance,
+						 disappearance,
+						 move,
+						 opportunity_cost_,
+						 forbidden_cost_);
 	  
-	  (*b).with_divisions(division)
-	    .with_detection_vars(detection, misdetection);
+	  b.with_divisions(division)
+	   .with_detection_vars(detection, misdetection);
+	  mrf = std::auto_ptr<Chaingraph>(new Chaingraph(b, with_constraints_, ep_gap_, fixed_detections_));
+	} else {
+	  pgm::ChaingraphModelBuilderECCV12 b(appearance,
+					      disappearance,
+					      move,
+					      opportunity_cost_,
+					      forbidden_cost_);
+	  
+	  b.with_divisions(division)
+	   .with_detection_vars(detection, misdetection);
+	  mrf = std::auto_ptr<Chaingraph>(new Chaingraph(b, with_constraints_, ep_gap_, fixed_detections_));
 	}
-	Chaingraph mrf(detection, misdetection, appearance,
-		       disappearance, move, division,
-		       opportunity_cost_, forbidden_cost_, with_constraints_,
-		       fixed_detections_, ep_gap_, b);
 
 	cout << "-> formulate MRF model" << endl;
-	mrf.formulate(*graph);
+	mrf->formulate(*graph);
 
 	cout << "-> infer" << endl;
-	mrf.infer();
+	mrf->infer();
 
 	cout << "-> conclude" << endl;
-	mrf.conclude(*graph);
+	mrf->conclude(*graph);
 
 	cout << "-> storing state of detection vars" << endl;
 	last_detections_ = state_of_nodes(*graph);

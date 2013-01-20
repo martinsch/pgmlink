@@ -8,7 +8,9 @@
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/archive/text_oarchive.hpp> // has to be include even though we dont use oarchives here
 #include <boost/archive/text_iarchive.hpp>
+#include <boost/shared_ptr.hpp>
 
+#include "pgmlink/reasoner_opengm.h"
 #include "pgmlink/traxels.h"
 #include "pgmlink/hypotheses.h"
 
@@ -24,7 +26,14 @@ BOOST_AUTO_TEST_CASE( learning_from_autolabels ) {
 
   SingleTimestepTraxel_HypothesesBuilder::Options builder_opts(6, 50);
   SingleTimestepTraxel_HypothesesBuilder hyp_builder(&ts, builder_opts);
-  
+  //shared_ptr<HypothesesGraph> graph = shared_ptr<HypothesesGraph>(hyp_builder.build()); 
+  //shared_ptr<ChaingraphModelBuilder> b = shared_ptr<ChaingraphModelBuilder>( new ChaingraphModelBuilderECCV12() );
+  //c = Chaingraph
+
 }
 
 
+
+// Local Variables:
+// mode: c++
+// End:

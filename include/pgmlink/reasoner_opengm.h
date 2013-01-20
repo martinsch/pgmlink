@@ -4,8 +4,8 @@
    @brief graphical model-based reasoner
 */
 
-#ifndef MRF_REASONER_H
-#define MRF_REASONER_H
+#ifndef REASONER_OPENGM_H
+#define REASONER_OPENGM_H
 
 #include <map>
 #include <vector>
@@ -16,6 +16,7 @@
 #include <opengm/inference/lpcplex.hxx>
 
 #include "pgmlink/event.h"
+#include "pgmlink/feature.h"
 #include "pgmlink/graphical_model.h"
 #include "pgmlink/hypotheses.h"
 #include "pgmlink/reasoner.h"
@@ -58,7 +59,7 @@ namespace pgmlink {
 
 
     /**
-       @brief Linking model formulated as an Opengm graphical model.
+       @brief Chaingraph model formulated as an Opengm graphical model.
 
        Represents an opengm model to solve the matching problem in a
        HypothesesGraph. Use a ChaingraphModelBuilder to construct the
@@ -98,18 +99,19 @@ namespace pgmlink {
       
       enum WeightType {det_weight, mov_weight, div_weight, app_weight, dis_weight, opp_weight};
       map<WeightType, vector<OpengmModel::IndexType> > weight_map; ///< associates events with their corresponding weight ids
+      
+      //void set_weights( WeightType, vector<OpengmModel::ValueType> );
+      //const vector<OpengmModel::ValueType>& get_weights( WeightType );
     };
 
     class ChaingraphModelBuilder {
     public:
-      ChaingraphModelBuilder(shared_ptr<const HypothesesGraph> g,
-    			     boost::function<double (const Traxel&)> appearance,
-    			     boost::function<double (const Traxel&)> disappearance,
-    			     boost::function<double (const Traxel&, const Traxel&)> move,
+    ChaingraphModelBuilder(boost::function<double (const Traxel&)> appearance = ConstantFeature(1000),
+    			     boost::function<double (const Traxel&)> disappearance = ConstantFeature(1000),
+    			     boost::function<double (const Traxel&, const Traxel&)> move = SquaredDistance(),
     			     double opportunity_cost = 0,
     			     double forbidden_cost = 100000)
-    	: hypotheses_(g),
-	with_detection_vars_(false),
+	: with_detection_vars_(false),
 	with_divisions_(false),
     	appearance_(appearance),
     	disappearance_(disappearance),
@@ -117,10 +119,9 @@ namespace pgmlink {
     	opportunity_cost_(opportunity_cost),
     	forbidden_cost_(forbidden_cost) {}
 
-      // mandatory parameters
-      shared_ptr<const HypothesesGraph> hypotheses() const { return hypotheses_; }
-      ChaingraphModelBuilder& hypotheses( shared_ptr<const HypothesesGraph> );
+      virtual ChaingraphModelBuilder* clone() const = 0;
 
+      // mandatory parameters
       function<double (const Traxel&)> appearance() const { return appearance_; }
       ChaingraphModelBuilder& appearance( function<double (const Traxel&)> );
 
@@ -138,33 +139,32 @@ namespace pgmlink {
 
       //// optional parameters
       // detection vars
-      ChaingraphModelBuilder& with_detection_vars( function<double (const Traxel&)> detection,
-						   function<double (const Traxel&)> non_detection );
+      ChaingraphModelBuilder& with_detection_vars( function<double (const Traxel&)> detection=ConstantFeature(10),
+						   function<double (const Traxel&)> non_detection=ConstantFeature(200));
       ChaingraphModelBuilder& without_detection_vars();
       bool has_detection_vars() const { return with_detection_vars_; }
       function<double (const Traxel&)> detection() const { return detection_; }
       function<double (const Traxel&)> non_detection() const { return non_detection_; }
 
       // divisions
-      ChaingraphModelBuilder& with_divisions( function<double (const Traxel&,const Traxel&,const Traxel&)> );
+      ChaingraphModelBuilder& with_divisions( function<double (const Traxel&,const Traxel&,const Traxel&)> div = KasterDivision(10) );
       ChaingraphModelBuilder& without_divisions();
       bool has_divisions() const { return with_divisions_; }
       function<double (const Traxel&,const Traxel&,const Traxel&)> division() const { return division_; }
 
       // build
-      virtual shared_ptr<ChaingraphModel> build() const = 0;
+      virtual shared_ptr<ChaingraphModel> operator()( const HypothesesGraph& ) const = 0;      
 
       // refinement
       static void add_hard_constraints( const ChaingraphModel&, const HypothesesGraph&, OpengmLPCplex& );
       static void fix_detections( const ChaingraphModel&, const HypothesesGraph&, OpengmLPCplex& );
 
     protected:
-      void add_detection_vars( ChaingraphModel& ) const;
-      void add_assignment_vars( ChaingraphModel& ) const;
+      void add_detection_vars( const HypothesesGraph&, ChaingraphModel& ) const;
+      void add_assignment_vars( const HypothesesGraph&, ChaingraphModel& ) const;
 
     private:
       static void couple( const ChaingraphModel&, const HypothesesGraph::Node&, const HypothesesGraph::Arc&, OpengmLPCplex& );
-      shared_ptr<const HypothesesGraph> hypotheses_;
       
       bool with_detection_vars_;
       bool with_divisions_;
@@ -181,40 +181,40 @@ namespace pgmlink {
 
     class TrainableChaingraphModelBuilder : public ChaingraphModelBuilder {
     public:
-      TrainableChaingraphModelBuilder(shared_ptr<const HypothesesGraph> g,
-    			     boost::function<double (const Traxel&)> appearance,
-    			     boost::function<double (const Traxel&)> disappearance,
-    			     boost::function<double (const Traxel&, const Traxel&)> move,
-    			     double opportunity_cost = 0,
-    			     double forbidden_cost = 100000)
-    	: ChaingraphModelBuilder(g, appearance, disappearance, move, opportunity_cost, forbidden_cost) {}
+      TrainableChaingraphModelBuilder(boost::function<double (const Traxel&)> appearance = ConstantFeature(1000),
+				      boost::function<double (const Traxel&)> disappearance = ConstantFeature(1000),
+				      boost::function<double (const Traxel&, const Traxel&)> move = SquaredDistance(),
+				      double opportunity_cost = 0,
+				      double forbidden_cost = 100000)
+    	: ChaingraphModelBuilder(appearance, disappearance, move, opportunity_cost, forbidden_cost) {}
+      virtual TrainableChaingraphModelBuilder* clone() const;
 
       // build
-      virtual shared_ptr<ChaingraphModel> build() const;
+      virtual shared_ptr<ChaingraphModel> operator()( const HypothesesGraph& ) const;
 
     private:
-      void add_detection_factor( ChaingraphModel&, const HypothesesGraph::Node& ) const;
-      void add_outgoing_factor( ChaingraphModel&, const HypothesesGraph::Node&) const;
-      void add_incoming_factor( ChaingraphModel&, const HypothesesGraph::Node&) const;
+      void add_detection_factor( const HypothesesGraph&, ChaingraphModel&, const HypothesesGraph::Node& ) const;
+      void add_outgoing_factor( const HypothesesGraph&, ChaingraphModel&, const HypothesesGraph::Node& ) const;
+      void add_incoming_factor( const HypothesesGraph&, ChaingraphModel&, const HypothesesGraph::Node& ) const;
     };
 
     class ChaingraphModelBuilderECCV12 : public ChaingraphModelBuilder {
     public:
-      ChaingraphModelBuilderECCV12(shared_ptr<const HypothesesGraph> g,
-    			     boost::function<double (const Traxel&)> appearance,
-    			     boost::function<double (const Traxel&)> disappearance,
-    			     boost::function<double (const Traxel&, const Traxel&)> move,
-    			     double opportunity_cost = 0,
-    			     double forbidden_cost = 100000)
-    	: ChaingraphModelBuilder(g, appearance, disappearance, move, opportunity_cost, forbidden_cost) {}
+      ChaingraphModelBuilderECCV12(boost::function<double (const Traxel&)> appearance = ConstantFeature(1000),
+				   boost::function<double (const Traxel&)> disappearance = ConstantFeature(1000),
+				   boost::function<double (const Traxel&, const Traxel&)> move = SquaredDistance(),
+				   double opportunity_cost = 0,
+				   double forbidden_cost = 100000)
+    	: ChaingraphModelBuilder(appearance, disappearance, move, opportunity_cost, forbidden_cost) {}
+      virtual ChaingraphModelBuilderECCV12* clone() const;
 
       // build
-      virtual shared_ptr<ChaingraphModel> build() const;
+      virtual shared_ptr<ChaingraphModel> operator()( const HypothesesGraph& ) const;
 
     private:
-      void add_detection_factor( ChaingraphModel&, const HypothesesGraph::Node& ) const;
-      void add_outgoing_factor( ChaingraphModel&, const HypothesesGraph::Node&) const;
-      void add_incoming_factor( ChaingraphModel&, const HypothesesGraph::Node&) const;
+      void add_detection_factor( const HypothesesGraph&, ChaingraphModel&, const HypothesesGraph::Node& ) const;
+      void add_outgoing_factor( const HypothesesGraph&, ChaingraphModel&, const HypothesesGraph::Node& ) const;
+      void add_incoming_factor( const HypothesesGraph&, ChaingraphModel&, const HypothesesGraph::Node& ) const;
     };
 
   } /* namespace pgm */
@@ -222,34 +222,30 @@ namespace pgmlink {
 
   class Chaingraph : public Reasoner {
     public:
-    Chaingraph(boost::function<double (const Traxel&)> detection,
-	       boost::function<double (const Traxel&)> non_detection,
-	       boost::function<double (const Traxel&)> appearance,
-	       boost::function<double (const Traxel&)> disappearance,
-	       boost::function<double (const Traxel&, const Traxel&)> move,
-	       boost::function<double (const Traxel&, const Traxel&, const Traxel&)> division,
-	       double opportunity_cost = 0,
-	       double forbidden_cost = 0,
-	       bool with_constraints = true,
-	       bool fixed_detections = false,
+
+    Chaingraph(bool with_constraints = true,
 	       double ep_gap = 0.01,
-	       pgm::ChaingraphModelBuilder* builder = NULL
+	       bool fixed_detections = false
+	       )
+      : optimizer_(NULL),
+      with_constraints_(with_constraints),
+      fixed_detections_(fixed_detections),
+      ep_gap_(ep_gap),
+      builder_(NULL)
+	{ builder_ = new pgm::ChaingraphModelBuilderECCV12(); (*builder_).with_detection_vars().with_divisions(); }
+    
+
+  Chaingraph(const pgm::ChaingraphModelBuilder& builder,
+	     bool with_constraints = true,
+	     double ep_gap = 0.01,
+	     bool fixed_detections = false
     ) 
-    : detection_(detection), 
-    non_detection_(non_detection),
-    appearance_(appearance),
-    disappearance_(disappearance),
-    move_(move),
-    division_(division),
-    opportunity_cost_(opportunity_cost),
-    forbidden_cost_(forbidden_cost),
-    optimizer_(NULL),
+    : optimizer_(NULL),
     with_constraints_(with_constraints),
     fixed_detections_(fixed_detections),
     ep_gap_(ep_gap),
-    builder_(builder),
-    destroy_builder_(false)
-    { };
+    builder_(builder.clone())
+    {};
     ~Chaingraph();
 
     virtual void formulate( const HypothesesGraph& );
@@ -258,6 +254,9 @@ namespace pgmlink {
 
     double forbidden_cost() const;
     bool with_constraints() const;
+    const pgm::ChaingraphModelBuilder& builder() { return *builder_; }
+    void builder(const pgm::ChaingraphModelBuilder& builder) {
+      if(builder_) delete builder_; builder_ = builder.clone(); }
 
     /** Return current state of graphical model
      *
@@ -284,16 +283,6 @@ namespace pgmlink {
     Chaingraph(const Chaingraph&) {};
     Chaingraph& operator=(const Chaingraph&) { return *this;};
     void reset();
-
-    // feature functions
-    boost::function<double (const Traxel&)> detection_;
-    boost::function<double (const Traxel&)> non_detection_;
-    boost::function<double (const Traxel&)> appearance_;
-    boost::function<double (const Traxel&)> disappearance_;
-    boost::function<double (const Traxel&, const Traxel&)> move_;
-    boost::function<double (const Traxel&, const Traxel&, const Traxel&)> division_;
-    double opportunity_cost_;
-    double forbidden_cost_;
     
     pgm::OpengmLPCplex* optimizer_;
     shared_ptr<pgm::ChaingraphModel> linking_model_;
@@ -303,8 +292,7 @@ namespace pgmlink {
 
     double ep_gap_;
     pgm::ChaingraphModelBuilder* builder_;
-    bool destroy_builder_;
 };
 
 } /* namespace pgmlink */
-#endif /* MRF_REASONER_H */
+#endif /* REASONER_OPENGM_H */

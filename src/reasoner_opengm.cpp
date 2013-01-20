@@ -40,14 +40,6 @@ namespace pgmlink {
     ////
     //// class ChaingraphModelBuilder
     ////
-    ChaingraphModelBuilder& ChaingraphModelBuilder::hypotheses(shared_ptr<const HypothesesGraph> g ) {
-      if(g == NULL) {
-	throw invalid_argument("ChaingraphModelBuilder::hypotheses(): null pointer");
-      }
-      hypotheses_ = g;
-      return *this;
-    }
-    
     ChaingraphModelBuilder& ChaingraphModelBuilder::appearance( function<double (const Traxel&)> f ) {
       if(!f) {
 	throw invalid_argument("ChaingraphModelBuilder::appearance(): empty function");
@@ -164,15 +156,15 @@ namespace pgmlink {
       }
     }
 
-    inline void ChaingraphModelBuilder::add_detection_vars( ChaingraphModel& m ) const {
-      for(HypothesesGraph::NodeIt n(*hypotheses()); n!=lemon::INVALID; ++n) {
+    inline void ChaingraphModelBuilder::add_detection_vars( const HypothesesGraph& hypotheses, ChaingraphModel& m ) const {
+      for(HypothesesGraph::NodeIt n(hypotheses); n!=lemon::INVALID; ++n) {
 	m.opengm_model->addVariable(2);
 	m.node_var[n] = m.opengm_model->numberOfVariables() - 1; 
       }
     }
 
-    inline void ChaingraphModelBuilder::add_assignment_vars( ChaingraphModel& m ) const {
-      for(HypothesesGraph::ArcIt a(*hypotheses()); a!=lemon::INVALID; ++a) {
+    inline void ChaingraphModelBuilder::add_assignment_vars( const HypothesesGraph& hypotheses, ChaingraphModel& m ) const {
+      for(HypothesesGraph::ArcIt a(hypotheses); a!=lemon::INVALID; ++a) {
 	m.opengm_model->addVariable(2);
 	m.arc_var[a] = m.opengm_model->numberOfVariables() - 1; 
       }
@@ -194,13 +186,17 @@ namespace pgmlink {
     ////
     //// class TrainableChaingraphModelBuilder
     ////
-    boost::shared_ptr<ChaingraphModel> TrainableChaingraphModelBuilder::build() const {
+    TrainableChaingraphModelBuilder* TrainableChaingraphModelBuilder::clone() const {
+      return new TrainableChaingraphModelBuilder(*this);
+    }
+
+    boost::shared_ptr<ChaingraphModel> TrainableChaingraphModelBuilder::operator()(const HypothesesGraph& hypotheses) const {
 
       if( !has_detection_vars() ) {
-	throw std::runtime_error("TrainableChaingraphModelBuilder::build(): option without detection vars not yet implemented");
+	throw std::runtime_error("TrainableChaingraphModelBuilder::operator(): option without detection vars not yet implemented");
       }
       if( !has_divisions() ) {
-	throw std::runtime_error("TrainableChaingraphModelBuilder::build(): option without divisions not yet implemented");
+	throw std::runtime_error("TrainableChaingraphModelBuilder::operator(): option without divisions not yet implemented");
       }
 
       //// setup the model
@@ -220,26 +216,26 @@ namespace pgmlink {
 
       
       if( has_detection_vars() ) {
-	add_detection_vars( *model );
+	add_detection_vars( hypotheses, *model );
       }
-      add_assignment_vars( *model );
+      add_assignment_vars( hypotheses, *model );
 
       if( has_detection_vars() ) {
-      	for(HypothesesGraph::NodeIt n(*hypotheses()); n!=lemon::INVALID; ++n) {
-      	  add_detection_factor( *model, n );
+      	for(HypothesesGraph::NodeIt n(hypotheses); n!=lemon::INVALID; ++n) {
+      	  add_detection_factor( hypotheses, *model, n );
       	}
       }
 
-      for(HypothesesGraph::NodeIt n(*hypotheses()); n!=lemon::INVALID; ++n) {
-      	add_outgoing_factor( *model, n );
-      	add_incoming_factor( *model, n );
+      for(HypothesesGraph::NodeIt n(hypotheses); n!=lemon::INVALID; ++n) {
+      	add_outgoing_factor( hypotheses, *model, n );
+      	add_incoming_factor( hypotheses, *model, n );
       }
 
       return model;
     }
 
-    void TrainableChaingraphModelBuilder::add_detection_factor( ChaingraphModel& m, const HypothesesGraph::Node& n) const {
-      property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = hypotheses()->get(node_traxel());
+    void TrainableChaingraphModelBuilder::add_detection_factor( const HypothesesGraph& hypotheses, ChaingraphModel& m, const HypothesesGraph::Node& n ) const {
+      property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = hypotheses.get(node_traxel());
       std::vector<size_t> var_indices;
       var_indices.push_back(m.node_var[n]);
       size_t shape[] = {2};
@@ -280,18 +276,19 @@ namespace pgmlink {
       }
     }
 
-    inline void TrainableChaingraphModelBuilder::add_outgoing_factor( ChaingraphModel& m, 
-			      const HypothesesGraph::Node& n ) const {
+    inline void TrainableChaingraphModelBuilder::add_outgoing_factor( const HypothesesGraph& hypotheses,
+								      ChaingraphModel& m, 
+								      const HypothesesGraph::Node& n) const {
       using namespace std;
+      property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = hypotheses.get(node_traxel());
 
       LOG(logDEBUG) << "TrainableChaingraphModelBuilder::add_outgoing_factor(): entered";
-      property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = hypotheses()->get(node_traxel());
       // collect and count outgoing arcs
       vector<HypothesesGraph::Arc> arcs; 
       vector<size_t> vi; 		// opengm variable indeces
       vi.push_back(m.node_var[n]); // first detection node, remaining will be transition nodes
       int count = 0;
-      for(HypothesesGraph::OutArcIt a(*hypotheses(), n); a != lemon::INVALID; ++a) {
+      for(HypothesesGraph::OutArcIt a(hypotheses, n); a != lemon::INVALID; ++a) {
 	arcs.push_back(a);
 	vi.push_back(m.arc_var[a]);
 	++count;
@@ -328,7 +325,7 @@ namespace pgmlink {
 
 	// move configurations
 	coords = std::vector<size_t>(2, 1); // (1,1)
-	OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape, shape+2, coords.begin(), move()(traxel_map[n], traxel_map[hypotheses()->target(arcs[0])]) )
+	OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape, shape+2, coords.begin(), move()(traxel_map[n], traxel_map[hypotheses.target(arcs[0])]) )
 	  .add_as_feature_to( *(m.opengm_model), m.weight_map[ChaingraphModel::mov_weight].front() );
 
 	// forbidden configuration
@@ -370,7 +367,7 @@ namespace pgmlink {
 	  coords[i] = 1; 
 	  check = entries.erase(BinToDec(coords));
 	  assert(check == 1);
-	  OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), move()(traxel_map[n], traxel_map[hypotheses()->target(arcs[i-1])]) )
+	  OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), move()(traxel_map[n], traxel_map[hypotheses.target(arcs[i-1])]) )
 	    .add_as_feature_to( *(m.opengm_model), m.weight_map[ChaingraphModel::mov_weight].front() );
 
 	  coords[i] = 0; // reset coords
@@ -388,8 +385,8 @@ namespace pgmlink {
 	    check = entries.erase(BinToDec(coords));
 	    assert(check == 1);
 	    OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), division()(traxel_map[n],
-					      traxel_map[hypotheses()->target(arcs[i-1])],
-					      traxel_map[hypotheses()->target(arcs[j-1])]
+					      traxel_map[hypotheses.target(arcs[i-1])],
+					      traxel_map[hypotheses.target(arcs[j-1])]
 					      ) )
 	      .add_as_feature_to( *(m.opengm_model), m.weight_map[ChaingraphModel::div_weight].front() );
 	  
@@ -414,16 +411,17 @@ namespace pgmlink {
       LOG(logDEBUG) << "TrainableChaingraphModelBuilder::add_outgoing_factor(): leaving";
     }
 
-    inline void TrainableChaingraphModelBuilder::add_incoming_factor( ChaingraphModel& m,
-			      const HypothesesGraph::Node& n) const {
+    inline void TrainableChaingraphModelBuilder::add_incoming_factor( const HypothesesGraph& hypotheses,
+								      ChaingraphModel& m,
+								      const HypothesesGraph::Node& n ) const {
       using namespace std;
+      property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = hypotheses.get(node_traxel());
 
       LOG(logDEBUG) << "TrainableChaingraphModelBuilder::add_incoming_factor(): entered";
-      property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = hypotheses()->get(node_traxel());
       // collect and count incoming arcs
       vector<size_t> vi; // opengm variable indeces
       int count = 0;
-      for(HypothesesGraph::InArcIt a(*hypotheses(), n); a != lemon::INVALID; ++a) {
+      for(HypothesesGraph::InArcIt a(hypotheses, n); a != lemon::INVALID; ++a) {
 	vi.push_back(m.arc_var[a]);
 	++count;
       }
@@ -485,7 +483,11 @@ namespace pgmlink {
     ////
     //// class ChaingraphModelBuilderECCV12
     ////
-    boost::shared_ptr<ChaingraphModel> ChaingraphModelBuilderECCV12::build() const {
+    ChaingraphModelBuilderECCV12* ChaingraphModelBuilderECCV12::clone() const {
+      return new ChaingraphModelBuilderECCV12(*this);
+    }
+
+    boost::shared_ptr<ChaingraphModel> ChaingraphModelBuilderECCV12::operator()(const HypothesesGraph& hypotheses) const {
       using boost::shared_ptr;
       using std::map;
 
@@ -500,26 +502,28 @@ namespace pgmlink {
       shared_ptr<ChaingraphModel> model( new ChaingraphModel() );
       
       if( has_detection_vars() ) {
-	add_detection_vars( *model );
+	add_detection_vars( hypotheses, *model );
       }
-      add_assignment_vars( *model );
+      add_assignment_vars( hypotheses, *model );
+
 
       if( has_detection_vars() ) {
-	for(HypothesesGraph::NodeIt n(*hypotheses()); n!=lemon::INVALID; ++n) {
-	  add_detection_factor( *model, n );
+	for(HypothesesGraph::NodeIt n(hypotheses); n!=lemon::INVALID; ++n) {
+	  add_detection_factor( hypotheses, *model, n );
 	}
       }
 
-      for(HypothesesGraph::NodeIt n(*hypotheses()); n!=lemon::INVALID; ++n) {
-	add_outgoing_factor( *model, n );
- 	add_incoming_factor( *model, n );
+      for(HypothesesGraph::NodeIt n(hypotheses); n!=lemon::INVALID; ++n) {
+	add_outgoing_factor( hypotheses, *model, n );
+ 	add_incoming_factor( hypotheses, *model, n );
       }
 
       return model;
     }
 
-    void ChaingraphModelBuilderECCV12::add_detection_factor( ChaingraphModel& m, const HypothesesGraph::Node& n) const {
-      property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = hypotheses()->get(node_traxel());
+    void ChaingraphModelBuilderECCV12::add_detection_factor( const HypothesesGraph& hypotheses, ChaingraphModel& m, const HypothesesGraph::Node& n) const {
+      property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = hypotheses.get(node_traxel());
+
       size_t vi[] = {m.node_var[n]};
       vector<size_t> coords(1,0);
       OpengmExplicitFactor<double> table( vi, vi+1 );
@@ -533,18 +537,20 @@ namespace pgmlink {
       table.add_to( *(m.opengm_model) );
     }
 
-    inline void ChaingraphModelBuilderECCV12::add_outgoing_factor( ChaingraphModel& m, 
-			      const HypothesesGraph::Node& n ) const {
+    inline void ChaingraphModelBuilderECCV12::add_outgoing_factor( const HypothesesGraph& hypotheses,
+								   ChaingraphModel& m, 
+								   const HypothesesGraph::Node& n
+								   ) const {
       using namespace std;
+      property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = hypotheses.get(node_traxel());
 
       LOG(logDEBUG) << "ChaingraphModelBuilderECCV12::add_outgoing_factor(): entered";
-      property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = hypotheses()->get(node_traxel());
       // collect and count outgoing arcs
       vector<HypothesesGraph::Arc> arcs; 
       vector<size_t> vi; 		// opengm variable indeces
       vi.push_back(m.node_var[n]); // first detection node, remaining will be transition nodes
       int count = 0;
-      for(HypothesesGraph::OutArcIt a(*hypotheses(), n); a != lemon::INVALID; ++a) {
+      for(HypothesesGraph::OutArcIt a(hypotheses, n); a != lemon::INVALID; ++a) {
 	arcs.push_back(a);
 	vi.push_back(m.arc_var[a]);
 	++count;
@@ -586,7 +592,7 @@ namespace pgmlink {
 	// move configurations
 	coords = std::vector<size_t>(table_dim, 1);
 	// (1,1)
-	table.set_value( coords, move()(traxel_map[n], traxel_map[hypotheses()->target(arcs[0])]) );
+	table.set_value( coords, move()(traxel_map[n], traxel_map[hypotheses.target(arcs[0])]) );
 
 	table.add_to( *m.opengm_model );
 
@@ -611,7 +617,7 @@ namespace pgmlink {
 	// (1,0,0,0,1,0,0)
 	for(size_t i = 1; i < table_dim; ++i) {
 	  coords[i] = 1; 
-	  table.set_value( coords, move()(traxel_map[n], traxel_map[hypotheses()->target(arcs[i-1])]) );
+	  table.set_value( coords, move()(traxel_map[n], traxel_map[hypotheses.target(arcs[i-1])]) );
 	  coords[i] = 0; // reset coords
 	}
       
@@ -624,8 +630,8 @@ namespace pgmlink {
 	    coords[i] = 1;
 	    coords[j] = 1;
 	    table.set_value(coords, division()(traxel_map[n],
-					      traxel_map[hypotheses()->target(arcs[i-1])],
-					      traxel_map[hypotheses()->target(arcs[j-1])]
+					      traxel_map[hypotheses.target(arcs[i-1])],
+					      traxel_map[hypotheses.target(arcs[j-1])]
 					      ));
 	  
 	    // reset
@@ -640,16 +646,17 @@ namespace pgmlink {
       LOG(logDEBUG) << "ChaingraphModelBuilderECCV12::add_outgoing_factor(): leaving";
     }
 
-    inline void ChaingraphModelBuilderECCV12::add_incoming_factor( ChaingraphModel& m,
-			      const HypothesesGraph::Node& n) const {
+    inline void ChaingraphModelBuilderECCV12::add_incoming_factor( const HypothesesGraph& hypotheses,
+								   ChaingraphModel& m,
+								   const HypothesesGraph::Node& n) const {
       using namespace std;
+      property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = hypotheses.get(node_traxel());
 
       LOG(logDEBUG) << "ChaingraphModelBuilderECCV12::add_incoming_factor(): entered";
-      property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = hypotheses()->get(node_traxel());
       // collect and count incoming arcs
       vector<size_t> vi; // opengm variable indeces
       int count = 0;
-      for(HypothesesGraph::InArcIt a(*hypotheses(), n); a != lemon::INVALID; ++a) {
+      for(HypothesesGraph::InArcIt a(hypotheses, n); a != lemon::INVALID; ++a) {
 	vi.push_back(m.arc_var[a]);
 	++count;
       }
@@ -700,39 +707,25 @@ namespace pgmlink {
 	delete optimizer_;
 	optimizer_ = NULL;
     }
-    if( builder_ && destroy_builder_ ) {
-      delete builder_;
-      builder_ = NULL;
-    }
+
+    delete builder_;
+    builder_ = NULL;
   }
 
 double Chaingraph::forbidden_cost() const {
-    return forbidden_cost_;
+  return builder_->forbidden_cost();
 }
 
 bool Chaingraph::with_constraints() const {
-    return with_constraints_;
-}
-
-namespace {
-   struct NullDeleter {template<typename T> void operator()(T*) {} };
+  return with_constraints_;
 }
 
 void Chaingraph::formulate( const HypothesesGraph& hypotheses ) {
     LOG(logDEBUG) << "Chaingraph::formulate: entered";
     reset();
 
-    // configure the model builder
-    shared_ptr<const HypothesesGraph> g(&hypotheses, NullDeleter() );
-    if(!builder_) {
-	builder_ = new pgm::ChaingraphModelBuilderECCV12(g, appearance_,disappearance_,move_,opportunity_cost_, forbidden_cost_);
-	destroy_builder_ = true;
-	(*builder_).with_detection_vars( detection_, non_detection_ )
-	  .with_divisions( division_ );
-    }
-
     // build the model
-    linking_model_ = builder_->build();
+    linking_model_ = (*builder_)(hypotheses);
 
     // refine the model with hard constraints
     pgm::OpengmLPCplex::Parameter param;

@@ -7,6 +7,8 @@
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/scoped_ptr.hpp>
+#include <boost/make_shared.hpp>
 
 #include <lemon/color.h>
 #include <lemon/graph_to_eps.h>
@@ -98,16 +100,18 @@ BOOST_AUTO_TEST_CASE( HypothesesGraph_build_hyp2 ) {
    ConstantFeature e4(4);
    ConstantFeature e5(5);
    ConstantFeature e6(6);
-    
-   Chaingraph mrf(e1,		//detection
-		  e2,		//non_detection
-		  e3,		//appearance
-		  e4,		//disappearance
-		  e5,		//move
-		  e6,	//division
-		  7,                                               //opportunity
-		  8                                                //forbidden cost 
-		  );
+
+   pgm::ChaingraphModelBuilderECCV12 b;
+   b.with_detection_vars(e1, e2)
+     .appearance(e3)
+     .disappearance(e4)
+     .move(e5)
+     .with_divisions(e6)
+     .opportunity_cost(7)
+     .forbidden_cost(8)
+     ;
+   
+   Chaingraph mrf(b, true, 0.01, false);
 
   std::cout << "Formulating Factors" << std::endl;
   std::cout <<  std::endl;
@@ -313,39 +317,27 @@ BOOST_AUTO_TEST_CASE( HypothesesGraph_build_hyp_mrf ) {
     ConstantFeature e4(50);	
     ConstantFeature e5(20);		
     ConstantFeature e6(5);	
+
+    pgm::ChaingraphModelBuilderECCV12 b1;
+    b1.with_detection_vars(e1, e2)
+      .appearance(e3)
+      .disappearance(e4)
+      .move(e5)
+      .with_divisions(e6)
+      ;
     
-    Chaingraph mrf(e1,		//detection
-		   e2,		//non_detection
-		   e3,		//appearance
-		   e4,		//disappearance
-		   e5,		//move
-		   e6	        //division
-		   );
+    Chaingraph mrf(b1, true, 0.01, false);
 
-    pgm::TrainableChaingraphModelBuilder* b =
-      new pgm::TrainableChaingraphModelBuilder(graph,
-					       e3,
-					       e4,
-					       e5,
-					       0,
-					       0);
+    pgm::TrainableChaingraphModelBuilder b(e3,
+					   e4,
+					   e5,
+					   0,
+					   0);
 
-    (*b).with_divisions(e6)
+    b.with_divisions(e6)
       .with_detection_vars(e1, e2);
 
-    Chaingraph new_builder(e1,		//detection
-			   e2,		//non_detection
-			   e3,		//appearance
-			   e4,		//disappearance
-			   e5,		//move
-			   e6,   	//division
-			   0,
-			   0,
-			   true,
-			   false,
-			   0.01,
-			   b
-			   );
+    Chaingraph new_builder(b, true, 0.01, false);
 
 
     cout << "-> workflow: formulating model" << endl; 
