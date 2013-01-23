@@ -153,7 +153,7 @@ namespace pgmlink {
       function<double (const Traxel&,const Traxel&,const Traxel&)> division() const { return division_; }
 
       // build
-      virtual shared_ptr<ChaingraphModel> build( const HypothesesGraph& ) const = 0;      
+      virtual ChaingraphModel* build( const HypothesesGraph& ) const = 0;      
 
       // refinement
       static void add_hard_constraints( const ChaingraphModel&, const HypothesesGraph&, OpengmLPCplex& );
@@ -190,7 +190,7 @@ namespace pgmlink {
       virtual TrainableChaingraphModelBuilder* clone() const;
 
       // build
-      virtual shared_ptr<ChaingraphModel> build( const HypothesesGraph& ) const;
+      virtual ChaingraphModel* build( const HypothesesGraph& ) const;
 
     private:
       void add_detection_factor( const HypothesesGraph&, ChaingraphModel&, const HypothesesGraph::Node& ) const;
@@ -209,7 +209,7 @@ namespace pgmlink {
       virtual ChaingraphModelBuilderECCV12* clone() const;
 
       // build
-      virtual shared_ptr<ChaingraphModel> build( const HypothesesGraph& ) const;
+      virtual ChaingraphModel* build( const HypothesesGraph& ) const;
 
     private:
       void add_detection_factor( const HypothesesGraph&, ChaingraphModel&, const HypothesesGraph::Node& ) const;
