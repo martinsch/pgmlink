@@ -190,13 +190,13 @@ namespace pgmlink {
       return new TrainableChaingraphModelBuilder(*this);
     }
 
-    boost::shared_ptr<ChaingraphModel> TrainableChaingraphModelBuilder::operator()(const HypothesesGraph& hypotheses) const {
+    boost::shared_ptr<ChaingraphModel> TrainableChaingraphModelBuilder::build(const HypothesesGraph& hypotheses) const {
 
       if( !has_detection_vars() ) {
-	throw std::runtime_error("TrainableChaingraphModelBuilder::operator(): option without detection vars not yet implemented");
+	throw std::runtime_error("TrainableChaingraphModelBuilder::build: option without detection vars not yet implemented");
       }
       if( !has_divisions() ) {
-	throw std::runtime_error("TrainableChaingraphModelBuilder::operator(): option without divisions not yet implemented");
+	throw std::runtime_error("TrainableChaingraphModelBuilder::build: option without divisions not yet implemented");
       }
 
       //// setup the model
@@ -487,7 +487,7 @@ namespace pgmlink {
       return new ChaingraphModelBuilderECCV12(*this);
     }
 
-    boost::shared_ptr<ChaingraphModel> ChaingraphModelBuilderECCV12::operator()(const HypothesesGraph& hypotheses) const {
+    boost::shared_ptr<ChaingraphModel> ChaingraphModelBuilderECCV12::build(const HypothesesGraph& hypotheses) const {
       using boost::shared_ptr;
       using std::map;
 
@@ -725,7 +725,7 @@ void Chaingraph::formulate( const HypothesesGraph& hypotheses ) {
     reset();
 
     // build the model
-    linking_model_ = (*builder_)(hypotheses);
+    linking_model_ = builder_->build(hypotheses);
 
     // refine the model with hard constraints
     pgm::OpengmLPCplex::Parameter param;
