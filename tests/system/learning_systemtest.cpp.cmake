@@ -9,6 +9,7 @@
 #include <boost/archive/text_oarchive.hpp> // has to be include even though we dont use oarchives here
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/shared_ptr.hpp>
+#include <lemon/maps.h>
 
 #include "pgmlink/reasoner_opengm.h"
 #include "pgmlink/traxels.h"
@@ -26,10 +27,22 @@ BOOST_AUTO_TEST_CASE( learning_from_autolabels ) {
 
   SingleTimestepTraxel_HypothesesBuilder::Options builder_opts(6, 50);
   SingleTimestepTraxel_HypothesesBuilder hyp_builder(&ts, builder_opts);
-  //shared_ptr<HypothesesGraph> graph = shared_ptr<HypothesesGraph>(hyp_builder.build()); 
-  //shared_ptr<ChaingraphModelBuilder> b = shared_ptr<ChaingraphModelBuilder>( new ChaingraphModelBuilderECCV12() );
-  //c = Chaingraph
+  shared_ptr<HypothesesGraph> graph = shared_ptr<HypothesesGraph>(hyp_builder.build()); 
+  pgm::ChaingraphModelBuilderECCV12 b;
+  b.with_detection_vars().with_divisions();
+  Chaingraph c(b, true);
+  c.formulate(*graph);
+  c.infer();
+  c.conclude(*graph);
 
+  property_map<node_active, HypothesesGraph::base_graph>::type node_labels(*graph);
+  lemon::mapCopy(*graph, graph->get(node_active()), node_labels);
+  property_map<arc_active, HypothesesGraph::base_graph>::type arc_labels(*graph);
+  lemon::mapCopy(*graph, graph->get(arc_active()), arc_labels);
+  vector<pgm::OpengmModel::ValueType> weights;
+
+  pgm::ChaingraphModelTrainer trainer;
+  weights = trainer.train(graph.get(), graph.get()+1, &node_labels, &arc_labels);
 }
 
 

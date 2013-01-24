@@ -217,6 +217,12 @@ namespace pgmlink {
       void add_incoming_factor( const HypothesesGraph&, ChaingraphModel&, const HypothesesGraph::Node& ) const;
     };
 
+    class ChaingraphModelTrainer {
+    public:
+      template<class IT1, class IT2, class IT3>
+	std::vector<OpengmModel::ValueType> train(IT1 samples_begin, IT1 samples_end, IT2 node_labels, IT3 arc_labels) const;
+    };
+
   } /* namespace pgm */
 
 
@@ -293,6 +299,23 @@ namespace pgmlink {
     double ep_gap_;
     pgm::ChaingraphModelBuilder* builder_;
 };
+
+
+
+  /**/
+  /* implementation */
+  /**/
+  
+  template<class IT1, class IT2, class IT3>
+    std::vector<pgm::OpengmModel::ValueType> pgm::ChaingraphModelTrainer::train(IT1 samples_begin, IT1 samples_end, IT2 node_labels, IT3 arc_labels) const {
+    // for each sample: build chaingraph model
+    
+
+    // convert HypothesesGraph labels to OpengmModel labels
+    
+    return std::vector<pgm::OpengmModel::ValueType>();
+  }
+
 
 } /* namespace pgmlink */
 #endif /* REASONER_OPENGM_H */
