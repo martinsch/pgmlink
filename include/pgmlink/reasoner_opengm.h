@@ -7,6 +7,8 @@
 #ifndef REASONER_OPENGM_H
 #define REASONER_OPENGM_H
 
+#include <algorithm>
+#include <iterator>
 #include <map>
 #include <vector>
 #include <utility>
@@ -106,6 +108,9 @@ namespace pgmlink {
       var_t var_of_arc(arc_t) const;
       node_t node_of_var(var_t) const;
       arc_t arc_of_var(var_t) const;
+
+      enum VarCategory {node_var, arc_var};
+      VarCategory var_category(var_t) const;
       
       enum WeightType {det_weight, mov_weight, div_weight, app_weight, dis_weight, opp_weight};
       map<WeightType, vector<OpengmModel::IndexType> > weight_map; ///< associates events with their corresponding weight ids

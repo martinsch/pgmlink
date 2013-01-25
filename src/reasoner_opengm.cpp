@@ -54,18 +54,15 @@ namespace pgmlink {
       init();
       }
 
-    inline const ChaingraphModel::node_var_map& ChaingraphModel::var_of_node() const
-    {
+    inline const ChaingraphModel::node_var_map& ChaingraphModel::var_of_node() const {
       return node_var_.left;
     }
 
-    inline const ChaingraphModel::var_node_map& ChaingraphModel::node_of_var() const
-    {
+    inline const ChaingraphModel::var_node_map& ChaingraphModel::node_of_var() const {
       return node_var_.right;
     }
 
-    inline const ChaingraphModel::arc_var_map& ChaingraphModel::var_of_arc() const
-    {
+    inline const ChaingraphModel::arc_var_map& ChaingraphModel::var_of_arc() const {
       return arc_var_.left;
     }
 
@@ -74,8 +71,7 @@ namespace pgmlink {
       return arc_var_.right;      
     }
 
-    inline ChaingraphModel::var_t ChaingraphModel::var_of_node(node_t e) const
-    {
+    inline ChaingraphModel::var_t ChaingraphModel::var_of_node(node_t e) const {
       node_var_map::const_iterator it = var_of_node().find(e);
       if(it!=var_of_node().end()) {
 	return it->second;
@@ -84,8 +80,7 @@ namespace pgmlink {
       }
     }
 
-    inline ChaingraphModel::var_t ChaingraphModel::var_of_arc(arc_t e) const
-    {
+    inline ChaingraphModel::var_t ChaingraphModel::var_of_arc(arc_t e) const {
       arc_var_map::const_iterator it = var_of_arc().find(e);
       if(it!=var_of_arc().end()) {
 	return it->second;
@@ -94,8 +89,7 @@ namespace pgmlink {
       }
     }
 
-    inline ChaingraphModel::node_t ChaingraphModel::node_of_var(var_t e) const
-    {
+    inline ChaingraphModel::node_t ChaingraphModel::node_of_var(var_t e) const {
       var_node_map::const_iterator it = node_of_var().find(e);
       if(it!=node_of_var().end()) {
 	return it->second;
@@ -104,8 +98,7 @@ namespace pgmlink {
       }
     }
 
-    inline ChaingraphModel::arc_t ChaingraphModel::arc_of_var(var_t e) const
-    {
+    inline ChaingraphModel::arc_t ChaingraphModel::arc_of_var(var_t e) const {
       var_arc_map::const_iterator it = arc_of_var().find(e);
       if(it!=arc_of_var().end()) {
 	return it->second;
@@ -113,6 +106,17 @@ namespace pgmlink {
 	throw std::out_of_range("ChaingraphModel::arc_of_var(): key does not exist");
       }
     }
+
+    ChaingraphModel::VarCategory ChaingraphModel::var_category(var_t e) const {
+      if(arc_of_var().count(e)) {
+	return ChaingraphModel::arc_var;
+      } else if(node_of_var().count(e)) {
+	return ChaingraphModel::node_var;
+      } else {
+	throw std::out_of_range("ChaingraphModel::var_category(): key does not exist");
+      }
+    }
+
 
     void ChaingraphModel::init() {
       weight_map[det_weight] = vector<OpengmModel::IndexType>();
