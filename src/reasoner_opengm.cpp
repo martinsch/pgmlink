@@ -36,6 +36,93 @@ namespace pgmlink {
       }
       return *entry_;
     } 
+
+    ////
+    //// class ChaingraphModel
+    ////
+    ChaingraphModel::ChaingraphModel() : opengm_model( new OpengmModel() ) {
+      init();
+    }
+
+    ChaingraphModel::ChaingraphModel(shared_ptr<OpengmModel> m,
+				     const node_var_map& node_var,
+				     const arc_var_map& arc_var
+				     )
+      : opengm_model(m) {
+      node_var_.left = node_var;
+      arc_var_.left = arc_var;
+      init();
+      }
+
+    inline const ChaingraphModel::node_var_map& ChaingraphModel::var_of_node() const
+    {
+      return node_var_.left;
+    }
+
+    inline const ChaingraphModel::var_node_map& ChaingraphModel::node_of_var() const
+    {
+      return node_var_.right;
+    }
+
+    inline const ChaingraphModel::arc_var_map& ChaingraphModel::var_of_arc() const
+    {
+      return arc_var_.left;
+    }
+
+    inline const ChaingraphModel::var_arc_map& ChaingraphModel::arc_of_var() const
+    {
+      return arc_var_.right;      
+    }
+
+    inline ChaingraphModel::var_t ChaingraphModel::var_of_node(node_t e) const
+    {
+      node_var_map::const_iterator it = var_of_node().find(e);
+      if(it!=var_of_node().end()) {
+	return it->second;
+      } else {
+	throw std::out_of_range("ChaingraphModel::var_of_node(): key does not exist");
+      }
+    }
+
+    inline ChaingraphModel::var_t ChaingraphModel::var_of_arc(arc_t e) const
+    {
+      arc_var_map::const_iterator it = var_of_arc().find(e);
+      if(it!=var_of_arc().end()) {
+	return it->second;
+      } else {
+	throw std::out_of_range("ChaingraphModel::var_of_arc(): key does not exist");
+      }
+    }
+
+    inline ChaingraphModel::node_t ChaingraphModel::node_of_var(var_t e) const
+    {
+      var_node_map::const_iterator it = node_of_var().find(e);
+      if(it!=node_of_var().end()) {
+	return it->second;
+      } else {
+	throw std::out_of_range("ChaingraphModel::node_of_var(): key does not exist");
+      }
+    }
+
+    inline ChaingraphModel::arc_t ChaingraphModel::arc_of_var(var_t e) const
+    {
+      var_arc_map::const_iterator it = arc_of_var().find(e);
+      if(it!=arc_of_var().end()) {
+	return it->second;
+      } else {
+	throw std::out_of_range("ChaingraphModel::arc_of_var(): key does not exist");
+      }
+    }
+
+    void ChaingraphModel::init() {
+      weight_map[det_weight] = vector<OpengmModel::IndexType>();
+      weight_map[mov_weight] = vector<OpengmModel::IndexType>();
+      weight_map[div_weight] = vector<OpengmModel::IndexType>();
+      weight_map[app_weight] = vector<OpengmModel::IndexType>();
+      weight_map[dis_weight] = vector<OpengmModel::IndexType>();
+      weight_map[opp_weight] = vector<OpengmModel::IndexType>();
+    }
+
     
     ////
     //// class ChaingraphModelBuilder
@@ -117,7 +204,7 @@ namespace pgmlink {
 	// couple transitions
 	vector<size_t> cplex_idxs;
 	for(HypothesesGraph::OutArcIt a(hypotheses, n); a!=lemon::INVALID; ++a) {
-	  cplex_idxs.push_back(cplex_id(m.arc_var.find(a)->second));
+	  cplex_idxs.push_back(cplex_id(m.var_of_arc(a)));
 	}
 	vector<int> coeffs(cplex_idxs.size(), 1);
 	// 0 <= 1*transition + ... + 1*transition <= 2
@@ -137,7 +224,7 @@ namespace pgmlink {
 	// couple transitions
 	vector<size_t> cplex_idxs;
 	for(HypothesesGraph::InArcIt a(hypotheses, n); a!=lemon::INVALID; ++a) {
-	  cplex_idxs.push_back(cplex_id(m.arc_var.find(a)->second));
+	  cplex_idxs.push_back(cplex_id(m.var_of_arc(a)));
 	}
 	vector<int> coeffs(cplex_idxs.size(), 1);
 	// 0 <= 1*transition + ... + 1*transition <= 1
@@ -148,7 +235,7 @@ namespace pgmlink {
     void ChaingraphModelBuilder::fix_detections( const ChaingraphModel& m, const HypothesesGraph& g, OpengmLPCplex& cplex ) {
       for(HypothesesGraph::NodeIt n(g); n!=lemon::INVALID; ++n) {
 	vector<size_t> cplex_idxs; 
-	cplex_idxs.push_back(cplex_id(m.node_var.find(n)->second));
+	cplex_idxs.push_back(cplex_id(m.var_of_node(n)));
 	vector<int> coeffs;
 	coeffs.push_back(1);
 	// 1 <= 1*detection <= 1
@@ -159,21 +246,21 @@ namespace pgmlink {
     inline void ChaingraphModelBuilder::add_detection_vars( const HypothesesGraph& hypotheses, ChaingraphModel& m ) const {
       for(HypothesesGraph::NodeIt n(hypotheses); n!=lemon::INVALID; ++n) {
 	m.opengm_model->addVariable(2);
-	m.node_var[n] = m.opengm_model->numberOfVariables() - 1; 
+	m.node_var_.left.insert(ChaingraphModel::node_var_map::value_type(n, m.opengm_model->numberOfVariables() - 1));
       }
     }
 
     inline void ChaingraphModelBuilder::add_assignment_vars( const HypothesesGraph& hypotheses, ChaingraphModel& m ) const {
       for(HypothesesGraph::ArcIt a(hypotheses); a!=lemon::INVALID; ++a) {
 	m.opengm_model->addVariable(2);
-	m.arc_var[a] = m.opengm_model->numberOfVariables() - 1; 
+	m.arc_var_.left.insert(ChaingraphModel::arc_var_map::value_type(a, m.opengm_model->numberOfVariables() - 1));
       }
     }
 
     void ChaingraphModelBuilder::couple(const ChaingraphModel& m, const HypothesesGraph::Node& n, const HypothesesGraph::Arc& a, OpengmLPCplex& cplex ) {
       vector<size_t> cplex_idxs; 
-      cplex_idxs.push_back(cplex_id(m.node_var.find(n)->second));
-      cplex_idxs.push_back(cplex_id(m.arc_var.find(a)->second));
+      cplex_idxs.push_back(cplex_id(m.var_of_node(n)));
+      cplex_idxs.push_back(cplex_id(m.var_of_arc(a)));
       vector<int> coeffs;
       coeffs.push_back(1);
       coeffs.push_back(-1);
@@ -237,7 +324,7 @@ namespace pgmlink {
     void TrainableChaingraphModelBuilder::add_detection_factor( const HypothesesGraph& hypotheses, ChaingraphModel& m, const HypothesesGraph::Node& n ) const {
       property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = hypotheses.get(node_traxel());
       std::vector<size_t> var_indices;
-      var_indices.push_back(m.node_var[n]);
+      var_indices.push_back(m.var_of_node(n));
       size_t shape[] = {2};
 
       size_t indicate[] = {0};
@@ -286,11 +373,11 @@ namespace pgmlink {
       // collect and count outgoing arcs
       vector<HypothesesGraph::Arc> arcs; 
       vector<size_t> vi; 		// opengm variable indeces
-      vi.push_back(m.node_var[n]); // first detection node, remaining will be transition nodes
+      vi.push_back(m.var_of_node(n)); // first detection node, remaining will be transition nodes
       int count = 0;
       for(HypothesesGraph::OutArcIt a(hypotheses, n); a != lemon::INVALID; ++a) {
 	arcs.push_back(a);
-	vi.push_back(m.arc_var[a]);
+	vi.push_back(m.var_of_arc(a));
 	++count;
       }
 
@@ -422,10 +509,10 @@ namespace pgmlink {
       vector<size_t> vi; // opengm variable indeces
       int count = 0;
       for(HypothesesGraph::InArcIt a(hypotheses, n); a != lemon::INVALID; ++a) {
-	vi.push_back(m.arc_var[a]);
+	vi.push_back(m.var_of_arc(a));
 	++count;
       }
-      vi.push_back(m.node_var[n]); 
+      vi.push_back(m.var_of_node(n)); 
       std::reverse(vi.begin(), vi.end());
     
       //// construct factor
@@ -524,7 +611,7 @@ namespace pgmlink {
     void ChaingraphModelBuilderECCV12::add_detection_factor( const HypothesesGraph& hypotheses, ChaingraphModel& m, const HypothesesGraph::Node& n) const {
       property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = hypotheses.get(node_traxel());
 
-      size_t vi[] = {m.node_var[n]};
+      size_t vi[] = {m.var_of_node(n)};
       vector<size_t> coords(1,0);
       OpengmExplicitFactor<double> table( vi, vi+1 );
 
@@ -548,11 +635,11 @@ namespace pgmlink {
       // collect and count outgoing arcs
       vector<HypothesesGraph::Arc> arcs; 
       vector<size_t> vi; 		// opengm variable indeces
-      vi.push_back(m.node_var[n]); // first detection node, remaining will be transition nodes
+      vi.push_back(m.var_of_node(n)); // first detection node, remaining will be transition nodes
       int count = 0;
       for(HypothesesGraph::OutArcIt a(hypotheses, n); a != lemon::INVALID; ++a) {
 	arcs.push_back(a);
-	vi.push_back(m.arc_var[a]);
+	vi.push_back(m.var_of_arc(a));
 	++count;
       }
 
@@ -657,10 +744,10 @@ namespace pgmlink {
       vector<size_t> vi; // opengm variable indeces
       int count = 0;
       for(HypothesesGraph::InArcIt a(hypotheses, n); a != lemon::INVALID; ++a) {
-	vi.push_back(m.arc_var[a]);
+	vi.push_back(m.var_of_arc(a));
 	++count;
       }
-      vi.push_back(m.node_var[n]); 
+      vi.push_back(m.var_of_node(n)); 
       std::reverse(vi.begin(), vi.end());
     
       //// construct factor
@@ -771,12 +858,12 @@ void Chaingraph::conclude( HypothesesGraph& g ) {
     property_map<arc_active, HypothesesGraph::base_graph>::type& active_arcs = g.get(arc_active());
 
     // write state after inference into 'active'-property maps
-    for(std::map<HypothesesGraph::Node, size_t>::const_iterator it = linking_model_->node_var.begin(); it != linking_model_->node_var.end(); ++it) {
+    for(pgm::ChaingraphModel::node_var_map::const_iterator it = linking_model_->var_of_node().begin(); it != linking_model_->var_of_node().end(); ++it) {
 	bool state = false;
 	if(solution[it->second] == 1) state = true;
 	active_nodes.set(it->first, state);
     }
-    for(std::map<HypothesesGraph::Arc, size_t>::const_iterator it = linking_model_->arc_var.begin(); it != linking_model_->arc_var.end(); ++it) {
+    for(pgm::ChaingraphModel::arc_var_map::const_iterator it = linking_model_->var_of_arc().begin(); it != linking_model_->var_of_arc().end(); ++it) {
 	bool state = false;
 	if(solution[it->second] == 1) state = true;
 	active_arcs.set(it->first, state);
@@ -787,12 +874,12 @@ void Chaingraph::conclude( HypothesesGraph& g ) {
     return linking_model_->opengm_model.get();
   }
 
-  const std::map<HypothesesGraph::Node, size_t>& Chaingraph::get_node_map() const {
-    return linking_model_->node_var;
+  const Chaingraph::node_var_map& Chaingraph::get_node_map() const {
+    return linking_model_->var_of_node();
   }
 
-  const std::map<HypothesesGraph::Arc, size_t>& Chaingraph::get_arc_map() const {
-    return linking_model_->arc_var;
+  const Chaingraph::arc_var_map& Chaingraph::get_arc_map() const {
+    return linking_model_->var_of_arc();
   }
 
 void Chaingraph::reset() {

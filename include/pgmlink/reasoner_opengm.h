@@ -12,6 +12,7 @@
 #include <utility>
 #include <boost/function.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/bimap.hpp>
 #include <opengm/inference/inference.hxx>
 #include <opengm/inference/lpcplex.hxx>
 
@@ -57,7 +58,7 @@ namespace pgmlink {
       OpengmModel::ValueType* entry_;
     };
 
-
+    class ChaingraphModelBuilder;
     /**
        @brief Chaingraph model formulated as an Opengm graphical model.
 
@@ -78,30 +79,46 @@ namespace pgmlink {
        @see ChaingraphModelBuilder
        @see HypothesesGraph
      */
-    struct ChaingraphModel {
-    ChaingraphModel() : opengm_model( new OpengmModel() ) {}
-    ChaingraphModel( shared_ptr<OpengmModel> m,
-		   map<HypothesesGraph::Node, OpengmModel::IndexType> node_var = map<HypothesesGraph::Node, OpengmModel::IndexType>(),
-		   map<HypothesesGraph::Arc, OpengmModel::IndexType> arc_var = map<HypothesesGraph::Arc, OpengmModel::IndexType>()
-		   )
-    : opengm_model(m), node_var(node_var), arc_var(arc_var) {
-      weight_map[det_weight] = vector<OpengmModel::IndexType>();
-      weight_map[mov_weight] = vector<OpengmModel::IndexType>();
-      weight_map[div_weight] = vector<OpengmModel::IndexType>();
-      weight_map[app_weight] = vector<OpengmModel::IndexType>();
-      weight_map[dis_weight] = vector<OpengmModel::IndexType>();
-      weight_map[opp_weight] = vector<OpengmModel::IndexType>();
-    }
+    class ChaingraphModel {
+    public:
+      typedef HypothesesGraph::Node node_t;
+      typedef HypothesesGraph::Arc arc_t;
+      typedef OpengmModel::IndexType var_t;
+      typedef boost::bimap<node_t, var_t>::left_map node_var_map;
+      typedef boost::bimap<node_t, var_t>::right_map var_node_map;
+      typedef boost::bimap<arc_t, var_t>::left_map arc_var_map;
+      typedef boost::bimap<arc_t, var_t>::right_map var_arc_map;
+
+      ChaingraphModel();
+      ChaingraphModel( shared_ptr<OpengmModel>,
+		       const node_var_map&,
+		       const arc_var_map&
+		       );
       
       shared_ptr<OpengmModel> opengm_model; ///< opengm model usually constructed by ChaingraphModelBuilder
-      map<HypothesesGraph::Node, OpengmModel::IndexType> node_var; ///< maps nodes to random variables representing detections
-      map<HypothesesGraph::Arc, OpengmModel::IndexType> arc_var; ///< maps arcs to random variables representing links
+
+      const node_var_map& var_of_node() const; ///< maps nodes to random variables representing detections
+      const var_node_map& node_of_var() const;
+      const arc_var_map& var_of_arc() const; ///< maps arcs to random variables representing links
+      const var_arc_map& arc_of_var() const;
+
+      var_t var_of_node(node_t) const;
+      var_t var_of_arc(arc_t) const;
+      node_t node_of_var(var_t) const;
+      arc_t arc_of_var(var_t) const;
       
       enum WeightType {det_weight, mov_weight, div_weight, app_weight, dis_weight, opp_weight};
       map<WeightType, vector<OpengmModel::IndexType> > weight_map; ///< associates events with their corresponding weight ids
       
       //void set_weights( WeightType, vector<OpengmModel::ValueType> );
       //const vector<OpengmModel::ValueType>& get_weights( WeightType );
+    private:
+      friend class ChaingraphModelBuilder;
+
+      void init();
+
+      boost::bimap<node_t, var_t> node_var_;
+      boost::bimap<arc_t, var_t> arc_var_;
     };
 
     class ChaingraphModelBuilder {
@@ -228,6 +245,8 @@ namespace pgmlink {
 
   class Chaingraph : public Reasoner {
     public:
+    typedef pgm::ChaingraphModel::node_var_map node_var_map;
+    typedef pgm::ChaingraphModel::arc_var_map arc_var_map;
 
     Chaingraph(bool with_constraints = true,
 	       double ep_gap = 0.01,
@@ -275,13 +294,13 @@ namespace pgmlink {
      *
      * The map is populated after the first call to formulate().
      */
-    const std::map<HypothesesGraph::Node, size_t>& get_node_map() const;
+    const node_var_map& get_node_map() const;
 
     /** Return mapping from HypothesesGraph arcs to graphical model variable ids
      *
      * The map is populated after the first call to formulate().
      */
-    const std::map<HypothesesGraph::Arc, size_t>& get_arc_map() const;
+    const arc_var_map& get_arc_map() const;
     
 
     private:
