@@ -23,14 +23,14 @@ namespace pgmlink {
     ////
     //// class FactorEntry
     ////
-    inline void FactorEntry::set( OpengmModel::ValueType v ) {
+    void FactorEntry::set( OpengmModel::ValueType v ) {
       if( entry_ == NULL ) {
 	throw runtime_error("FactorEntry: is invalid");
       }
       *entry_ = v;
     }
 
-    inline OpengmModel::ValueType FactorEntry::get() const {
+    OpengmModel::ValueType FactorEntry::get() const {
       if( entry_ == NULL ) {
 	throw runtime_error("FactorEntryPtr: is invalid");
       }
@@ -54,24 +54,24 @@ namespace pgmlink {
       init();
       }
 
-    inline const ChaingraphModel::node_var_map& ChaingraphModel::var_of_node() const {
+    const ChaingraphModel::node_var_map& ChaingraphModel::var_of_node() const {
       return node_var_.left;
     }
 
-    inline const ChaingraphModel::var_node_map& ChaingraphModel::node_of_var() const {
+    const ChaingraphModel::var_node_map& ChaingraphModel::node_of_var() const {
       return node_var_.right;
     }
 
-    inline const ChaingraphModel::arc_var_map& ChaingraphModel::var_of_arc() const {
+    const ChaingraphModel::arc_var_map& ChaingraphModel::var_of_arc() const {
       return arc_var_.left;
     }
 
-    inline const ChaingraphModel::var_arc_map& ChaingraphModel::arc_of_var() const
+    const ChaingraphModel::var_arc_map& ChaingraphModel::arc_of_var() const
     {
       return arc_var_.right;      
     }
 
-    inline ChaingraphModel::var_t ChaingraphModel::var_of_node(node_t e) const {
+    ChaingraphModel::var_t ChaingraphModel::var_of_node(node_t e) const {
       node_var_map::const_iterator it = var_of_node().find(e);
       if(it!=var_of_node().end()) {
 	return it->second;
@@ -80,7 +80,7 @@ namespace pgmlink {
       }
     }
 
-    inline ChaingraphModel::var_t ChaingraphModel::var_of_arc(arc_t e) const {
+    ChaingraphModel::var_t ChaingraphModel::var_of_arc(arc_t e) const {
       arc_var_map::const_iterator it = var_of_arc().find(e);
       if(it!=var_of_arc().end()) {
 	return it->second;
@@ -89,7 +89,7 @@ namespace pgmlink {
       }
     }
 
-    inline ChaingraphModel::node_t ChaingraphModel::node_of_var(var_t e) const {
+    ChaingraphModel::node_t ChaingraphModel::node_of_var(var_t e) const {
       var_node_map::const_iterator it = node_of_var().find(e);
       if(it!=node_of_var().end()) {
 	return it->second;
@@ -98,7 +98,7 @@ namespace pgmlink {
       }
     }
 
-    inline ChaingraphModel::arc_t ChaingraphModel::arc_of_var(var_t e) const {
+    ChaingraphModel::arc_t ChaingraphModel::arc_of_var(var_t e) const {
       var_arc_map::const_iterator it = arc_of_var().find(e);
       if(it!=arc_of_var().end()) {
 	return it->second;
