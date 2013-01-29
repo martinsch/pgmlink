@@ -12,6 +12,7 @@
 #include <lemon/maps.h>
 
 #include "pgmlink/reasoner_opengm.h"
+#include "pgmlink/pgm_chaingraph.h"
 #include "pgmlink/traxels.h"
 #include "pgmlink/hypotheses.h"
 
@@ -28,7 +29,7 @@ BOOST_AUTO_TEST_CASE( learning_from_autolabels ) {
   SingleTimestepTraxel_HypothesesBuilder::Options builder_opts(6, 50);
   SingleTimestepTraxel_HypothesesBuilder hyp_builder(&ts, builder_opts);
   shared_ptr<HypothesesGraph> graph = shared_ptr<HypothesesGraph>(hyp_builder.build()); 
-  pgm::ChaingraphModelBuilderECCV12 b;
+  pgm::chaingraph::ECCV12ModelBuilder b;
   b.with_detection_vars().with_divisions();
   Chaingraph c(b, true);
   c.formulate(*graph);
@@ -41,7 +42,7 @@ BOOST_AUTO_TEST_CASE( learning_from_autolabels ) {
   lemon::mapCopy(*graph, graph->get(arc_active()), arc_labels);
   vector<pgm::OpengmModel::ValueType> weights;
 
-  pgm::ChaingraphModelTrainer trainer;
+  pgm::chaingraph::ModelTrainer trainer;
   weights = trainer.train(graph.get(), graph.get()+1, &node_labels, &arc_labels);
 }
 
