@@ -8,7 +8,7 @@
 #include <boost/shared_array.hpp>
 
 #include "pgmlink/feature.h"
-#include "pgmlink/graphical_model.h"
+#include "pgmlink/pgm.h"
 #include "pgmlink/hypotheses.h"
 #include "pgmlink/log.h"
 #include "pgmlink/reasoner_opengm.h"

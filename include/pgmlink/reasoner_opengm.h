@@ -20,45 +20,16 @@
 
 #include "pgmlink/event.h"
 #include "pgmlink/feature.h"
-#include "pgmlink/graphical_model.h"
+#include "pgmlink/pgm.h"
 #include "pgmlink/hypotheses.h"
 #include "pgmlink/reasoner.h"
 #include "pgmlink/pgm_chaingraph.h"
 
 namespace pgmlink {
   class Traxel;
-
   namespace pgm {
     typedef opengm::LPCplex<OpengmModel, opengm::Minimizer> OpengmLPCplex;
-    using boost::shared_ptr;
-
-    /**
-       @brief Accessing entries of a Factor/Function that was already added to a graphical model.
-
-       Manages a pointer to an element of an array-like opengm function (usually opengm::ExplicitFunction).
-       Validity of the pointer is ensured by owning a smart pointer to the full model.
-
-       Use this class to modify factor elements of an already instantiated opengm graphical model.
-     */
-    class FactorEntry {
-    public:
-    FactorEntry() : entry_(NULL) {}
-    FactorEntry( shared_ptr<OpengmModel> m, /**< has to be valid */
-		 OpengmModel::ValueType* entry /**< has to point into the opengm model to ensure the same lifetime */
-		 ) :
-      m_(m), entry_(entry) {}
-      
-      void set( OpengmModel::ValueType );
-      OpengmModel::ValueType get() const;
-
-      shared_ptr<OpengmModel> model() const { return m_; }
-
-    private:
-      shared_ptr<OpengmModel> m_;
-      OpengmModel::ValueType* entry_;
-    };
   } /* namespace pgm */
-
 
   class Chaingraph : public Reasoner {
     public:

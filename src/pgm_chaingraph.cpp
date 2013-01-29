@@ -8,7 +8,7 @@
 #include <opengm/inference/lpcplex.hxx>
 #include <opengm/datastructures/marray/marray.hxx>
 
-#include "pgmlink/graphical_model.h"
+#include "pgmlink/pgm.h"
 #include "pgmlink/hypotheses.h"
 #include "pgmlink/log.h"
 #include "pgmlink/pgm_chaingraph.h"

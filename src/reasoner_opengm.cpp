@@ -8,7 +8,7 @@
 #include <opengm/inference/lpcplex.hxx>
 #include <opengm/datastructures/marray/marray.hxx>
 
-#include "pgmlink/graphical_model.h"
+#include "pgmlink/pgm.h"
 #include "pgmlink/hypotheses.h"
 #include "pgmlink/log.h"
 #include "pgmlink/reasoner_opengm.h"
@@ -20,27 +20,6 @@
 using namespace std;
 
 namespace pgmlink {
-  namespace pgm {
-    ////
-    //// class FactorEntry
-    ////
-    void FactorEntry::set( OpengmModel::ValueType v ) {
-      if( entry_ == NULL ) {
-	throw runtime_error("FactorEntry: is invalid");
-      }
-      *entry_ = v;
-    }
-
-    OpengmModel::ValueType FactorEntry::get() const {
-      if( entry_ == NULL ) {
-	throw runtime_error("FactorEntryPtr: is invalid");
-      }
-      return *entry_;
-    } 
-  } /* namespace pgm */
-
-
-
   ////
   //// class Chaingraph
   ////

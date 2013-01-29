@@ -4,8 +4,8 @@
    @brief opengm extensions
 */
 
-#ifndef GRAPHICAL_MODEL_H
-#define GRAPHICAL_MODEL_H
+#ifndef PGMLINK_PGM_H
+#define PGMLINK_PGM_H
 
 #include <vector>
 
@@ -23,82 +23,111 @@
 #include "pgmlink/util.h"
 
 namespace pgmlink {
-namespace pgm {
-
-//typedef opengm::GraphicalModel<double, opengm::Adder> OpengmModel;
-typedef opengm::ExplicitFunction<double> ExplicitFunction;
-typedef opengm::FunctionDecoratorWeighted< opengm::IndicatorFunction<double> > FeatureFunction;
-typedef opengm::LoglinearModel<double,
-  opengm::meta::TypeList<ExplicitFunction,
-  opengm::meta::TypeList<FeatureFunction, opengm::meta::ListEnd > > > OpengmModel;
-
-template <typename OGM_FUNCTION>
- class OpengmFactor {
- public:
-  typedef OGM_FUNCTION FunctionType;
-
-  OpengmFactor( const FunctionType&, const std::vector<size_t>& ogm_var_indices );
-  template <typename ITER>
-    OpengmFactor( const FunctionType&, ITER first_ogm_idx, ITER last_ogm_idx );
-
-  typename FunctionType::ValueType get_value( std::vector<size_t> coords ) const;
-  template <typename OGM_GRAPHICAL_MODEL>
-    void add_to( OGM_GRAPHICAL_MODEL& ) const;
-
-  FunctionType& function() { return ogmfunction_; }
-  const FunctionType& function() const { return ogmfunction_; }
-  const std::vector<size_t>& var_indices() const { return vi_; }
-  const std::vector<size_t>& var_order() const { return order_; }
-
- protected:
-  FunctionType ogmfunction_;
-  std::vector<size_t> vi_;
-  std::vector<size_t> order_;
- };
-
-
- template <typename VALUE>
-   class OpengmExplicitFactor : public OpengmFactor<opengm::ExplicitFunction<VALUE> > {
- public:
-  typedef typename OpengmFactor<opengm::ExplicitFunction<VALUE> >::FunctionType FunctionType; 
-  
-  OpengmExplicitFactor( const std::vector<size_t>& ogm_var_indices, VALUE init=0, size_t states_per_var=2 );
-  template <typename ITER>
-    OpengmExplicitFactor( ITER first_ogm_idx, ITER last_ogm_idx, VALUE init=0, size_t states_per_var=2 );  
-  
-  void set_value( std::vector<size_t> coords, VALUE v);
-  
- private:
-  void init_( VALUE init, size_t states_per_var );
-};    
- 
- template <typename VALUE>
-   class OpengmWeightedFeature
-   : public OpengmFactor< opengm::FunctionDecoratorWeighted< opengm::IndicatorFunction<VALUE> > >
- {
-  public:
-    typedef typename opengm::FunctionDecoratorWeighted< opengm::IndicatorFunction<VALUE> > FunctionType;
-
-    template<class IT1, class IT2>
-      OpengmWeightedFeature(const std::vector<size_t>& ogm_var_indices,
-			    IT1 shapeBegin, IT1 shapeEnd,
-			    IT2 indicate,
-			    VALUE indicate_value = 1., 
-			    VALUE weight = 1.,
-			    VALUE default_value = 0);
-
-    template <typename OGM_LOGLINEARMODEL>
-      void add_as_feature_to( OGM_LOGLINEARMODEL&, typename OGM_LOGLINEARMODEL::IndexType weight_index ) const;
-
-    void weight( VALUE w );
-    VALUE weight() const;
-
-    void indicate_value( VALUE v );
-    VALUE indicate_value() const;
+  namespace pgm {
+    using boost::shared_ptr;
     
-    void default_value( VALUE v );
-    VALUE default_value() const;
- };
+
+    //typedef opengm::GraphicalModel<double, opengm::Adder> OpengmModel;
+    typedef opengm::ExplicitFunction<double> ExplicitFunction;
+    typedef opengm::FunctionDecoratorWeighted< opengm::IndicatorFunction<double> > FeatureFunction;
+    typedef opengm::LoglinearModel<double,
+      opengm::meta::TypeList<ExplicitFunction,
+      opengm::meta::TypeList<FeatureFunction, opengm::meta::ListEnd > > > OpengmModel;
+
+    template <typename OGM_FUNCTION>
+      class OpengmFactor {
+    public:
+      typedef OGM_FUNCTION FunctionType;
+
+      OpengmFactor( const FunctionType&, const std::vector<size_t>& ogm_var_indices );
+      template <typename ITER>
+	OpengmFactor( const FunctionType&, ITER first_ogm_idx, ITER last_ogm_idx );
+
+      typename FunctionType::ValueType get_value( std::vector<size_t> coords ) const;
+      template <typename OGM_GRAPHICAL_MODEL>
+	void add_to( OGM_GRAPHICAL_MODEL& ) const;
+
+      FunctionType& function() { return ogmfunction_; }
+      const FunctionType& function() const { return ogmfunction_; }
+      const std::vector<size_t>& var_indices() const { return vi_; }
+      const std::vector<size_t>& var_order() const { return order_; }
+
+    protected:
+      FunctionType ogmfunction_;
+      std::vector<size_t> vi_;
+      std::vector<size_t> order_;
+    };
+
+
+    template <typename VALUE>
+      class OpengmExplicitFactor : public OpengmFactor<opengm::ExplicitFunction<VALUE> > {
+    public:
+      typedef typename OpengmFactor<opengm::ExplicitFunction<VALUE> >::FunctionType FunctionType; 
+  
+      OpengmExplicitFactor( const std::vector<size_t>& ogm_var_indices, VALUE init=0, size_t states_per_var=2 );
+      template <typename ITER>
+	OpengmExplicitFactor( ITER first_ogm_idx, ITER last_ogm_idx, VALUE init=0, size_t states_per_var=2 );  
+  
+      void set_value( std::vector<size_t> coords, VALUE v);
+  
+    private:
+      void init_( VALUE init, size_t states_per_var );
+    };    
+ 
+    template <typename VALUE>
+      class OpengmWeightedFeature
+      : public OpengmFactor< opengm::FunctionDecoratorWeighted< opengm::IndicatorFunction<VALUE> > >
+    {
+    public:
+      typedef typename opengm::FunctionDecoratorWeighted< opengm::IndicatorFunction<VALUE> > FunctionType;
+
+      template<class IT1, class IT2>
+	OpengmWeightedFeature(const std::vector<size_t>& ogm_var_indices,
+			      IT1 shapeBegin, IT1 shapeEnd,
+			      IT2 indicate,
+			      VALUE indicate_value = 1., 
+			      VALUE weight = 1.,
+			      VALUE default_value = 0);
+
+      template <typename OGM_LOGLINEARMODEL>
+	void add_as_feature_to( OGM_LOGLINEARMODEL&, typename OGM_LOGLINEARMODEL::IndexType weight_index ) const;
+
+      void weight( VALUE w );
+      VALUE weight() const;
+
+      void indicate_value( VALUE v );
+      VALUE indicate_value() const;
+    
+      void default_value( VALUE v );
+      VALUE default_value() const;
+    };
+
+    /**
+       @brief Accessing entries of a Factor/Function that was already added to a graphical model.
+
+       Manages a pointer to an element of an array-like opengm function (usually opengm::ExplicitFunction).
+       Validity of the pointer is ensured by owning a smart pointer to the full model.
+
+       Use this class to modify factor elements of an already instantiated opengm graphical model.
+    */
+    class FactorEntry {
+    public:
+    FactorEntry() : entry_(NULL) {}
+    FactorEntry( shared_ptr<OpengmModel> m, /**< has to be valid */
+		 OpengmModel::ValueType* entry /**< has to point into the opengm model to ensure the same lifetime */
+		 ) :
+      m_(m), entry_(entry) {}
+      
+      void set( OpengmModel::ValueType );
+      OpengmModel::ValueType get() const;
+
+      shared_ptr<OpengmModel> model() const { return m_; }
+
+    private:
+      shared_ptr<OpengmModel> m_;
+      OpengmModel::ValueType* entry_;
+    };
+
 
 
 /******************/
@@ -263,4 +292,4 @@ template<class VALUE>
 } /* namespace pgm */
 } /* namespace pgmlink */
 
-#endif /* GRAPHICAL_MODEL_H */
+#endif /* PGMLINK_PGM_H */
