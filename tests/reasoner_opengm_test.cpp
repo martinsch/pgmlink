@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE( HypothesesGraph_build_hyp2 ) {
    ConstantFeature e5(5);
    ConstantFeature e6(6);
 
-   pgm::ChaingraphModelBuilderECCV12 b;
+   pgm::chaingraph::ECCV12ModelBuilder b;
    b.with_detection_vars(e1, e2)
      .appearance(e3)
      .disappearance(e4)
@@ -318,7 +318,7 @@ BOOST_AUTO_TEST_CASE( HypothesesGraph_build_hyp_mrf ) {
     ConstantFeature e5(20);		
     ConstantFeature e6(5);	
 
-    pgm::ChaingraphModelBuilderECCV12 b1;
+    pgm::chaingraph::ECCV12ModelBuilder b1;
     b1.with_detection_vars(e1, e2)
       .appearance(e3)
       .disappearance(e4)
@@ -328,7 +328,7 @@ BOOST_AUTO_TEST_CASE( HypothesesGraph_build_hyp_mrf ) {
     
     Chaingraph mrf(b1, true, 0.01, false);
 
-    pgm::TrainableChaingraphModelBuilder b(e3,
+    pgm::chaingraph::TrainableModelBuilder b(e3,
 					   e4,
 					   e5,
 					   0,

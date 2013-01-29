@@ -60,198 +60,202 @@ namespace pgmlink {
       OpengmModel::ValueType* entry_;
     };
 
-    class ChaingraphModelBuilder;
-    /**
-       @brief Chaingraph model formulated as an Opengm graphical model.
+    namespace chaingraph {
+      class ModelBuilder;
+      /**
+	 @brief Chaingraph model formulated as an Opengm graphical model.
+	 
+	 Represents an opengm model to solve the matching problem in a
+	 HypothesesGraph. Use a chaingraph::ModelBuilder to construct the
+	 model. During construction of the chaingraph::Model a random
+	 variable is added to the graphical model for every node and
+	 every arc in the HypothesesGraph. The mapping between nodes
+	 resp. arcs and random variables is stored in the fields
+	 node_var and arc_var.
+	 
+	 A node in the HypothesesGraph describes a detection in the link
+	 model. The corresponding random variable determines wether it
+	 is an actual object or a misdetection. Similarly, an arc is
+	 interpreted as a possible link between two objects whose state is
+	 determined by the corresponding random variable.
+	 
+	 @see chaingraph::ModelBuilder
+	 @see HypothesesGraph
+      */
+      class Model {
+      public:
+	typedef HypothesesGraph::Node node_t;
+	typedef HypothesesGraph::Arc arc_t;
+	typedef OpengmModel::IndexType var_t;
+	typedef boost::bimap<node_t, var_t>::left_map node_var_map;
+	typedef boost::bimap<node_t, var_t>::right_map var_node_map;
+	typedef boost::bimap<arc_t, var_t>::left_map arc_var_map;
+	typedef boost::bimap<arc_t, var_t>::right_map var_arc_map;
 
-       Represents an opengm model to solve the matching problem in a
-       HypothesesGraph. Use a ChaingraphModelBuilder to construct the
-       model. During construction of the ChaingraphModel a random
-       variable is added to the graphical model for every node and
-       every arc in the HypothesesGraph. The mapping between nodes
-       resp. arcs and random variables is stored in the fields
-       node_var and arc_var.
-
-       A node in the HypothesesGraph describes a detection in the link
-       model. The corresponding random variable determines wether it
-       is an actual object or a misdetection. Similarly, an arc is
-       interpreted as a possible link between two objects whose state is
-       determined by the corresponding random variable.
-
-       @see ChaingraphModelBuilder
-       @see HypothesesGraph
-     */
-    class ChaingraphModel {
-    public:
-      typedef HypothesesGraph::Node node_t;
-      typedef HypothesesGraph::Arc arc_t;
-      typedef OpengmModel::IndexType var_t;
-      typedef boost::bimap<node_t, var_t>::left_map node_var_map;
-      typedef boost::bimap<node_t, var_t>::right_map var_node_map;
-      typedef boost::bimap<arc_t, var_t>::left_map arc_var_map;
-      typedef boost::bimap<arc_t, var_t>::right_map var_arc_map;
-
-      ChaingraphModel();
-      ChaingraphModel( shared_ptr<OpengmModel>,
-		       const node_var_map&,
-		       const arc_var_map&
-		       );
+	Model();
+	Model( shared_ptr<OpengmModel>,
+	       const node_var_map&,
+	       const arc_var_map&
+	       );
       
-      shared_ptr<OpengmModel> opengm_model; ///< opengm model usually constructed by ChaingraphModelBuilder
+	shared_ptr<OpengmModel> opengm_model; ///< opengm model usually constructed by chaingraph::ModelBuilder
 
-      const node_var_map& var_of_node() const; ///< maps nodes to random variables representing detections
-      const var_node_map& node_of_var() const;
-      const arc_var_map& var_of_arc() const; ///< maps arcs to random variables representing links
-      const var_arc_map& arc_of_var() const;
+	const node_var_map& var_of_node() const; ///< maps nodes to random variables representing detections
+	const var_node_map& node_of_var() const;
+	const arc_var_map& var_of_arc() const; ///< maps arcs to random variables representing links
+	const var_arc_map& arc_of_var() const;
 
-      var_t var_of_node(node_t) const;
-      var_t var_of_arc(arc_t) const;
-      node_t node_of_var(var_t) const;
-      arc_t arc_of_var(var_t) const;
+	var_t var_of_node(node_t) const;
+	var_t var_of_arc(arc_t) const;
+	node_t node_of_var(var_t) const;
+	arc_t arc_of_var(var_t) const;
 
-      enum VarCategory {node_var, arc_var};
-      VarCategory var_category(var_t) const;
+	enum VarCategory {node_var, arc_var};
+	VarCategory var_category(var_t) const;
       
-      enum WeightType {det_weight, mov_weight, div_weight, app_weight, dis_weight, opp_weight};
-      map<WeightType, vector<OpengmModel::IndexType> > weight_map; ///< associates events with their corresponding weight ids
+	enum WeightType {det_weight, mov_weight, div_weight, app_weight, dis_weight, opp_weight};
+	map<WeightType, vector<OpengmModel::IndexType> > weight_map; ///< associates events with their corresponding weight ids
       
-      //void set_weights( WeightType, vector<OpengmModel::ValueType> );
-      //const vector<OpengmModel::ValueType>& get_weights( WeightType );
-    private:
-      friend class ChaingraphModelBuilder;
+	//void set_weights( WeightType, vector<OpengmModel::ValueType> );
+	//const vector<OpengmModel::ValueType>& get_weights( WeightType );
+      private:
+	friend class ModelBuilder;
 
-      void init();
+	void init();
 
-      boost::bimap<node_t, var_t> node_var_;
-      boost::bimap<arc_t, var_t> arc_var_;
-    };
-
-    class ChaingraphModelBuilder {
-    public:
-    ChaingraphModelBuilder(boost::function<double (const Traxel&)> appearance = ConstantFeature(1000),
-    			     boost::function<double (const Traxel&)> disappearance = ConstantFeature(1000),
-    			     boost::function<double (const Traxel&, const Traxel&)> move = SquaredDistance(),
-    			     double opportunity_cost = 0,
-    			     double forbidden_cost = 100000)
+	boost::bimap<node_t, var_t> node_var_;
+	boost::bimap<arc_t, var_t> arc_var_;
+      };
+      
+      class ModelBuilder {
+      public:
+      ModelBuilder(boost::function<double (const Traxel&)> appearance = ConstantFeature(1000),
+		   boost::function<double (const Traxel&)> disappearance = ConstantFeature(1000),
+		   boost::function<double (const Traxel&, const Traxel&)> move = SquaredDistance(),
+		   double opportunity_cost = 0,
+		   double forbidden_cost = 100000)
 	: with_detection_vars_(false),
-	with_divisions_(false),
-    	appearance_(appearance),
-    	disappearance_(disappearance),
-    	move_(move),
-    	opportunity_cost_(opportunity_cost),
-    	forbidden_cost_(forbidden_cost) {}
+	  with_divisions_(false),
+	  appearance_(appearance),
+	  disappearance_(disappearance),
+	  move_(move),
+	  opportunity_cost_(opportunity_cost),
+	  forbidden_cost_(forbidden_cost) {}
 
-      virtual ChaingraphModelBuilder* clone() const = 0;
+	virtual chaingraph::ModelBuilder* clone() const = 0;
 
-      // mandatory parameters
-      function<double (const Traxel&)> appearance() const { return appearance_; }
-      ChaingraphModelBuilder& appearance( function<double (const Traxel&)> );
+	// mandatory parameters
+	function<double (const Traxel&)> appearance() const { return appearance_; }
+	ModelBuilder& appearance( function<double (const Traxel&)> );
 
-      function<double (const Traxel&)> disappearance() const { return disappearance_; }
-      ChaingraphModelBuilder& disappearance( function<double (const Traxel&)> );
+	function<double (const Traxel&)> disappearance() const { return disappearance_; }
+	ModelBuilder& disappearance( function<double (const Traxel&)> );
 
-      function<double (const Traxel&,const Traxel&)> move() const { return move_; }
-      ChaingraphModelBuilder& move( function<double (const Traxel&,const Traxel&)> );
+	function<double (const Traxel&,const Traxel&)> move() const { return move_; }
+	ModelBuilder& move( function<double (const Traxel&,const Traxel&)> );
 
-      double opportunity_cost() const { return opportunity_cost_; }
-      ChaingraphModelBuilder& opportunity_cost( double c ) { opportunity_cost_ = c; return *this; }
+	double opportunity_cost() const { return opportunity_cost_; }
+	ModelBuilder& opportunity_cost( double c ) { opportunity_cost_ = c; return *this; }
 
-      double forbidden_cost() const { return forbidden_cost_; }
-      ChaingraphModelBuilder& forbidden_cost( double c ) { forbidden_cost_ = c; return *this; } 
+	double forbidden_cost() const { return forbidden_cost_; }
+	ModelBuilder& forbidden_cost( double c ) { forbidden_cost_ = c; return *this; } 
 
-      //// optional parameters
-      // detection vars
-      ChaingraphModelBuilder& with_detection_vars( function<double (const Traxel&)> detection=ConstantFeature(10),
-						   function<double (const Traxel&)> non_detection=ConstantFeature(200));
-      ChaingraphModelBuilder& without_detection_vars();
-      bool has_detection_vars() const { return with_detection_vars_; }
-      function<double (const Traxel&)> detection() const { return detection_; }
-      function<double (const Traxel&)> non_detection() const { return non_detection_; }
+	//// optional parameters
+	// detection vars
+	ModelBuilder& with_detection_vars( function<double (const Traxel&)> detection=ConstantFeature(10),
+					   function<double (const Traxel&)> non_detection=ConstantFeature(200));
+	ModelBuilder& without_detection_vars();
+	bool has_detection_vars() const { return with_detection_vars_; }
+	function<double (const Traxel&)> detection() const { return detection_; }
+	function<double (const Traxel&)> non_detection() const { return non_detection_; }
 
-      // divisions
-      ChaingraphModelBuilder& with_divisions( function<double (const Traxel&,const Traxel&,const Traxel&)> div = KasterDivision(10) );
-      ChaingraphModelBuilder& without_divisions();
-      bool has_divisions() const { return with_divisions_; }
-      function<double (const Traxel&,const Traxel&,const Traxel&)> division() const { return division_; }
+	// divisions
+	ModelBuilder& with_divisions( function<double (const Traxel&,const Traxel&,const Traxel&)> div = KasterDivision(10) );
+	ModelBuilder& without_divisions();
+	bool has_divisions() const { return with_divisions_; }
+	function<double (const Traxel&,const Traxel&,const Traxel&)> division() const { return division_; }
 
-      // build
-      virtual ChaingraphModel* build( const HypothesesGraph& ) const = 0;      
+	// build
+	virtual chaingraph::Model* build( const HypothesesGraph& ) const = 0;      
 
-      // refinement
-      static void add_hard_constraints( const ChaingraphModel&, const HypothesesGraph&, OpengmLPCplex& );
-      static void fix_detections( const ChaingraphModel&, const HypothesesGraph&, OpengmLPCplex& );
+	// refinement
+	static void add_hard_constraints( const Model&, const HypothesesGraph&, OpengmLPCplex& );
+	static void fix_detections( const Model&, const HypothesesGraph&, OpengmLPCplex& );
 
-    protected:
-      void add_detection_vars( const HypothesesGraph&, ChaingraphModel& ) const;
-      void add_assignment_vars( const HypothesesGraph&, ChaingraphModel& ) const;
+      protected:
+	void add_detection_vars( const HypothesesGraph&, Model& ) const;
+	void add_assignment_vars( const HypothesesGraph&, Model& ) const;
 
-    private:
-      static void couple( const ChaingraphModel&, const HypothesesGraph::Node&, const HypothesesGraph::Arc&, OpengmLPCplex& );
+      private:
+	static void couple( const chaingraph::Model&, const HypothesesGraph::Node&, const HypothesesGraph::Arc&, OpengmLPCplex& );
       
-      bool with_detection_vars_;
-      bool with_divisions_;
+	bool with_detection_vars_;
+	bool with_divisions_;
 
-      function<double (const Traxel&)> detection_;
-      function<double (const Traxel&)> non_detection_;
-      function<double (const Traxel&)> appearance_;
-      function<double (const Traxel&)> disappearance_;
-      function<double (const Traxel&,const Traxel&)> move_;
-      function<double (const Traxel&,const Traxel&,const Traxel&)> division_;
-      double opportunity_cost_;
-      double forbidden_cost_;
-    };
-
-    class TrainableChaingraphModelBuilder : public ChaingraphModelBuilder {
-    public:
-      TrainableChaingraphModelBuilder(boost::function<double (const Traxel&)> appearance = ConstantFeature(1000),
+	function<double (const Traxel&)> detection_;
+	function<double (const Traxel&)> non_detection_;
+	function<double (const Traxel&)> appearance_;
+	function<double (const Traxel&)> disappearance_;
+	function<double (const Traxel&,const Traxel&)> move_;
+	function<double (const Traxel&,const Traxel&,const Traxel&)> division_;
+	double opportunity_cost_;
+	double forbidden_cost_;
+      };
+      
+      class TrainableModelBuilder : public chaingraph::ModelBuilder {
+      public:
+      TrainableModelBuilder(boost::function<double (const Traxel&)> appearance = ConstantFeature(1000),
 				      boost::function<double (const Traxel&)> disappearance = ConstantFeature(1000),
 				      boost::function<double (const Traxel&, const Traxel&)> move = SquaredDistance(),
 				      double opportunity_cost = 0,
 				      double forbidden_cost = 100000)
-    	: ChaingraphModelBuilder(appearance, disappearance, move, opportunity_cost, forbidden_cost) {}
-      virtual TrainableChaingraphModelBuilder* clone() const;
+    	: chaingraph::ModelBuilder(appearance, disappearance, move, opportunity_cost, forbidden_cost) {}
+	virtual TrainableModelBuilder* clone() const;
 
-      // build
-      virtual ChaingraphModel* build( const HypothesesGraph& ) const;
+	// build
+	virtual chaingraph::Model* build( const HypothesesGraph& ) const;
 
-    private:
-      void add_detection_factor( const HypothesesGraph&, ChaingraphModel&, const HypothesesGraph::Node& ) const;
-      void add_outgoing_factor( const HypothesesGraph&, ChaingraphModel&, const HypothesesGraph::Node& ) const;
-      void add_incoming_factor( const HypothesesGraph&, ChaingraphModel&, const HypothesesGraph::Node& ) const;
-    };
+      private:
+	void add_detection_factor( const HypothesesGraph&, Model&, const HypothesesGraph::Node& ) const;
+	void add_outgoing_factor( const HypothesesGraph&, Model&, const HypothesesGraph::Node& ) const;
+	void add_incoming_factor( const HypothesesGraph&, Model&, const HypothesesGraph::Node& ) const;
 
-    class ChaingraphModelBuilderECCV12 : public ChaingraphModelBuilder {
-    public:
-      ChaingraphModelBuilderECCV12(boost::function<double (const Traxel&)> appearance = ConstantFeature(1000),
+      
+      };
+      
+      class ECCV12ModelBuilder : public chaingraph::ModelBuilder {
+      public:
+      ECCV12ModelBuilder(boost::function<double (const Traxel&)> appearance = ConstantFeature(1000),
 				   boost::function<double (const Traxel&)> disappearance = ConstantFeature(1000),
 				   boost::function<double (const Traxel&, const Traxel&)> move = SquaredDistance(),
 				   double opportunity_cost = 0,
 				   double forbidden_cost = 100000)
-    	: ChaingraphModelBuilder(appearance, disappearance, move, opportunity_cost, forbidden_cost) {}
-      virtual ChaingraphModelBuilderECCV12* clone() const;
+    	: chaingraph::ModelBuilder(appearance, disappearance, move, opportunity_cost, forbidden_cost) {}
+	virtual ECCV12ModelBuilder* clone() const;
 
-      // build
-      virtual ChaingraphModel* build( const HypothesesGraph& ) const;
+	// build
+	virtual chaingraph::Model* build( const HypothesesGraph& ) const;
 
-    private:
-      void add_detection_factor( const HypothesesGraph&, ChaingraphModel&, const HypothesesGraph::Node& ) const;
-      void add_outgoing_factor( const HypothesesGraph&, ChaingraphModel&, const HypothesesGraph::Node& ) const;
-      void add_incoming_factor( const HypothesesGraph&, ChaingraphModel&, const HypothesesGraph::Node& ) const;
-    };
+      private:
+	void add_detection_factor( const HypothesesGraph&, Model&, const HypothesesGraph::Node& ) const;
+	void add_outgoing_factor( const HypothesesGraph&, Model&, const HypothesesGraph::Node& ) const;
+	void add_incoming_factor( const HypothesesGraph&, Model&, const HypothesesGraph::Node& ) const;
+      };
+      
+      class ModelTrainer {
+      public:
+	template<class IT1, class IT2, class IT3>
+	  std::vector<OpengmModel::ValueType> train(IT1 samples_begin, IT1 samples_end, IT2 node_labels, IT3 arc_labels) const;
+      };
 
-    class ChaingraphModelTrainer {
-    public:
-      template<class IT1, class IT2, class IT3>
-	std::vector<OpengmModel::ValueType> train(IT1 samples_begin, IT1 samples_end, IT2 node_labels, IT3 arc_labels) const;
-    };
-
+    } /* namespace chaingraph */
   } /* namespace pgm */
 
 
   class Chaingraph : public Reasoner {
     public:
-    typedef pgm::ChaingraphModel::node_var_map node_var_map;
-    typedef pgm::ChaingraphModel::arc_var_map arc_var_map;
+    typedef pgm::chaingraph::Model::node_var_map node_var_map;
+    typedef pgm::chaingraph::Model::arc_var_map arc_var_map;
 
     Chaingraph(bool with_constraints = true,
 	       double ep_gap = 0.01,
@@ -262,10 +266,10 @@ namespace pgmlink {
       fixed_detections_(fixed_detections),
       ep_gap_(ep_gap),
       builder_(NULL)
-	{ builder_ = new pgm::ChaingraphModelBuilderECCV12(); (*builder_).with_detection_vars().with_divisions(); }
+	{ builder_ = new pgm::chaingraph::ECCV12ModelBuilder(); (*builder_).with_detection_vars().with_divisions(); }
     
 
-  Chaingraph(const pgm::ChaingraphModelBuilder& builder,
+  Chaingraph(const pgm::chaingraph::ModelBuilder& builder,
 	     bool with_constraints = true,
 	     double ep_gap = 0.01,
 	     bool fixed_detections = false
@@ -284,8 +288,8 @@ namespace pgmlink {
 
     double forbidden_cost() const;
     bool with_constraints() const;
-    const pgm::ChaingraphModelBuilder& builder() { return *builder_; }
-    void builder(const pgm::ChaingraphModelBuilder& builder) {
+    const pgm::chaingraph::ModelBuilder& builder() { return *builder_; }
+    void builder(const pgm::chaingraph::ModelBuilder& builder) {
       if(builder_) delete builder_; builder_ = builder.clone(); }
 
     /** Return current state of graphical model
@@ -315,13 +319,13 @@ namespace pgmlink {
     void reset();
     
     pgm::OpengmLPCplex* optimizer_;
-    shared_ptr<pgm::ChaingraphModel> linking_model_;
+    shared_ptr<pgm::chaingraph::Model> linking_model_;
 
     bool with_constraints_;
     bool fixed_detections_;
 
     double ep_gap_;
-    pgm::ChaingraphModelBuilder* builder_;
+    pgm::chaingraph::ModelBuilder* builder_;
 };
 } /* namespace pgmlink */
 
@@ -333,10 +337,10 @@ namespace pgmlink {
 
 namespace pgmlink {
   template<class IT1, class IT2, class IT3>
-    std::vector<pgm::OpengmModel::ValueType> pgm::ChaingraphModelTrainer::train(IT1 samples_begin, IT1 samples_end, IT2 node_labels, IT3 arc_labels) const {
+    std::vector<pgm::OpengmModel::ValueType> pgm::chaingraph::ModelTrainer::train(IT1 samples_begin, IT1 samples_end, IT2 node_labels, IT3 arc_labels) const {
     // for each sample: build chaingraph model
-    boost::ptr_vector<pgm::ChaingraphModel> models;
-    ChaingraphModelBuilderECCV12 b;
+    boost::ptr_vector<pgm::chaingraph::Model> models;
+    chaingraph::ECCV12ModelBuilder b;
     b.with_detection_vars().with_divisions();
     for(IT1 sample=samples_begin; sample!=samples_end; ++sample){
       models.push_back(b.build(*sample));
@@ -348,18 +352,18 @@ namespace pgmlink {
     std::vector<std::vector<pgm::OpengmModel::LabelType> > var_labels(std::distance(samples_begin, samples_end));
     for (int i=0; i < std::distance(samples_begin, samples_end); ++i) {
       var_labels[i] = std::vector<pgm::OpengmModel::LabelType>(models[i].opengm_model->numberOfVariables());
-      for(pgm::ChaingraphModel::var_t var_idx = 0; var_idx < var_labels[i].size(); ++var_idx) {
+      for(pgm::chaingraph::Model::var_t var_idx = 0; var_idx < var_labels[i].size(); ++var_idx) {
 	switch(models[i].var_category(var_idx)) {
-	case pgm::ChaingraphModel::node_var: {
-	  pgm::ChaingraphModel::node_t n = models[i].node_of_var(var_idx);
+	case pgm::chaingraph::Model::node_var: {
+	  pgm::chaingraph::Model::node_t n = models[i].node_of_var(var_idx);
 	  var_labels[i][var_idx] = (*cur_node_labels)[n];
 	} break; 
-	case pgm::ChaingraphModel::arc_var: {
-	  pgm::ChaingraphModel::arc_t a = models[i].arc_of_var(var_idx);
+	case pgm::chaingraph::Model::arc_var: {
+	  pgm::chaingraph::Model::arc_t a = models[i].arc_of_var(var_idx);
 	  var_labels[i][var_idx] = (*cur_arc_labels)[a];
 	} break;
 	  default:
-	    throw std::runtime_error("ChaingraphModelTrainer::train(): unknown var category encountered");
+	    throw std::runtime_error("chaingraph::ModelTrainer::train(): unknown var category encountered");
 	    break;
 	  }
       }

@@ -71,7 +71,7 @@ vector<vector<Event> > ChaingraphTracking::operator()(TraxelStore& ts) {
 	std::auto_ptr<Chaingraph> mrf;
 
 	if(alternative_builder_) {
-	  pgm::TrainableChaingraphModelBuilder b(appearance,
+	  pgm::chaingraph::TrainableModelBuilder b(appearance,
 						 disappearance,
 						 move,
 						 opportunity_cost_,
@@ -81,7 +81,7 @@ vector<vector<Event> > ChaingraphTracking::operator()(TraxelStore& ts) {
 	   .with_detection_vars(detection, misdetection);
 	  mrf = std::auto_ptr<Chaingraph>(new Chaingraph(b, with_constraints_, ep_gap_, fixed_detections_));
 	} else {
-	  pgm::ChaingraphModelBuilderECCV12 b(appearance,
+	  pgm::chaingraph::ECCV12ModelBuilder b(appearance,
 					      disappearance,
 					      move,
 					      opportunity_cost_,
