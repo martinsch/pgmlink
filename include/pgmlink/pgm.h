@@ -9,6 +9,7 @@
 
 #include <vector>
 
+#include <opengm/learning/loss_hamming.hxx>
 #include <opengm/graphicalmodel/graphicalmodel.hxx>
 #include <opengm/graphicalmodel/loglinearmodel.hxx>
 #include <opengm/inference/inference.hxx>
@@ -30,9 +31,11 @@ namespace pgmlink {
     //typedef opengm::GraphicalModel<double, opengm::Adder> OpengmModel;
     typedef opengm::ExplicitFunction<double> ExplicitFunction;
     typedef opengm::FunctionDecoratorWeighted< opengm::IndicatorFunction<double> > FeatureFunction;
+    typedef opengm::HammingFunction<double> LossFunction;
     typedef opengm::LoglinearModel<double,
       opengm::meta::TypeList<ExplicitFunction,
-      opengm::meta::TypeList<FeatureFunction, opengm::meta::ListEnd > > > OpengmModel;
+      opengm::meta::TypeList<FeatureFunction,
+      opengm::meta::TypeList<LossFunction, opengm::meta::ListEnd > > > > OpengmModel;
 
     template <typename OGM_FUNCTION>
       class OpengmFactor {
