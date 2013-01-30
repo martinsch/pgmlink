@@ -69,8 +69,8 @@ BOOST_AUTO_TEST_CASE( learning_from_autolabels ) {
   lemon::mapCopy(*graph, graph->get(arc_active()), arc_labels);
   vector<pgm::OpengmModel::ValueType> weights;
 
-  // pgm::chaingraph::ModelTrainer trainer;
-  // weights = trainer.train(graph.get(), graph.get()+1, &node_labels, &arc_labels);
+  pgm::chaingraph::ModelTrainer trainer;
+  weights = trainer.train(graph.get(), graph.get()+1, &node_labels, &arc_labels);
 }
 
 

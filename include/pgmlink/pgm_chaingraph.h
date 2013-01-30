@@ -229,4 +229,52 @@ namespace pgmlink {
   } /* namespace pgm */
 } /* namespace pgmlink */
 
+
+/**/
+/* implementation */
+/**/
+#include <boost/ptr_container/ptr_vector.hpp>
+#include <iostream>
+
+namespace pgmlink {
+  template<class IT1, class IT2, class IT3>
+    std::vector<pgm::OpengmModel::ValueType> pgm::chaingraph::ModelTrainer::train(IT1 samples_begin, IT1 samples_end, IT2 node_labels, IT3 arc_labels) const {
+    std::cout << "begin training\n";
+    // for each sample: build chaingraph model
+    boost::ptr_vector<pgm::chaingraph::Model> models;
+    chaingraph::ECCV12ModelBuilder b;
+    b.with_detection_vars().with_divisions();
+    for(IT1 sample=samples_begin; sample!=samples_end; ++sample){
+      models.push_back(b.build(*sample));
+    }
+
+    // convert HypothesesGraph labels to OpengmModel labels
+    IT2 cur_node_labels = node_labels;
+    IT3 cur_arc_labels = arc_labels;
+    std::vector<std::vector<pgm::OpengmModel::LabelType> > var_labels(std::distance(samples_begin, samples_end));
+    for (int i=0; i < std::distance(samples_begin, samples_end); ++i) {
+      var_labels[i] = std::vector<pgm::OpengmModel::LabelType>(models[i].opengm_model->numberOfVariables());
+      for(pgm::chaingraph::Model::var_t var_idx = 0; var_idx < var_labels[i].size(); ++var_idx) {
+	switch(models[i].var_category(var_idx)) {
+	case pgm::chaingraph::Model::node_var: {
+	  pgm::chaingraph::Model::node_t n = models[i].node_of_var(var_idx);
+	  var_labels[i][var_idx] = (*cur_node_labels)[n];
+	} break; 
+	case pgm::chaingraph::Model::arc_var: {
+	  pgm::chaingraph::Model::arc_t a = models[i].arc_of_var(var_idx);
+	  var_labels[i][var_idx] = (*cur_arc_labels)[a];
+	} break;
+	  default:
+	    throw std::runtime_error("chaingraph::ModelTrainer::train(): unknown var category encountered");
+	    break;
+	  }
+      }
+      ++cur_node_labels;
+      ++cur_arc_labels;
+    }
+    
+    return std::vector<pgm::OpengmModel::ValueType>();
+  }
+} /* namespace pgmlink */
+
 #endif /* PGMLINK_PGM_CHAINGRAPH_H */
