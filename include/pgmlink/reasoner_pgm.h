@@ -4,8 +4,8 @@
    @brief graphical model-based reasoner
 */
 
-#ifndef REASONER_OPENGM_H
-#define REASONER_OPENGM_H
+#ifndef REASONER_PGM_H
+#define REASONER_PGM_H
 
 #include <algorithm>
 #include <iterator>
@@ -154,4 +154,4 @@ namespace pgmlink {
   }
 
 } /* namespace pgmlink */
-#endif /* REASONER_OPENGM_H */
+#endif /* REASONER_PGM_H */

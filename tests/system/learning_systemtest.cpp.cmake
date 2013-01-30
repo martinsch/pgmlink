@@ -11,7 +11,7 @@
 #include <boost/shared_ptr.hpp>
 #include <lemon/maps.h>
 
-#include "pgmlink/reasoner_opengm.h"
+#include "pgmlink/reasoner_pgm.h"
 #include "pgmlink/pgm_chaingraph.h"
 #include "pgmlink/traxels.h"
 #include "pgmlink/hypotheses.h"

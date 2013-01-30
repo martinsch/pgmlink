@@ -1,4 +1,4 @@
-#define BOOST_TEST_MODULE reasoner_opengm_test
+#define BOOST_TEST_MODULE reasoner_pgm_test
 
 #include <vector>
 #include <iostream>
@@ -21,7 +21,7 @@
 #include "pgmlink/graph.h"
 #include "pgmlink/hypotheses.h"
 #include "pgmlink/feature.h"
-#include "pgmlink/reasoner_opengm.h"
+#include "pgmlink/reasoner_pgm.h"
 #include "pgmlink/traxels.h"
 
 using namespace pgmlink;

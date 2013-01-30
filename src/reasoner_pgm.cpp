@@ -11,7 +11,7 @@
 #include "pgmlink/pgm.h"
 #include "pgmlink/hypotheses.h"
 #include "pgmlink/log.h"
-#include "pgmlink/reasoner_opengm.h"
+#include "pgmlink/reasoner_pgm.h"
 #include "pgmlink/pgm_chaingraph.h"
 #include "pgmlink/traxels.h"
 
