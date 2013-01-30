@@ -55,6 +55,27 @@ namespace pgmlink {
       LOG(logDEBUG3) << "get_cellness(): " << cellness;
       return cellness;
     }
+
+  double get_detection_prob(const Traxel& tr, size_t state) {
+	  FeatureMap::const_iterator it = tr.features.find("detProb");
+	  if (it == tr.features.end()) {
+		  throw runtime_error("get_detection_prob(): divProb feature not in traxel");
+	  }
+	  double det_prob = it->second[state];
+	  LOG(logDEBUG3) << "get_detection_prob(): " << det_prob;
+	  return det_prob;
+  }
+
+  double get_division_prob(const Traxel& tr) {
+	  FeatureMap::const_iterator it = tr.features.find("divProb");
+	  if (it == tr.features.end()) {
+		  throw runtime_error("get_division_prob(): divProb feature not in traxel");
+	  }
+	  double div_prob = it->second[0];
+	  LOG(logDEBUG3) << "get_division_prob(): " << div_prob;
+	  return div_prob;
+  }
+
   }
 
 
@@ -78,7 +99,54 @@ namespace pgmlink {
   }
   
   
-  
+////
+//// class NegLnDetection
+////
+double NegLnDetection::operator ()(const Traxel& tr, size_t state) const {
+	double arg = get_detection_prob(tr, state);
+    if(arg < 0.0000000001) arg = 0.0000000001;
+	return w_*-1*log(arg);
+}
+
+
+////
+//// class NegLnDivision
+////
+double NegLnDivision::operator ()(const Traxel& tr, size_t state) const {
+	double arg = get_division_prob(tr);
+	if (state == 0) {
+		arg = 1 - arg;
+	}
+    if(arg <0.0000000001) arg = 0.0000000001;
+	return w_*-1*log(arg);
+}
+
+
+////
+//// class NegLnTransition
+////
+double NegLnTransition::operator ()(const double dist_prob) const {
+	double arg = dist_prob;
+    if(arg < 0.0000000001) arg = 0.0000000001;
+	return w_*-1*log(arg);
+}
+
+
+////
+//// class NegLnConstant
+////
+double NegLnConstant::operator ()(size_t state) const {
+	if (state > sizeof(prob_vector_)/sizeof(double)) {
+		  throw runtime_error("NegLnConstant(): state must not be larger than the size of the prob. vector");
+	}
+	double arg = prob_vector_[state];
+	LOG(logDEBUG3) << "NegLnConstant(): arg = " << arg;
+	if(arg == 0) arg = 0.0000000001;
+	return w_*-1*log(arg);
+}
+
+
+
   ////
   //// class SquaredDistance
   ////

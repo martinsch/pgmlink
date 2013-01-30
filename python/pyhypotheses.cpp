@@ -98,6 +98,10 @@ void export_hypotheses() {
 
 
   // handle function overloading
+  HypothesesGraph::Node (HypothesesGraph::*addnode1)(const int) 
+    = &HypothesesGraph::add_node;
+  HypothesesGraph::Node (HypothesesGraph::*addnode2)(const std::vector<int>) 
+    = &HypothesesGraph::add_node;
   void (HypothesesGraph::*erase1)(const HypothesesGraph::Node) = &HypothesesGraph::erase;
   void (HypothesesGraph::*erase2)(const HypothesesGraph::Arc) = &HypothesesGraph::erase;
   bool (HypothesesGraph::*valid1)(const HypothesesGraph::Node) const = &HypothesesGraph::valid;
@@ -114,7 +118,8 @@ void export_hypotheses() {
     &HypothesesGraph::runningNode;
 
   class_<HypothesesGraph, boost::noncopyable>("HypothesesGraph")
-    .def("addNode", &HypothesesGraph::add_node)
+    .def("addNode", addnode1)
+    .def("addNode", addnode2)
     //.def("timesteps", &HypothesesGraph::timesteps, 
     //   return_internal_reference<>())
     .def("earliest_timestep", &HypothesesGraph::earliest_timestep)

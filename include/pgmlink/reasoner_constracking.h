@@ -3,16 +3,20 @@
 
 #include <map>
 #include <boost/function.hpp>
+#include <opengm/inference/inference.hxx>
+#include <opengm/inference/lpcplex.hxx>
+
 #include "pgmlink/graphical_model.h"
 #include "pgmlink/hypotheses.h"
 #include "pgmlink/reasoner.h"
 
-namespace Tracking {
+namespace pgmlink {
 class Traxel;
 
-class SingleTimestepTraxelConservation : public Reasoner {
+
+class ConservationTracking : public Reasoner {
     public:
-	SingleTimestepTraxelConservation(
+	ConservationTracking(
 				unsigned int max_number_objects,
 				boost::function<double (const Traxel&, const size_t)> detection,
 			    boost::function<double (const Traxel&, const size_t)> division,
@@ -30,7 +34,7 @@ class SingleTimestepTraxelConservation : public Reasoner {
     division_(division),
     transition_(transition),
     forbidden_cost_(forbidden_cost),
-    pgm_(NULL),
+//    pgm_(NULL),
     optimizer_(NULL),
     with_constraints_(with_constraints),
     fixed_detections_(fixed_detections),
@@ -41,7 +45,7 @@ class SingleTimestepTraxelConservation : public Reasoner {
     number_of_appearance_nodes_(0),
     number_of_disappearance_nodes_(0)
     { };
-    ~SingleTimestepTraxelConservation();
+    ~ConservationTracking();
 
     virtual void formulate( const HypothesesGraph& );
     virtual void infer();
@@ -55,7 +59,7 @@ class SingleTimestepTraxelConservation : public Reasoner {
      * The returned pointer may be NULL before formulate() is called
      * the first time.
      **/
-    const OpengmModel* get_graphical_model() const;
+//    const pgm::OpengmModelDeprecated* get_graphical_model() const;
 
     /** Return mapping from HypothesesGraph nodes to graphical model variable ids
      *
@@ -72,8 +76,8 @@ class SingleTimestepTraxelConservation : public Reasoner {
 
     private:
     // copy and assingment have to be implemented, yet
-    SingleTimestepTraxelConservation(const SingleTimestepTraxelConservation&) {};
-    SingleTimestepTraxelConservation& operator=(const SingleTimestepTraxelConservation&) { return *this;};
+    ConservationTracking(const ConservationTracking&) {};
+    ConservationTracking& operator=(const ConservationTracking&) { return *this;};
 
     void reset();
     void add_constraints( const HypothesesGraph& );
@@ -100,8 +104,10 @@ class SingleTimestepTraxelConservation : public Reasoner {
     boost::function<double (const double)> transition_;
     double forbidden_cost_;
     
-    OpengmModel* pgm_;
-    OpengmModel::ogmInference* optimizer_;
+//    pgm::OpengmModelDeprecated* pgm_;
+    shared_ptr<pgm::OpengmModelDeprecated> pgm_;
+//    pgmlink::pgm::OpengmModelDeprecated::ogmLPCplex* optimizer_;
+    opengm::LPCplex<pgm::OpengmModelDeprecated::ogmGraphicalModel, pgm::OpengmModelDeprecated::ogmAccumulator>* optimizer_;
 
     std::map<HypothesesGraph::Node, size_t> node_map_;
     std::map<HypothesesGraph::Node, size_t> div_node_map_;
@@ -132,10 +138,11 @@ class SingleTimestepTraxelConservation : public Reasoner {
 /******************/
  
 // template< typename table_t, typename const_iter >
-//   void SingleTimestepTraxelConservation::add_factor( const table_t& table, const_iter first_idx, const_iter last_idx ){
-//   OpengmModel::FunctionIdentifier id=pgm_->Model()->addFunction(table);
+//   void ConservationTracking::add_factor( const table_t& table, const_iter first_idx, const_iter last_idx ){
+//   OpengmModelDeprecated::FunctionIdentifier id=pgm_->Model()->addFunction(table);
 //   pgm_->Model()->addFactor(id, first_idx, last_idx);
 // }
  
-} /* namespace Tracking */
+} /* namespace pgmlink */
 #endif /* MRF_REASONER_H */
+  
