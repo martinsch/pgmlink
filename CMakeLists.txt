@@ -51,10 +51,10 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_extensions/)
     find_package( VIGRA REQUIRED )
     find_package( Lemon REQUIRED )
     find_package( HDF5 REQUIRED )
+    find_package( FFTW3 REQUIRED )
 
-    include_directories(${VIGRA_INCLUDE_DIR} ${LEMON_INCLUDE_DIR} ${HDF5_INCLUDE_DIRS} )
-    link_directories( ${VIGRA_IMPEX_LIBRARY_DIR} ${LEMON_LIBRARY_DIR} ${HDF5_LIBRARY_DIRS} )
-
+    include_directories(${FFTW3_INCLUDE_DIR} ${VIGRA_INCLUDE_DIR} ${LEMON_INCLUDE_DIR} ${HDF5_INCLUDE_DIRS} )
+    link_directories( ${FFTW3_LIBRARY_DIR} ${VIGRA_IMPEX_LIBRARY_DIR} ${LEMON_LIBRARY_DIR} ${HDF5_LIBRARY_DIRS} )
 ##
 # build options
 ##
@@ -104,9 +104,7 @@ FILE(GLOB LIB_SOURCES src/*.cpp)
 find_package( Boost REQUIRED COMPONENTS serialization )
 
 ADD_LIBRARY(pgmlink SHARED ${LIB_SOURCES})
-TARGET_LINK_LIBRARIES(pgmlink ${Boost_LIBRARIES} ${HD5_LIBRARIES} ${HDF5_HL_LIBRARIES} ann cplex ilocplex pthread concert ${VIGRA_IMPEX_LIBRARY} ${LEMON_LIBRARIES})
-
-
+TARGET_LINK_LIBRARIES(pgmlink ${FFTW3_LIBRARIES} fftw3 fftw3f ${HD5_LIBRARIES} ${HDF5_HL_LIBRARIES} ann cplex ilocplex pthread concert ${VIGRA_IMPEX_LIBRARY} ${LEMON_LIBRARIES} )
 
 
 ### Always use full RPATH
