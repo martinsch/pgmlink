@@ -250,7 +250,7 @@ namespace pgmlink {
 									     const HypothesesGraph::Node& n) const {
 	vector<OpengmModel::IndexType> vi; // opengm variable indices; can be empty if there are no det vars
 	if(has_detection_vars()) {
-	  vi.push_back(m.var_of_node(n)); // first detection node, remaining will be transition nodes
+	  vi.push_back(m.var_of_node(n)); // first detection node, remaining will be assignment vars
 	}
 	for(HypothesesGraph::OutArcIt a(hypotheses, n); a != lemon::INVALID; ++a) {
 	  vi.push_back(m.var_of_arc(a));
@@ -258,7 +258,19 @@ namespace pgmlink {
 	return vi;
       }
 
-      
+      vector<OpengmModel::IndexType> ModelBuilder::vars_for_incoming_factor( const HypothesesGraph& hypotheses,
+									     const Model& m,
+									     const HypothesesGraph::Node& n) const {
+	vector<OpengmModel::IndexType> vi; // opengm variable indices; can be empty if there are no det vars
+	if(has_detection_vars()) {
+	  vi.push_back(m.var_of_node(n)); // detection var, remaining will be assignment vars
+	}
+	for(HypothesesGraph::InArcIt a(hypotheses, n); a != lemon::INVALID; ++a) {
+	  vi.push_back(m.var_of_arc(a));
+	}
+	std::reverse(vi.begin(), vi.end()); // det var should be the first index to be consistent with vars_for_outgoing_factor()
+	return vi;
+      }
 
       void ModelBuilder::couple(const Model& m, const HypothesesGraph::Node& n, const HypothesesGraph::Arc& a, OpengmLPCplex& cplex ) {
 	vector<size_t> cplex_idxs; 
@@ -281,10 +293,6 @@ namespace pgmlink {
     }
 
     Model* TrainableModelBuilder::build(const HypothesesGraph& hypotheses) const {
-
-      if( !has_detection_vars() ) {
-	throw std::runtime_error("TrainableChaingraphModelBuilder::build: option without detection vars not yet implemented");
-      }
       if( !has_divisions() ) {
 	throw std::runtime_error("TrainableChaingraphModelBuilder::build: option without divisions not yet implemented");
       }
@@ -491,45 +499,50 @@ namespace pgmlink {
 
       LOG(logDEBUG) << "TrainableModelBuilder::add_incoming_factor(): entered";
       // collect and count incoming arcs
-      vector<size_t> vi; // opengm variable indeces
-      int count = 0;
-      for(HypothesesGraph::InArcIt a(hypotheses, n); a != lemon::INVALID; ++a) {
-	vi.push_back(m.var_of_arc(a));
-	++count;
+      const vector<size_t> vi = vars_for_incoming_factor(hypotheses, m, n); // one or zero det vars and zero or more assignment vars
+      if(vi.size() == 0) {
+	// nothing to do here, get out!
+	// happens in case of no det vars and no incoming arcs
+	return;
       }
-      vi.push_back(m.var_of_node(n)); 
-      std::reverse(vi.begin(), vi.end());
     
       //// construct factor
-      size_t table_dim = count + 1; 		// detection var + n * transition var
+      const size_t table_dim = vi.size();
+      const std::vector<size_t> shape(table_dim, 2);
       std::vector<size_t> coords;
-      std::vector<size_t> shape(table_dim, 2);
       
       std::set<size_t > entries;
       for(size_t i = 0; i < static_cast<size_t>(std::pow(2, table_dim)); ++i) {
 	entries.insert( entries.end(), i );
       }
 
-
       // allow opportunity configuration
       // (0,0,...,0)
-      coords = std::vector<size_t>(table_dim, 0);
-      size_t check = entries.erase(BinToDec(coords));
-      assert(check == 1);
+      if(has_detection_vars()) {
+	coords = std::vector<size_t>(table_dim, 0);
+	size_t check = entries.erase(BinToDec(coords));
+	assert(check == 1);
+      }
 
       // appearance configuration
       coords = std::vector<size_t>(table_dim, 0);
-      coords[0] = 1; // (1,0,...,0)
-	check = entries.erase(BinToDec(coords));
-	assert(check == 1);
-	OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), appearance()(traxel_map[n]) )
-	  .add_as_feature_to( *(m.opengm_model), m.weight_map[Model::app_weight].front() );
+      if(has_detection_vars()) {
+	coords[0] = 1; // (1,0,...,0)
+      }
+      size_t check = entries.erase(BinToDec(coords));
+      assert(check == 1);
+      OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), appearance()(traxel_map[n]) )
+	.add_as_feature_to( *(m.opengm_model), m.weight_map[Model::app_weight].front() );
 
       // allow move configurations
-      coords = std::vector<size_t>(table_dim, 0);
-      coords[0] = 1;
       // (1,0,0,0,1,0,0)
-      for(size_t i = 1; i < table_dim; ++i) {
+      coords = std::vector<size_t>(table_dim, 0);
+      size_t assignment_begin = 0;
+      if(has_detection_vars()) {
+	coords[0] = 1;
+	assignment_begin = 1;
+      }
+      for(size_t i = assignment_begin; i < table_dim; ++i) {
 	coords[i] = 1; 
 	size_t check = entries.erase(BinToDec(coords));
 	assert(check == 1);
@@ -539,6 +552,7 @@ namespace pgmlink {
       // forbidden configurations
       for(std::set<size_t>::iterator it = entries.begin(); it != entries.end(); ++it) {
 	coords = DecToBin(*it);
+	// zero padding up to table dim
 	if(coords.size() < table_dim ) {
 	  coords.insert(coords.begin(), table_dim-coords.size(), 0);
 	}
