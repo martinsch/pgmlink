@@ -148,8 +148,8 @@ namespace pgmlink {
       virtual chaingraph::Model* build( const HypothesesGraph& ) const = 0;      
 
       // refinement
-      static void add_hard_constraints( const Model&, const HypothesesGraph&, OpengmLPCplex& );
-      static void fix_detections( const Model&, const HypothesesGraph&, OpengmLPCplex& );
+      void add_hard_constraints( const Model&, const HypothesesGraph&, OpengmLPCplex& );
+      void fix_detections( const Model&, const HypothesesGraph&, OpengmLPCplex& );
 
     protected:
       void add_detection_vars( const HypothesesGraph&, Model& ) const;

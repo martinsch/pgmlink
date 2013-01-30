@@ -173,54 +173,67 @@ namespace pgmlink {
       return *this;
     }
 
-    namespace {
-      inline size_t cplex_id(size_t opengm_id) {
-	return 2*opengm_id + 1;
+      namespace {
+	inline size_t cplex_id(size_t opengm_id) {
+	  return 2*opengm_id + 1;
+	}
       }
-    }
-    void ModelBuilder::add_hard_constraints( const Model& m, const HypothesesGraph& hypotheses, OpengmLPCplex& cplex ) {
-      LOG(logDEBUG) << "Chaingraph::add_constraints: entered";
-      ////
-      //// outgoing transitions
-      ////
-      LOG(logDEBUG) << "Chaingraph::add_constraints: outgoing transitions";
-      for(HypothesesGraph::NodeIt n(hypotheses); n!=lemon::INVALID; ++n) {
-	// couple detection and transitions
-	for(HypothesesGraph::OutArcIt a(hypotheses, n); a!=lemon::INVALID; ++a) {
-	  couple(m, n, a, cplex);
+      void ModelBuilder::add_hard_constraints( const Model& m, const HypothesesGraph& hypotheses, OpengmLPCplex& cplex ) {
+	LOG(logDEBUG) << "Chaingraph::add_constraints: entered";
+	////
+	//// outgoing transitions
+	////
+	LOG(logDEBUG) << "Chaingraph::add_constraints: outgoing transitions";
+	for(HypothesesGraph::NodeIt n(hypotheses); n!=lemon::INVALID; ++n) {
+	  // couple detection and transitions
+	  if(has_detection_vars()) {
+	    for(HypothesesGraph::OutArcIt a(hypotheses, n); a!=lemon::INVALID; ++a) {
+	      couple(m, n, a, cplex);
+	    }
+	  }
+	
+	  // couple assignments
+	  vector<size_t> cplex_idxs;
+	  for(HypothesesGraph::OutArcIt a(hypotheses, n); a!=lemon::INVALID; ++a) {
+	    cplex_idxs.push_back(cplex_id(m.var_of_arc(a)));
+	  }
+	  if( cplex_idxs.size() > 0 ) {
+	    vector<int> coeffs(cplex_idxs.size(), 1);
+	    // 0 <= 1*transition + ... + 1*transition <= 2 [div] or 1 [no div]
+	    const size_t max_on = has_divisions() ? 2 : 1;
+	    cplex.addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0, max_on);
+	  }
 	}
-	// couple transitions
-	vector<size_t> cplex_idxs;
-	for(HypothesesGraph::OutArcIt a(hypotheses, n); a!=lemon::INVALID; ++a) {
-	  cplex_idxs.push_back(cplex_id(m.var_of_arc(a)));
-	}
-	vector<int> coeffs(cplex_idxs.size(), 1);
-	// 0 <= 1*transition + ... + 1*transition <= 2
-	cplex.addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0, 2);
-      }
-
-      ////
-      //// incoming transitions
-      ////
-      LOG(logDEBUG) << "Chaingraph::add_constraints: incoming transitions";
-      for(HypothesesGraph::NodeIt n(hypotheses); n!=lemon::INVALID; ++n) {
-	// couple detection and transitions
-	for(HypothesesGraph::InArcIt a(hypotheses, n); a!=lemon::INVALID; ++a) {
-	  couple(m, n, a, cplex);
-	}
+      
+	////
+	//// incoming transitions
+	////
+	LOG(logDEBUG) << "Chaingraph::add_constraints: incoming transitions";
+	for(HypothesesGraph::NodeIt n(hypotheses); n!=lemon::INVALID; ++n) {
+	  // couple detection and transitions
+	  if(has_detection_vars()) {
+	    for(HypothesesGraph::InArcIt a(hypotheses, n); a!=lemon::INVALID; ++a) {
+	      couple(m, n, a, cplex);
+	    }
+	  }
 	    
-	// couple transitions
-	vector<size_t> cplex_idxs;
-	for(HypothesesGraph::InArcIt a(hypotheses, n); a!=lemon::INVALID; ++a) {
-	  cplex_idxs.push_back(cplex_id(m.var_of_arc(a)));
+	  // couple transitions
+	  vector<size_t> cplex_idxs;
+	  for(HypothesesGraph::InArcIt a(hypotheses, n); a!=lemon::INVALID; ++a) {
+	    cplex_idxs.push_back(cplex_id(m.var_of_arc(a)));
+	  }
+	  if(cplex_idxs.size() > 0) {
+	    vector<int> coeffs(cplex_idxs.size(), 1);
+	    // 0 <= 1*transition + ... + 1*transition <= 1
+	    cplex.addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0, 1);
+	  }
 	}
-	vector<int> coeffs(cplex_idxs.size(), 1);
-	// 0 <= 1*transition + ... + 1*transition <= 1
-	cplex.addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0, 1);
       }
-    }
 
       void ModelBuilder::fix_detections( const Model& m, const HypothesesGraph& g, OpengmLPCplex& cplex ) {
+	if(!has_detection_vars()) {
+	  throw std::runtime_error("chaingraph::ModelBuilder::fix_detections(): called without has_detection_vars()");
+	}
 	for(HypothesesGraph::NodeIt n(g); n!=lemon::INVALID; ++n) {
 	  vector<size_t> cplex_idxs; 
 	  cplex_idxs.push_back(cplex_id(m.var_of_node(n)));
@@ -232,6 +245,10 @@ namespace pgmlink {
       }
 
       inline void ModelBuilder::add_detection_vars( const HypothesesGraph& hypotheses, Model& m ) const {
+	if(!has_detection_vars()) {
+	  throw std::runtime_error("chaingraph::ModelBuilder::add_detection_vars(): called without has_detection_vars()");
+	}
+
 	for(HypothesesGraph::NodeIt n(hypotheses); n!=lemon::INVALID; ++n) {
 	  m.opengm_model->addVariable(2);
 	  m.node_var_.left.insert(Model::node_var_map::value_type(n, m.opengm_model->numberOfVariables() - 1));

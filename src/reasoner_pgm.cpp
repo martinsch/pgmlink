@@ -60,12 +60,12 @@ void Chaingraph::formulate( const HypothesesGraph& hypotheses ) {
 
     if (with_constraints_) {
       LOG(logDEBUG) << "Chaingraph::formulate: add_constraints";
-      pgm::chaingraph::ModelBuilder::add_hard_constraints( *linking_model_ , hypotheses, *cplex );
+      builder_->add_hard_constraints( *linking_model_ , hypotheses, *cplex );
     }
     
     if (fixed_detections_) {
       LOG(logDEBUG) << "Chaingraph::formulate: fix_detections";
-      pgm::chaingraph::ModelBuilder::fix_detections( *linking_model_, hypotheses, *cplex );
+      builder_->fix_detections( *linking_model_, hypotheses, *cplex );
     }
 }
 
