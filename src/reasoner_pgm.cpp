@@ -93,10 +93,15 @@ void Chaingraph::conclude( HypothesesGraph& g ) {
     property_map<arc_active, HypothesesGraph::base_graph>::type& active_arcs = g.get(arc_active());
 
     // write state after inference into 'active'-property maps
-    for(pgm::chaingraph::Model::node_var_map::const_iterator it = linking_model_->var_of_node().begin(); it != linking_model_->var_of_node().end(); ++it) {
+    if(builder_->has_detection_vars()) {
+      for(pgm::chaingraph::Model::node_var_map::const_iterator it = linking_model_->var_of_node().begin(); it != linking_model_->var_of_node().end(); ++it) {
 	bool state = false;
 	if(solution[it->second] == 1) state = true;
 	active_nodes.set(it->first, state);
+      }
+    } else {
+      // if we have no detection vars we set all nodes to active by default
+      active_nodes.setAll(true); 
     }
     for(pgm::chaingraph::Model::arc_var_map::const_iterator it = linking_model_->var_of_arc().begin(); it != linking_model_->var_of_arc().end(); ++it) {
 	bool state = false;

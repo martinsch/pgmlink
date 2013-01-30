@@ -72,11 +72,11 @@ namespace pgmlink {
     return lhs;
   }
   inline std::ostream& operator<<(std::ostream& os, const EventsStatistics& obj) { 
-    os << "#total:" << obj.n_total
-       << " #move:" << obj.n_mov
-       << " #division:" << obj.n_div
-       << " #app.:" << obj.n_app
-       << " #disapp." << obj.n_dis;
+    os << "#total: " << obj.n_total
+       << ", #move: " << obj.n_mov
+       << ", #division: " << obj.n_div
+       << ", #app.: " << obj.n_app
+       << ", #disapp.: " << obj.n_dis;
     return os;
   } 
 
@@ -84,7 +84,7 @@ namespace pgmlink {
     EventsStatistics collect_events_statistics(event_it begin, event_it end, bool ignore_unknown_events=false) {
     EventsStatistics stats;
     for(event_it event=begin; event!=end; ++event) {
-      switch(*event) {
+      switch(event->type) {
       case Event::Move:
 	stats.n_mov += 1;
 	stats.n_total += 1;
