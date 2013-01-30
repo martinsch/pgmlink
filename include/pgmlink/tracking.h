@@ -132,7 +132,9 @@ namespace pgmlink {
   	      double avg_obj_size=30.0,
   	      bool with_appearance=false,
   	      bool with_disappearance=false,
-  	      bool with_tracklets=true
+  	      bool with_tracklets=true,
+         double division_weight=1.0,
+         double transition_weight=1.0
   	      )
         : max_number_objects_(max_number_objects),
         	max_dist_(max_neighbor_distance), division_threshold_(division_threshold),
@@ -140,7 +142,7 @@ namespace pgmlink {
         forbidden_cost_(forbidden_cost), with_constraints_(with_constraints),
         fixed_detections_(fixed_detections), ep_gap_(ep_gap), avg_obj_size_(avg_obj_size),
         with_appearance_(with_appearance),with_disappearance_(with_disappearance),
-        with_tracklets_(with_tracklets){}
+        with_tracklets_(with_tracklets), division_weight_(division_weight), transition_weight_(transition_weight){}
       std::vector< std::vector<Event> > operator()(TraxelStore&);
 
       /**
@@ -160,6 +162,8 @@ namespace pgmlink {
       double ep_gap_;
       double avg_obj_size_;
       bool with_appearance_, with_disappearance_, with_tracklets_;
+      double division_weight_;
+      double transition_weight_;
       shared_ptr<std::vector< std::map<unsigned int, bool> > > last_detections_;
     };
 }
