@@ -17,12 +17,12 @@
 
 #include "pgmlink/graph.h"
 #include "pgmlink/hypotheses.h"
-#include "pgmlink/energy.h"
+#include "pgmlink/feature.h"
 #include "pgmlink/reasoner_constracking.h"
 #include "pgmlink/traxels.h"
-#include "pgmlink/track.h"
+#include "pgmlink/tracking.h"
 
-using namespace Tracking;
+using namespace pgmlink;
 using namespace std;
 using namespace boost;
 

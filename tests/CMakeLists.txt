@@ -21,17 +21,17 @@ if(Boost_FOUND)
 
   ## randomforest lives in the project dir and we add it manually
   # assume by default that HDF5 is installed. Set definition for vigra random forest
-  ADD_DEFINITIONS(-DHasHDF5)
-  configure_file(randomforest_test.cpp.cmake randomforest_test.cpp)
-  add_executable(randomforest_test ${PROJECT_BINARY_DIR}/tests/randomforest_test.cpp)
-  target_link_libraries(randomforest_test pgmlink ${Boost_LIBRARIES} hdf5 hdf5_hl vigraimpex)
-  add_test(randomforest randomforest_test)
+  #ADD_DEFINITIONS(-DHasHDF5)
+  #configure_file(randomforest_test.cpp.cmake randomforest_test.cpp)
+  #add_executable(randomforest_test ${PROJECT_BINARY_DIR}/tests/randomforest_test.cpp)
+  #target_link_libraries(randomforest_test pgmlink ${Boost_LIBRARIES} hdf5 hdf5_hl vigraimpex)
+  #add_test(randomforest randomforest_test)
 
   ## system tests
-  configure_file( system/learning_systemtest.cpp.cmake learning_systemtest.cpp)
-  add_executable( learning_systemtest ${PROJECT_BINARY_DIR}/tests/learning_systemtest.cpp )
-  target_link_libraries( learning_systemtest pgmlink ${Boost_LIBRARIES} )   
-  add_test( learning_systemtest learning_systemtest )
+  #configure_file( system/learning_systemtest.cpp.cmake learning_systemtest.cpp)
+  #add_executable( learning_systemtest ${PROJECT_BINARY_DIR}/tests/learning_systemtest.cpp )
+  #target_link_libraries( learning_systemtest pgmlink ${Boost_LIBRARIES} )   
+  #add_test( learning_systemtest learning_systemtest )
   
 endif()
 

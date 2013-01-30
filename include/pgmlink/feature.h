@@ -67,6 +67,40 @@ namespace pgmlink {
     double w_;
   };
  
+class NegLnDetection {
+public:
+	NegLnDetection(double weight) :
+		w_(weight) {}
+	double operator()( const Traxel&, const size_t state ) const;
+private:
+	double w_;
+};
+
+class NegLnConstant {
+public:
+	NegLnConstant(double weight, std::vector<double> prob_vector): w_(weight), prob_vector_(prob_vector) {}
+	double operator()(const size_t state ) const;
+private:
+	double w_;
+	std::vector<double> prob_vector_;
+};
+
+class NegLnDivision {
+public:
+	NegLnDivision(double weight) : w_(weight) {}
+	double operator()( const Traxel&, const size_t state ) const;
+private:
+	double w_;
+};
+
+class NegLnTransition {
+public:
+	NegLnTransition(double weight) : w_(weight) {}
+	double operator()( const double ) const;
+private:
+	double w_;
+};
+
   /**
      @brief Zero near temporal border, else 1.
   */

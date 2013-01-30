@@ -35,11 +35,29 @@ void export_track() {
       .def("detections", &ChaingraphTracking::detections) 
     ;
 
+    class_<ConsTracking>("ConsTracking",
+			init<int,double,double,string,bool,double,bool,bool,double,double,bool,bool,bool>(
+						args("max_number_objects", "max_neighbor_distance", "division_threshold",
+							"detection_rf_filename", "size_dependent_detection_prob", "forbidden_cost",
+							"with_constraints", "fixed_detections", "ep_gap", "avg_obj_size",
+							"with_appearance", "with_disappearance", "with_tracklets")))
+	  .def("__call__", &ConsTracking::operator())
+	  .def("detections", &ConsTracking::detections)
+	;
+
+    class_<NNTracking>("NNTracking",
+			init<double,double,std::vector<std::string>, double,bool,bool,std::vector<int> >(
+				 args("divDist", "movDist", "features", "divisionThreshold", "splitterHandling", "mergerHandling", "maxTraxelIdAt")))
+	  .def("__call__", &NNTracking::operator())
+	  .def("detections", &NNTracking::detections)
+        ;
+
     enum_<Event::EventType>("EventType")
 	.value("Move", Event::Move)
 	.value("Division", Event::Division)
 	.value("Appearance", Event::Appearance)
 	.value("Disappearance", Event::Disappearance)
+	.value("Merger", Event::Merger)
 	.value("Void", Event::Void)
     ;
 

@@ -25,12 +25,43 @@
 namespace pgmlink {
 namespace pgm {
 
-//typedef opengm::GraphicalModel<double, opengm::Adder> OpengmModel;
 typedef opengm::ExplicitFunction<double> ExplicitFunction;
 typedef opengm::FunctionDecoratorWeighted< opengm::IndicatorFunction<double> > FeatureFunction;
 typedef opengm::LoglinearModel<double,
   opengm::meta::TypeList<ExplicitFunction,
   opengm::meta::TypeList<FeatureFunction, opengm::meta::ListEnd > > > OpengmModel;
+
+
+class OpengmModelDeprecated {
+   public:
+   typedef double Energy;
+   typedef opengm::GraphicalModel<Energy, opengm::Adder> ogmGraphicalModel;
+   typedef opengm::Factor<ogmGraphicalModel> ogmFactor;
+   typedef opengm::Minimizer ogmAccumulator;
+   typedef opengm::Inference<ogmGraphicalModel, ogmAccumulator> ogmInference;
+   typedef opengm::meta::TypeAtTypeList<ogmGraphicalModel::FunctionTypeList, 0>::type ExplicitFunctionType;
+   typedef ogmGraphicalModel::FunctionIdentifier FunctionIdentifier;
+   
+   OpengmModelDeprecated() {
+      model_ = new ogmGraphicalModel();
+   }
+   ~OpengmModelDeprecated() {
+      delete model_;
+   }
+
+   ogmGraphicalModel* Model() {return model_; }
+   const ogmGraphicalModel* Model() const {return model_; }
+ 
+   private:
+   OpengmModelDeprecated(const OpengmModelDeprecated&);
+   OpengmModelDeprecated& operator=(const OpengmModelDeprecated&);
+   
+   ogmGraphicalModel* model_;
+};
+
+
+
+
 
 template <typename OGM_FUNCTION>
  class OpengmFactor {
@@ -259,6 +290,7 @@ template<class VALUE>
   VALUE OpengmWeightedFeature<VALUE>::default_value() const {
   return this->ogmfunction_.innerFunction()->default_value();
  }
+
 
 } /* namespace pgm */
 } /* namespace pgmlink */

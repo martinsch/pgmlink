@@ -16,7 +16,6 @@
 #include "pgmlink/reasoner_nearestneighbor.h"
 #include "pgmlink/reasoner_nntracklets.h"
 #include "pgmlink/reasoner_constracking.h"
-#include "pgmlink/track.h"
 
 using namespace std;
 using boost::shared_ptr;
@@ -186,7 +185,7 @@ vector<vector<Event> > NNTracking::operator()(TraxelStore& ts) {
 
 
 	cout << "-> init NN reasoner" << endl;
-	SingleTimestepTraxelNN nn_reasoner(divDist_,movDist_,divisionThreshold_,splitterHandling_, mergerHandling_, maxTraxelIdAt_);
+	NnTracking nn_reasoner(divDist_,movDist_,divisionThreshold_,splitterHandling_, mergerHandling_, maxTraxelIdAt_);
 
 	cout << "-> formulate NN model" << endl;
 	nn_reasoner.formulate(*graph);
@@ -291,7 +290,7 @@ vector<vector<Event> > NNTrackletsTracking::operator()(TraxelStore& ts) {
 
 
 	cout << "-> init NN reasoner" << endl;
-	SingleTimestepTraxelNNTracklets nn_reasoner(maxDist_,divisionThreshold_,splitterHandling_, mergerHandling_, maxTraxelIdAt_);
+	NnTrackletTracking nn_reasoner(maxDist_,divisionThreshold_,splitterHandling_, mergerHandling_, maxTraxelIdAt_);
 
 	cout << "-> formulate NN model" << endl;
 	nn_reasoner.formulate(*graph);
@@ -454,7 +453,7 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 	}
 
 	cout << "-> init ConservationTracking reasoner" << endl;
-	SingleTimestepTraxelConservation pgm(
+	ConservationTracking pgm(
 			max_number_objects_,
 			detection,
 			division,
