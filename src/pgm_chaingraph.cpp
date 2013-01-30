@@ -293,10 +293,6 @@ namespace pgmlink {
     }
 
     Model* TrainableModelBuilder::build(const HypothesesGraph& hypotheses) const {
-      if( !has_divisions() ) {
-	throw std::runtime_error("TrainableChaingraphModelBuilder::build: option without divisions not yet implemented");
-      }
-
       //// setup the model
       Model* model( new Model() );
 
@@ -447,7 +443,7 @@ namespace pgmlink {
       }
       
       // division configurations
-      {
+      if(has_divisions()) {
 	coords = std::vector<size_t>(table_dim, 0);
 	size_t assignment_begin = 0;
 	if(has_detection_vars()) {
