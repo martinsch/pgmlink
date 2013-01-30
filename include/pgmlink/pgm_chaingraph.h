@@ -234,6 +234,7 @@ namespace pgmlink {
 /* implementation */
 /**/
 #include <boost/ptr_container/ptr_vector.hpp>
+#include <opengm/learning/structsvm.hxx>
 #include <iostream>
 
 namespace pgmlink {
@@ -242,8 +243,27 @@ namespace pgmlink {
     std::cout << "begin training\n";
     // for each sample: build chaingraph model
     boost::ptr_vector<pgm::chaingraph::Model> models;
-    chaingraph::ECCV12ModelBuilder b;
-    b.with_detection_vars().with_divisions();
+
+
+    SquaredDistance move;
+    ConstantFeature appearance(1);
+    ConstantFeature disappearance(1);
+    GeometryDivision2 division(0, 0);
+    ConstantFeature det(10);
+    ConstantFeature ndet (200);
+
+    pgm::chaingraph::TrainableModelBuilder b;
+    b.move(move)
+      .appearance(appearance)
+      .disappearance(disappearance)
+      //.opportunity_cost(1)
+      .forbidden_cost(1000000000)
+      .without_detection_vars()
+      .without_divisions()
+      //.with_detection_vars(det, ndet)
+      //.with_divisions(division);
+      ;
+
     for(IT1 sample=samples_begin; sample!=samples_end; ++sample){
       models.push_back(b.build(*sample));
     }
@@ -273,7 +293,25 @@ namespace pgmlink {
       ++cur_arc_labels;
     }
     
-    return std::vector<pgm::OpengmModel::ValueType>();
+
+
+    //// train with opengm
+    // prepare input
+    std::vector<pgm::OpengmModel> ogm_models;
+    for(size_t i = 0; i < models.size(); ++i) {
+      ogm_models.push_back(*(models[i].opengm_model));
+    }
+    
+    opengm::StructSvmDlib<pgm::OpengmModel> svm(ogm_models, var_labels);
+    svm.set_c(10000);
+    //svm.set_epsilon(0.00);
+    std::cout << "svm.get_c(): " << svm.get_c() << "\n"; 
+    std::cout << "svm.get_epsilon(): " << svm.get_epsilon() << "\n"; 
+
+    vector<pgm::OpengmModel::ValueType> w;
+    svm.train(w);
+     
+    return w;
   }
 } /* namespace pgmlink */
 

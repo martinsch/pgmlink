@@ -313,17 +313,22 @@ namespace pgmlink {
       //// setup the model
       Model* model( new Model() );
 
-      // we need six weights; one per event
-      assert(model->opengm_model->numberOfWeights() == 0);
-      model->opengm_model->increaseNumberOfWeights(6);
-
       // assign the weight ids to event types
-      model->weight_map[Model::det_weight].push_back(0);
-      model->weight_map[Model::mov_weight].push_back(1);
-      model->weight_map[Model::div_weight].push_back(2);
-      model->weight_map[Model::app_weight].push_back(3);
-      model->weight_map[Model::dis_weight].push_back(4);
-      model->weight_map[Model::opp_weight].push_back(5);
+      assert(model->opengm_model->numberOfWeights() == 0);
+      model->opengm_model->increaseNumberOfWeights(3);
+      model->weight_map[Model::mov_weight].push_back(0);
+      model->weight_map[Model::app_weight].push_back(1);
+      model->weight_map[Model::dis_weight].push_back(2);
+
+      if(has_divisions()) {
+	model->opengm_model->increaseNumberOfWeights(1);
+	model->weight_map[Model::div_weight].push_back(3);
+      }
+      if(has_detection_vars()) {
+	model->opengm_model->increaseNumberOfWeights(2);
+	model->weight_map[Model::det_weight].push_back(4);
+	model->weight_map[Model::opp_weight].push_back(5);
+      }
 
       
       if( has_detection_vars() ) {

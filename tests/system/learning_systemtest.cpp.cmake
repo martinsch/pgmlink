@@ -13,6 +13,7 @@
 #include <lemon/maps.h>
 
 #include "pgmlink/event.h"
+#include "pgmlink/feature.h"
 #include "pgmlink/reasoner_pgm.h"
 #include "pgmlink/pgm_chaingraph.h"
 #include "pgmlink/traxels.h"
@@ -33,7 +34,11 @@ BOOST_AUTO_TEST_CASE( learning_from_autolabels ) {
   SingleTimestepTraxel_HypothesesBuilder hyp_builder(&ts, builder_opts);
   shared_ptr<HypothesesGraph> graph = shared_ptr<HypothesesGraph>(hyp_builder.build()); 
   pgm::chaingraph::TrainableModelBuilder b;
-  b.without_detection_vars().without_divisions();
+  b.without_detection_vars().without_divisions()
+    .appearance(ConstantFeature(500))
+    .disappearance(ConstantFeature(500))
+    .move(SquaredDistance())
+    ;
   //b.with_detection_vars().with_divisions();
   Chaingraph c(b, true);
   c.formulate(*graph);
@@ -56,7 +61,12 @@ BOOST_AUTO_TEST_CASE( learning_from_autolabels ) {
   SingleTimestepTraxel_HypothesesBuilder hyp_builder(&ts, builder_opts);
   shared_ptr<HypothesesGraph> graph = shared_ptr<HypothesesGraph>(hyp_builder.build()); 
   pgm::chaingraph::TrainableModelBuilder b;
-  b.without_detection_vars().without_divisions();
+  b.without_detection_vars().without_divisions()
+    .appearance(ConstantFeature(500))
+    .disappearance(ConstantFeature(500))
+    .move(SquaredDistance())
+    ;
+
   //b.with_detection_vars().with_divisions();
   Chaingraph c(b, true);
   c.formulate(*graph);
