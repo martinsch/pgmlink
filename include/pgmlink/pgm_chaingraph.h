@@ -155,6 +155,10 @@ namespace pgmlink {
       void add_detection_vars( const HypothesesGraph&, Model& ) const;
       void add_assignment_vars( const HypothesesGraph&, Model& ) const;
 
+      vector<OpengmModel::IndexType> vars_for_outgoing_factor( const HypothesesGraph&,
+							       const Model&,
+							       const HypothesesGraph::Node&) const;
+
     private:
       static void couple( const chaingraph::Model&, const HypothesesGraph::Node&, const HypothesesGraph::Arc&, OpengmLPCplex& );
       

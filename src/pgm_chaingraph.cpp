@@ -220,41 +220,56 @@ namespace pgmlink {
       }
     }
 
-    void ModelBuilder::fix_detections( const Model& m, const HypothesesGraph& g, OpengmLPCplex& cplex ) {
-      for(HypothesesGraph::NodeIt n(g); n!=lemon::INVALID; ++n) {
+      void ModelBuilder::fix_detections( const Model& m, const HypothesesGraph& g, OpengmLPCplex& cplex ) {
+	for(HypothesesGraph::NodeIt n(g); n!=lemon::INVALID; ++n) {
+	  vector<size_t> cplex_idxs; 
+	  cplex_idxs.push_back(cplex_id(m.var_of_node(n)));
+	  vector<int> coeffs;
+	  coeffs.push_back(1);
+	  // 1 <= 1*detection <= 1
+	  cplex.addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin() , 1, 1);
+	}
+      }
+
+      inline void ModelBuilder::add_detection_vars( const HypothesesGraph& hypotheses, Model& m ) const {
+	for(HypothesesGraph::NodeIt n(hypotheses); n!=lemon::INVALID; ++n) {
+	  m.opengm_model->addVariable(2);
+	  m.node_var_.left.insert(Model::node_var_map::value_type(n, m.opengm_model->numberOfVariables() - 1));
+	}
+      }
+
+      inline void ModelBuilder::add_assignment_vars( const HypothesesGraph& hypotheses, Model& m ) const {
+	for(HypothesesGraph::ArcIt a(hypotheses); a!=lemon::INVALID; ++a) {
+	  m.opengm_model->addVariable(2);
+	  m.arc_var_.left.insert(Model::arc_var_map::value_type(a, m.opengm_model->numberOfVariables() - 1));
+	}
+      }
+
+      vector<OpengmModel::IndexType> ModelBuilder::vars_for_outgoing_factor( const HypothesesGraph& hypotheses,
+									     const Model& m,
+									     const HypothesesGraph::Node& n) const {
+	vector<OpengmModel::IndexType> vi; // opengm variable indices; can be empty if there are no det vars
+	if(has_detection_vars()) {
+	  vi.push_back(m.var_of_node(n)); // first detection node, remaining will be transition nodes
+	}
+	for(HypothesesGraph::OutArcIt a(hypotheses, n); a != lemon::INVALID; ++a) {
+	  vi.push_back(m.var_of_arc(a));
+	}
+	return vi;
+      }
+
+      
+
+      void ModelBuilder::couple(const Model& m, const HypothesesGraph::Node& n, const HypothesesGraph::Arc& a, OpengmLPCplex& cplex ) {
 	vector<size_t> cplex_idxs; 
 	cplex_idxs.push_back(cplex_id(m.var_of_node(n)));
+	cplex_idxs.push_back(cplex_id(m.var_of_arc(a)));
 	vector<int> coeffs;
 	coeffs.push_back(1);
-	// 1 <= 1*detection <= 1
-	cplex.addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin() , 1, 1);
+	coeffs.push_back(-1);
+	// 0 <= 1*detection - 1*transition <= 1
+	cplex.addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin() , 0, 1);
       }
-    }
-
-    inline void ModelBuilder::add_detection_vars( const HypothesesGraph& hypotheses, Model& m ) const {
-      for(HypothesesGraph::NodeIt n(hypotheses); n!=lemon::INVALID; ++n) {
-	m.opengm_model->addVariable(2);
-	m.node_var_.left.insert(Model::node_var_map::value_type(n, m.opengm_model->numberOfVariables() - 1));
-      }
-    }
-
-    inline void ModelBuilder::add_assignment_vars( const HypothesesGraph& hypotheses, Model& m ) const {
-      for(HypothesesGraph::ArcIt a(hypotheses); a!=lemon::INVALID; ++a) {
-	m.opengm_model->addVariable(2);
-	m.arc_var_.left.insert(Model::arc_var_map::value_type(a, m.opengm_model->numberOfVariables() - 1));
-      }
-    }
-
-    void ModelBuilder::couple(const Model& m, const HypothesesGraph::Node& n, const HypothesesGraph::Arc& a, OpengmLPCplex& cplex ) {
-      vector<size_t> cplex_idxs; 
-      cplex_idxs.push_back(cplex_id(m.var_of_node(n)));
-      cplex_idxs.push_back(cplex_id(m.var_of_arc(a)));
-      vector<int> coeffs;
-      coeffs.push_back(1);
-      coeffs.push_back(-1);
-      // 0 <= 1*detection - 1*transition <= 1
-      cplex.addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin() , 0, 1);
-    }
 
 
 
@@ -352,97 +367,117 @@ namespace pgmlink {
     }
 
     inline void TrainableModelBuilder::add_outgoing_factor( const HypothesesGraph& hypotheses,
-								      Model& m, 
-								      const HypothesesGraph::Node& n) const {
+							    Model& m, 
+							    const HypothesesGraph::Node& n) const {
       using namespace std;
       property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = hypotheses.get(node_traxel());
 
       LOG(logDEBUG) << "TrainableModelBuilder::add_outgoing_factor(): entered";
-      //// setup node and arc var indices
-      vector<size_t> vi; // opengm variable indeces
-      
-      vector<HypothesesGraph::Arc> arcs; 
+      // setup node and arc var indices
+      const vector<size_t> vi = vars_for_outgoing_factor(hypotheses, m, n); // one or zero det vars and zero or more assignment vars
+      if(vi.size() == 0) {
+	// nothing to do here, get out!
+	// happens in case of no det vars and no outgoing arcs
+	return;
+      }
 
-      vi.push_back(m.var_of_node(n)); // first detection node, remaining will be transition nodes
-      int n_arc_vars = 0;
-      int n_node_vars = 0;
+      // collect outgoing arcs for use in the feature functions further down
+      vector<HypothesesGraph::Arc> arcs; 
       for(HypothesesGraph::OutArcIt a(hypotheses, n); a != lemon::INVALID; ++a) {
 	arcs.push_back(a);
-	vi.push_back(m.var_of_arc(a));
-	++n_arc_vars;
       }
 
       // construct factor
-      const size_t table_dim = n_arc_vars + 1; 		// detection var + n * transition var
+      const size_t table_dim = vi.size();
+      assert(table_dim > 0);
+      const std::vector<size_t> shape(table_dim, 2);
       std::vector<size_t> coords;
-      std::vector<size_t> shape(table_dim, 2);
 
       std::set<size_t > entries;
       for(size_t i = 0; i < static_cast<size_t>(std::pow(2, table_dim)); ++i) {
 	entries.insert( entries.end(), i );
       }
 	
-      // opportunity configuration
-      coords = std::vector<size_t>(table_dim, 0); // (0,0,...,0)
-      size_t check = entries.erase(BinToDec(coords));
-      assert(check == 1);
-      OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), opportunity_cost() )
-	.add_as_feature_to( *(m.opengm_model), m.weight_map[Model::opp_weight].front() );
+      // opportunity configuration; only in case of detection vars
+      if(has_detection_vars()) {
+	coords = std::vector<size_t>(table_dim, 0); // (0,0,...,0)
+	size_t check = entries.erase(BinToDec(coords));
+	assert(check == 1);
+	OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), opportunity_cost() )
+	  .add_as_feature_to( *(m.opengm_model), m.weight_map[Model::opp_weight].front() );
+      }
 
       // disappearance configuration
-      coords = std::vector<size_t>(table_dim, 0);
-      coords[0] = 1; // (1,0,...,0)
-      check = entries.erase(BinToDec(coords));
-      assert(check == 1);
-      OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), disappearance()(traxel_map[n]) )
-	.add_as_feature_to( *(m.opengm_model), m.weight_map[Model::dis_weight].front() );
+      { 
+	coords = std::vector<size_t>(table_dim, 0);
+	if(has_detection_vars()){
+	  coords[0] = 1; // (1,0,...,0)
+	}
+	size_t check = entries.erase(BinToDec(coords));
+	assert(check == 1);
+	OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), disappearance()(traxel_map[n]) )
+	  .add_as_feature_to( *(m.opengm_model), m.weight_map[Model::dis_weight].front() );
+      }
 
       // move configurations
-      coords = std::vector<size_t>(table_dim, 0);
-      coords[0] = 1;
-      // (1,0,0,0,1,0,0)
-      for(size_t i = 1; i < table_dim; ++i) {
-	coords[i] = 1; 
-	check = entries.erase(BinToDec(coords));
-	assert(check == 1);
-	OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), move()(traxel_map[n], traxel_map[hypotheses.target(arcs[i-1])]) )
-	  .add_as_feature_to( *(m.opengm_model), m.weight_map[Model::mov_weight].front() );
-
-	coords[i] = 0; // reset coords
+      {
+	coords = std::vector<size_t>(table_dim, 0);
+	size_t assignment_begin = 0;
+	if(has_detection_vars()) {
+	  coords[0] = 1;
+	  assignment_begin = 1;
+	}
+	// (1  ,0,0,0,1,0,0)
+	for(size_t i = assignment_begin; i < table_dim; ++i) {
+	  coords[i] = 1; 
+	  size_t check = entries.erase(BinToDec(coords));
+	  assert(check == 1);
+	  OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), move()(traxel_map[n], traxel_map[hypotheses.target(arcs[i-assignment_begin])]) )
+	    .add_as_feature_to( *(m.opengm_model), m.weight_map[Model::mov_weight].front() );
+	  coords[i] = 0; // reset coords
+	}
       }
       
       // division configurations
-      coords = std::vector<size_t>(table_dim, 0);
-      coords[0] = 1;
+      {
+	coords = std::vector<size_t>(table_dim, 0);
+	size_t assignment_begin = 0;
+	if(has_detection_vars()) {
+	  coords[0] = 1;
+	  assignment_begin = 1;
+	}
 
-      // (1,0,0,1,0,1,0,0) 
-      for(unsigned int i = 1; i < table_dim - 1; ++i) {
-	for(unsigned int j = i+1; j < table_dim; ++j) {
-	  coords[i] = 1;
-	  coords[j] = 1;
-	  check = entries.erase(BinToDec(coords));
-	  assert(check == 1);
-	  OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), division()(traxel_map[n],
-														   traxel_map[hypotheses.target(arcs[i-1])],
-														   traxel_map[hypotheses.target(arcs[j-1])]
-														   ) )
-	    .add_as_feature_to( *(m.opengm_model), m.weight_map[Model::div_weight].front() );
-	  
-	  // reset
-	  coords[i] = 0;
-	  coords[j] = 0;
+	// (1   ,0,0,1,0,1,0,0) 
+	for(unsigned int i = assignment_begin; i < table_dim - 1; ++i) {
+	  for(unsigned int j = i+1; j < table_dim; ++j) {
+	    coords[i] = 1;
+	    coords[j] = 1;
+	    size_t check = entries.erase(BinToDec(coords));
+	    assert(check == 1);
+	    OpengmModel::ValueType value = division()(traxel_map[n],
+							traxel_map[hypotheses.target(arcs[i-assignment_begin])],
+							traxel_map[hypotheses.target(arcs[j-assignment_begin])]);
+	    OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), value)
+	      .add_as_feature_to( *(m.opengm_model), m.weight_map[Model::div_weight].front() );
+	    // reset
+	    coords[i] = 0;
+	    coords[j] = 0;
+	  }
 	}
       }
 
       // forbidden configurations
-      for(std::set<size_t>::iterator it = entries.begin(); it != entries.end(); ++it) {
-	coords = DecToBin(*it);
-	if(coords.size() < table_dim ) {
-	  coords.insert(coords.begin(), table_dim-coords.size(), 0);
+      {
+	for(std::set<size_t>::iterator it = entries.begin(); it != entries.end(); ++it) {
+	  coords = DecToBin(*it);
+	  // pad with zeros up to coordinate size
+	  if(coords.size() < table_dim ) {
+	    coords.insert(coords.begin(), table_dim-coords.size(), 0);
+	  }
+	  assert( coords.size() == table_dim );
+	  OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), forbidden_cost())
+	    .add_to( *(m.opengm_model) );
 	}
-	assert( coords.size() == table_dim );
-	OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), forbidden_cost())
-	  .add_to( *(m.opengm_model) );
       }
 
       LOG(logDEBUG) << "TrainableChaingraphModelBuilder::add_outgoing_factor(): leaving";
