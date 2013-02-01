@@ -234,7 +234,7 @@ namespace pgmlink {
 /* implementation */
 /**/
 #include <boost/ptr_container/ptr_vector.hpp>
-#include <opengm/learning/structsvm.hxx>
+#include <pgmlink/ext_opengm/structsvm.hxx>
 #include <iostream>
 
 namespace pgmlink {

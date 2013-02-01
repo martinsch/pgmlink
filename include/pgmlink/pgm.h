@@ -9,13 +9,13 @@
 
 #include <vector>
 
-#include <opengm/learning/loss_hamming.hxx>
+#include <pgmlink/ext_opengm/loss_hamming.hxx>
 #include <opengm/graphicalmodel/graphicalmodel.hxx>
-#include <opengm/graphicalmodel/loglinearmodel.hxx>
+#include <pgmlink/ext_opengm/loglinearmodel.hxx>
 #include <opengm/inference/inference.hxx>
 #include <opengm/functions/explicit_function.hxx>
-#include <opengm/functions/decorator_weighted.hxx>
-#include <opengm/functions/indicator_function.hxx>
+#include <pgmlink/ext_opengm/decorator_weighted.hxx>
+#include <pgmlink/ext_opengm/indicator_function.hxx>
 #include <opengm/operations/adder.hxx>
 #include <opengm/utilities/metaprogramming.hxx>
 

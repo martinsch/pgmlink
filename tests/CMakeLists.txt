@@ -31,7 +31,17 @@ if(Boost_FOUND)
   configure_file( system/learning_systemtest.cpp.cmake learning_systemtest.cpp)
   add_executable( learning_systemtest ${PROJECT_BINARY_DIR}/tests/learning_systemtest.cpp )
   target_link_libraries( learning_systemtest pgmlink ${Boost_LIBRARIES} )   
-  add_test( learning_systemtest learning_systemtest )
-  
+  #add_test( learning_systemtest learning_systemtest )
+
+  ## opengm extensions tests
+  file(GLOB OGM_TEST_SRCS ext_opengm/*.cxx)
+  foreach(test_src ${OGM_TEST_SRCS})
+    get_filename_component(test_name ${test_src} NAME_WE)
+    set(test_name ext_opengm_${test_name})
+    add_executable( ${test_name} ${test_src} )
+    target_link_libraries( ${test_name} ilocplex cplex concert )
+    add_test( ${test_name} ${test_name} )
+  endforeach(test_src)
+
 endif()
 
