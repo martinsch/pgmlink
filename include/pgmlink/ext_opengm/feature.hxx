@@ -166,6 +166,8 @@ template<class FUNCTION>
 bool ObservableWeight<FUNCTION>::hasObserver(WeightObserver<FUNCTION>* o) {
   if(o) {
     return observers_.count(o);
+  } else {
+    throw RuntimeError("ObservableWeight::hasObserver(): observer is NULL");
   }
 }
 
