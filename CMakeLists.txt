@@ -104,7 +104,7 @@ FILE(GLOB LIB_SOURCES src/*.cpp)
 find_package( Boost REQUIRED COMPONENTS serialization )
 
 ADD_LIBRARY(pgmlink SHARED ${LIB_SOURCES})
-TARGET_LINK_LIBRARIES(pgmlink ${Boost_LIBRARIES} ${HD5_LIBRARIES} ${HDF5_HL_LIBRARIES} ann cplex ilocplex pthread concert ${VIGRA_IMPEX_LIBRARY} ${LEMON_LIBRARIES})
+TARGET_LINK_LIBRARIES(pgmlink ${Boost_LIBRARIES} ${HD5_LIBRARIES} ${HDF5_HL_LIBRARIES} ann cplex ilocplex pthread concert ${VIGRA_IMPEX_LIBRARY} ${LEMON_LIBRARIES} mlpack)
 
 
 
