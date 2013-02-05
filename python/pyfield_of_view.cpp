@@ -1,3 +1,6 @@
+#define PY_ARRAY_UNIQUE_SYMBOL pgmlink_pyarray
+#define NO_IMPORT_ARRAY
+
 #include <boost/python.hpp>
 #include <boost/utility.hpp>
 

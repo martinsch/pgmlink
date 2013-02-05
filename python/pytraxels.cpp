@@ -1,3 +1,6 @@
+#define PY_ARRAY_UNIQUE_SYMBOL pgmlink_pyarray
+#define NO_IMPORT_ARRAY
+
 #include <vector>
 #include <string>
 #include <sstream>
@@ -10,8 +13,8 @@
 #include <boost/python/return_internal_reference.hpp>
 #include <boost/utility.hpp>
 
-#include <vigra/numpy_array.hxx>
-#include <vigra/numpy_array_converters.hxx>
+//#include <vigra/numpy_array.hxx>
+//#include <vigra/numpy_array_converters.hxx>
 #include <vigra/multi_array.hxx>
 
 #include "../include/pgmlink/traxels.h"

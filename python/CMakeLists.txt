@@ -32,6 +32,7 @@ set(PYPGMLINK_SRCS
   pypgmlink.cpp
   pytrack.cpp
   pytraxels.cpp
+  pycrosscorrelation.cpp
   )
 
 add_library(pypgmlink SHARED ${PYPGMLINK_SRCS})
