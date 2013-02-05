@@ -70,5 +70,18 @@ class Test_HypothesesGraph( ut.TestCase ):
         m[n1] = t
         self.assertEqual(m[n1].Id, 33)
 
+
+class Test_CrossCorrelation( ut.TestCase ):
+    def runTest( self ):
+        import numpy as np
+        img1 = np.array( [ [1, 0, 1], [1, 1, 1], [1, 1, 1] ], dtype=np.float)
+        img2 = np.array( [ [0, 0, 0], [1, 0, 1], [1, 1, 1] ], dtype=np.float)
+#        pgmlink.patchedCrossCorrelation(img1,img2,int(3),int(0),int(0),True)
+        print 'bla'
+        pgmlink.patchedCrossCorrelation(int(3),int(0),int(0),True)
+        print 'success'
+        
+        
+        
 if __name__=="__main__":
     ut.main()
