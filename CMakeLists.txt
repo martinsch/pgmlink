@@ -52,12 +52,17 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_extensions/)
     find_package( Lemon REQUIRED )
     find_package( HDF5 REQUIRED )
     find_package( FFTW3 REQUIRED )
+    find_package( PythonLibs REQUIRED )
+    find_package(Vigranumpy REQUIRED PATHS ${Vigranumpy_DIR})
 
-    include_directories(${FFTW3_INCLUDE_DIR} ${VIGRA_INCLUDE_DIR} ${LEMON_INCLUDE_DIR} ${HDF5_INCLUDE_DIRS} )
+    include_directories(${FFTW3_INCLUDE_DIR} ${VIGRA_INCLUDE_DIR} ${LEMON_INCLUDE_DIR} ${HDF5_INCLUDE_DIRS} /usr/include/python2.7/ )
     link_directories( ${FFTW3_LIBRARY_DIR} ${VIGRA_IMPEX_LIBRARY_DIR} ${LEMON_LIBRARY_DIR} ${HDF5_LIBRARY_DIRS} )
 ##
 # build options
 ##
+    SET(Vigranumpy_DIR ${Vigranumpy_DIR}
+      CACHE PATH "Directory containing VigranumpyConfig.cmake" FORCE )
+    message(STATUS "Vigranumpy found at: ${Vigranumpy_CONFIG}") 
 
     # logging level
     SET(LOGGING_LEVEL "INFO" CACHE STRING "Choose a global logging level: NO_LOGGING, ERROR, WARNING, INFO, DEBUG, DEBUG1, ..., DEBUG4")
@@ -104,7 +109,8 @@ FILE(GLOB LIB_SOURCES src/*.cpp)
 find_package( Boost REQUIRED COMPONENTS serialization )
 
 ADD_LIBRARY(pgmlink SHARED ${LIB_SOURCES})
-TARGET_LINK_LIBRARIES(pgmlink ${FFTW3_LIBRARIES} fftw3 fftw3f ${HD5_LIBRARIES} ${HDF5_HL_LIBRARIES} ann cplex ilocplex pthread concert ${VIGRA_IMPEX_LIBRARY} ${LEMON_LIBRARIES} )
+#TARGET_LINK_LIBRARIES(pgmlink ${LIBS} ${VIGRA_NUMPY_CORE_LIBRARY} vigraimpex boost_python ${PYTHON_LIBRARIES} ${FFTW3_LIBRARIES} fftw3 fftw3f fftw3_threads ${HD5_LIBRARIES} ${HDF5_HL_LIBRARIES} ann cplex ilocplex pthread concert ${VIGRA_IMPEX_LIBRARY} ${LEMON_LIBRARIES} )
+TARGET_LINK_LIBRARIES(pgmlink ${LIBS} boost_python ${PYTHON_LIBRARIES} ${FFTW3_LIBRARIES} fftw3 fftw3f fftw3_threads ${HD5_LIBRARIES} ${HDF5_HL_LIBRARIES} ann cplex ilocplex pthread concert ${VIGRA_IMPEX_LIBRARY} ${LEMON_LIBRARIES} )
 
 
 ### Always use full RPATH
