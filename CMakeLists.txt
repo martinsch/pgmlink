@@ -60,9 +60,9 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_extensions/)
 ##
 # build options
 ##
-    SET(Vigranumpy_DIR ${Vigranumpy_DIR}
-      CACHE PATH "Directory containing VigranumpyConfig.cmake" FORCE )
-    message(STATUS "Vigranumpy found at: ${Vigranumpy_CONFIG}") 
+#    SET(Vigranumpy_DIR ${Vigranumpy_DIR}
+#      CACHE PATH "Directory containing VigranumpyConfig.cmake" FORCE )
+#    message(STATUS "Vigranumpy found at: ${Vigranumpy_CONFIG}") 
 
     # logging level
     SET(LOGGING_LEVEL "INFO" CACHE STRING "Choose a global logging level: NO_LOGGING, ERROR, WARNING, INFO, DEBUG, DEBUG1, ..., DEBUG4")
@@ -79,7 +79,7 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_extensions/)
 	FORCE)
     ENDIF(NOT CMAKE_BUILD_TYPE)
 
-    SET(CMAKE_CXX_FLAGS "-Wall -Wextra -Wfatal-errors -std=c++98 -pedantic -pthread")
+    SET(CMAKE_CXX_FLAGS "-Wall -Wextra -Wfatal-errors -std=c++98 -pedantic -pthread -fopenmp")
     SET(CMAKE_CXX_FLAGS_DEBUG "-Wno-long-long -g -O0")
     SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -Werror")
 
