@@ -36,8 +36,58 @@ BOOST_AUTO_TEST_CASE( MergerResolver_resolve_mergers ) {
 }
 
 
-BOOST_AUTO_TEST_CASE( MergerResolver_ ) {
+BOOST_AUTO_TEST_CASE( MergerResolver_refine_node) {
+  // MergerResolver::refine_node(HypothesesGraph::Node node, std::size_t nMerger)
 
+  //  t=1      2      3 
+  //    o ----   --- o
+  //          \ /
+  //           O
+  //          / \
+  //    o ----   --- o
+
+  // ->
+  //    o ---- o ---- o
+  //     \    / \    /
+  //       --     --
+  //     /    \ /    \
+  //    o ---- o ---- o
+
+  
+  HypothesesGraph g;
+  
+}
+
+
+BOOST_AUTO_TEST_CASE( MergerResolver_deactivate_arcs ) {
+  // deactivate_arcs(std::vector<HypothesesGraph::base_graph::Arc>)
+  
+  //  t=1      2      3 
+  //    o ---- o ---- o
+             
+  // ->
+  //    o      o      o
+
+  
+  HypothesesGraph g;
+  g.add(arc_active());
+  HypothesesGraph::Node n1 = g.add_node(0);
+  HypothesesGraph::Node n2 = g.add_node(1);
+  HypothesesGraph::Node n3 = g.add_node(2);
+  HypothesesGraph::Arc a12 = g.addArc(n1, n2);
+  HypothesesGraph::Arc a23 = g.addArc(n2, n3);
+
+  g.get(arc_active()).set(a12, true);
+  g.get(arc_active()).set(a23, true);
+  
+  std::vector<HypothesesGraph::base_graph::Arc> arcs;
+  arcs.push_back(a12);
+  arcs.push_back(a23);
+  MergerResolver m(&g);
+  m.deactivate_arcs(arcs);
+  for (std::vector<HypothesesGraph::base_graph::Arc>::iterator it = arcs.begin(); it != arcs.end(); ++it) {
+    BOOST_CHECK_EQUAL(g.get(arc_active())[*it], false);
+  }
 }
 
 
