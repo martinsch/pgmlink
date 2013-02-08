@@ -103,6 +103,16 @@ namespace pgmlink {
     }
   }
 
+  void MergerResolver::deactivate_nodes(std::vector<HypothesesGraph::Node> nodes) {
+    // deactivate Nodes provided by nodes
+    // needed to set all resolved merger nodes inactive
+    std::vector<HypothesesGraph::Node>::iterator it = nodes.begin();
+    property_map<node_active2, HypothesesGraph::base_graph>::type& node_active_map = g_->get(node_active2());
+    for (; it != nodes.end(); ++it) {
+      node_active_map.set(*it, 0);
+    }
+  }
+
   void MergerResolver::refine_node(HypothesesGraph::Node node,
 				   std::size_t nMerger) {
     property_map<node_active2, HypothesesGraph::base_graph>::type& active_map = g_->get(node_active2());
@@ -112,7 +122,6 @@ namespace pgmlink {
     assert(trax.features.find("mergerCOMs") != trax.features.end());
 
     feature_array mergerCOMs = trax.features["mergerCOMs"];
-    int minIndex = ((nMerger-1)*nMerger)/2*3;
 
     // get incoming and outgoing arcs for reorganizing arcs
     std::vector<HypothesesGraph::base_graph::Arc> sources;
@@ -124,7 +133,7 @@ namespace pgmlink {
     for (unsigned int n = 0; n < nMerger; n++) {
       // set traxel features, most of which can be copied from the merger node
       // set new center of mass as calculated from GMM
-      trax.features["com"] = feature_array(mergerCOMs.begin()+minIndex+(3*n), mergerCOMs.begin()+minIndex+(3*(n+1)));
+      trax.features["com"] = feature_array(mergerCOMs.begin()+(3*n), mergerCOMs.begin()+(3*(n+1)));
       // todo: set traxel id!
       // add node to graph and activate it
       HypothesesGraph::Node newNode = g_->add_node(trax.Timestep);
