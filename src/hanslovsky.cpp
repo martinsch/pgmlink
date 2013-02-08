@@ -109,11 +109,8 @@ namespace pgmlink {
     property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g_->get(node_traxel());
     
     Traxel trax = traxel_map[node];
-    if (trax.features.find("possibleCOMs") == trax.features.end()) {
+    assert(trax.features.find("mergerCOMs") != trax.features.end());
 
-    } else {
-
-    }
     feature_array mergerCOMs = trax.features["mergerCOMs"];
     int minIndex = ((nMerger-1)*nMerger)/2*3;
 
