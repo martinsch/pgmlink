@@ -55,6 +55,98 @@ BOOST_AUTO_TEST_CASE( MergerResolver_refine_node) {
 
   
   HypothesesGraph g;
+  // g.add(arc_distance()).add(tracklet_intern_dist()).add(node_tracklet()).add(tracklet_intern_arc_ids()).add(traxel_arc_id());
+  g.add(node_traxel()).add(arc_distance()).add(arc_active()).add(node_active2());
+  
+  feature_array com(3,0);
+  feature_array pCOM(6*3, 0);
+
+  pCOM[0]  = 3;
+  pCOM[3]  = 1;
+  pCOM[6]  = 6;
+  pCOM[9]  = 1;
+  pCOM[12] = 3;
+  pCOM[16] = 6;
+
+  feature_array mCOM(pCOM.begin()+3, pCOM.begin()+9);
+    
+  Traxel t11;
+  t11.Timestep = 1;
+  t11.Id = 11;
+  com[0] = 1; t11.features["com"] = com;
+
+  Traxel t12 = t11;
+  t12.Id = 12;
+  t12.features["com"][0] = 6;
+
+  Traxel t21;
+  t21.Timestep = 2;
+  t21.Id = 21;
+  com[0] = 3; t21.features["com"] = com;
+  t21.features["possibleCOMs"] = pCOM;
+  t21.features["mergerCOMs"] = mCOM;
+  
+  Traxel t31;
+  t31.Timestep = 3;
+  t31.Id = 31;
+  com[0] = 1; t31.features["com"] = com;
+  
+  Traxel t32 = t31;
+  t32.Id = 32;
+  t32.features["com"][0] = 6;
+  
+  HypothesesGraph::Node n11 = g.add_node(1);
+  HypothesesGraph::Node n12 = g.add_node(1);
+  HypothesesGraph::Node n21 = g.add_node(2);
+  HypothesesGraph::Node n31 = g.add_node(3);
+  HypothesesGraph::Node n32 = g.add_node(3);
+
+  HypothesesGraph::Arc a11_21 = g.addArc(n11, n21);
+  HypothesesGraph::Arc a12_21 = g.addArc(n12, n21);
+  HypothesesGraph::Arc a21_31 = g.addArc(n21, n31);
+  HypothesesGraph::Arc a21_32 = g.addArc(n21, n32);
+
+  property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g.get(node_traxel());
+  traxel_map.set(n11, t11);
+  traxel_map.set(n12, t12);
+  traxel_map.set(n21, t21);
+  traxel_map.set(n31, t31);
+  traxel_map.set(n32, t32);
+
+  property_map<arc_active, HypothesesGraph::base_graph>::type& arc_map = g.get(arc_active());
+  arc_map.set(a11_21, true);
+  arc_map.set(a12_21, true);
+  arc_map.set(a21_31, true);
+  arc_map.set(a21_32, true);
+
+  property_map<node_active2, HypothesesGraph::base_graph>::type& active_map = g.get(node_active2());
+  active_map.set(n11, 1);
+  active_map.set(n12, 1);
+  active_map.set(n21, 2);
+  active_map.set(n31, 1);
+  active_map.set(n32, 1);
+
+  property_map<node_timestep, HypothesesGraph::base_graph>::type& timestep_map = g.get(node_timestep());
+  property_map<node_timestep, HypothesesGraph::base_graph>::type::ItemIt timeIt(timestep_map, 2);
+
+  MergerResolver m(&g);
+  m.refine_node(n21, 2);
+  
+  // deactivated arcs from and to merger node
+  BOOST_CHECK_EQUAL(arc_map[a11_21], false);
+  BOOST_CHECK_EQUAL(arc_map[a12_21], false);
+  BOOST_CHECK_EQUAL(arc_map[a21_31], false);
+  BOOST_CHECK_EQUAL(arc_map[a21_32], false);
+
+  for (; timeIt != lemon::INVALID; ++timeIt) {
+    if (timeIt == n21) {
+      // deactivated merger node
+      BOOST_CHECK_EQUAL(active_map[timeIt], 2);
+    } else {
+      // activated merger replacement nodes
+      BOOST_CHECK_EQUAL(active_map[timeIt], 1);
+    }
+  }
   
 }
 
@@ -71,9 +163,9 @@ BOOST_AUTO_TEST_CASE( MergerResolver_deactivate_arcs ) {
   
   HypothesesGraph g;
   g.add(arc_active());
-  HypothesesGraph::Node n1 = g.add_node(0);
-  HypothesesGraph::Node n2 = g.add_node(1);
-  HypothesesGraph::Node n3 = g.add_node(2);
+  HypothesesGraph::Node n1 = g.add_node(1);
+  HypothesesGraph::Node n2 = g.add_node(2);
+  HypothesesGraph::Node n3 = g.add_node(3);
   HypothesesGraph::Arc a12 = g.addArc(n1, n2);
   HypothesesGraph::Arc a23 = g.addArc(n2, n3);
 
@@ -86,8 +178,33 @@ BOOST_AUTO_TEST_CASE( MergerResolver_deactivate_arcs ) {
   MergerResolver m(&g);
   m.deactivate_arcs(arcs);
   for (std::vector<HypothesesGraph::base_graph::Arc>::iterator it = arcs.begin(); it != arcs.end(); ++it) {
+    // arc is deactivated
     BOOST_CHECK_EQUAL(g.get(arc_active())[*it], false);
   }
+}
+
+
+BOOST_AUTO_TEST_CASE( MergerResolver_deactivate_nodes ) {
+  // deactivate_nodes(std::vector<HypothesesGraph::Node> nodes)
+
+  // (1) -> (0)
+
+  
+  HypothesesGraph g;
+  g.add(node_active2());
+  HypothesesGraph::Node n = g.add_node(1);
+  g.get(node_active2()).set(n, 1);
+  
+  // node is active with 1 object
+  BOOST_CHECK_EQUAL(g.get(node_active2())[n], 1);
+
+  std::vector<HypothesesGraph::Node> nodes;
+  nodes.push_back(n);
+  MergerResolver m(&g);
+  m.deactivate_nodes(nodes);
+  
+  // node is not active (0) objects
+  BOOST_CHECK_EQUAL(g.get(node_active2())[n], 0);
 }
 
 

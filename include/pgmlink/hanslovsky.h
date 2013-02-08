@@ -103,7 +103,10 @@ namespace pgmlink {
 
     // Deactivate arcs of merger node.
     // tested
-    void deactivate_arcs(std::vector<HypothesesGraph::base_graph::Arc>);
+    void deactivate_arcs(std::vector<HypothesesGraph::base_graph::Arc> arcs);
+
+    // Deactivate all resolved merger nodes
+    void deactivate_nodes(std::vector<HypothesesGraph::Node> nodes);
 
     // Split merger node into appropiately many new nodes.
     void refine_node(HypothesesGraph::Node,
@@ -161,16 +164,21 @@ namespace pgmlink {
 
     
     // iterate over mergers and replace merger nodes
+    // keep track of merger nodes to deactivate them later
+    std::vector<HypothesesGraph::Node> nodes_to_deactivate;
     for (; active_valueIt != active_map.endValue(); ++active_valueIt) {
       if (*active_valueIt > 1) {
 	property_map<node_active2, HypothesesGraph::base_graph>::type::ItemIt active_itemIt(active_map, *active_valueIt);
+	
 	for (; active_itemIt != lemon::INVALID; ++active_itemIt) {
 	  calculate_centers(active_itemIt, calg, *active_valueIt);
 	  // for each object create new node and set arcs to old merger node inactive (neccessary for pruning)
 	  refine_node(active_itemIt, *active_valueIt);
+	  nodes_to_deactivate.push_back(active_itemIt);
 	}
       }
     }
+    deactivate_nodes(nodes_to_deactivate);
     prune_inactive(*g_);
     return g_;
   }
