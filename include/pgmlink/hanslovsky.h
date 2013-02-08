@@ -89,7 +89,8 @@ namespace pgmlink {
     // Calculate cluster centers for merged cells if feature is not yet present at traxel.
     template <typename ClusteringAlg>
     void calculate_centers(HypothesesGraph::Node,
-			   ClusteringAlg);
+			   ClusteringAlg calg,
+			   int nMergers);
 
     // Add arcs to nodes created to replace merger node.
     void add_arcs_for_replacement_node(HypothesesGraph::Node,
@@ -108,8 +109,6 @@ namespace pgmlink {
     MergerResolver(HypothesesGraph* g) : g_(g) {}
     template <typename ClusteringAlg>
     HypothesesGraph* resolve_mergers(ClusteringAlg);
-    HypothesesGraph* giveGraph() {return g_;}
-    
   };
   
   template <typename ArcIterator>
@@ -123,16 +122,30 @@ namespace pgmlink {
   
   template <typename ClusteringAlg>
   void MergerResolver::calculate_centers(HypothesesGraph::Node node,
-					 ClusteringAlg calg) {
+					 ClusteringAlg calg,
+					 int nMergers) {
     // get traxel map from graph to access traxel
     property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g_->get(node_traxel());
     Traxel trax = traxel_map[node];
-    // if mergerCOMs already exist, violate assert statement
+    feature_array mergerCOMs(nMergers*3);
+
+    // assert mergerCOMs does not exist
     assert(trax.features.find("mergerCOMs") == trax.features.end());
-    // either exception or assert for ValueList
-    assert(trax.features.find("Coord<ValueList>") != trax.features.end());
-    // calculate merger centers using clustering algorithm calg
-    trax.features["mergerCOMs"] = calg(trax.features["Coord<ValueList>"]);
+    
+    // check for feature possibleCOMs. If present, read appropriate coordinates. Otherwise calculate mergerCOMs from coordinate list
+    if (trax.features.find("possibleCOMs") != trax.features.end()) {
+      int index1 = nMergers*(nMergers-1)/2;
+      int index2 = nMergers*(nMergers+1)/2;
+      mergerCOMs.assign(trax.features["possibleCOMs"].begin() + index1, trax.features["possibleCOMs"].begin() + index2);
+    } else {
+      // throw exception if list of coordinates is not stored int traxel
+      if (trax.features.find("Coord<ValueList>") == trax.features.end()) {
+	throw std::runtime_error("List of coordinates not stored in traxel!");
+      }
+      // calculate merger centers using clustering algorithm calg
+      mergerCOMs = calg(trax.features["Coord<ValueList>"]);
+    }
+    trax.features["mergerCOMs"] = mergerCOMs;
     traxel_map.set(node, trax);
   }
   
@@ -141,12 +154,14 @@ namespace pgmlink {
     // extract property maps and iterators from graph
     property_map<node_active2, HypothesesGraph::base_graph>::type& active_map = g_->get(node_active2());
     property_map<node_active2, HypothesesGraph::base_graph>::type::ValueIt active_valueIt = active_map.beginValue();
+
     
     // iterate over mergers and replace merger nodes
     for (; active_valueIt != active_map.endValue(); ++active_valueIt) {
       if (*active_valueIt > 1) {
 	property_map<node_active2, HypothesesGraph::base_graph>::type::ItemIt active_itemIt(active_map, *active_valueIt);
 	for (; active_itemIt != lemon::INVALID; ++active_itemIt) {
+	  calculate_centers(active_itemIt, calg, *active_valueIt);
 	  // for each object create new node and set arcs to old merger node inactive (neccessary for pruning)
 	  refine_node(active_itemIt, *active_valueIt);
 	}

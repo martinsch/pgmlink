@@ -8,11 +8,15 @@
 
 #include "pgmlink/hypotheses.h"
 #include "pgmlink/traxels.h"
+// enable tests of private class members
+#define private public
 #include "pgmlink/hanslovsky.h"
+#undef private
 
 #include <armadillo>
 #include <mlpack/core.hpp>
 #include <mlpack/methods/kmeans/kmeans.hpp>
+#include <lemon/maps.h>
 
 using namespace pgmlink;
 using namespace std;
@@ -22,13 +26,70 @@ using namespace boost;
 BOOST_AUTO_TEST_CASE( MergerResolver_constructor ) {
   HypothesesGraph g;
   MergerResolver m(&g);
-  BOOST_CHECK_EQUAL(m.giveGraph(), &g);
+  BOOST_CHECK_EQUAL(m.g_, &g);
 }
 
 
 BOOST_AUTO_TEST_CASE( MergerResolver_resolve_mergers ) {
   HypothesesGraph g;
   MergerResolver m(&g);
+}
+
+
+BOOST_AUTO_TEST_CASE( MergerResolver_collect_arcs ) {
+  // MergerResolver::collect_arcs(ArcIterator arcIt, std::vector<HypothesesGraph::base_graph::Arc>& res)
+
+  //  t=1      2      3 
+  //    o ---- o ---- o 
+
+  
+  feature_array COM(3, 0.0);
+  TraxelStore ts;
+  Traxel t1, t2, t3;
+  
+  t1.Id = 11;
+  t1.Timestep = 1;
+  t1.features["com"] = COM;
+  
+  t2.Id = 21;
+  t2.Timestep = 2;
+  t2.features["com"] = COM;
+  
+  t3.Id = 31;
+  t3.Timestep = 3;
+  t3.features["com"] = COM;
+  
+  add(ts, t1);
+  add(ts, t2);
+  add(ts, t3);
+  SingleTimestepTraxel_HypothesesBuilder::Options builder_opts(1, 100, false, false, 100);
+  SingleTimestepTraxel_HypothesesBuilder hyp_builder(&ts, builder_opts);
+  HypothesesGraph* g = hyp_builder.build();
+  MergerResolver m(g);
+  
+  std::vector<HypothesesGraph::base_graph::Arc> sources;
+  std::vector<HypothesesGraph::base_graph::Arc> targets;
+  
+  property_map<node_timestep, HypothesesGraph::base_graph>::type& time_map = g->get(node_timestep());
+  property_map<node_timestep, HypothesesGraph::base_graph>::type::ItemIt time_it(time_map, 2);
+  HypothesesGraph::Node node = time_it;
+  m.collect_arcs(HypothesesGraph::base_graph::InArcIt(*g, node), sources);
+  m.collect_arcs(HypothesesGraph::base_graph::OutArcIt(*g, node), targets);
+
+  // There should be one arc from t1 to t2 and one from t2 to t3
+  BOOST_CHECK_EQUAL(sources.size(), 1);
+  BOOST_CHECK_EQUAL(targets.size(), 1);
+
+  property_map<node_traxel, HypothesesGraph::base_graph>::type& trax_map = g->get(node_traxel());
+  Traxel src_from = trax_map[g->source(sources[0])];
+  Traxel src_to = trax_map[g->target(sources[0])];
+  Traxel tar_from = trax_map[g->source(targets[0])];
+  Traxel tar_to = trax_map[g->target(targets[0])];
+
+  BOOST_CHECK_EQUAL(src_from.Id, t1.Id);
+  BOOST_CHECK_EQUAL(src_to.Id, t2.Id);
+  BOOST_CHECK_EQUAL(tar_from.Id, t2.Id);
+  BOOST_CHECK_EQUAL(tar_to.Id, t3.Id);
 }
 
 
