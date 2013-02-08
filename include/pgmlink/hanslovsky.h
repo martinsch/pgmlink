@@ -30,8 +30,11 @@ namespace pgmlink {
     
     void copy_centers_to_feature_array(const arma::mat& centers, feature_array& c);
   public:
+    // tested
     KMeans(int k, const feature_array& data) :
       k_(k), data_(data) {}
+
+    // tested
     feature_array operator()();
   };
 
@@ -39,6 +42,7 @@ namespace pgmlink {
   //// helper functions
   ////
   template <typename T, typename U>
+  // tested
   void feature_array_to_arma_mat(const std::vector<T>& in, arma::Mat<U>& out) {
     int stepSize = out.n_rows;
     int n = out.n_cols;
@@ -58,6 +62,7 @@ namespace pgmlink {
 
   
   template <typename T>
+  // tested
   void get_centers(const arma::Mat<T>& data, const arma::Col<size_t> labels, arma::Mat<T>& centers, int k) {
     arma::Col<size_t>::const_iterator labelIt = labels.begin();
     std::vector<int> clusterSize(k, 0);
@@ -106,7 +111,12 @@ namespace pgmlink {
     void deactivate_arcs(std::vector<HypothesesGraph::base_graph::Arc> arcs);
 
     // Deactivate all resolved merger nodes
+    // tested
     void deactivate_nodes(std::vector<HypothesesGraph::Node> nodes);
+
+    // Get maximum id for given timestep
+    // tested
+    unsigned int get_max_id(int ts);
 
     // Split merger node into appropiately many new nodes.
     void refine_node(HypothesesGraph::Node,
