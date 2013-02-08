@@ -119,6 +119,7 @@ namespace pgmlink {
     unsigned int get_max_id(int ts);
 
     // Split merger node into appropiately many new nodes.
+    // tested
     void refine_node(HypothesesGraph::Node,
 		     std::size_t);
     

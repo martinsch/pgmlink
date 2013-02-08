@@ -4,6 +4,8 @@
 #include <cstring>
 #include <iostream>
 #include <algorithm>
+#include <set>
+#include <vector>
 
 #include <boost/test/unit_test.hpp>
 
@@ -72,6 +74,9 @@ BOOST_AUTO_TEST_CASE( MergerResolver_refine_node) {
   feature_array mCOM(pCOM.begin()+3, pCOM.begin()+9);
   feature_array com1(mCOM.begin(), mCOM.begin()+3);
   feature_array com2(mCOM.begin()+3, mCOM.end());
+  std::set<double> dist;
+  dist.insert(0);
+  dist.insert(5);
     
   Traxel t11;
   t11.Timestep = 1;
@@ -130,7 +135,8 @@ BOOST_AUTO_TEST_CASE( MergerResolver_refine_node) {
   active_map.set(n32, 1);
 
   property_map<node_timestep, HypothesesGraph::base_graph>::type& timestep_map = g.get(node_timestep());
-  property_map<node_timestep, HypothesesGraph::base_graph>::type::ItemIt timeIt(timestep_map, 2);
+  property_map<arc_distance, HypothesesGraph::base_graph>::type& distance_map = g.get(arc_distance());
+  
 
   MergerResolver m(&g);
   m.refine_node(n21, 2);
@@ -142,19 +148,46 @@ BOOST_AUTO_TEST_CASE( MergerResolver_refine_node) {
   BOOST_CHECK_EQUAL(arc_map[a21_32], false);
 
   int count = 0;
+  property_map<node_timestep, HypothesesGraph::base_graph>::type::ItemIt timeIt(timestep_map, 2);
   for (; timeIt != lemon::INVALID; ++timeIt) {
+    HypothesesGraph::base_graph::InArcIt inIt(g, timeIt);
+    HypothesesGraph::base_graph::OutArcIt outIt(g, timeIt);
     if (timeIt == n21) {
-      // deactivated merger node
+      
+      // merger node still active, will be deactivated in MergerResolver::resolve_mergers
       BOOST_CHECK_EQUAL(active_map[timeIt], 2);
     } else {
 
       // if correct merger COM exists in traxel, count++
       Traxel trax = traxel_map[timeIt];
       com = trax.features["com"];
-      if (std::equal(com1.begin(), com1.end(), com.begin()) ||
-	  std::equal(com2.begin(), com2.end(), com.begin())) {
+      if ( (std::equal(com1.begin(), com1.end(), com.begin()) ||
+	    std::equal(com2.begin(), com2.end(), com.begin()) ) &&
+	   (trax.Id == 22 || trax.Id == 23) ) {
 	++count;
       }
+      
+      
+      std::set<double> inDist;
+      for (; inIt != lemon::INVALID; ++inIt) {
+	// save distances of arcs
+	inDist.insert(distance_map[inIt]);
+	// check if activated
+        BOOST_CHECK(arc_map[inIt]);
+      }
+      // check distances of new arcs
+      BOOST_CHECK_EQUAL_COLLECTIONS(inDist.begin(), inDist.end(), dist.begin(), dist.end());
+      
+      std::set<double> outDist;
+      for (; outIt != lemon::INVALID; ++outIt) {
+	// save distances of arcs
+	outDist.insert(distance_map[outIt]);
+	// check if activated
+        BOOST_CHECK(arc_map[outIt]);	
+      }
+      // check distances of new arcs
+      BOOST_CHECK_EQUAL_COLLECTIONS(outDist.begin(), outDist.end(), dist.begin(), dist.end());
+      
       // activated merger replacement nodes
       BOOST_CHECK_EQUAL(active_map[timeIt], 1);
     }
