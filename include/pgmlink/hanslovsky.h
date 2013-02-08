@@ -93,10 +93,10 @@ namespace pgmlink {
 			   int nMergers);
 
     // Add arcs to nodes created to replace merger node.
-    void add_arcs_for_replacement_node(HypothesesGraph::Node,
-				       Traxel,
-				       std::vector<HypothesesGraph::base_graph::Arc>,
-				       std::vector<HypothesesGraph::base_graph::Arc>);
+    void add_arcs_for_replacement_node(HypothesesGraph::Node node,
+				       Traxel trax,
+				       std::vector<HypothesesGraph::base_graph::Arc> src,
+				       std::vector<HypothesesGraph::base_graph::Arc> dest);
 
     // Deactivate arcs of merger node.
     void deactivate_arcs(std::vector<HypothesesGraph::base_graph::Arc>);
