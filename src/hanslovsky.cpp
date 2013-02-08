@@ -113,15 +113,31 @@ namespace pgmlink {
     }
   }
 
+  unsigned int MergerResolver::get_max_id(int ts) {
+    property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g_->get(node_traxel());
+    property_map<node_timestep, HypothesesGraph::base_graph>::type& time_map = g_->get(node_timestep());
+    property_map<node_timestep, HypothesesGraph::base_graph>::type::ItemIt timeIt(time_map, ts);
+    unsigned int max_id = 0;
+    for (; timeIt != lemon::INVALID; ++timeIt) {
+      if (traxel_map[timeIt].Id > max_id) {
+	max_id = traxel_map[timeIt].Id;
+      }
+    }
+    return max_id;
+  }
+
   void MergerResolver::refine_node(HypothesesGraph::Node node,
 				   std::size_t nMerger) {
     property_map<node_active2, HypothesesGraph::base_graph>::type& active_map = g_->get(node_active2());
     property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g_->get(node_traxel());
+    property_map<node_timestep, HypothesesGraph::base_graph>::type& time_map = g_->get(node_timestep());
     
     Traxel trax = traxel_map[node];
     assert(trax.features.find("mergerCOMs") != trax.features.end());
 
     feature_array mergerCOMs = trax.features["mergerCOMs"];
+    int timestep = time_map[node];
+    unsigned int max_id = get_max_id(timestep)+1;
 
     // get incoming and outgoing arcs for reorganizing arcs
     std::vector<HypothesesGraph::base_graph::Arc> sources;
@@ -130,13 +146,14 @@ namespace pgmlink {
     collect_arcs(HypothesesGraph::base_graph::OutArcIt(*g_, node), targets);
 
     // create new node for each of the objects merged into node
-    for (unsigned int n = 0; n < nMerger; n++) {
+    for (unsigned int n = 0; n < nMerger; ++n, ++max_id) {
       // set traxel features, most of which can be copied from the merger node
       // set new center of mass as calculated from GMM
       trax.features["com"] = feature_array(mergerCOMs.begin()+(3*n), mergerCOMs.begin()+(3*(n+1)));
+      trax.Id = max_id;
       // todo: set traxel id!
       // add node to graph and activate it
-      HypothesesGraph::Node newNode = g_->add_node(trax.Timestep);
+      HypothesesGraph::Node newNode = g_->add_node(timestep);
       traxel_map.set(newNode, trax);
       active_map.set(newNode, 1);
       // add arc candidates for new nodes (todo: need to somehow choose which ones are active)

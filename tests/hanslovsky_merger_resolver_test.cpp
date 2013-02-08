@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include <cstring>
 #include <iostream>
+#include <algorithm>
 
 #include <boost/test/unit_test.hpp>
 
@@ -69,6 +70,8 @@ BOOST_AUTO_TEST_CASE( MergerResolver_refine_node) {
   pCOM[16] = 6;
 
   feature_array mCOM(pCOM.begin()+3, pCOM.begin()+9);
+  feature_array com1(mCOM.begin(), mCOM.begin()+3);
+  feature_array com2(mCOM.begin()+3, mCOM.end());
     
   Traxel t11;
   t11.Timestep = 1;
@@ -138,15 +141,25 @@ BOOST_AUTO_TEST_CASE( MergerResolver_refine_node) {
   BOOST_CHECK_EQUAL(arc_map[a21_31], false);
   BOOST_CHECK_EQUAL(arc_map[a21_32], false);
 
+  int count = 0;
   for (; timeIt != lemon::INVALID; ++timeIt) {
     if (timeIt == n21) {
       // deactivated merger node
       BOOST_CHECK_EQUAL(active_map[timeIt], 2);
     } else {
+
+      // if correct merger COM exists in traxel, count++
+      Traxel trax = traxel_map[timeIt];
+      com = trax.features["com"];
+      if (std::equal(com1.begin(), com1.end(), com.begin()) ||
+	  std::equal(com2.begin(), com2.end(), com.begin())) {
+	++count;
+      }
       // activated merger replacement nodes
       BOOST_CHECK_EQUAL(active_map[timeIt], 1);
     }
   }
+  BOOST_CHECK_EQUAL(count, 2);
   
 }
 
@@ -205,6 +218,43 @@ BOOST_AUTO_TEST_CASE( MergerResolver_deactivate_nodes ) {
   
   // node is not active (0) objects
   BOOST_CHECK_EQUAL(g.get(node_active2())[n], 0);
+}
+
+
+BOOST_AUTO_TEST_CASE( MergerResolver_get_max_id ) {
+  // get_max_id(int ts)
+
+  // ids in timesteps:
+  //  t=1      2
+  //    1      2
+  //    2
+  
+  HypothesesGraph g;
+  g.add(node_traxel());
+  Traxel t11, t12, t21;
+  
+  t11.Timestep = 1;
+  t11.Id = 1;
+
+  t12.Timestep = 1;
+  t12.Id = 2;
+
+  t21.Timestep = 2;
+  t21.Id = 2;
+
+  HypothesesGraph::Node n11 = g.add_node(1);
+  HypothesesGraph::Node n12 = g.add_node(1);
+  HypothesesGraph::Node n21 = g.add_node(2);
+
+  property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g.get(node_traxel());
+
+  traxel_map.set(n11, t11);
+  traxel_map.set(n12, t12);
+  traxel_map.set(n21, t21);
+
+  MergerResolver m(&g);
+  BOOST_CHECK_EQUAL(m.get_max_id(1), 2);
+  BOOST_CHECK_EQUAL(m.get_max_id(2), 2);  
 }
 
 
@@ -357,8 +407,8 @@ BOOST_AUTO_TEST_CASE( MergerResolver_collect_arcs ) {
 
 
 BOOST_AUTO_TEST_CASE( MergerResolver_kmeans) {
-  // KMeans(int k, const feature_array& data, feature_array& centers
-  // KMeans::predict()
+  // KMeans(int k, const feature_array& data, feature_array& centers)
+  // KMeans::operator()
   float arr[] = {-6, 0, 0, -5, 0, 0, -4, 0, 0, 6, 0, 0, 5, 0, 0, 4, 0, 0};
   float arr_res[] = {5, 0, 0, -5, 0, 0};
   feature_array data(arr, arr + sizeof(arr)/sizeof(arr[0]));
