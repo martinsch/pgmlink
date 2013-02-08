@@ -151,11 +151,11 @@ namespace pgmlink {
       // set new center of mass as calculated from GMM
       trax.features["com"] = feature_array(mergerCOMs.begin()+(3*n), mergerCOMs.begin()+(3*(n+1)));
       trax.Id = max_id;
-      // todo: set traxel id!
       // add node to graph and activate it
       HypothesesGraph::Node newNode = g_->add_node(timestep);
       traxel_map.set(newNode, trax);
       active_map.set(newNode, 1);
+      time_map.set(newNode, timestep);
       // add arc candidates for new nodes (todo: need to somehow choose which ones are active)
       add_arcs_for_replacement_node(newNode, trax, sources, targets);
     }
