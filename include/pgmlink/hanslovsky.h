@@ -124,7 +124,11 @@ namespace pgmlink {
 		     std::size_t);
     
   public:
-    MergerResolver(HypothesesGraph* g) : g_(g) {}
+    MergerResolver(HypothesesGraph* g) : g_(g)
+    {
+      if (!g_->has_property(merger_resolved_to()))
+	g_->add(merger_resolved_to());
+    }
     template <typename ClusteringAlg>
     HypothesesGraph* resolve_mergers(ClusteringAlg);
   };

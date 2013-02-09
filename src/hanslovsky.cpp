@@ -132,6 +132,7 @@ namespace pgmlink {
     property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g_->get(node_traxel());
     property_map<node_timestep, HypothesesGraph::base_graph>::type& time_map = g_->get(node_timestep());
     
+    
     Traxel trax = traxel_map[node];
     assert(trax.features.find("mergerCOMs") != trax.features.end());
 
@@ -145,7 +146,10 @@ namespace pgmlink {
     collect_arcs(HypothesesGraph::base_graph::InArcIt(*g_, node), sources);
     collect_arcs(HypothesesGraph::base_graph::OutArcIt(*g_, node), targets);
 
+
     // create new node for each of the objects merged into node
+    
+    std::vector<int> new_ids;
     for (unsigned int n = 0; n < nMerger; ++n, ++max_id) {
       // set traxel features, most of which can be copied from the merger node
       // set new center of mass as calculated from GMM
@@ -158,11 +162,15 @@ namespace pgmlink {
       time_map.set(newNode, timestep);
       // add arc candidates for new nodes (todo: need to somehow choose which ones are active)
       add_arcs_for_replacement_node(newNode, trax, sources, targets);
+      // save new id from merger node to new_ids;
+      new_ids.push_back(max_id);
     }
     // deactivate incoming and outgoing arcs of merger node
     // merger node will be deactivated after pruning
     deactivate_arcs(sources);
     deactivate_arcs(targets);
+    // save information on new ids in property map
+    g_->get(merger_resolved_to()).set(node, new_ids);
   }
   
 }
