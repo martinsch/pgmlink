@@ -88,9 +88,14 @@ BOOST_AUTO_TEST_CASE( MergerResolver_refine_node) {
   feature_array mCOM(pCOM.begin()+3, pCOM.begin()+9);
   feature_array com1(mCOM.begin(), mCOM.begin()+3);
   feature_array com2(mCOM.begin()+3, mCOM.end());
+  
   std::set<double> dist;
   dist.insert(0);
   dist.insert(5);
+
+  std::vector<int> new_ids;
+  new_ids.push_back(22);
+  new_ids.push_back(23);
     
   Traxel t11;
   t11.Timestep = 1;
@@ -206,7 +211,11 @@ BOOST_AUTO_TEST_CASE( MergerResolver_refine_node) {
       BOOST_CHECK_EQUAL(active_map[timeIt], 1);
     }
   }
+  // check number of newly created nodes
   BOOST_CHECK_EQUAL(count, 2);
+  // check that merger_resolved_to property is set properly
+  std::vector<int> property = g.get(merger_resolved_to())[n21];
+  BOOST_CHECK_EQUAL_COLLECTIONS(property.begin(), property.end(), new_ids.begin(), new_ids.end());
   
 }
 
