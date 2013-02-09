@@ -35,6 +35,20 @@ BOOST_AUTO_TEST_CASE( MergerResolver_constructor ) {
 
 BOOST_AUTO_TEST_CASE( MergerResolver_resolve_mergers ) {
   HypothesesGraph g;
+  g.add(node_traxel()).add(arc_distance()).add(arc_active()).add(node_active2()).add(merger_resolved_to());
+  //  t=1      2
+  //    o ----  
+  //          \ 
+  //           O
+  //          / 
+  //    o ----   
+
+  // ->
+  //    o ---- o
+  //     \    / 
+  //       --   
+  //     /    \ 
+  //    o ---- o
   MergerResolver m(&g);
 }
 
@@ -59,7 +73,7 @@ BOOST_AUTO_TEST_CASE( MergerResolver_refine_node) {
   
   HypothesesGraph g;
   // g.add(arc_distance()).add(tracklet_intern_dist()).add(node_tracklet()).add(tracklet_intern_arc_ids()).add(traxel_arc_id());
-  g.add(node_traxel()).add(arc_distance()).add(arc_active()).add(node_active2());
+  g.add(node_traxel()).add(arc_distance()).add(arc_active()).add(node_active2()).add(merger_resolved_to());
   
   feature_array com(3,0);
   feature_array pCOM(6*3, 0);

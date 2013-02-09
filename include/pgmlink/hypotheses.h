@@ -188,6 +188,16 @@ namespace pgmlink {
     template <typename Graph>
       const std::string property_map<division_active,Graph>::name = "division_active";
 
+  // merger_resolved_to
+  struct merger_resolved_to {};
+  template <typename Graph>
+  struct property_map<merger_resolved_to, Graph> {
+    typedef lemon::IterableValueMap< Graph, typename Graph::Node, std::vector<int> > type;
+    static const std::string name;
+  };
+  template <typename Graph>
+  const std::string property_map<merger_resolved_to, Graph>::name = "merger_resolved_to";
+
 
 
   class HypothesesGraph : public PropertyGraph<lemon::ListDigraph> {
