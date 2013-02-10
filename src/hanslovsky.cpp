@@ -148,7 +148,6 @@ namespace pgmlink {
 
 
     // create new node for each of the objects merged into node
-    
     std::vector<int> new_ids;
     for (unsigned int n = 0; n < nMerger; ++n, ++max_id) {
       // set traxel features, most of which can be copied from the merger node
@@ -164,6 +163,7 @@ namespace pgmlink {
       add_arcs_for_replacement_node(newNode, trax, sources, targets);
       // save new id from merger node to new_ids;
       new_ids.push_back(max_id);
+      
     }
     // deactivate incoming and outgoing arcs of merger node
     // merger node will be deactivated after pruning

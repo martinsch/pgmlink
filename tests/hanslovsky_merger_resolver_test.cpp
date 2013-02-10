@@ -30,6 +30,8 @@ BOOST_AUTO_TEST_CASE( MergerResolver_constructor ) {
   HypothesesGraph g;
   MergerResolver m(&g);
   BOOST_CHECK_EQUAL(m.g_, &g);
+  // check that merger_resolved_to property has been added
+  BOOST_CHECK(m.g_->has_property(merger_resolved_to()));
 }
 
 
@@ -49,7 +51,56 @@ BOOST_AUTO_TEST_CASE( MergerResolver_resolve_mergers ) {
   //       --   
   //     /    \ 
   //    o ---- o
+
+  feature_array com(3,0);
+  feature_array pCOM(6*3, 0);
+
+  pCOM[0]  = 3;
+  pCOM[3]  = 1;
+  pCOM[6]  = 6;
+  pCOM[9]  = 1;
+  pCOM[12] = 3;
+  pCOM[16] = 6;
+
+  Traxel t11;
+  t11.Timestep = 1;
+  t11.Id = 11;
+  com[0] = 1; t11.features["com"] = com;
+
+  Traxel t12 = t11;
+  t12.Id = 12;
+  t12.features["com"][0] = 6;
+
+  Traxel t21;
+  t21.Timestep = 2;
+  t21.Id = 21;
+  com[0] = 3; t21.features["com"] = com;
+  t21.features["possibleCOMs"] = pCOM;
+
+  
+  HypothesesGraph::Node n11 = g.add_node(1);
+  HypothesesGraph::Node n12 = g.add_node(1);
+  HypothesesGraph::Node n21 = g.add_node(2);
+
+  HypothesesGraph::Arc a11_21 = g.addArc(n11, n21);
+  HypothesesGraph::Arc a12_21 = g.addArc(n12, n21);
+
+  property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g.get(node_traxel());
+  traxel_map.set(n11, t11);
+  traxel_map.set(n12, t12);
+  traxel_map.set(n21, t21);
+
+  property_map<arc_active, HypothesesGraph::base_graph>::type& arc_map = g.get(arc_active());
+  arc_map.set(a11_21, true);
+  arc_map.set(a12_21, true);
+
+  property_map<node_active2, HypothesesGraph::base_graph>::type& active_map = g.get(node_active2());
+  active_map.set(n11, 1);
+  active_map.set(n12, 1);
+  active_map.set(n21, 2);
+
   MergerResolver m(&g);
+  // m.resolve_mergers<KMeans>();
 }
 
 
@@ -110,8 +161,8 @@ BOOST_AUTO_TEST_CASE( MergerResolver_refine_node) {
   t21.Timestep = 2;
   t21.Id = 21;
   com[0] = 3; t21.features["com"] = com;
-  t21.features["possibleCOMs"] = pCOM;
   t21.features["mergerCOMs"] = mCOM;
+
   
   Traxel t31;
   t31.Timestep = 3;
