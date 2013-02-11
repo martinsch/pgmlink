@@ -32,6 +32,10 @@ BOOST_AUTO_TEST_CASE( MergerResolver_constructor ) {
   BOOST_CHECK_EQUAL(m.g_, &g);
   // check that merger_resolved_to property has been added
   BOOST_CHECK(m.g_->has_property(merger_resolved_to()));
+
+  // check exception on intialization with null pointer
+  HypothesesGraph* G = 0; // = hyp_builder.build();
+  BOOST_CHECK_THROW(MergerResolver M(G), std::runtime_error);
 }
 
 
@@ -102,7 +106,8 @@ BOOST_AUTO_TEST_CASE( MergerResolver_resolve_mergers ) {
   active_map.set(n21, 2);
 
   MergerResolver m(&g);
-  m.resolve_mergers<KMeans>();
+  FeatureExtractorMCOMsFromPCOMs extractor;
+  m.resolve_mergers(extractor);
 
   // setup tests
   property_map<node_active2, HypothesesGraph::base_graph>::type::ValueIt active_valueIt = active_map.beginValue();
@@ -255,7 +260,8 @@ BOOST_AUTO_TEST_CASE( MergerResolver_refine_node) {
   
 
   MergerResolver m(&g);
-  m.refine_node(n21, 2);
+  FeatureExtractorMCOMsFromMCOMs extractor;
+  m.refine_node(n21, 2, extractor);
   
   // deactivated arcs from and to merger node
   BOOST_CHECK_EQUAL(arc_map[a11_21], false);
