@@ -196,7 +196,9 @@ namespace pgmlink {
 	}
       }
     }
-    deactivate_nodes(nodes_to_deactivate);
+    // maybe keep merger nodes active for event extraction
+    // talk to Bernhard and Martin!
+    // deactivate_nodes(nodes_to_deactivate);
     prune_inactive(*g_);
     return g_;
   }

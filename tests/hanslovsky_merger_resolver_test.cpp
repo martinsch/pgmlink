@@ -94,13 +94,59 @@ BOOST_AUTO_TEST_CASE( MergerResolver_resolve_mergers ) {
   arc_map.set(a11_21, true);
   arc_map.set(a12_21, true);
 
+  
+
   property_map<node_active2, HypothesesGraph::base_graph>::type& active_map = g.get(node_active2());
   active_map.set(n11, 1);
   active_map.set(n12, 1);
   active_map.set(n21, 2);
 
   MergerResolver m(&g);
-  // m.resolve_mergers<KMeans>();
+  m.resolve_mergers<KMeans>();
+
+  // setup tests
+  property_map<node_active2, HypothesesGraph::base_graph>::type::ValueIt active_valueIt = active_map.beginValue();
+  property_map<arc_distance, HypothesesGraph::base_graph>::type& distance_map = g.get(arc_distance());
+  std::set<int> active_values;
+  std::set<int> values_found;
+  active_values.insert(1);
+  active_values.insert(2);
+  std::set<double> distances;
+  distances.insert(0);
+  distances.insert(5);
+  std::set<int> new_ids;
+  new_ids.insert(22);
+  new_ids.insert(23);
+  std::set<int> set_ids;
+  
+  for (; active_valueIt != active_map.endValue(); ++active_valueIt) {
+    property_map<node_active2, HypothesesGraph::base_graph>::type::ItemIt active_itemIt(active_map, *active_valueIt);
+    property_map<merger_resolved_to, HypothesesGraph::base_graph>::type& to_map = g.get(merger_resolved_to());
+    values_found.insert(*active_valueIt);
+    for (; active_itemIt != lemon::INVALID; ++active_itemIt) {
+      int count = 0;
+      std::set<double> measured_distances;
+      for (HypothesesGraph::InArcIt it(g, active_itemIt); it != lemon::INVALID; ++it) {
+	++count;
+	measured_distances.insert(distance_map[it]);
+      }
+      for (HypothesesGraph::OutArcIt it(g, active_itemIt); it != lemon::INVALID; ++it) {
+	++count;
+	measured_distances.insert(distance_map[it]);
+      }
+      if (*active_valueIt == 1) {
+	BOOST_CHECK_EQUAL(count, 2);
+	BOOST_CHECK_EQUAL_COLLECTIONS(distances.begin(), distances.end(), measured_distances.begin(), measured_distances.end());
+      } else if (*active_valueIt == 2) {
+	BOOST_CHECK_EQUAL(count, 0);
+	BOOST_CHECK_EQUAL(traxel_map[active_itemIt].Id, 21);
+	set_ids = std::set<int>(to_map[active_itemIt].begin(), to_map[active_itemIt].end());
+      }
+    }
+  }
+  BOOST_CHECK_EQUAL_COLLECTIONS(values_found.begin(), values_found.end(), active_values.begin(), active_values.end());
+  BOOST_CHECK_EQUAL_COLLECTIONS(set_ids.begin(), set_ids.end(), new_ids.begin(), new_ids.end());
+  
 }
 
 
