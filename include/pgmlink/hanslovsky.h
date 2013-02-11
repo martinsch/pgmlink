@@ -111,9 +111,28 @@ namespace pgmlink {
 
   ////
   //// FeatureExtractorMCOMsFromKMeans
+  ////
   class FeatureExtractorMCOMsFromKMeans : public FeatureExtractorBase {
   public:
     virtual std::vector<Traxel> operator()(Traxel trax, size_t nMergers, unsigned int max_id);
+  };
+
+
+  ////
+  //// DistanceBase
+  ////
+  class DistanceBase {
+  public:
+    virtual double operator()(Traxel from, Traxel to) = 0;
+  };
+
+
+  ////
+  //// DistanceFromCOMs
+  ////
+  class DistanceFromCOMs : public DistanceBase{
+  public:
+    virtual double operator()(Traxel from, Traxel to);
   };
 
 
@@ -143,7 +162,8 @@ namespace pgmlink {
     void add_arcs_for_replacement_node(HypothesesGraph::Node node,
 				       Traxel trax,
 				       std::vector<HypothesesGraph::base_graph::Arc> src,
-				       std::vector<HypothesesGraph::base_graph::Arc> dest);
+				       std::vector<HypothesesGraph::base_graph::Arc> dest,
+				       DistanceBase& distance);
 
     // Deactivate arcs of merger node.
     // tested
@@ -161,7 +181,8 @@ namespace pgmlink {
     // tested
     void refine_node(HypothesesGraph::Node,
 		     std::size_t,
-		     FeatureExtractorBase& extractor);
+		     FeatureExtractorBase& extractor,
+		     DistanceBase& distance);
     
   public:
     MergerResolver(HypothesesGraph* g) : g_(g)
@@ -171,7 +192,8 @@ namespace pgmlink {
       if (!g_->has_property(merger_resolved_to()))
 	g_->add(merger_resolved_to());
     }
-    HypothesesGraph* resolve_mergers(FeatureExtractorBase& extractor);
+    HypothesesGraph* resolve_mergers(FeatureExtractorBase& extractor,
+				     DistanceBase& distance);
   };
   
   template <typename ArcIterator>

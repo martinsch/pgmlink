@@ -97,14 +97,23 @@ namespace pgmlink {
     return res;
   }
 
+  
+  ////
+  //// DistanceFromCOMs
+  ////
+  double DistanceFromCOMs::operator()(Traxel from, Traxel to) {
+    return from.distance_to(to);
+  }
+
 
   ////
   //// MergerResolver
   ////
   void MergerResolver::add_arcs_for_replacement_node(HypothesesGraph::Node node,
-				     Traxel trax,
-				     std::vector<HypothesesGraph::base_graph::Arc> src,
-				     std::vector<HypothesesGraph::base_graph::Arc> dest) {
+						     Traxel trax,
+						     std::vector<HypothesesGraph::base_graph::Arc> src,
+						     std::vector<HypothesesGraph::base_graph::Arc> dest,
+						     DistanceBase& distance) {
     // add Arcs for new node that is a replacement node for merger node
     // get the property_maps needed for adding Arcs
     std::vector<HypothesesGraph::base_graph::Arc>::iterator it;
@@ -116,7 +125,7 @@ namespace pgmlink {
     for(it = src.begin(); it != src.end(); ++it) {
       HypothesesGraph::Node from = g_->source(*it);
       Traxel from_tr = traxel_map[from];
-      double dist = from_tr.distance_to(trax);
+      double dist = distance(from_tr, trax);
       HypothesesGraph::Arc arc = g_->addArc(from, node);
       // add distance and activate arcs
       arc_distances.set(arc, dist);
@@ -127,7 +136,7 @@ namespace pgmlink {
     for(it = dest.begin(); it != dest.end(); ++it) {
       HypothesesGraph::Node to = g_->target(*it);
       Traxel to_tr = traxel_map[to];
-      double dist = trax.distance_to(to_tr);
+      double dist = distance(trax, to_tr);
       HypothesesGraph::Arc arc = g_->addArc(node, to);
       // add distance and activate arcs
       arc_distances.set(arc, dist);
@@ -170,7 +179,8 @@ namespace pgmlink {
 
   void MergerResolver::refine_node(HypothesesGraph::Node node,
 				   std::size_t nMerger,
-				   FeatureExtractorBase& extractor) {
+				   FeatureExtractorBase& extractor,
+				   DistanceBase& distance) {
     property_map<node_active2, HypothesesGraph::base_graph>::type& active_map = g_->get(node_active2());
     property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g_->get(node_traxel());
     property_map<node_timestep, HypothesesGraph::base_graph>::type& time_map = g_->get(node_timestep());
@@ -199,7 +209,7 @@ namespace pgmlink {
       active_map.set(newNode, 1);
       time_map.set(newNode, timestep);
       // add arc candidates for new nodes (todo: need to somehow choose which ones are active)
-      add_arcs_for_replacement_node(newNode, *it, sources, targets);
+      add_arcs_for_replacement_node(newNode, *it, sources, targets, distance);
       // save new id from merger node to new_ids;
       new_ids.push_back(it->Id);
       
@@ -213,7 +223,8 @@ namespace pgmlink {
   }
 
 
-  HypothesesGraph* MergerResolver::resolve_mergers(FeatureExtractorBase& extractor) {
+  HypothesesGraph* MergerResolver::resolve_mergers(FeatureExtractorBase& extractor,
+						   DistanceBase& distance) {
     // extract property maps and iterators from graph
     property_map<node_active2, HypothesesGraph::base_graph>::type& active_map = g_->get(node_active2());
     property_map<node_active2, HypothesesGraph::base_graph>::type::ValueIt active_valueIt = active_map.beginValue();
@@ -229,7 +240,7 @@ namespace pgmlink {
 	for (; active_itemIt != lemon::INVALID; ++active_itemIt) {
 	  // calculate_centers<ClusteringAlg>(active_itemIt, *active_valueIt);
 	  // for each object create new node and set arcs to old merger node inactive (neccessary for pruning)
-	  refine_node(active_itemIt, *active_valueIt, extractor);
+	  refine_node(active_itemIt, *active_valueIt, extractor, distance);
 	  nodes_to_deactivate.push_back(active_itemIt);
 	}
       }
