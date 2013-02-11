@@ -11,6 +11,7 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <map>
 #include <boost/serialization/set.hpp>
 #include <boost/shared_ptr.hpp>
 #include <lemon/list_graph.h>
@@ -192,7 +193,8 @@ namespace pgmlink {
   struct merger_resolved_to {};
   template <typename Graph>
   struct property_map<merger_resolved_to, Graph> {
-    typedef lemon::IterableValueMap< Graph, typename Graph::Node, std::vector<int> > type;
+    // typedef std::map<typename Graph::Node, std::vector<unsigned int> > type;
+    typedef lemon::IterableValueMap< Graph, typename Graph::Node, std::vector<unsigned int> > type;
     static const std::string name;
   };
   template <typename Graph>

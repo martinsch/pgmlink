@@ -198,7 +198,7 @@ namespace pgmlink {
 
 
     // create new node for each of the objects merged into node
-    std::vector<int> new_ids;
+    std::vector<unsigned int> new_ids;
     std::vector<Traxel> ft = extractor(trax, nMerger, max_id);
     for (std::vector<Traxel>::iterator it = ft.begin(); it != ft.end(); ++it) {
       // set traxel features, most of which can be copied from the merger node
@@ -220,6 +220,7 @@ namespace pgmlink {
     deactivate_arcs(targets);
     // save information on new ids in property map
     g_->get(merger_resolved_to()).set(node, new_ids);
+    // g_->get(merger_resolved_to())[node] = new_ids;
   }
 
 
