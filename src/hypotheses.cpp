@@ -157,12 +157,12 @@ namespace pgmlink {
 	for(node_timestep_map_t::ItemIt node_at(node_timestep_map, t); node_at!=lemon::INVALID; ++node_at) {
 	    assert(node_traxel_map[node_at].Timestep == t);
 
-	    if (with_resolved && resolved_map->find(node_at) != resolved_map->end()) {
+	    if (with_resolved && (*node_number_of_objects)[node_at] > 1) {
 	      Event e;
 	      e.type = Event::ResolvedTo;
 	      e.traxel_ids.push_back(node_traxel_map[node_at].Id);
-	      std::vector<unsigned int> ids = *resolved_map[node_at];
-	      for (std::vector<unsigned int>::iterator it = ids.begin(); it != its.end(); ++it) {
+	      std::vector<unsigned int> ids = (*resolved_map)[node_at];
+	      for (std::vector<unsigned int>::iterator it = ids.begin(); it != ids.end(); ++it) {
 		e.traxel_ids.push_back(*it);
 	      }
 	      (*ret)[t-g.earliest_timestep()].push_back(e);
