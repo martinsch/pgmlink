@@ -126,6 +126,7 @@ namespace pgmlink {
     typedef property_map<node_traxel, HypothesesGraph::base_graph>::type node_traxel_map_t;
     node_traxel_map_t& node_traxel_map = g.get(node_traxel());
     property_map<division_active, HypothesesGraph::base_graph>::type* division_node_map;
+    
     bool with_division_detection = false;
     if (g.getProperties().count("division_active") > 0) {
     	division_node_map = &g.get(division_active());
@@ -136,6 +137,12 @@ namespace pgmlink {
     if (g.getProperties().count("node_active2") > 0) {
     	node_number_of_objects = &g.get(node_active2());
     	with_mergers = true;
+    }
+    bool with_resolved = false;
+    property_map<merger_resolved_to, HypothesesGraph::base_graph>::type* resolved_map;
+    if (g.getProperties().count("merger_resolved_to") > 0) {
+      resolved_map = &g.get(merger_resolved_to());
+      with_resolved = true;
     }
 
     // for every timestep
@@ -149,6 +156,18 @@ namespace pgmlink {
 	LOG(logDEBUG2) << "events(): for every node: destiny";
 	for(node_timestep_map_t::ItemIt node_at(node_timestep_map, t); node_at!=lemon::INVALID; ++node_at) {
 	    assert(node_traxel_map[node_at].Timestep == t);
+
+	    if (with_resolved && resolved_map->find(node_at) != resolved_map->end()) {
+	      Event e;
+	      e.type = Event::ResolvedTo;
+	      e.traxel_ids.push_back(node_traxel_map[node_at].Id);
+	      std::vector<unsigned int> ids = *resolved_map[node_at];
+	      for (std::vector<unsigned int>::iterator it = ids.begin(); it != its.end(); ++it) {
+		e.traxel_ids.push_back(*it);
+	      }
+	      (*ret)[t-g.earliest_timestep()].push_back(e);
+	      LOG(logDEBUG3) << e;
+	    }
 
 	    if(with_mergers && (*node_number_of_objects)[node_at] > 1) {
 			Event e;
