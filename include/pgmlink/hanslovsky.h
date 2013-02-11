@@ -6,6 +6,8 @@
 #include <stdexcept>
 #include <cassert>
 #include <algorithm>
+#include <string>
+#include <map>
 
 
 // external headers
@@ -20,6 +22,9 @@
 
 
 namespace pgmlink {
+
+  typedef std::vector<std::string> feature_list;
+  
   ////
   //// KMeans
   ////
@@ -76,6 +81,42 @@ namespace pgmlink {
     }
   }
 
+
+  ////
+  //// FeatureExtractorBase
+  ////
+  class FeatureExtractorBase {
+  public:
+    virtual std::vector<Traxel> operator()(Traxel trax, size_t nMergers, unsigned int max_id) = 0;
+  };
+
+
+  ////
+  //// FeatureExtractorMCOMsFromPCOMs
+  ////
+  class FeatureExtractorMCOMsFromPCOMs : public FeatureExtractorBase {
+  public:
+    virtual std::vector<Traxel> operator()(Traxel trax, size_t nMergers, unsigned int max_id);
+  };
+
+  
+  ////
+  //// FeatureExtractorMCOMsFromMCOMs
+  ////
+  class FeatureExtractorMCOMsFromMCOMs : public FeatureExtractorBase {
+  public:
+    virtual std::vector<Traxel> operator()(Traxel trax, size_t nMergers, unsigned int max_id);
+  };
+    
+
+  ////
+  //// FeatureExtractorMCOMsFromKMeans
+  class FeatureExtractorMCOMsFromKMeans : public FeatureExtractorBase {
+  public:
+    virtual std::vector<Traxel> operator()(Traxel trax, size_t nMergers, unsigned int max_id);
+  };
+
+
   ////
   //// MergerResolver
   ////
@@ -92,9 +133,10 @@ namespace pgmlink {
     void collect_arcs(ArcIterator,
 		      std::vector<HypothesesGraph::base_graph::Arc>&);
 
-    template <typename ClusteringAlg>
-    void calculate_centers(HypothesesGraph::Node,
-			   int nMergers);
+    // template <typename ClusteringAlg>
+    // do a more general way!
+    // void calculate_centers(HypothesesGraph::Node,
+    // int nMergers);
 
     // Add arcs to nodes created to replace merger node.
     // tested
@@ -118,16 +160,18 @@ namespace pgmlink {
     // Split merger node into appropiately many new nodes.
     // tested
     void refine_node(HypothesesGraph::Node,
-		     std::size_t);
+		     std::size_t,
+		     FeatureExtractorBase& extractor);
     
   public:
     MergerResolver(HypothesesGraph* g) : g_(g)
     {
+      if (!g_)
+	throw std::runtime_error("HypotesesGraph g_ is a null pointer!");
       if (!g_->has_property(merger_resolved_to()))
 	g_->add(merger_resolved_to());
     }
-    template <typename ClusteringAlg>
-    HypothesesGraph* resolve_mergers();
+    HypothesesGraph* resolve_mergers(FeatureExtractorBase& extractor);
   };
   
   template <typename ArcIterator>
@@ -139,7 +183,7 @@ namespace pgmlink {
     }
   }
   
-  template <typename ClusteringAlg>
+  /* template <typename ClusteringAlg>
   void MergerResolver::calculate_centers(HypothesesGraph::Node node,					 
 					 int nMergers) {
     // get traxel map from graph to access traxel
@@ -167,41 +211,9 @@ namespace pgmlink {
     trax.features["mergerCOMs"] = mergerCOMs;
     assert((int)mergerCOMs.size() == 3*nMergers);
     traxel_map.set(node, trax);
-  }
+    } */
 
-  // requirements for ClusteringAlg:
-  // ClusteringAlg(int nMerger, feature_array coordinate_list)
-  // feature_array ClusteringAlg::operator()()
-  template <typename ClusteringAlg>
-  HypothesesGraph* MergerResolver::resolve_mergers() {
-    // extract property maps and iterators from graph
-    property_map<node_active2, HypothesesGraph::base_graph>::type& active_map = g_->get(node_active2());
-    property_map<node_active2, HypothesesGraph::base_graph>::type::ValueIt active_valueIt = active_map.beginValue();
-
-    
-    // iterate over mergers and replace merger nodes
-    // keep track of merger nodes to deactivate them later
-    std::vector<HypothesesGraph::Node> nodes_to_deactivate;
-    for (; active_valueIt != active_map.endValue(); ++active_valueIt) {
-      if (*active_valueIt > 1) {
-	property_map<node_active2, HypothesesGraph::base_graph>::type::ItemIt active_itemIt(active_map, *active_valueIt);
-	property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g_->get(node_traxel());
-	
-	for (; active_itemIt != lemon::INVALID; ++active_itemIt) {
-	  calculate_centers<ClusteringAlg>(active_itemIt, *active_valueIt);
-	  // for each object create new node and set arcs to old merger node inactive (neccessary for pruning)
-	  Traxel TRAX = traxel_map[active_itemIt];
-	  refine_node(active_itemIt, *active_valueIt);
-	  nodes_to_deactivate.push_back(active_itemIt);
-	}
-      }
-    }
-    // maybe keep merger nodes active for event extraction
-    // talk to Bernhard and Martin!
-    // deactivate_nodes(nodes_to_deactivate);
-    prune_inactive(*g_);
-    return g_;
-  }
+  
   
 }
 
