@@ -82,7 +82,6 @@ namespace pgmlink {
 
             // predict probabilities
             rf.predictProbabilities(features, prob);
-
             return prob;
         }
 

@@ -4,6 +4,7 @@
 #include <sstream>
 #include <utility>
 #include <vector>
+#include <algorithm>
 
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
@@ -143,6 +144,7 @@ namespace pgmlink {
     if (g.getProperties().count("merger_resolved_to") > 0) {
       resolved_map = &g.get(merger_resolved_to());
       with_resolved = true;
+      LOG(logDEBUG1) << "events(): with_resolved enabled";
     }
 
     // for every timestep
@@ -157,7 +159,11 @@ namespace pgmlink {
 	for(node_timestep_map_t::ItemIt node_at(node_timestep_map, t); node_at!=lemon::INVALID; ++node_at) {
 	    assert(node_traxel_map[node_at].Timestep == t);
 
-	    if (with_resolved && (*node_number_of_objects)[node_at] > 1) {
+
+	    LOG(logDEBUG2) << "events(): size of resolved_map: " << (*resolved_map)[node_at].size();
+	    if (with_resolved && (*resolved_map)[node_at].size()) {
+	      // property_map<merger_resolved_to, HypothesesGraph::base_graph>::type::ItemIt resolved_it;
+	      // resolved_it = std::find(resolved_it
 	      Event e;
 	      e.type = Event::ResolvedTo;
 	      e.traxel_ids.push_back(node_traxel_map[node_at].Id);
@@ -169,6 +175,7 @@ namespace pgmlink {
 	      LOG(logDEBUG3) << e;
 	    }
 
+	    LOG(logDEBUG3) << "Number of detected objects: " << (*node_number_of_objects)[node_at];
 	    if(with_mergers && (*node_number_of_objects)[node_at] > 1) {
 			Event e;
 			e.type = Event::Merger;

@@ -191,6 +191,12 @@ namespace pgmlink {
 	throw std::runtime_error("HypotesesGraph g_ is a null pointer!");
       if (!g_->has_property(merger_resolved_to()))
 	g_->add(merger_resolved_to());
+      if (!g_->has_property(node_active2()))
+	throw std::runtime_error("HypothesesGraph g_ does not have property node_active2!");
+      if (!g_->has_property(arc_active()))
+	throw std::runtime_error("HypothesesGraph g_ does not have property arc_active!");
+      if (!g_->has_property(arc_distance()))
+	throw std::runtime_error("HypothesesGraph g_ does not have property arc_distance!");
     }
     HypothesesGraph* resolve_mergers(FeatureExtractorBase& extractor,
 				     DistanceBase& distance);

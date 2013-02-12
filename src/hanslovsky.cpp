@@ -61,7 +61,7 @@ namespace pgmlink {
   std::vector<Traxel> FeatureExtractorMCOMsFromPCOMs::operator()(
 										  Traxel trax,
 										  size_t nMerger,
-										  unsigned int max_id
+										  unsigned int start_id
 										  ) {
     std::map<std::string, feature_array>::iterator it = trax.features.find("possibleCOMs");
     assert(it != trax.features.end());
@@ -69,8 +69,8 @@ namespace pgmlink {
     unsigned int index1 = 3*(nMerger*(nMerger-1))/2;
     unsigned int index2 = 3*(nMerger*(nMerger+1))/2;
     feature_array range(it->second.begin()+index1, it->second.begin()+index2);
-    for (unsigned int n = 0; n < nMerger; ++n, ++max_id) {
-      trax.Id = max_id;
+    for (unsigned int n = 0; n < nMerger; ++n, ++start_id) {
+      trax.Id = start_id;
       trax.features["com"] = feature_array(range.begin()+(3*n), range.begin()+(3*(n+1)));
       res.push_back(trax);
     }
@@ -84,13 +84,13 @@ namespace pgmlink {
   std::vector<Traxel> FeatureExtractorMCOMsFromMCOMs::operator()(
 										  Traxel trax,
 										  size_t nMerger,
-										  unsigned int max_id
+										  unsigned int start_id
 										  ) {
     std::map<std::string, feature_array>::iterator it = trax.features.find("mergerCOMs");
     assert(it != trax.features.end());
     std::vector<Traxel> res;
-    for (unsigned int n = 0; n < nMerger; ++n, ++max_id) {
-      trax.Id = max_id;
+    for (unsigned int n = 0; n < nMerger; ++n, ++start_id) {
+      trax.Id = start_id;
       trax.features["com"] = feature_array(it->second.begin()+(3*n), it->second.begin()+(3*(n+1)));
       res.push_back(trax);
     }
