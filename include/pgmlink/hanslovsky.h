@@ -137,6 +137,20 @@ namespace pgmlink {
 
 
   ////
+  //// ReasonerMaxOneArc
+  ////
+  class ReasonerMaxOneArc : public Reasoner {
+  private:
+    
+  public:
+    ReasonerMaxOneArc();
+    virtual void formulate(const HypothesesGraph& g);
+    virtual void infer();
+    virtual void conclude(HypothesesGraph& g);
+  };
+
+
+  ////
   //// MergerResolver
   ////
   class MergerResolver {
@@ -197,6 +211,8 @@ namespace pgmlink {
 	throw std::runtime_error("HypothesesGraph g_ does not have property arc_active!");
       if (!g_->has_property(arc_distance()))
 	throw std::runtime_error("HypothesesGraph g_ does not have property arc_distance!");
+      if (!g_->has_property(node_originated_from()))
+	g_->add(node_originated_from());
     }
     HypothesesGraph* resolve_mergers(FeatureExtractorBase& extractor,
 				     DistanceBase& distance);

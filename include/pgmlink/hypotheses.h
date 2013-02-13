@@ -194,11 +194,21 @@ namespace pgmlink {
   template <typename Graph>
   struct property_map<merger_resolved_to, Graph> {
     // typedef std::map<typename Graph::Node, std::vector<unsigned int> > type;
-    typedef lemon::IterableValueMap< Graph, typename Graph::Node, std::vector<unsigned int> > type;
+    typedef lemon::IterableValueMap<Graph, typename Graph::Node, std::vector<unsigned int> > type;
     static const std::string name;
   };
   template <typename Graph>
   const std::string property_map<merger_resolved_to, Graph>::name = "merger_resolved_to";
+
+  // node_originated_from
+  struct node_originated_from {};
+  template <typename Graph>
+  struct property_map<node_originated_from, Graph> {
+    typedef lemon::IterableValueMap<Graph, typename Graph::Node, std::vector<unsigned int> > type;
+    static const std::string name;
+  };
+  template <typename Graph>
+  const std::string property_map<node_originated_from, Graph>::name = "node_originated_from";
 
 
 

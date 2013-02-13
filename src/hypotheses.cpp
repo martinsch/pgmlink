@@ -141,10 +141,17 @@ namespace pgmlink {
     }
     bool with_resolved = false;
     property_map<merger_resolved_to, HypothesesGraph::base_graph>::type* resolved_map;
-    if (g.getProperties().count("merger_resolved_to") > 0) {
+    if (g.getProperties().count("merger_resolved_to") > 0 && false) {
       resolved_map = &g.get(merger_resolved_to());
       with_resolved = true;
       LOG(logDEBUG1) << "events(): with_resolved enabled";
+    }
+    bool with_origin = true;
+    property_map<node_originated_from, HypothesesGraph::base_graph>::type* origin_map;
+    if (g.getProperties().count("node_originated_from") > 0) {
+      origin_map = &g.get(node_originated_from());
+      with_origin = true;
+      LOG(logDEBUG1) << "events(): with_origin enabeld";
     }
 
     // for every timestep
@@ -154,16 +161,23 @@ namespace pgmlink {
         LOG(logDEBUG2) << "events(): processing timestep: " << t;
 	ret->push_back(vector<Event>());
 
+	map<unsigned int, vector<unsigned int> > resolver_map;
+
 	// for every node: destiny
 	LOG(logDEBUG2) << "events(): for every node: destiny";
 	for(node_timestep_map_t::ItemIt node_at(node_timestep_map, t); node_at!=lemon::INVALID; ++node_at) {
 	    assert(node_traxel_map[node_at].Timestep == t);
 
+	    if (with_origin && (*origin_map)[node_at].size() > 0) {
+	      LOG(logDEBUG1) << "events(): collecting resolver node ids for all merger nodes";
+	      resolver_map[(*origin_map)[node_at][0]].push_back(node_traxel_map[node_at].Id);
+	    }
 
-	    LOG(logDEBUG2) << "events(): size of resolved_map: " << (*resolved_map)[node_at].size();
-	    if (with_resolved && (*resolved_map)[node_at].size()) {
+
+	    if (with_resolved && ((*resolved_map)[node_at]).size() > 0) {
 	      // property_map<merger_resolved_to, HypothesesGraph::base_graph>::type::ItemIt resolved_it;
 	      // resolved_it = std::find(resolved_it
+	      LOG(logINFO) << "events(): entered resolved_to event creation...";
 	      Event e;
 	      e.type = Event::ResolvedTo;
 	      e.traxel_ids.push_back(node_traxel_map[node_at].Id);
@@ -252,6 +266,17 @@ namespace pgmlink {
 	    }
 	}
 
+	for (map<unsigned int, vector<unsigned int> >::iterator map_it = resolver_map.begin(); map_it != resolver_map.end(); ++map_it) {
+	  Event e;
+	  e.type = Event::ResolvedTo;
+	  e.traxel_ids.push_back(map_it->first);
+	  for (std::vector<unsigned int>::iterator it = map_it->second.begin(); it != map_it->second.end(); ++it) {
+	    e.traxel_ids.push_back(*it);
+	  }
+	  (*ret)[t-g.earliest_timestep()].push_back(e);
+	  LOG(logDEBUG1) << e;
+	}
+	
 	// appearances in next timestep
 	LOG(logDEBUG2) << "events(): appearances in next timestep";
 	for(node_timestep_map_t::ItemIt node_at(node_timestep_map, t+1); node_at!=lemon::INVALID; ++node_at) {
