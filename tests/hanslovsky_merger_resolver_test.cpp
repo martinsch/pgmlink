@@ -46,10 +46,158 @@ BOOST_AUTO_TEST_CASE( MergerResolver_constructor ) {
 }
 
 
+BOOST_AUTO_TEST_CASE( MergerResolver_resolve_mergers_3 ) {
+  LOG(logINFO) << "Starting test MergerResolver_resolve_mergers_3";
+  //  t=1       2
+  //       --- (2)
+  //     /
+  //   (3) --- (1)
+
+  // -> each of the nodes in timesteps t has a possible arc to all nodes in t+1
+  //    o ----- o
+  //     \     /
+  //      -----
+  //     / \ / \
+  //    o --x-- o
+  //     \ / \ /
+  //      -----
+  //     /     \
+  //    o ----- o
+
+  HypothesesGraph g;
+  g.add(node_traxel()).add(arc_distance()).add(arc_active()).add(node_active2());
+  feature_array com(3,0);
+  feature_array pCOM(6*3, 0);
+
+  pCOM[0]  = 3;
+  pCOM[3]  = 1;
+  pCOM[6]  = 6;
+  pCOM[9]  = 1;
+  pCOM[12] = 3;
+  pCOM[15] = 6;
+
+  Traxel t11;
+  t11.Timestep = 1;
+  t11.Id = 11;
+  com[0] = 3; t11.features["com"] = com;
+  t11.features["possibleCOMs"] = pCOM;
+
+  Traxel t21;
+  t21.Timestep = 2;
+  t21.Id = 21;
+  com[0] = 1.5; t21.features["com"] = com;
+  t21.features["possibleCOMs"] = pCOM;
+
+  Traxel t22;
+  t22.Timestep = 2;
+  t22.Id = 22;
+  com[0] = 3; t22.features["com"] = com;
+
+  HypothesesGraph::Node n11 = g.add_node(1);
+  HypothesesGraph::Node n21 = g.add_node(2);
+  HypothesesGraph::Node n22 = g.add_node(2);
+
+  HypothesesGraph::Arc a11_21 = g.addArc(n11, n21);
+  HypothesesGraph::Arc a11_22 = g.addArc(n11, n22);
+
+
+  property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g.get(node_traxel());
+  traxel_map.set(n11, t11);
+  traxel_map.set(n21, t21);
+  traxel_map.set(n22, t22);
+
+  property_map<arc_active, HypothesesGraph::base_graph>::type& arc_map = g.get(arc_active());
+  arc_map.set(a11_21, true);
+  arc_map.set(a11_22, true);
+
+  property_map<node_active2, HypothesesGraph::base_graph>::type& active_map = g.get(node_active2());
+  active_map.set(n11, 3);
+  active_map.set(n21, 2);
+  active_map.set(n22, 1);
+
+  property_map<arc_distance, HypothesesGraph::base_graph>::type& dist_map = g.get(arc_distance());
+
+  MergerResolver m(&g);
+  FeatureExtractorMCOMsFromPCOMs extractor;
+  DistanceFromCOMs distance;
+  m.resolve_mergers(extractor, distance);
+  
+
+  // check that arcs and nodes have been deactivated
+
+  BOOST_CHECK(!g.valid(a11_22) || (g.source(a11_22) != n11 || g.target(a11_22) != n22));
+  BOOST_CHECK(!g.valid(a11_21) || (g.source(a11_21) != n11 || g.target(a11_21) != n21));
+
+  BOOST_CHECK(!g.valid(n11));
+  BOOST_CHECK(!g.valid(n21));
+
+
+  // check that traxel ids have been set correctly
+  set<int> trx_ids_1;
+  set<int> trx_ids_2;
+  trx_ids_1.insert(12);
+  trx_ids_1.insert(13);
+  trx_ids_1.insert(14);
+  trx_ids_1.insert(22);
+  trx_ids_1.insert(23);
+  trx_ids_1.insert(24);
+  int trx_count = 0;
+  property_map<node_active2, HypothesesGraph::base_graph>::type::ItemIt active_it(active_map, 1);
+  for (; active_it != lemon::INVALID; ++active_it, ++trx_count) {
+    trx_ids_2.insert(traxel_map[active_it].Id);
+
+    HypothesesGraph::InArcIt IAIT(g, active_it);
+    int count_n = 0;
+    for(; IAIT != lemon::INVALID; ++IAIT, ++count_n) {
+      BOOST_CHECK(arc_map[IAIT]);
+    }
+    HypothesesGraph::OutArcIt OAIT(g, active_it);
+    for(; OAIT != lemon::INVALID; ++OAIT, ++count_n) {
+      BOOST_CHECK(arc_map[OAIT]);
+    }
+    BOOST_CHECK_EQUAL(count_n, 3);
+  }
+  BOOST_CHECK_EQUAL_COLLECTIONS(trx_ids_1.begin(), trx_ids_1.end(), trx_ids_2.begin(), trx_ids_2.end());
+  BOOST_CHECK_EQUAL(trx_count, 6);
+
+  
+  // check that distances are calculated correctly and active arcs are valid
+  set<double> arc_dist_1;
+  set<double> arc_dist_2;
+  arc_dist_1.insert(0);
+  arc_dist_1.insert(2);
+  arc_dist_1.insert(3);
+  arc_dist_1.insert(5);
+  int arc_count = 0;
+  
+  property_map<arc_active, HypothesesGraph::base_graph>::type::ItemIt arc_it(arc_map, true);
+  for(; arc_it != lemon::INVALID; ++arc_it, ++arc_count) {
+    arc_dist_2.insert(dist_map[arc_it]);
+    BOOST_CHECK(g.valid(arc_it));
+  }
+  BOOST_CHECK_EQUAL_COLLECTIONS(arc_dist_1.begin(), arc_dist_1.end(), arc_dist_2.begin(), arc_dist_2.end());
+  BOOST_CHECK_EQUAL(arc_count, 9);
+
+
+  
+
+  // check that deactivated nodes are pruned, i.e. ItemIt(active_map, 0) should be equal  to lemon::INVALID
+  property_map<node_active2, HypothesesGraph::base_graph>::type::ItemIt deactive_it(active_map, 0);
+  BOOST_CHECK(!(deactive_it != lemon::INVALID));
+
+  // check that deactivated arcs are pruned, i.e. FalseIt should be equal to lemon::INVALID
+  property_map<arc_active, HypothesesGraph::base_graph>::type::FalseIt f_it(arc_map);
+  BOOST_CHECK(!(f_it != lemon::INVALID));
+
+}
+
+
 BOOST_AUTO_TEST_CASE( MergerResolver_resolve_mergers_2 ) {
   LOG(logINFO) << "Starting test MergerResolver_resolve_mergers_2";
-  HypothesesGraph g;
-  g.add(node_traxel()).add(arc_distance()).add(arc_active()).add(node_active2()).add(merger_resolved_to());
+  //
+  // IMPORTANT: IMPLEMENT BOOST_CHECKS FOR THIS TEST!!!
+  //
+  
   //  t=1      2      3
   //    o ----    ----o
   //          \  /
@@ -63,6 +211,9 @@ BOOST_AUTO_TEST_CASE( MergerResolver_resolve_mergers_2 ) {
   //       --     --
   //     /    \ /    \
   //    o ---- o ---- o
+
+  HypothesesGraph g;
+  g.add(node_traxel()).add(arc_distance()).add(arc_active()).add(node_active2()).add(merger_resolved_to());
 
   feature_array com(3,0);
   feature_array pCOM(6*3, 0);
@@ -139,15 +290,24 @@ BOOST_AUTO_TEST_CASE( MergerResolver_resolve_mergers_2 ) {
   // property_map<merger_resolved_to, HypothesesGraph::base_graph>::type& resolved_map = g.get(merger_resolved_to());
   property_map<node_timestep, HypothesesGraph::base_graph>::type& time_map = g.get(node_timestep());
   property_map<node_timestep, HypothesesGraph::base_graph>::type::ItemIt IT(time_map, 2);
+
+  // deactivated arcs from and to merger node
+  BOOST_CHECK(!g.valid(a11_21) || g.source(a11_21) != n11 || g.target(a11_21) != n21);
+  BOOST_CHECK(!g.valid(a12_21) || g.source(a12_21) != n12 || g.target(a12_21) != n21);
+  BOOST_CHECK(!g.valid(a21_31) || g.source(a21_31) != n21 || g.target(a21_31) != n31);
+  BOOST_CHECK(!g.valid(a21_32) || g.source(a21_32) != n21 || g.target(a21_32) != n32);
   
   vector<vector<Event> > ev = *(events(g));
   unsigned time = 0;
-  LOG(logDEBUG1) << "Detected the following events:";
+  unsigned resolve_count = 0;
+  LOG(logINFO) << "Detected the following events:";
   for (vector<vector<Event> >::iterator it = ev.begin(); it != ev.end(); ++it, ++time) {
     for (vector<Event>::iterator It = it->begin(); It != it->end(); ++It) {
-      LOG(logDEBUG1) << " " << time << ": " << *It;
+      LOG(logINFO) << " " << time << ": " << *It;
+      if (It->type == Event::ResolvedTo) ++resolve_count;
     }
   }
+  BOOST_CHECK_EQUAL(resolve_count, 1);
 
   
 }
@@ -270,10 +430,10 @@ BOOST_AUTO_TEST_CASE( MergerResolver_resolve_mergers ) {
 
   vector<vector<Event> > ev = *(events(g));
   unsigned time = 0;
-  LOG(logDEBUG1) << "Detected the following events:";
+  LOG(logINFO) << "Detected the following events:";
   for (vector<vector<Event> >::iterator it = ev.begin(); it != ev.end(); ++it, ++time) {
     for (vector<Event>::iterator It = it->begin(); It != it->end(); ++It) {
-      LOG(logDEBUG1) << " " << time << ": " << *It;
+      LOG(logINFO) << " " << time << ": " << *It;
     }
   }
   
@@ -391,10 +551,10 @@ BOOST_AUTO_TEST_CASE( MergerResolver_refine_node ) {
   m.refine_node(n21, 2, extractor, distance);
   
   // deactivated arcs from and to merger node
-  BOOST_CHECK_EQUAL(arc_map[a11_21], false);
-  BOOST_CHECK_EQUAL(arc_map[a12_21], false);
-  BOOST_CHECK_EQUAL(arc_map[a21_31], false);
-  BOOST_CHECK_EQUAL(arc_map[a21_32], false);
+  BOOST_CHECK(!g.valid(a11_21) || g.source(a11_21) != n11 || g.target(a11_21) != n21);
+  BOOST_CHECK(!g.valid(a12_21) || g.source(a12_21) != n12 || g.target(a12_21) != n21);
+  BOOST_CHECK(!g.valid(a21_31) || g.source(a21_31) != n21 || g.target(a21_31) != n31);
+  BOOST_CHECK(!g.valid(a21_32) || g.source(a21_32) != n21 || g.target(a21_32) != n32);
 
   int count = 0;
   property_map<node_timestep, HypothesesGraph::base_graph>::type::ItemIt timeIt(timestep_map, 2);
@@ -461,7 +621,7 @@ BOOST_AUTO_TEST_CASE( MergerResolver_deactivate_arcs ) {
 
   
   HypothesesGraph g;
-  g.add(arc_active()).add(node_active2()).add(arc_distance());
+  g.add(arc_active()).add(node_active2()).add(arc_distance()).add(node_traxel());
   HypothesesGraph::Node n1 = g.add_node(1);
   HypothesesGraph::Node n2 = g.add_node(2);
   HypothesesGraph::Node n3 = g.add_node(3);
@@ -765,6 +925,5 @@ BOOST_AUTO_TEST_CASE( MergerResolver_helper_functions_get_centers ) {
     BOOST_CHECK_EQUAL_COLLECTIONS(c[n].begin(), c[n].end(), fvec.begin(), fvec.end());
   }
 }
-
 
 // EOF

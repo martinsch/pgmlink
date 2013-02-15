@@ -19,27 +19,55 @@
 #include "pgmlink/hypotheses.h"
 #include "pgmlink/event.h"
 #include "pgmlink/traxels.h"
+#include "pgmlink/reasoner.h"
+#include "pgmlink/hanslovsky_grammar.h"
 
+/**
+ * @brief Implementation of ideas for merger resolution in the HypothesesGraph environment.
+ * @file
+ *
+ *
+ * This header contains all the tools neccessary for resolve mergers on a HypothesesGraph. It provides specifications
+ * of base classes for the use with the conservsation tracking. It is possible to derive classes from the base classes to
+ * use the resolver for your own specific problem
+ */
 
 namespace pgmlink {
-
-  typedef std::vector<std::string> feature_list;
-  
   ////
   //// KMeans
   ////
+  /**
+   * @class KMeans 
+   * @brief compatibility class for kMeans as an interface between feature_array and the mlpack library used for
+   * kMeans
+   *
+   *
+   * The library mlpack provides several clustering algorithms, one of which is kMeans. Instead of doing repetetive work
+   * as rewriting kMeans would be, we are using the kMeans implementation provided in mlpack. To do so we need to convert
+   * the data given in the form of a feature_array into an appropriate armadillo matrix (arma::mat), that can be used by
+   * mlpack
+   */
   class KMeans {
   private:
+    KMeans();
     int k_;
     const feature_array& data_;
-    
     void copy_centers_to_feature_array(const arma::mat& centers, feature_array& c);
   public:
     // tested
+    /**
+     * @brief Constructor
+     * @param [in] k number of clusters
+     * @param [in] data feature_array storing data
+     */
     KMeans(int k, const feature_array& data) :
       k_(k), data_(data) {}
 
     // tested
+    /**
+     * @brief compute cluster centers and labels for datapoints
+     * @returns feature_array that contains the coordinates of k clusters
+     */
     feature_array operator()();
   };
 
@@ -48,6 +76,12 @@ namespace pgmlink {
   ////
   template <typename T, typename U>
   // tested
+  /**
+   * @brief Helper function to convert feature_array to arma::Mat.
+   * @param [in] in original data; specifying T=float will make in a feature_array
+   * @param [in,out] out arma::Mat<U> that holds the converted data. For the use in
+   * KMeans specify U=double
+   */
   void feature_array_to_arma_mat(const std::vector<T>& in, arma::Mat<U>& out) {
     int stepSize = out.n_rows;
     int n = out.n_cols;
@@ -68,6 +102,16 @@ namespace pgmlink {
   
   template <typename T>
   // tested
+  /**
+   * @brief Helper function to calculate center coordinates from data assignments.
+   * @param [in] data data points (coordinates)
+   * @param [in] labels assignments after running kMeans
+   * @param [in,out] centers arma::Mat to hold the coordinates of the cluster centers
+   * @param [in] k number of clusters used for kMeans
+   *
+   * The mlpack kMeans implementation does not return the coordinates of the cluster centers.
+   * The centers can be computed using the original data and the assignments.
+   */
   void get_centers(const arma::Mat<T>& data, const arma::Col<size_t> labels, arma::Mat<T>& centers, int k) {
     arma::Col<size_t>::const_iterator labelIt = labels.begin();
     std::vector<int> clusterSize(k, 0);
@@ -85,6 +129,12 @@ namespace pgmlink {
   ////
   //// FeatureExtractorBase
   ////
+  /*
+   * @brief Base class for feature extraction used when resolving merger nodes
+   * @class FeatureExtractorBase
+   *
+   * 
+   */
   class FeatureExtractorBase {
   public:
     virtual std::vector<Traxel> operator()(Traxel trax, size_t nMergers, unsigned int max_id) = 0;
@@ -137,22 +187,59 @@ namespace pgmlink {
 
 
   ////
+  //// ResolveAmbiguousArcsBase
+  ////
+  class ResolveAmbiguousArcsBase {
+  public:
+    virtual HypothesesGraph& operator()(HypothesesGraph* g) = 0;
+  };
+  
+
+  ////
+  //// ResolveAmbiguousArcsGreedy
+  ////
+  class ResolveAmbiguousArcsGreedy : public ResolveAmbiguousArcsBase {
+  public:
+    virtual HypothesesGraph& operator()(HypothesesGraph* g);
+  };
+
+
+  ////
   //// ReasonerMaxOneArc
   ////
   class ReasonerMaxOneArc : public Reasoner {
   private:
-    
   public:
     ReasonerMaxOneArc();
     virtual void formulate(const HypothesesGraph& g);
     virtual void infer();
     virtual void conclude(HypothesesGraph& g);
   };
+  
+
+  ////
+  //// ResolveAmbiguousArcsPgm
+  ////
+  class ResolveAmbiguousArcsPgm : public ReasonerMaxOneArc, private ResolveAmbiguousArcsBase {
+    virtual HypothesesGraph& operator()(HypothesesGraph* g);
+  };
 
 
   ////
   //// MergerResolver
   ////
+  /**
+   * @brief Resolve mergers on a HypothesesGraph
+   *
+   * Using HypothesesGraph and property_map it is possible to build an algorithm that is capable of merger detection.
+   * However, to fully solve the merger problem, the mergers need to be resolved into new objects and the tracking
+   * has to be fed with the additional information from those new objects. This class gives an implementation that
+   * is as general as possible to allow for application in various settings.
+   * The model must provide a HypothesesGraph and the properties node_active2, arc_active, arc_distance.
+   * The classes for application in the conservation tracking environment are provided. For the use in other settings, 
+   * the appropriate classes have to be specified accordingly.
+   */
+   
   class MergerResolver {
   private:
     HypothesesGraph* g_;

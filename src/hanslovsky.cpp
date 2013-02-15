@@ -73,6 +73,7 @@ namespace pgmlink {
       trax.Id = start_id;
       trax.features["com"] = feature_array(range.begin()+(3*n), range.begin()+(3*(n+1)));
       res.push_back(trax);
+      LOG(logDEBUG3) << "FeatureExtractorMCOMsFromPCOMs::operator()(): Appended traxel with com (" << trax.features["com"][0] << "," << trax.features["com"][1] << "," << trax.features["com"][2] << ") and id " << trax.Id;
     }
     return res;
   }
@@ -106,13 +107,11 @@ namespace pgmlink {
   }
 
   ////
-  //// ReasonerMaxOneArc
+  //// ResolveAmbiguousArcsGreedy
   ////
-  void ReasonerMaxOneArc::formulate(const HypothesesGraph& g) {
-  }
-  void ReasonerMaxOneArc::infer() {
-  }
-  void ReasonerMaxOneArc::conclude(HypothesesGraph& g) {
+  HypothesesGraph& ResolveAmbiguousArcsGreedy::operator()(HypothesesGraph* g) {
+    
+    return *g;
   }
 
 
@@ -140,6 +139,7 @@ namespace pgmlink {
       // add distance and activate arcs
       arc_distances.set(arc, dist);
       arc_active_map.set(arc, true);
+      LOG(logDEBUG3) << "MergerResolver::add_arcs_for_replacement_node(): added incoming arc: (" << from_tr.Id << "," << trax.Id << "), dist=" << dist << ", state=" << arc_active_map[arc];
     }
 
     // add outgoing arcs
@@ -151,6 +151,7 @@ namespace pgmlink {
       // add distance and activate arcs
       arc_distances.set(arc, dist);
       arc_active_map.set(arc, true);
+      LOG(logDEBUG3) << "MergerResolver::add_arcs_for_replacement_node(): added outgoing arc " << g_->id(arc)  << " (" << trax.Id << "," << to_tr.Id << "), dist=" << dist << ", state=" << arc_active_map[arc];
     }
   }
 
@@ -160,7 +161,11 @@ namespace pgmlink {
     std::vector<HypothesesGraph::base_graph::Arc>::iterator it = arcs.begin();
     property_map<arc_active, HypothesesGraph::base_graph>::type& arc_active_map = g_->get(arc_active());
     for (; it != arcs.end(); ++it) {
-      arc_active_map.set(*it, false);
+      //      if (!g_->valid(g_->source(*it)) || !g_->valid(g_->target(*it))) {
+      LOG(logDEBUG3) << "MergerResolver::deactivate_arcs(): setting arc " << g_->id(*it)  << " (" << g_->get(node_traxel())[g_->source((*it))].Id << "," << g_->get(node_traxel())[g_->target((*it))].Id << ") property arc_active to false";
+	arc_active_map.set(*it, false);
+	//      }
+	g_->erase(*it);
     }
   }
 
@@ -170,7 +175,7 @@ namespace pgmlink {
     std::vector<HypothesesGraph::Node>::iterator it = nodes.begin();
     property_map<node_active2, HypothesesGraph::base_graph>::type& node_active_map = g_->get(node_active2());
     for (; it != nodes.end(); ++it) {
-      LOG(logDEBUG1) << "MergerResolver::deactivate_nodes(): setting Node " << g_->id(*it) << " property node_active2 to 0";
+      LOG(logDEBUG3) << "MergerResolver::deactivate_nodes(): setting Node " << g_->id(*it) << " property node_active2 to 0";
       node_active_map.set(*it, 0);
     }
   }
@@ -213,11 +218,13 @@ namespace pgmlink {
     // create new node for each of the objects merged into node
     std::vector<unsigned int> new_ids;
     std::vector<Traxel> ft = extractor(trax, nMerger, max_id);
+    LOG(logDEBUG) << "MergerResolver::refine_node(): Resolving node " << g_->id(node) << " (" << trax << ") to " << active_map[node] << " merger(s)";
     for (std::vector<Traxel>::iterator it = ft.begin(); it != ft.end(); ++it) {
       // set traxel features, most of which can be copied from the merger node
       // set new center of mass as calculated from GMM
       // add node to graph and activate it
       HypothesesGraph::Node newNode = g_->add_node(timestep);
+      LOG(logDEBUG3) << "MergerResolver::refine_node(): new node " << g_->id(newNode) << " (" << *it << ") at (" << it->features["com"][0] << "," << it->features["com"][1] << "," << it->features["com"][2] << ")";
       traxel_map.set(newNode, *it);
       active_map.set(newNode, 1);
       time_map.set(newNode, timestep);
@@ -227,7 +234,6 @@ namespace pgmlink {
       new_ids.push_back(it->Id);
       // store parent (merger) node. this is used for creating the resolved_to event later
       origin_map.set(newNode, std::vector<unsigned int>(1, traxel_map[node].Id));
-      
     }
     // deactivate incoming and outgoing arcs of merger node
     // merger node will be deactivated after pruning
@@ -235,8 +241,6 @@ namespace pgmlink {
     deactivate_arcs(targets);
     // save information on new ids in property map
     resolved_map.set(node, new_ids);
-    LOG(logINFO) << "refine_node(): Node resolved to " << resolved_map[node].size() << " merger(s)";
-    // g_->get(merger_resolved_to())[node] = new_ids;
   }
 
 
