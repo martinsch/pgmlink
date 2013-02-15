@@ -82,12 +82,14 @@ namespace pgmlink {
 
       for(inactive_arc_it it(active_arcs); it!=lemon::INVALID; ++it) {
 	arcs_to_prune.push_back(it);
+	assert(g.valid(it));
       } 
 
       // prune inactive arcs
       for(vector<HypothesesGraph::Arc>::const_iterator it = arcs_to_prune.begin(); it!= arcs_to_prune.end(); ++it) {
 	LOG(logDEBUG3) << "prune_inactive: pruned arc: " << g.id(*it);
 	g.erase(*it);
+	assert(!g.valid(*it));
       }
 
       // prune inactive nodes 
@@ -99,12 +101,14 @@ namespace pgmlink {
   		for (HypothesesGraph::NodeIt it(g); it != lemon::INVALID; ++it) {
   			if (!(*active2_nodes)[it]) {
   				nodes_to_prune.push_back(it);
+				assert(g.valid(it));
   			}
   		}
       } else {
     	typedef property_map<node_active, HypothesesGraph::base_graph>::type::FalseIt inactive_node_it;
 		for (inactive_node_it it(*active_nodes); it != lemon::INVALID; ++it) {
 			nodes_to_prune.push_back(it);
+			assert(g.valid(it));
 		}
       }
 
@@ -112,6 +116,7 @@ namespace pgmlink {
       for(vector<HypothesesGraph::Node>::const_iterator it = nodes_to_prune.begin(); it!= nodes_to_prune.end(); ++it) {
 	LOG(logDEBUG3) << "prune_inactive: pruned node: " << g.id(*it);
 	g.erase(*it);
+	assert(!g.valid(*it));
       } 
 
       return g;
