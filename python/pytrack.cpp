@@ -1,3 +1,5 @@
+#define BOOST_PYTHON_MAX_ARITY 20
+
 #include <vector>
 
 #include <boost/python.hpp>
@@ -36,11 +38,12 @@ void export_track() {
     ;
 
     class_<ConsTracking>("ConsTracking",
-			init<int,double,double,string,bool,double,bool,bool,double,double,bool,bool,bool>(
+			init<int,double,double,string,bool,double,bool,bool,double,double,bool,bool,bool,double,double>(
 						args("max_number_objects", "max_neighbor_distance", "division_threshold",
 							"detection_rf_filename", "size_dependent_detection_prob", "forbidden_cost",
 							"with_constraints", "fixed_detections", "ep_gap", "avg_obj_size",
-							"with_appearance", "with_disappearance", "with_tracklets")))
+							"with_appearance", "with_disappearance", "with_tracklets",
+							"division_weight", "transition_weight")))
 	  .def("__call__", &ConsTracking::operator())
 	  .def("detections", &ConsTracking::detections)
 	;

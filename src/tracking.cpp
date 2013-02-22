@@ -423,8 +423,8 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 		detection = bind<double>(NegLnConstant(1,prob_vector), _2);
 	}
 
-	division = NegLnDivision(1); // weight 1
-	transition = NegLnTransition(1); // weight 1
+	division = NegLnDivision(division_weight_);
+	transition = NegLnTransition(transition_weight_);
 
 	cout << "-> building hypotheses" << endl;
 	SingleTimestepTraxel_HypothesesBuilder::Options builder_opts(1, // max_nearest_neighbors
