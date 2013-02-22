@@ -401,8 +401,14 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 			detProb = computeDetProb(vol,avg_obj_size_,sigma2);
 			feature_array detProbFeat(feature_array::difference_type(max_number_objects_+1));
 			for(int i = 0; i<=max_number_objects_; ++i) {
-				LOG(logDEBUG2) << "detection probability for " << trax.Id << "[" << i << "] = " << detProb[i];
-				detProbFeat[i] = detProb[i];
+				double d = detProb[i];
+				if (d < 0.01) {
+					d = 0.01;
+				} else if (d > 0.99) {
+					d = 0.99;
+				}
+				LOG(logDEBUG2) << "detection probability for " << trax.Id << "[" << i << "] = " << d;
+				detProbFeat[i] = d;
 			}
 			trax.features["detProb"] = detProbFeat;
 			ts.replace(tr, trax);
@@ -423,6 +429,8 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 		detection = bind<double>(NegLnConstant(1,prob_vector), _2);
 	}
 
+	LOG(logDEBUG1) << "division_weight_ = " << division_weight_;
+	LOG(logDEBUG1) << "transition_weight_ = " << transition_weight_;
 	division = NegLnDivision(division_weight_);
 	transition = NegLnTransition(transition_weight_);
 

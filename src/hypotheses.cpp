@@ -136,6 +136,7 @@ namespace pgmlink {
     if (g.getProperties().count("node_active2") > 0) {
     	node_number_of_objects = &g.get(node_active2());
     	with_mergers = true;
+    	LOG(logDEBUG1) << "events(): with_mergers = true";
     }
 
     // for every timestep
@@ -788,6 +789,8 @@ namespace {
 				// if not already present
 				if (lemon::findArc(*graph,neighbor_node,curr_node) == lemon::INVALID) {
 					graph->addArc(neighbor_node, curr_node);
+					LOG(logDEBUG2) << "added backward arc from " << graph->id(neighbor_node) << " to " <<
+							graph->id(curr_node);
 				}
 			}
 		}
