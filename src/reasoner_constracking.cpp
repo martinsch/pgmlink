@@ -151,6 +151,8 @@ void ConservationTracking::conclude(HypothesesGraph& g) {
 				HypothesesGraph::Arc a = g.arcFromId(*arc_id_it);
 				if (solution[it->second] > 0) {
 					active_arcs.set(a, true);
+					assert(active_nodes[g.source(a)] == solution[it->second] && "tracklet internal arcs must have the same flow as their connected nodes");
+					assert(active_nodes[g.target(a)] == solution[it->second] && "tracklet internal arcs must have the same flow as their connected nodes");
 				}
 			}
 		} else {
@@ -179,6 +181,8 @@ void ConservationTracking::conclude(HypothesesGraph& g) {
 					assert(active_arcs[a] == false);
 					if(solution[it->second] > 0) {
 						active_arcs.set(a, true);
+						assert(active_nodes[g.source(a)] == solution[it->second] && "tracklet internal arcs must have the same flow as their connected nodes");
+						assert(active_nodes[g.target(a)] == solution[it->second] && "tracklet internal arcs must have the same flow as their connected nodes");
 					}
 				}
 			} else {
@@ -211,6 +215,8 @@ void ConservationTracking::conclude(HypothesesGraph& g) {
 					assert(active_arcs[a] == false);
 					if (solution[it->second] > 0) {
 						active_arcs.set(a, true);
+						assert(active_nodes[g.source(a)] == solution[it->second] && "tracklet internal arcs must have the same flow as their connected nodes");
+						assert(active_nodes[g.target(a)] == solution[it->second] && "tracklet internal arcs must have the same flow as their connected nodes");
 					}
 				}
 			} else {
