@@ -353,6 +353,7 @@ std::vector<double> computeDetProb(double vol, double avg_vol, vector<double> s2
 vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 	cout << "-> building energy functions " << endl;
 
+	double detection_weight = 10;
 	Traxels empty;
 	boost::function<double(const Traxel&, const size_t)> detection, division;
 	boost::function<double(const double)> transition;
@@ -413,7 +414,7 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 			trax.features["detProb"] = detProbFeat;
 			ts.replace(tr, trax);
 		}
-		detection = NegLnDetection(1); // weight 1
+		detection = NegLnDetection(detection_weight); // weight 1
 	} else {
 		// assume a quasi geometric distribution
 		vector<double> prob_vector;
@@ -426,7 +427,7 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 		}
 		prob_vector.insert(prob_vector.begin(), 1-sum);
 
-		detection = bind<double>(NegLnConstant(1,prob_vector), _2);
+		detection = bind<double>(NegLnConstant(detection_weight,prob_vector), _2);
 	}
 
 	LOG(logDEBUG1) << "division_weight_ = " << division_weight_;
@@ -468,7 +469,8 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 			transition,
 			forbidden_cost_,
 			ep_gap_,
-			with_tracklets_
+			with_tracklets_,
+			with_divisions_
 			);
 
 	cout << "-> formulate ConservationTracking model" << endl;

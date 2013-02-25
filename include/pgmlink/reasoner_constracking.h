@@ -23,7 +23,8 @@ class ConservationTracking : public Reasoner {
 			    boost::function<double (const double)> transition,
                 double forbidden_cost = 0,
 			    double ep_gap = 0.01,
-			    bool with_tracklets = false
+			    bool with_tracklets = false,
+			    bool with_divisions = true
     )
     : max_number_objects_(max_number_objects),
     detection_(detection),
@@ -33,6 +34,7 @@ class ConservationTracking : public Reasoner {
     optimizer_(NULL),
     ep_gap_(ep_gap),
     with_tracklets_(with_tracklets),
+    with_divisions_(with_divisions),
     number_of_appearance_nodes_(0),
     number_of_disappearance_nodes_(0)
     { };
@@ -101,7 +103,7 @@ class ConservationTracking : public Reasoner {
 
     double ep_gap_;
 
-    bool with_tracklets_;
+    bool with_tracklets_, with_divisions_;
 
     unsigned int number_of_transition_nodes_, number_of_division_nodes_;
     unsigned int number_of_appearance_nodes_, number_of_disappearance_nodes_;
