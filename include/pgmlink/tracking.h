@@ -32,7 +32,7 @@ namespace pgmlink {
 	      double mean_div_dist=25,
 	      double min_angle=0,
 	      double ep_gap=0.01,
-	      bool alternative_builder=false 
+	      bool alternative_builder=false
 	      )
       : app_(appearance), dis_(disappearance), det_(detection), mis_(misdetection), 
       rf_fn_(random_forest_filename), use_rf_(cellness_by_random_forest), 
@@ -120,7 +120,7 @@ namespace pgmlink {
   class ConsTracking {
     public:
 	  ConsTracking(
-		  int max_number_objects = 3,
+		  int max_number_objects=3,
 	      double max_neighbor_distance = 20,
 		  double division_threshold = 0.3,
 		  const std::string& random_forest_filename = "none",
@@ -133,8 +133,8 @@ namespace pgmlink {
   	      bool with_appearance=false,
   	      bool with_disappearance=false,
   	      bool with_tracklets=true,
-         double division_weight=1.0,
-         double transition_weight=1.0
+  	      double division_weight=1.0,
+  	      double transition_weight=1.0
   	      )
         : max_number_objects_(max_number_objects),
         	max_dist_(max_neighbor_distance), division_threshold_(division_threshold),
@@ -142,7 +142,9 @@ namespace pgmlink {
         forbidden_cost_(forbidden_cost), with_constraints_(with_constraints),
         fixed_detections_(fixed_detections), ep_gap_(ep_gap), avg_obj_size_(avg_obj_size),
         with_appearance_(with_appearance),with_disappearance_(with_disappearance),
-        with_tracklets_(with_tracklets), division_weight_(division_weight), transition_weight_(transition_weight){}
+        with_tracklets_(with_tracklets),
+        division_weight_(division_weight),
+        transition_weight_(transition_weight) {}
       std::vector< std::vector<Event> > operator()(TraxelStore&);
 
       /**

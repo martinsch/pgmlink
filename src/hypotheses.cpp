@@ -136,26 +136,46 @@ namespace pgmlink {
     if (g.getProperties().count("node_active2") > 0) {
     	node_number_of_objects = &g.get(node_active2());
     	with_mergers = true;
+    	LOG(logDEBUG1) << "events(): with_mergers = true";
     }
 
     // for every timestep
     LOG(logDEBUG1) << "events(): earliest_timestep: " << g.earliest_timestep();
     LOG(logDEBUG1) << "events(): latest_timestep: " << g.latest_timestep();
+//    std::vector<Event> prev_mergers;
     for(int t = g.earliest_timestep(); t < g.latest_timestep(); ++t) {
         LOG(logDEBUG2) << "events(): processing timestep: " << t;
-	ret->push_back(vector<Event>());
+        ret->push_back(vector<Event>());
+
+//        if(with_mergers) {
+//        	for(std::vector<Event>::const_iterator m_it = prev_mergers.begin(); m_it != prev_mergers.end(); ++m_it) {
+//        		(*ret)[t-g.earliest_timestep()].push_back(*m_it);
+//        	}
+//        	prev_mergers.clear();
+//        }
 
 	// for every node: destiny
 	LOG(logDEBUG2) << "events(): for every node: destiny";
 	for(node_timestep_map_t::ItemIt node_at(node_timestep_map, t); node_at!=lemon::INVALID; ++node_at) {
 	    assert(node_traxel_map[node_at].Timestep == t);
 
-	    if(with_mergers && (*node_number_of_objects)[node_at] > 1) {
+//	    if(with_mergers && (*node_number_of_objects)[node_at] > 1) {
+//	    	prev_mergers.clear();
+//			Event e;
+//			e.type = Event::Merger;
+//			e.traxel_ids.push_back(node_traxel_map[node_at].Id);
+//			e.traxel_ids.push_back((*node_number_of_objects)[node_at]);
+//			prev_mergers.push_back(e);
+//			LOG(logDEBUG3) << e;
+//		}
+
+
+	    if(with_mergers && (*node_number_of_objects)[node_at] > 1 && t > 1) {
 			Event e;
 			e.type = Event::Merger;
 			e.traxel_ids.push_back(node_traxel_map[node_at].Id);
 			e.traxel_ids.push_back((*node_number_of_objects)[node_at]);
-			(*ret)[t-g.earliest_timestep()].push_back(e);
+			(*ret)[t-g.earliest_timestep()-1].push_back(e);
 			LOG(logDEBUG3) << e;
 	    }
 
@@ -788,6 +808,8 @@ namespace {
 				// if not already present
 				if (lemon::findArc(*graph,neighbor_node,curr_node) == lemon::INVALID) {
 					graph->addArc(neighbor_node, curr_node);
+					LOG(logDEBUG2) << "added backward arc from " << graph->id(neighbor_node) << " to " <<
+							graph->id(curr_node);
 				}
 			}
 		}
