@@ -126,12 +126,8 @@ namespace pgmlink {
 		  const std::string& random_forest_filename = "none",
   	      bool size_dependent_detection_prob = false,
   	      double forbidden_cost = 0,
-  	      bool with_constraints = true,
-  	      bool fixed_detections = false,
   	      double ep_gap=0.01,
   	      double avg_obj_size=30.0,
-  	      bool with_appearance=false,
-  	      bool with_disappearance=false,
   	      bool with_tracklets=true,
   	      double division_weight=1.0,
   	      double transition_weight=1.0
@@ -139,9 +135,8 @@ namespace pgmlink {
         : max_number_objects_(max_number_objects),
         	max_dist_(max_neighbor_distance), division_threshold_(division_threshold),
         detection_rf_fn_(random_forest_filename), use_size_dependent_detection_(size_dependent_detection_prob),
-        forbidden_cost_(forbidden_cost), with_constraints_(with_constraints),
-        fixed_detections_(fixed_detections), ep_gap_(ep_gap), avg_obj_size_(avg_obj_size),
-        with_appearance_(with_appearance),with_disappearance_(with_disappearance),
+        forbidden_cost_(forbidden_cost),
+        ep_gap_(ep_gap), avg_obj_size_(avg_obj_size),
         with_tracklets_(with_tracklets),
         division_weight_(division_weight),
         transition_weight_(transition_weight) {}
@@ -159,11 +154,9 @@ namespace pgmlink {
       const std::string detection_rf_fn_;
       bool use_size_dependent_detection_;
       double forbidden_cost_;
-      bool with_constraints_;
-      bool fixed_detections_;
       double ep_gap_;
       double avg_obj_size_;
-      bool with_appearance_, with_disappearance_, with_tracklets_;
+      bool with_tracklets_;
       double division_weight_;
       double transition_weight_;
       shared_ptr<std::vector< std::map<unsigned int, bool> > > last_detections_;

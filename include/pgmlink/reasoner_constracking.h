@@ -22,11 +22,7 @@ class ConservationTracking : public Reasoner {
 			    boost::function<double (const Traxel&, const size_t)> division,
 			    boost::function<double (const double)> transition,
                 double forbidden_cost = 0,
-			    bool with_constraints = true,
-			    bool fixed_detections = false,
 			    double ep_gap = 0.01,
-			    bool with_appearance = false,
-			    bool with_disappearance = false,
 			    bool with_tracklets = false
     )
     : max_number_objects_(max_number_objects),
@@ -34,13 +30,8 @@ class ConservationTracking : public Reasoner {
     division_(division),
     transition_(transition),
     forbidden_cost_(forbidden_cost),
-//    pgm_(NULL),
     optimizer_(NULL),
-    with_constraints_(with_constraints),
-    fixed_detections_(fixed_detections),
     ep_gap_(ep_gap),
-    with_appearance_(with_appearance),
-    with_disappearance_(with_disappearance),
     with_tracklets_(with_tracklets),
     number_of_appearance_nodes_(0),
     number_of_disappearance_nodes_(0)
@@ -65,7 +56,7 @@ class ConservationTracking : public Reasoner {
      *
      * The map is populated after the first call to formulate().
      */
-    const std::map<HypothesesGraph::Node, size_t>& get_node_map() const;
+//    const std::map<HypothesesGraph::Node, size_t>& get_node_map() const;
 
     /** Return mapping from HypothesesGraph arcs to graphical model variable ids
      *
@@ -89,10 +80,7 @@ class ConservationTracking : public Reasoner {
     void add_finite_factors( const HypothesesGraph& );
 
     // helper
-    void fix_detections( const HypothesesGraph& );
     size_t cplex_id(size_t opengm_id, size_t state);
-//    template<typename table_t, typename const_iter>
-//      void add_factor( const table_t& table, const_iter first_idx, const_iter last_idx );
 
 
     unsigned int max_number_objects_;
@@ -100,31 +88,22 @@ class ConservationTracking : public Reasoner {
     // energy functions
     boost::function<double (const Traxel&, const size_t)> detection_;
     boost::function<double (const Traxel&, const size_t)> division_;
-//    boost::function<double (const Traxel&, const Traxel&, const size_t)> transition_;
     boost::function<double (const double)> transition_;
     double forbidden_cost_;
     
-//    pgm::OpengmModelDeprecated* pgm_;
     shared_ptr<pgm::OpengmModelDeprecated> pgm_;
-//    pgmlink::pgm::OpengmModelDeprecated::ogmLPCplex* optimizer_;
     opengm::LPCplex<pgm::OpengmModelDeprecated::ogmGraphicalModel, pgm::OpengmModelDeprecated::ogmAccumulator>* optimizer_;
 
-    std::map<HypothesesGraph::Node, size_t> node_map_;
     std::map<HypothesesGraph::Node, size_t> div_node_map_;
     std::map<HypothesesGraph::Node, size_t> app_node_map_;
     std::map<HypothesesGraph::Node, size_t> dis_node_map_;
     std::map<HypothesesGraph::Arc, size_t> arc_map_;
 
-    bool with_constraints_;
-    bool fixed_detections_;
     double ep_gap_;
-
-    bool with_appearance_;
-    bool with_disappearance_;
 
     bool with_tracklets_;
 
-    unsigned int number_of_detection_nodes_, number_of_transition_nodes_, number_of_division_nodes_;
+    unsigned int number_of_transition_nodes_, number_of_division_nodes_;
     unsigned int number_of_appearance_nodes_, number_of_disappearance_nodes_;
 
     HypothesesGraph tracklet_graph_;
