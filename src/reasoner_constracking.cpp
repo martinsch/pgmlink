@@ -50,7 +50,9 @@
 	add_disappearance_nodes(*graph);
 
 	LOG(logDEBUG) << "ConservationTracking::formulate: add_division_nodes";
-	add_division_nodes(*graph);
+	if (with_divisions_) {
+		add_division_nodes(*graph);
+	}
   	pgm::OpengmModelDeprecated::ogmGraphicalModel* model = pgm_->Model();
 
 	LOG(logDEBUG) << "ConservationTracking::formulate: add_finite_factors";
@@ -188,18 +190,20 @@ void ConservationTracking::conclude(HypothesesGraph& g) {
 		}
 	}
 	// initialize division node map
-	for (std::map<HypothesesGraph::Node, size_t>::const_iterator it =
-			div_node_map_.begin(); it != div_node_map_.end(); ++it) {
-		division_nodes.set(it->first, false);
-	}
-	for (std::map<HypothesesGraph::Node, size_t>::const_iterator it =
-			div_node_map_.begin(); it != div_node_map_.end(); ++it) {
-		if (solution[it->second] >=1) {
-			if (with_tracklets_) {
-				// set division property for the last node in the tracklet
-				division_nodes.set(tracklet2traxel_node_map_[it->first].back(), true);
-			} else {
-				division_nodes.set(it->first, true);
+	if (with_divisions_) {
+		for (std::map<HypothesesGraph::Node, size_t>::const_iterator it =
+				div_node_map_.begin(); it != div_node_map_.end(); ++it) {
+			division_nodes.set(it->first, false);
+		}
+		for (std::map<HypothesesGraph::Node, size_t>::const_iterator it =
+				div_node_map_.begin(); it != div_node_map_.end(); ++it) {
+			if (solution[it->second] >=1) {
+				if (with_tracklets_) {
+					// set division property for the last node in the tracklet
+					division_nodes.set(tracklet2traxel_node_map_[it->first].back(), true);
+				} else {
+					division_nodes.set(it->first, true);
+				}
 			}
 		}
 	}
@@ -405,29 +409,31 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
 	////
 	//// add division factors
 	////
-	LOG(logDEBUG) << "ConservationTracking::add_finite_factors: add division factors";
-	for (HypothesesGraph::NodeIt n(g); n != lemon::INVALID; ++n) {
-		if (div_node_map_.count(n) == 0) {
-			continue;
-		}
-		size_t vi[] = { div_node_map_[n] };
-		vector<size_t> coords(1, 0); // number of variables
-		// ITER first_ogm_idx, ITER last_ogm_idx, VALUE init, size_t states_per_var
-		pgm::OpengmExplicitFactor<double> table(vi, vi + 1, 0, 2);
-		for (size_t state = 0; state <= 1; ++state) {
-			double energy = 0;
-			if (with_tracklets_) {
-				energy = division_(tracklet_map[n].back(), state);
-			} else {
-				energy = division_(traxel_map[n], state);
+	if (with_divisions_) {
+		LOG(logDEBUG) << "ConservationTracking::add_finite_factors: add division factors";
+		for (HypothesesGraph::NodeIt n(g); n != lemon::INVALID; ++n) {
+			if (div_node_map_.count(n) == 0) {
+				continue;
 			}
-			LOG(logDEBUG2) << "ConservationTracking::add_finite_factors: division[" << state <<
-					"] = " << energy;
-			coords[0] = state;
-			table.set_value(coords, energy);
-			coords[0] = 0;
+			size_t vi[] = { div_node_map_[n] };
+			vector<size_t> coords(1, 0); // number of variables
+			// ITER first_ogm_idx, ITER last_ogm_idx, VALUE init, size_t states_per_var
+			pgm::OpengmExplicitFactor<double> table(vi, vi + 1, 0, 2);
+			for (size_t state = 0; state <= 1; ++state) {
+				double energy = 0;
+				if (with_tracklets_) {
+					energy = division_(tracklet_map[n].back(), state);
+				} else {
+					energy = division_(traxel_map[n], state);
+				}
+				LOG(logDEBUG2) << "ConservationTracking::add_finite_factors: division[" << state <<
+						"] = " << energy;
+				coords[0] = state;
+				table.set_value(coords, energy);
+				coords[0] = 0;
+			}
+			table.add_to(*(pgm_->Model()));
 		}
-		table.add_to(*(pgm_->Model()));
 	}
 }
 
@@ -481,7 +487,7 @@ void ConservationTracking::add_constraints(const HypothesesGraph& g) {
 
 
 		int div_cplex_id = -1;
-		if (div_node_map_.count(n) > 0) {
+		if (with_divisions_ && div_node_map_.count(n) > 0) {
 			LOG(logDEBUG3) << "div_node_map_[n] = " << div_node_map_[n];
 			LOG(logDEBUG3) << "number_of_transition_nodes_ = " << number_of_transition_nodes_;
 			LOG(logDEBUG3) << "number_of_division_nodes_ = " << number_of_division_nodes_;
