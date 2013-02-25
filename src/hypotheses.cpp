@@ -142,6 +142,7 @@ namespace pgmlink {
     // for every timestep
     LOG(logDEBUG1) << "events(): earliest_timestep: " << g.earliest_timestep();
     LOG(logDEBUG1) << "events(): latest_timestep: " << g.latest_timestep();
+    std::vector<Event> mergers_t0;
 //    std::vector<Event> prev_mergers;
     for(int t = g.earliest_timestep(); t < g.latest_timestep(); ++t) {
         LOG(logDEBUG2) << "events(): processing timestep: " << t;
@@ -169,8 +170,16 @@ namespace pgmlink {
 //			LOG(logDEBUG3) << e;
 //		}
 
+	    if(t == g.earliest_timestep() && with_mergers && (*node_number_of_objects)[node_at] > 1 ) {
+			Event e;
+			e.type = Event::Merger;
+			e.traxel_ids.push_back(node_traxel_map[node_at].Id);
+			e.traxel_ids.push_back((*node_number_of_objects)[node_at]);
+			mergers_t0.push_back(e);
+			LOG(logDEBUG3) << e;
+		}
 
-	    if(with_mergers && (*node_number_of_objects)[node_at] > 1 && t > 1) {
+	    if(with_mergers && (*node_number_of_objects)[node_at] > 1 && t > g.earliest_timestep()) {
 			Event e;
 			e.type = Event::Merger;
 			e.traxel_ids.push_back(node_traxel_map[node_at].Id);
@@ -246,6 +255,8 @@ namespace pgmlink {
 	    }
 	}
 
+
+
 	// appearances in next timestep
 	LOG(logDEBUG2) << "events(): appearances in next timestep";
 	for(node_timestep_map_t::ItemIt node_at(node_timestep_map, t+1); node_at!=lemon::INVALID; ++node_at) {
@@ -264,21 +275,14 @@ namespace pgmlink {
 	    }
 	}
     }
-//    // mergers in last timestep
-//	if(with_mergers) {
-//		LOG(logDEBUG2) << "events(): mergers in last timestep";
-//		int t = g.latest_timestep();
-//		for(node_timestep_map_t::ItemIt node_at(node_timestep_map, t); node_at!=lemon::INVALID; ++node_at) {
-//			if((*node_number_of_objects)[node_at] > 1) {
-//				Event e;
-//				e.type = Event::Merger;
-//				e.traxel_ids.push_back(node_traxel_map[node_at].Id);
-//				e.traxel_ids.push_back((*node_number_of_objects)[node_at]);
-//				(*ret)[t-g.earliest_timestep()].push_back(e);
-//				LOG(logDEBUG3) << e;
-//			}
-//		}
-//	}
+
+    // mergers in first timestep
+    if(with_mergers) {
+    	for (std::vector<Event>::const_iterator it = mergers_t0.begin(); it!=mergers_t0.end(); ++it) {
+    		(*ret)[0].push_back(*it);
+    	}
+	}
+
 
     return ret;
   }

@@ -467,11 +467,7 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 			division,
 			transition,
 			forbidden_cost_,
-			with_constraints_,
-			fixed_detections_,
 			ep_gap_,
-			with_appearance_,
-			with_disappearance_,
 			with_tracklets_
 			);
 
