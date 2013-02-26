@@ -439,7 +439,7 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 	SingleTimestepTraxel_HypothesesBuilder::Options builder_opts(1, // max_nearest_neighbors
 				max_dist_,
 				true, // forward_backward
-				true, // consider_divisions
+				with_divisions_, // consider_divisions
 				division_threshold_
 				);
 	SingleTimestepTraxel_HypothesesBuilder hyp_builder(&ts, builder_opts);
