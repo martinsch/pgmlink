@@ -24,7 +24,9 @@ class ConservationTracking : public Reasoner {
                 double forbidden_cost = 0,
 			    double ep_gap = 0.01,
 			    bool with_tracklets = false,
-			    bool with_divisions = true
+			    bool with_divisions = true,
+			    double disappearance_cost = 10,
+			    double appearance_cost = 10
     )
     : max_number_objects_(max_number_objects),
     detection_(detection),
@@ -35,6 +37,8 @@ class ConservationTracking : public Reasoner {
     ep_gap_(ep_gap),
     with_tracklets_(with_tracklets),
     with_divisions_(with_divisions),
+    disappearance_cost_(disappearance_cost),
+    appearance_cost_(appearance_cost),
     number_of_appearance_nodes_(0),
     number_of_disappearance_nodes_(0)
     { };
@@ -104,6 +108,8 @@ class ConservationTracking : public Reasoner {
     double ep_gap_;
 
     bool with_tracklets_, with_divisions_;
+
+    double disappearance_cost_, appearance_cost_;
 
     unsigned int number_of_transition_nodes_, number_of_division_nodes_;
     unsigned int number_of_appearance_nodes_, number_of_disappearance_nodes_;

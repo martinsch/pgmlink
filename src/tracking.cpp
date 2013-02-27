@@ -439,7 +439,7 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 	SingleTimestepTraxel_HypothesesBuilder::Options builder_opts(1, // max_nearest_neighbors
 				max_dist_,
 				true, // forward_backward
-				true, // consider_divisions
+				with_divisions_, // consider_divisions
 				division_threshold_
 				);
 	SingleTimestepTraxel_HypothesesBuilder hyp_builder(&ts, builder_opts);
@@ -470,7 +470,9 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 			forbidden_cost_,
 			ep_gap_,
 			with_tracklets_,
-			with_divisions_
+			with_divisions_,
+			disappearance_cost_,
+			appearance_cost_
 			);
 
 	cout << "-> formulate ConservationTracking model" << endl;

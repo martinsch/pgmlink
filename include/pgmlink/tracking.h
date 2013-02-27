@@ -133,7 +133,9 @@ namespace pgmlink {
   	      bool with_tracklets=true,
   	      double division_weight=10.0,
   	      double transition_weight=10.0,
-  	      bool with_divisions=true
+  	      bool with_divisions=true,
+  	      double disappearance_cost = 0,
+  	      double appearance_cost = 0
   	      )
         : max_number_objects_(max_number_objects),
         	max_dist_(max_neighbor_distance), division_threshold_(division_threshold),
@@ -143,7 +145,9 @@ namespace pgmlink {
         with_tracklets_(with_tracklets),
         division_weight_(division_weight),
         transition_weight_(transition_weight),
-        with_divisions_(with_divisions){}
+        with_divisions_(with_divisions),
+        disappearance_cost_(disappearance_cost),
+        appearance_cost_(appearance_cost){}
       std::vector< std::vector<Event> > operator()(TraxelStore&);
 
       /**
@@ -164,6 +168,7 @@ namespace pgmlink {
       double division_weight_;
       double transition_weight_;
       bool with_divisions_;
+      double disappearance_cost_, appearance_cost_;
       shared_ptr<std::vector< std::map<unsigned int, bool> > > last_detections_;
     };
 }
