@@ -332,12 +332,15 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
 	for (HypothesesGraph::NodeIt n(g); n != lemon::INVALID; ++n) {
 		size_t num_vars = 0;
 		vector<size_t> vi;
+		vector<double> cost;
 		if (app_node_map_.count(n) > 0) {
 			vi.push_back(app_node_map_[n]);
+			cost.push_back(appearance_cost_);
 			++num_vars;
 		}
 		if (dis_node_map_.count(n) > 0) {
 			vi.push_back(dis_node_map_[n]);
+			cost.push_back(disappearance_cost_);
 			++num_vars;
 		}
 
@@ -364,7 +367,10 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
 							"] = " << energy;
 			for (size_t var_idx = 0; var_idx < num_vars; ++var_idx) {
 				coords[var_idx] = state;
-				table.set_value(coords, energy);
+				// if only one of the variables is > 0, then it is an appearance in this time frame
+				// or a disappearance in the next timeframe. Hence, add the cost of appearance/disappearance
+				// to the detection cost
+				table.set_value(coords, energy+cost[var_idx]);
 				coords[var_idx] = 0;
 				LOG(logDEBUG4) << "ConservationTracking::add_finite_factors: var_idx " << var_idx <<
 									" = " << energy;
@@ -373,6 +379,7 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
 			if (num_vars == 2) {
 				coords[0] = state;
 				coords[1] = state;
+				// only pay detection energy if both variables are on
 				table.set_value(coords, energy);
 				coords[0] = 0;
 				coords[1] = 0;
