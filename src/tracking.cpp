@@ -381,10 +381,14 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 //		LOG(logINFO) << "Predicting cellness";
 //		RF::predict_traxels(ts, rf, rf_features, 1, "cellness");
 
-		double s2 = (avg_obj_size_*avg_obj_size_)/4.0;
+		double s2 = sigma_;
+		if (s2 == 0.) {
+			s2 = (avg_obj_size_*avg_obj_size_)/4.0;
+		}
 		if (s2 < 0.0001) {
 			s2 = 0.0001;
 		}
+
 		LOG(logDEBUG) << "sigmas are all set to " << s2;
 		vector<double> sigma2(max_number_objects_+1,s2);
 //		for(size_t i = 0; i < sigma2.size(); ++i) {
