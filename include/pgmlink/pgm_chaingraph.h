@@ -112,6 +112,7 @@ namespace pgmlink {
 	forbidden_cost_(forbidden_cost) {}
 
       virtual chaingraph::ModelBuilder* clone() const = 0;
+      virtual ~ModelBuilder() {}
 
       // mandatory parameters
       function<double (const Traxel&)> appearance() const { return appearance_; }
