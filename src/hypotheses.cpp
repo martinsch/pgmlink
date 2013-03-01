@@ -170,14 +170,14 @@ namespace pgmlink {
 //			LOG(logDEBUG3) << e;
 //		}
 
-	    if(t == g.earliest_timestep() && with_mergers && (*node_number_of_objects)[node_at] > 1 ) {
-			Event e;
-			e.type = Event::Merger;
-			e.traxel_ids.push_back(node_traxel_map[node_at].Id);
-			e.traxel_ids.push_back((*node_number_of_objects)[node_at]);
-			mergers_t0.push_back(e);
-			LOG(logDEBUG3) << e;
-		}
+//	    if(t == g.earliest_timestep() && with_mergers && (*node_number_of_objects)[node_at] > 1 ) {
+//			Event e;
+//			e.type = Event::Merger;
+//			e.traxel_ids.push_back(node_traxel_map[node_at].Id);
+//			e.traxel_ids.push_back((*node_number_of_objects)[node_at]);
+//			mergers_t0.push_back(e);
+//			LOG(logDEBUG3) << e;
+//		}
 
 	    if(with_mergers && (*node_number_of_objects)[node_at] > 1 && t > g.earliest_timestep()) {
 			Event e;
@@ -276,12 +276,12 @@ namespace pgmlink {
 	}
     }
 
-    // mergers in first timestep
-    if(with_mergers) {
-    	for (std::vector<Event>::const_iterator it = mergers_t0.begin(); it!=mergers_t0.end(); ++it) {
-    		(*ret)[0].push_back(*it);
-    	}
-	}
+//    // mergers in first timestep
+//    if(with_mergers) {
+//    	for (std::vector<Event>::const_iterator it = mergers_t0.begin(); it!=mergers_t0.end(); ++it) {
+//    		(*ret)[0].push_back(*it);
+//    	}
+//	}
 
 
     return ret;
