@@ -135,8 +135,8 @@ namespace pgmlink {
   	      bool with_divisions=true,
   	      double disappearance_cost = 0,
   	      double appearance_cost = 0,
-  	      const std::vector<double> means = 0.,
-  	      const std::vector<double> sigmas =0.
+		  const std::vector<double> means = std::vector<double>(),
+		  const std::vector<double> sigmas = std::vector<double>()
   	      )
         : max_number_objects_(max_number_objects),
         	max_dist_(max_neighbor_distance), division_threshold_(division_threshold),
