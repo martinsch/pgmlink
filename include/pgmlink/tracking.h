@@ -118,7 +118,6 @@ namespace pgmlink {
         std::vector<int> maxTraxelIdAt_;
   };
 
-
   class ConsTracking {
     public:
 	  ConsTracking(
@@ -136,7 +135,8 @@ namespace pgmlink {
   	      bool with_divisions=true,
   	      double disappearance_cost = 0,
   	      double appearance_cost = 0,
-  	      double sigma=0.
+  	      const std::vector<double> means = 0.,
+  	      const std::vector<double> sigmas =0.
   	      )
         : max_number_objects_(max_number_objects),
         	max_dist_(max_neighbor_distance), division_threshold_(division_threshold),
@@ -149,7 +149,8 @@ namespace pgmlink {
         with_divisions_(with_divisions),
         disappearance_cost_(disappearance_cost),
         appearance_cost_(appearance_cost),
-        sigma_(sigma){}
+        means_(means),
+        sigmas_(sigmas){}
       std::vector< std::vector<Event> > operator()(TraxelStore&);
 
       /**
@@ -170,7 +171,8 @@ namespace pgmlink {
       double division_weight_;
       double transition_weight_;
       bool with_divisions_;
-      double disappearance_cost_, appearance_cost_, sigma_;
+      double disappearance_cost_, appearance_cost_;
+      std::vector<double> means_, sigmas_;
       shared_ptr<std::vector< std::map<unsigned int, bool> > > last_detections_;
     };
 }

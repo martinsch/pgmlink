@@ -324,17 +324,15 @@ vector<map<unsigned int, bool> > NNTrackletsTracking::detections() {
 
 
 namespace {
-std::vector<double> computeDetProb(double vol, double avg_vol, vector<double> s2) {
+std::vector<double> computeDetProb(double vol, vector<double> means, vector<double> s2) {
 	std::vector<double> result;
 
 	double sum = 0;
-	size_t k = 0;
-	for (vector<double>::const_iterator it = s2.begin(); it != s2.end(); ++it) {
-		double val = vol - k*avg_vol;
-		val = exp(-(val*val)/(*it));
+	for (size_t k = 0; k < means.size(); ++k) {
+		double val = vol - means[k];
+		val = exp(-(val*val)/s2[k]);
 		result.push_back(val);
 		sum += val;
-		++k;
 	}
 
 	// normalize
@@ -381,19 +379,38 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 //		LOG(logINFO) << "Predicting cellness";
 //		RF::predict_traxels(ts, rf, rf_features, 1, "cellness");
 
-		double s2 = sigma_;
-		if (s2 == 0.) {
-			s2 = (avg_obj_size_*avg_obj_size_)/4.0;
-		}
-		if (s2 < 0.0001) {
-			s2 = 0.0001;
+//		double s2 = sigma_;
+
+		vector<double> means;
+		if (means_.size() == 0 ) {
+			for(int i = 0; i<max_number_objects_+1; ++i) {
+				means.push_back(i*avg_obj_size_);
+				LOG(logINFO) << "mean[" << i << "] = " << means[i];
+			}
+		} else {
+			assert(sigmas_.size() != 0);
+			for(int i = 0; i<max_number_objects_+1; ++i) {
+				means.push_back(means_[i]);
+				LOG(logINFO) << "mean[" << i << "] = " << means[i];
+			}
 		}
 
-		LOG(logDEBUG) << "sigmas are all set to " << s2;
-		vector<double> sigma2(max_number_objects_+1,s2);
-//		for(size_t i = 0; i < sigma2.size(); ++i) {
-//			cout << sigma2[i] << endl;
-//		}
+		vector<double> sigma2(max_number_objects_+1,1.);
+		if (sigmas_.size() == 0) {
+			double s2 = (avg_obj_size_*avg_obj_size_)/4.0;
+			if (s2 < 0.0001) {
+				s2 = 0.0001;
+			}
+			for(int i = 0; i<max_number_objects_+1; ++i) {
+				sigma2.push_back(s2);
+				LOG(logINFO) << "sigma2[" << i << "] = "  << sigma2[i];
+			}
+		} else {
+			for (int i = 0; i<max_number_objects_+1; ++i) {
+				sigma2.push_back(sigmas_[i]);
+				LOG(logINFO) << "sigma2[" << i << "] = "  << sigma2[i];
+			}
+		}
 
 		for(TraxelStore::iterator tr = ts.begin(); tr != ts.end(); ++tr) {
 			Traxel trax = *tr;
@@ -403,7 +420,7 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 			}
 			double vol = it->second[0];
 			vector<double> detProb;
-			detProb = computeDetProb(vol,avg_obj_size_,sigma2);
+			detProb = computeDetProb(vol,means,sigma2);
 			feature_array detProbFeat(feature_array::difference_type(max_number_objects_+1));
 			for(int i = 0; i<=max_number_objects_; ++i) {
 				double d = detProb[i];

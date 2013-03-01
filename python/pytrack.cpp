@@ -13,6 +13,17 @@ using namespace std;
 using namespace pgmlink;
 using namespace boost::python;
 
+
+//std::vector<double> convertList2Vector(boost::python::list & list) {
+//	std::vector<double> result;
+//	for (int i = 0; i < len(list); ++i) {
+//		result.push_back(boost::python::extract<double>(list[i]));
+//	}
+//	return result;
+//}
+
+
+
 void export_track() {
     class_<vector<Event> >("EventVector")
 	.def(vector_indexing_suite<vector<Event> >())
@@ -38,14 +49,15 @@ void export_track() {
     ;
 
     class_<ConsTracking>("ConsTracking",
-			init<int,double,double,string,bool,double,double,double,bool,double,double,bool,double,double,double>(
+			init<int,double,double,string,bool,double,double,double,bool,double,double,bool,double,double,double,
+			std::vector<double>,std::vector<double> >(
 						args("max_number_objects", "max_neighbor_distance", "division_threshold",
 							"detection_rf_filename", "size_dependent_detection_prob", "forbidden_cost",
 							"ep_gap", "avg_obj_size",
 							"with_tracklets",
 							"division_weight", "transition_weight",
 							"with_divisions",
-							"disappearance_cost", "appearance_cost", "sigma_detection")))
+							"disappearance_cost", "appearance_cost", "sigma_detection","means","sigmas")))
 	  .def("__call__", &ConsTracking::operator())
 	  .def("detections", &ConsTracking::detections)
 	;
