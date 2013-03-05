@@ -395,7 +395,7 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 			}
 		}
 
-		vector<double> sigma2(max_number_objects_+1,1.);
+		vector<double> sigma2;
 		if (sigmas_.size() == 0) {
 			double s2 = (avg_obj_size_*avg_obj_size_)/4.0;
 			if (s2 < 0.0001) {
