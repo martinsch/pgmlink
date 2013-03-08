@@ -66,7 +66,7 @@ vector<vector<Event> > ChaingraphTracking::operator()(TraxelStore& ts) {
 	}
 
 	cout << "-> building hypotheses" << endl;
-	SingleTimestepTraxel_HypothesesBuilder::Options builder_opts(6, 50);
+	SingleTimestepTraxel_HypothesesBuilder::Options builder_opts(nneighbors_, 50);
 	SingleTimestepTraxel_HypothesesBuilder hyp_builder(&ts, builder_opts);
 	shared_ptr<HypothesesGraph> graph = shared_ptr<HypothesesGraph>(hyp_builder.build());
 
@@ -324,17 +324,15 @@ vector<map<unsigned int, bool> > NNTrackletsTracking::detections() {
 
 
 namespace {
-std::vector<double> computeDetProb(double vol, double avg_vol, vector<double> s2) {
+std::vector<double> computeDetProb(double vol, vector<double> means, vector<double> s2) {
 	std::vector<double> result;
 
 	double sum = 0;
-	size_t k = 0;
-	for (vector<double>::const_iterator it = s2.begin(); it != s2.end(); ++it) {
-		double val = vol - k*avg_vol;
-		val = exp(-(val*val)/(*it));
+	for (size_t k = 0; k < means.size(); ++k) {
+		double val = vol - means[k];
+		val = exp(-(val*val)/s2[k]);
 		result.push_back(val);
 		sum += val;
-		++k;
 	}
 
 	// normalize
@@ -353,6 +351,7 @@ std::vector<double> computeDetProb(double vol, double avg_vol, vector<double> s2
 vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 	cout << "-> building energy functions " << endl;
 
+	double detection_weight = 10;
 	Traxels empty;
 	boost::function<double(const Traxel&, const size_t)> detection, division;
 	boost::function<double(const double)> transition;
@@ -380,15 +379,38 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 //		LOG(logINFO) << "Predicting cellness";
 //		RF::predict_traxels(ts, rf, rf_features, 1, "cellness");
 
-		double s2 = (avg_obj_size_*avg_obj_size_)/4.0;
-		if (s2 < 0.0001) {
-			s2 = 0.0001;
+//		double s2 = sigma_;
+
+		vector<double> means;
+		if (means_.size() == 0 ) {
+			for(int i = 0; i<max_number_objects_+1; ++i) {
+				means.push_back(i*avg_obj_size_);
+				LOG(logINFO) << "mean[" << i << "] = " << means[i];
+			}
+		} else {
+			assert(sigmas_.size() != 0);
+			for(int i = 0; i<max_number_objects_+1; ++i) {
+				means.push_back(means_[i]);
+				LOG(logINFO) << "mean[" << i << "] = " << means[i];
+			}
 		}
-		LOG(logDEBUG) << "sigmas are all set to " << s2;
-		vector<double> sigma2(max_number_objects_+1,s2);
-//		for(size_t i = 0; i < sigma2.size(); ++i) {
-//			cout << sigma2[i] << endl;
-//		}
+
+		vector<double> sigma2;
+		if (sigmas_.size() == 0) {
+			double s2 = (avg_obj_size_*avg_obj_size_)/4.0;
+			if (s2 < 0.0001) {
+				s2 = 0.0001;
+			}
+			for(int i = 0; i<max_number_objects_+1; ++i) {
+				sigma2.push_back(s2);
+				LOG(logINFO) << "sigma2[" << i << "] = "  << sigma2[i];
+			}
+		} else {
+			for (int i = 0; i<max_number_objects_+1; ++i) {
+				sigma2.push_back(sigmas_[i]);
+				LOG(logINFO) << "sigma2[" << i << "] = "  << sigma2[i];
+			}
+		}
 
 		for(TraxelStore::iterator tr = ts.begin(); tr != ts.end(); ++tr) {
 			Traxel trax = *tr;
@@ -398,16 +420,22 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 			}
 			double vol = it->second[0];
 			vector<double> detProb;
-			detProb = computeDetProb(vol,avg_obj_size_,sigma2);
+			detProb = computeDetProb(vol,means,sigma2);
 			feature_array detProbFeat(feature_array::difference_type(max_number_objects_+1));
 			for(int i = 0; i<=max_number_objects_; ++i) {
-				LOG(logDEBUG2) << "detection probability for " << trax.Id << "[" << i << "] = " << detProb[i];
-				detProbFeat[i] = detProb[i];
+				double d = detProb[i];
+				if (d < 0.01) {
+					d = 0.01;
+				} else if (d > 0.99) {
+					d = 0.99;
+				}
+				LOG(logDEBUG2) << "detection probability for " << trax.Id << "[" << i << "] = " << d;
+				detProbFeat[i] = d;
 			}
 			trax.features["detProb"] = detProbFeat;
 			ts.replace(tr, trax);
 		}
-		detection = NegLnDetection(1); // weight 1
+		detection = NegLnDetection(detection_weight); // weight 1
 	} else {
 		// assume a quasi geometric distribution
 		vector<double> prob_vector;
@@ -420,17 +448,19 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 		}
 		prob_vector.insert(prob_vector.begin(), 1-sum);
 
-		detection = bind<double>(NegLnConstant(1,prob_vector), _2);
+		detection = bind<double>(NegLnConstant(detection_weight,prob_vector), _2);
 	}
 
-	division = NegLnDivision(1); // weight 1
-	transition = NegLnTransition(1); // weight 1
+	LOG(logDEBUG1) << "division_weight_ = " << division_weight_;
+	LOG(logDEBUG1) << "transition_weight_ = " << transition_weight_;
+	division = NegLnDivision(division_weight_);
+	transition = NegLnTransition(transition_weight_);
 
 	cout << "-> building hypotheses" << endl;
 	SingleTimestepTraxel_HypothesesBuilder::Options builder_opts(1, // max_nearest_neighbors
 				max_dist_,
 				true, // forward_backward
-				true, // consider_divisions
+				with_divisions_, // consider_divisions
 				division_threshold_
 				);
 	SingleTimestepTraxel_HypothesesBuilder hyp_builder(&ts, builder_opts);
@@ -459,12 +489,11 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 			division,
 			transition,
 			forbidden_cost_,
-			with_constraints_,
-			fixed_detections_,
 			ep_gap_,
-			with_appearance_,
-			with_disappearance_,
-			with_tracklets_
+			with_tracklets_,
+			with_divisions_,
+			disappearance_cost_,
+			appearance_cost_
 			);
 
 	cout << "-> formulate ConservationTracking model" << endl;

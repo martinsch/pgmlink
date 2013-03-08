@@ -1,5 +1,6 @@
 #define PY_ARRAY_UNIQUE_SYMBOL pgmlink_pyarray
 #define NO_IMPORT_ARRAY
+#define BOOST_PYTHON_MAX_ARITY 20
 
 #include <vector>
 
@@ -13,6 +14,17 @@
 using namespace std;
 using namespace pgmlink;
 using namespace boost::python;
+
+
+//std::vector<double> convertList2Vector(boost::python::list & list) {
+//	std::vector<double> result;
+//	for (int i = 0; i < len(list); ++i) {
+//		result.push_back(boost::python::extract<double>(list[i]));
+//	}
+//	return result;
+//}
+
+
 
 void export_track() {
     class_<vector<Event> >("EventVector")
@@ -31,19 +43,23 @@ void export_track() {
       .def(vector_indexing_suite<vector<map<unsigned int, bool> > >())
     ;
 
-    class_<ChaingraphTracking>("ChaingraphTracking", 
-			init<string,double,double,double,double,bool,double,double,bool,bool,double,double,double>(
-								     args("random_forest_filename", "appearance", "disappearance", "detection", "misdetection", "use_random_forest", "opportunity_cost", "forbidden_cost", "with_constraints", "fixed_detections", "mean_div_dist", "min_angle", "ep_gap")))
+    class_<ChaingraphTracking>("ChaingraphTracking",
+			       init<string,double,double,double,double,bool,double,double,bool,bool,double,double,double,int>(
+						        		    args("random_forest_filename", "appearance", "disappearance", "detection", "misdetection", "use_random_forest", "opportunity_cost", "forbidden_cost", "with_constraints", "fixed_detections", "mean_div_dist", "min_angle", "ep_gap", "nneighbors")))
       .def("__call__", &ChaingraphTracking::operator())
       .def("detections", &ChaingraphTracking::detections) 
     ;
 
     class_<ConsTracking>("ConsTracking",
-			init<int,double,double,string,bool,double,bool,bool,double,double,bool,bool,bool>(
+			init<int,double,double,string,bool,double,double,double,bool,double,double,bool,double,double,
+			std::vector<double>,std::vector<double> >(
 						args("max_number_objects", "max_neighbor_distance", "division_threshold",
 							"detection_rf_filename", "size_dependent_detection_prob", "forbidden_cost",
-							"with_constraints", "fixed_detections", "ep_gap", "avg_obj_size",
-							"with_appearance", "with_disappearance", "with_tracklets")))
+							"ep_gap", "avg_obj_size",
+							"with_tracklets",
+							"division_weight", "transition_weight",
+							"with_divisions",
+							"disappearance_cost", "appearance_cost","means","sigmas")))
 	  .def("__call__", &ConsTracking::operator())
 	  .def("detections", &ConsTracking::detections)
 	;
