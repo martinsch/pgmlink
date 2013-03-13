@@ -63,7 +63,7 @@ vector<vector<Event> > ChaingraphTracking::operator()(TraxelStore& ts) {
 	}
 
 	cout << "-> building hypotheses" << endl;
-	SingleTimestepTraxel_HypothesesBuilder::Options builder_opts(6, 50);
+	SingleTimestepTraxel_HypothesesBuilder::Options builder_opts(n_neighbors_, 50);
 	SingleTimestepTraxel_HypothesesBuilder hyp_builder(&ts, builder_opts);
 	shared_ptr<HypothesesGraph> graph = shared_ptr<HypothesesGraph>(hyp_builder.build());
 
