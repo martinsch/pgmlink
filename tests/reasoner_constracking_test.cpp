@@ -80,8 +80,6 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Merger ) {
 			  "none", // random_forest_filename
 	  	      false, // cellness_by_random_forest
 	  	      0, // forbidden_cost
-	  	      true, // with_constraints
-	  	      false, // fixed_detections
 	  	      0.0 // ep_gap
 	  	      );
 
@@ -96,9 +94,9 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Merger ) {
 		// t = 1: 2x move
 		// t = 2: 1x move, 1x merger
 		// t = 3: 2x move, 1x merger
-		if (t==1 || t ==2) {
+		if (t==2 || t ==3) {
 			BOOST_CHECK_EQUAL(it_t->size(),2);
-		} else { // t == 3
+		} else { // t == 1
 			BOOST_CHECK_EQUAL(it_t->size(),3);
 		}
 
