@@ -13,10 +13,14 @@ if(Boost_FOUND)
   ## autodiscover test sources and add tests
   file(GLOB TEST_SRCS *.cpp)
   foreach(test_src ${TEST_SRCS})
-    get_filename_component(test_name ${test_src} NAME_WE)
-    add_executable( ${test_name} ${test_src} )
-    target_link_libraries( ${test_name} pgmlink ${Boost_LIBRARIES})   
-    add_test( ${test_name} ${test_name})
+    if (${test_src} MATCHES "randomforest_test.cpp")
+    elseif(${test_src} MATCHES "learning_systemtest.cpp")
+    else()
+      get_filename_component(test_name ${test_src} NAME_WE)
+      add_executable( ${test_name} ${test_src} )
+      target_link_libraries( ${test_name} pgmlink ${Boost_LIBRARIES})   
+      add_test( ${test_name} ${test_name})
+    endif()
   endforeach(test_src)
 
   ## randomforest lives in the project dir and we add it manually

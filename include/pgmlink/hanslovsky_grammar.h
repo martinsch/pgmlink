@@ -33,6 +33,10 @@ namespace pgmlink {
 
   class FeatureExtractorMCOMsFromMCOMs;
 
+  class FeatureHandlerBase;
+
+  class FeatureHandlerFromTraxels;
+
   class DistanceBase;
 
   class DistanceFromCOMs;
@@ -45,7 +49,7 @@ namespace pgmlink {
 
   class ReasonerMaxOneArc;
 
-  class MergerResolver;  
+  class MergerResolver;
 
 }
 

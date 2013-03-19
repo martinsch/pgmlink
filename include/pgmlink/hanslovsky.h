@@ -167,13 +167,60 @@ namespace pgmlink {
     virtual std::vector<Traxel> operator()(Traxel trax, size_t nMergers, unsigned int max_id);
   };
 
+  
+  ////
+  //// FeatureHandlerBase
+  ////
+  class FeatureHandlerBase {
+  private:
+    const DistanceBase base_;
+    void add_arcs_for_replacement_node(HypothesesGraph& g,
+                                       HypothesesGraph::Node n,
+                                       const std::vector<HypothesesGraph::base_graph::Arc>& sources,
+                                       const std::vector<HypothesesGraph::base_graph::Arc>& targets,
+                                       DistanceBase& distance);
+  public:
+    virtual void operator()(HypothesesGraph& g,
+                            HypothesesGraph::Node n,
+                            const std::size_t& n_merger,
+                            const unsigned int& max_id,
+                            const std::vector<HypothesesGraph::base_graph::Arc>& sources,
+                            const std::vector<HypothesesGraph::base_graph::Arc>& targets,
+                            std::vector<unsigned int>& new_ids
+                            ) = 0;
+  };
+
+  
+  ////
+  //// FeatureHandlerFromTraxels
+  ////
+  class FeatureHandlerFromTraxelsMCOMsFromPCOMs : public FeatureHandlerBase {
+  private:
+    const FeatureExtractorBase extractor_;
+    const DistanceBase base_;
+  public:
+    FeatureHandlerFromTraxelsMCOMsFromPCOMs(const FeatureExtractorBase& extractor,
+                                            const DistanceBase& base = DistanceFromCOMs()) :
+      extractor_(extractor), base_(base) {}
+
+    virtual void operator()(HypothesesGraph& g,
+                            HypothesesGraph::Node n,
+                            const std::size_t& n_merger,
+                            const unsigned int& max_id,
+                            const int& timestep,
+                            const std::vector<HypothesesGraph::base_graph::Arc>& sources,
+                            const std::vector<HypothesesGraph::base_graph::Arc>& targets;
+                            std::vector<unsigned int>& new_ids
+                            );
+  };
+
 
   ////
   //// DistanceBase
   ////
   class DistanceBase {
   public:
-    virtual double operator()(Traxel from, Traxel to) = 0;
+    virtual double operator()(const HypothesesGraph& g, HypothesesGraph::Node from, HypothesesGraph::Node to) = 0;
   };
 
 
@@ -182,7 +229,7 @@ namespace pgmlink {
   ////
   class DistanceFromCOMs : public DistanceBase{
   public:
-    virtual double operator()(Traxel from, Traxel to);
+    virtual double operator()(const HypothesesGraph& g, HypothesesGraph::Node from, HypothesesGraph::Node Traxel to);
   };
 
 
@@ -282,9 +329,8 @@ namespace pgmlink {
     // tested
     void refine_node(HypothesesGraph::Node,
 		     std::size_t,
-		     FeatureExtractorBase& extractor,
-		     DistanceBase& distance);
-    
+		     const FeatureHandlerBase& handler);
+
   public:
     MergerResolver(HypothesesGraph* g) : g_(g)
     {
@@ -301,9 +347,9 @@ namespace pgmlink {
       if (!g_->has_property(node_originated_from()))
 	g_->add(node_originated_from());
     }
-    HypothesesGraph* resolve_mergers(FeatureExtractorBase& extractor,
-				     DistanceBase& distance);
+    HypothesesGraph* resolve_mergers(const FeatureHandlerBase& handler);
   };
+  
   
   template <typename ArcIterator>
   void MergerResolver::collect_arcs(ArcIterator arcIt,
@@ -313,6 +359,7 @@ namespace pgmlink {
       res.push_back(arcIt);
     }
   }
+
   
   /* template <typename ClusteringAlg>
   void MergerResolver::calculate_centers(HypothesesGraph::Node node,					 
