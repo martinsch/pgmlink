@@ -167,13 +167,32 @@ namespace pgmlink {
     virtual std::vector<Traxel> operator()(Traxel trax, size_t nMergers, unsigned int max_id);
   };
 
+
+  ////
+  //// DistanceBase
+  ////
+  class DistanceBase {
+  public:
+    virtual double operator()(const HypothesesGraph& g, HypothesesGraph::Node from, HypothesesGraph::Node to) = 0;
+    virtual double operator()(Traxel from,  Traxel to) = 0;
+  };
+
+
+  ////
+  //// DistanceFromCOMs
+  ////
+  class DistanceFromCOMs : public DistanceBase {
+  public:
+    virtual double operator()(const HypothesesGraph& g, HypothesesGraph::Node from, HypothesesGraph::Node to);
+    virtual double operator()(Traxel from,  Traxel to);
+  };
+
   
   ////
   //// FeatureHandlerBase
   ////
   class FeatureHandlerBase {
-  private:
-    const DistanceBase base_;
+  public:
     void add_arcs_for_replacement_node(HypothesesGraph& g,
                                        HypothesesGraph::Node n,
                                        const std::vector<HypothesesGraph::base_graph::Arc>& sources,
@@ -182,8 +201,9 @@ namespace pgmlink {
   public:
     virtual void operator()(HypothesesGraph& g,
                             HypothesesGraph::Node n,
-                            const std::size_t& n_merger,
-                            const unsigned int& max_id,
+                            std::size_t n_merger,
+                            unsigned int max_id,
+                            int timestep,
                             const std::vector<HypothesesGraph::base_graph::Arc>& sources,
                             const std::vector<HypothesesGraph::base_graph::Arc>& targets,
                             std::vector<unsigned int>& new_ids
@@ -194,42 +214,25 @@ namespace pgmlink {
   ////
   //// FeatureHandlerFromTraxels
   ////
-  class FeatureHandlerFromTraxelsMCOMsFromPCOMs : public FeatureHandlerBase {
+  class FeatureHandlerFromTraxels : public FeatureHandlerBase {
   private:
-    const FeatureExtractorBase extractor_;
-    const DistanceBase base_;
+    FeatureExtractorBase& extractor_;
+    DistanceBase& base_;
+    // FeatureHandlerFromTraxelsMCOMsFromPCOMs() {};
   public:
-    FeatureHandlerFromTraxelsMCOMsFromPCOMs(const FeatureExtractorBase& extractor,
-                                            const DistanceBase& base = DistanceFromCOMs()) :
+    FeatureHandlerFromTraxels(FeatureExtractorBase& extractor,
+                                            DistanceBase& base) :
       extractor_(extractor), base_(base) {}
 
     virtual void operator()(HypothesesGraph& g,
                             HypothesesGraph::Node n,
-                            const std::size_t& n_merger,
-                            const unsigned int& max_id,
-                            const int& timestep,
+                            std::size_t n_merger,
+                            unsigned int max_id,
+                            int timestep,
                             const std::vector<HypothesesGraph::base_graph::Arc>& sources,
-                            const std::vector<HypothesesGraph::base_graph::Arc>& targets;
+                            const std::vector<HypothesesGraph::base_graph::Arc>& targets,
                             std::vector<unsigned int>& new_ids
                             );
-  };
-
-
-  ////
-  //// DistanceBase
-  ////
-  class DistanceBase {
-  public:
-    virtual double operator()(const HypothesesGraph& g, HypothesesGraph::Node from, HypothesesGraph::Node to) = 0;
-  };
-
-
-  ////
-  //// DistanceFromCOMs
-  ////
-  class DistanceFromCOMs : public DistanceBase{
-  public:
-    virtual double operator()(const HypothesesGraph& g, HypothesesGraph::Node from, HypothesesGraph::Node Traxel to);
   };
 
 
@@ -329,7 +332,7 @@ namespace pgmlink {
     // tested
     void refine_node(HypothesesGraph::Node,
 		     std::size_t,
-		     const FeatureHandlerBase& handler);
+		     FeatureHandlerBase& handler);
 
   public:
     MergerResolver(HypothesesGraph* g) : g_(g)
@@ -347,7 +350,7 @@ namespace pgmlink {
       if (!g_->has_property(node_originated_from()))
 	g_->add(node_originated_from());
     }
-    HypothesesGraph* resolve_mergers(const FeatureHandlerBase& handler);
+    HypothesesGraph* resolve_mergers(FeatureHandlerBase& handler);
   };
   
   

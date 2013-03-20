@@ -102,24 +102,24 @@ namespace pgmlink {
   ////
   //// FeatureHandlerBase
   ////
-  void add_arcs_for_replacement_node(HypothesesGraph& g,
-                                     HypothesesGraph::Node n,
-                                     const std::vector<HypothesesGraph::base_graph::Arc>& sources,
-                                     const std::vector<HypothesesGraph::base_graph::Arc>& targets,
-                                     DistanceBase& distance) {
+  void FeatureHandlerBase::add_arcs_for_replacement_node(HypothesesGraph& g,
+                                                         HypothesesGraph::Node n,
+                                                         const std::vector<HypothesesGraph::base_graph::Arc>& sources,
+                                                         const std::vector<HypothesesGraph::base_graph::Arc>& targets,
+                                                         DistanceBase& distance) {
     // add Arcs for new node that is a replacement node for merger node
     // get the property_maps needed for adding Arcs
-    std::vector<HypothesesGraph::base_graph::Arc>::iterator it;
-    property_map<arc_distance, hypothesesGraph::base_graph>::type& arc_distances = g.get(arc_distance());
-    property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g.get(node_traxel());
-    property_map<arc_active, HypothesesGraph::base_graph>::type& arc_active = g.get(arc_active());
+    std::vector<HypothesesGraph::base_graph::Arc>::const_iterator it;
+    property_map<arc_distance, HypothesesGraph::base_graph>::type& arc_distances = g.get(arc_distance());
+    // property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g.get(node_traxel());
+    property_map<arc_active, HypothesesGraph::base_graph>::type& arc_active_map = g.get(arc_active());
 
 
     // add incoming arcs
     for (it = sources.begin(); it != sources.end(); ++it) {
       HypothesesGraph::Node from = g.source(*it);
       double dist = distance(g, from, n);
-      HypothesesGraph::Arc arc = g_->addArc(from, n);
+      HypothesesGraph::Arc arc = g.addArc(from, n);
       arc_distances.set(arc, dist);
       arc_active_map.set(arc, true);
       // LOG?
@@ -129,7 +129,7 @@ namespace pgmlink {
     for (it = targets.begin(); it != targets.end(); ++it) {
       HypothesesGraph::Node to = g.target(*it);
       double dist = distance(g, n, to);
-      HypothesesGraph::Arc arc = g_->addArc(n, to);
+      HypothesesGraph::Arc arc = g.addArc(n, to);
       arc_distances.set(arc, dist);
       arc_active_map.set(arc, true);
       // LOG?
@@ -138,27 +138,27 @@ namespace pgmlink {
     
 
   ////
-  //// FeatureHandlerFromTraxelsMCOMsFromPCOMs
+  //// FeatureHandlerFromTraxels
   ////
-  void FeatureHandlerFromTraxelsMCOMsFromPCOMs::operator()(
-                                                           HypothesesGraph& g,
-                                                           HypothesesGraph::Node n,
-                                                           const std::size_t& n_merger,
-                                                           const unsigned int& max_id,
-                                                           const int& timestep,
-                                                           const std::vector<HypothesesGraph::base_graph::Arc>& sources,
-                                                           const std::vector<HypothesesGraph::base_graph::Arc>& targets;
-                                                           std::vector<unsigned int>& new_ids
-                                                           ) {
+  void FeatureHandlerFromTraxels::operator()(
+                                             HypothesesGraph& g,
+                                             HypothesesGraph::Node n,
+                                             std::size_t n_merger,
+                                             unsigned int max_id,
+                                             int timestep,
+                                             const std::vector<HypothesesGraph::base_graph::Arc>& sources,
+                                             const std::vector<HypothesesGraph::base_graph::Arc>& targets,
+                                             std::vector<unsigned int>& new_ids
+                                             ) {
     // property maps
-    property_map<node_active2, HypotehsesGraph::base_graph>::type& active_map = g_->get(node_active2());
+    property_map<node_active2, HypothesesGraph::base_graph>::type& active_map = g.get(node_active2());
     property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g.get(node_traxel());
     property_map<node_timestep, HypothesesGraph::base_graph>::type& time_map = g.get(node_timestep());
     property_map<node_originated_from, HypothesesGraph::base_graph>::type& origin_map = g.get(node_originated_from());
 
     // traxel and vector of replacement traxels
-    Traxel trax = traxel_map[node];
-    std::vector<Traxel> ft = extractor(trax, n_merger, max_id);
+    Traxel trax = traxel_map[n];
+    std::vector<Traxel> ft = extractor_(trax, n_merger, max_id);
     // MAYBE LOG
     for (std::vector<Traxel>::iterator it = ft.begin(); it != ft.end(); ++it) {
       // set traxel features, most of which can be copied from the merger node
@@ -171,26 +171,26 @@ namespace pgmlink {
       time_map.set(new_node, timestep);
 
       // add arc candidates for new nodes (todo: need to somehow choose which ones are active)
-      add_arcs_for_replacement_node(new_node, *it, source, targets, distance);
+      this->add_arcs_for_replacement_node(g, new_node, sources, targets, base_);
       // save new id from merger node to new_ids;
       new_ids.push_back(it->Id);
       // store parent (merger) node. this is used for creating the resolved_to event later
       origin_map.set(new_node, std::vector<unsigned int>(1, trax.Id));
-      
-
-      
-    
-
+ 
+    }
   }
-                                                           
 
   
   ////
   //// DistanceFromCOMs
   ////
-    double DistanceFromCOMs::operator()(const HypothesesGraph& g, HypothesesGraph::Node from, HypthesesGraph::Node to) {
-      property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g.get(node_traxel());
-      return traxel_map[from].distance_to(traxel_map[to]);
+  double DistanceFromCOMs::operator()(const HypothesesGraph& g, HypothesesGraph::Node from, HypothesesGraph::Node to) {
+    property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g.get(node_traxel());
+    return traxel_map[from].distance_to(traxel_map[to]);
+  }
+
+  double DistanceFromCOMs::operator()(Traxel from, Traxel to) {
+    return from.distance_to(to);
   }
 
   ////
@@ -282,12 +282,12 @@ namespace pgmlink {
 
   void MergerResolver::refine_node(HypothesesGraph::Node node,
 				   std::size_t nMerger,
-				   FeatureHandlerBase& Handler) {
-    property_map<node_active2, HypothesesGraph::base_graph>::type& active_map = g_->get(node_active2());
-    property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g_->get(node_traxel());
+				   FeatureHandlerBase& handler) {
+    // property_map<node_active2, HypothesesGraph::base_graph>::type& active_map = g_->get(node_active2());
+    // property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g_->get(node_traxel());
     property_map<node_timestep, HypothesesGraph::base_graph>::type& time_map = g_->get(node_timestep());
     property_map<merger_resolved_to, HypothesesGraph::base_graph>::type& resolved_map = g_->get(merger_resolved_to());
-    property_map<node_originated_from, HypothesesGraph::base_graph>::type& origin_map = g_->get(node_originated_from());
+    // property_map<node_originated_from, HypothesesGraph::base_graph>::type& origin_map = g_->get(node_originated_from());
     
 
     
@@ -309,8 +309,9 @@ namespace pgmlink {
 
     // create new node for each of the objects merged into node
     std::vector<unsigned int> new_ids;
+    handler(*g_, node, nMerger, max_id, timestep, sources, targets, new_ids);
     // std::vector<Traxel> ft = extractor(trax, nMerger, max_id);
-    LOG(logDEBUG) << "MergerResolver::refine_node(): Resolving node " << g_->id(node) << " (" << trax << ") to " << active_map[node] << " merger(s)";
+    // LOG(logDEBUG) << "MergerResolver::refine_node(): Resolving node " << g_->id(node) << " (" << trax << ") to " << active_map[node] << " merger(s)";
     /* for (std::vector<Traxel>::iterator it = ft.begin(); it != ft.end(); ++it) {
       // set traxel features, most of which can be copied from the merger node
       // set new center of mass as calculated from GMM
@@ -337,8 +338,7 @@ namespace pgmlink {
   }
 
 
-  HypothesesGraph* MergerResolver::resolve_mergers(FeatureExtractorBase& extractor,
-						   DistanceBase& distance) {
+  HypothesesGraph* MergerResolver::resolve_mergers(FeatureHandlerBase& handler) {
     // extract property maps and iterators from graph
     property_map<node_active2, HypothesesGraph::base_graph>::type& active_map = g_->get(node_active2());
     property_map<node_active2, HypothesesGraph::base_graph>::type::ValueIt active_valueIt = active_map.beginValue();
@@ -354,7 +354,7 @@ namespace pgmlink {
 	for (; active_itemIt != lemon::INVALID; ++active_itemIt) {
 	  // calculate_centers<ClusteringAlg>(active_itemIt, *active_valueIt);
 	  // for each object create new node and set arcs to old merger node inactive (neccessary for pruning)
-	  refine_node(active_itemIt, *active_valueIt, extractor, distance);
+	  refine_node(active_itemIt, *active_valueIt, handler);
 	  nodes_to_deactivate.push_back(active_itemIt);
 	}
       }
