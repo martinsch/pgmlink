@@ -120,7 +120,8 @@ BOOST_AUTO_TEST_CASE( MergerResolver_resolve_mergers_3 ) {
   MergerResolver m(&g);
   FeatureExtractorMCOMsFromPCOMs extractor;
   DistanceFromCOMs distance;
-  m.resolve_mergers(extractor, distance);
+  FeatureHandlerFromTraxels handler(extractor, distance);
+  m.resolve_mergers(handler);
   
 
   // check that arcs and nodes have been deactivated
@@ -286,7 +287,8 @@ BOOST_AUTO_TEST_CASE( MergerResolver_resolve_mergers_2 ) {
   MergerResolver m(&g);
   FeatureExtractorMCOMsFromPCOMs extractor;
   DistanceFromCOMs distance;
-  m.resolve_mergers(extractor, distance);
+  FeatureHandlerFromTraxels handler(extractor, distance);
+  m.resolve_mergers(handler);
   // property_map<merger_resolved_to, HypothesesGraph::base_graph>::type& resolved_map = g.get(merger_resolved_to());
   property_map<node_timestep, HypothesesGraph::base_graph>::type& time_map = g.get(node_timestep());
   property_map<node_timestep, HypothesesGraph::base_graph>::type::ItemIt IT(time_map, 2);
@@ -383,7 +385,8 @@ BOOST_AUTO_TEST_CASE( MergerResolver_resolve_mergers ) {
   MergerResolver m(&g);
   FeatureExtractorMCOMsFromPCOMs extractor;
   DistanceFromCOMs distance;
-  m.resolve_mergers(extractor, distance);
+  FeatureHandlerFromTraxels handler(extractor, distance);
+  m.resolve_mergers(handler);
 
   // setup tests
   property_map<node_active2, HypothesesGraph::base_graph>::type::ValueIt active_valueIt = active_map.beginValue();
@@ -548,7 +551,8 @@ BOOST_AUTO_TEST_CASE( MergerResolver_refine_node ) {
   MergerResolver m(&g);
   FeatureExtractorMCOMsFromMCOMs extractor;
   DistanceFromCOMs distance;
-  m.refine_node(n21, 2, extractor, distance);
+  FeatureHandlerFromTraxels handler(extractor, distance);
+  m.refine_node(n21, 2, handler);
   
   // deactivated arcs from and to merger node
   BOOST_CHECK(!g.valid(a11_21) || g.source(a11_21) != n11 || g.target(a11_21) != n21);
