@@ -113,6 +113,7 @@ namespace pgmlink {
     property_map<arc_distance, HypothesesGraph::base_graph>::type& arc_distances = g.get(arc_distance());
     // property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g.get(node_traxel());
     property_map<arc_active, HypothesesGraph::base_graph>::type& arc_active_map = g.get(arc_active());
+    property_map<arc_resolution_candidate, HypothesesGraph::base_graph>::type& arc_resolution_map = g.get(arc_resolution_candidate());
 
 
     // add incoming arcs
@@ -122,6 +123,7 @@ namespace pgmlink {
       HypothesesGraph::Arc arc = g.addArc(from, n);
       arc_distances.set(arc, dist);
       arc_active_map.set(arc, true);
+      arc_resolution_map.set(arc, true);
       // LOG?
     }
 
@@ -132,6 +134,7 @@ namespace pgmlink {
       HypothesesGraph::Arc arc = g.addArc(n, to);
       arc_distances.set(arc, dist);
       arc_active_map.set(arc, true);
+      arc_resolution_map.set(arc, true);
       // LOG?
     }
   }
@@ -155,6 +158,7 @@ namespace pgmlink {
     property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g.get(node_traxel());
     property_map<node_timestep, HypothesesGraph::base_graph>::type& time_map = g.get(node_timestep());
     property_map<node_originated_from, HypothesesGraph::base_graph>::type& origin_map = g.get(node_originated_from());
+    property_map<node_resolution_candidate, HypothesesGraph::base_graph>::type& node_resolution_map = g.get(node_resolution_candidate());
 
     // traxel and vector of replacement traxels
     Traxel trax = traxel_map[n];
@@ -176,6 +180,7 @@ namespace pgmlink {
       new_ids.push_back(it->Id);
       // store parent (merger) node. this is used for creating the resolved_to event later
       origin_map.set(new_node, std::vector<unsigned int>(1, trax.Id));
+      node_resolution_map.set(new_node, true);
  
     }
   }

@@ -26,6 +26,20 @@ using namespace std;
 using namespace boost;
 
 
+BOOST_AUTO_TEST_CASE( MergerResolver_subgraph ) {
+  HypothesesGraph g1, g2;
+  g1.add(node_active2()).add(arc_active());
+  HypothesesGraph::Node n1 = g1.add_node(1);
+  HypothesesGraph::Node n2 = g1.add_node(2);
+  property_map<node_active2, HypothesesGraph::base_graph>::type& na_map = g1.get(node_active2());
+  property_map<arc_active, HypothesesGraph::base_graph>::type& aa_map = g1.get(arc_active());
+  na_map.set(n1,true);
+  na_map.set(n2,false);
+  get_subset<node_active2, arc_active>(g1, g2);
+
+}
+
+
 BOOST_AUTO_TEST_CASE( MergerResolver_constructor ) {
   HypothesesGraph g;
   BOOST_CHECK_THROW(MergerResolver m(&g), std::runtime_error);
@@ -189,6 +203,9 @@ BOOST_AUTO_TEST_CASE( MergerResolver_resolve_mergers_3 ) {
   // check that deactivated arcs are pruned, i.e. FalseIt should be equal to lemon::INVALID
   property_map<arc_active, HypothesesGraph::base_graph>::type::FalseIt f_it(arc_map);
   BOOST_CHECK(!(f_it != lemon::INVALID));
+
+  HypothesesGraph g_res;
+  resolve_graph(g, g_res);
 
 }
 

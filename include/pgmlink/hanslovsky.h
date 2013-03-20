@@ -12,6 +12,7 @@
 
 // external headers
 #include <lemon/maps.h>
+#include <lemon/adaptors.h>
 #include <armadillo>
 
 
@@ -21,6 +22,8 @@
 #include "pgmlink/traxels.h"
 #include "pgmlink/reasoner.h"
 #include "pgmlink/hanslovsky_grammar.h"
+#include "pgmlink/reasoner_constracking.h"
+#include "pgmlink/feature.h"
 
 /**
  * @brief Implementation of ideas for merger resolution in the HypothesesGraph environment.
@@ -349,9 +352,57 @@ namespace pgmlink {
 	throw std::runtime_error("HypothesesGraph g_ does not have property arc_distance!");
       if (!g_->has_property(node_originated_from()))
 	g_->add(node_originated_from());
+      if (!g_->has_property(node_resolution_candidate()))
+        g_->add(node_resolution_candidate());
+      if (!g_->has_property(arc_resolution_candidate()))
+        g_->add(arc_resolution_candidate());
     }
     HypothesesGraph* resolve_mergers(FeatureHandlerBase& handler);
   };
+
+
+
+  ////
+  //// transfer graph to graph only containing only subset of nodes based on tags
+  //// needs to be arc iterator
+  template <typename NodePropertyTag, typename ArcPropertyTag>
+  void get_subset(HypothesesGraph& src, HypothesesGraph& dest) {
+    typedef typename property_map<NodePropertyTag, HypothesesGraph::base_graph>::type NodeFilter;
+    typedef typename property_map<ArcPropertyTag, HypothesesGraph::base_graph>::type ArcFilter;
+
+    NodeFilter& node_filter_map = src.get(NodePropertyTag());
+    ArcFilter& arc_filter_map = src.get(ArcPropertyTag());
+    // property_map<PropertyTag, HypothesesGraph::base_graph>::type::ItemIt it(property_tag_map, value);
+    lemon::SubDigraph<HypothesesGraph::base_graph, NodeFilter, ArcFilter> sub(src, node_filter_map, arc_filter_map);
+    lemon::digraphCopy(sub,dest);
+  }
+
+
+  void resolve_graph(HypothesesGraph& src, HypothesesGraph& dest) {
+    get_subset<node_resolution_candidate, arc_resolution_candidate>(src, dest);
+    std::vector<double> prob;
+    prob.push_back(0.0);
+    prob.push_back(1.0);
+    boost::function<double(const Traxel&, const size_t)> division = NegLnDivision(1); // weight 1
+    boost::function<double(const double)> transition = NegLnTransition(1); // weight 1
+    boost::function<double(const Traxel&, const size_t)> detection = boost::bind<double>(NegLnConstant(1,prob), _2);
+    ConservationTracking pgm(
+                             1, //max_number_objects_,
+                             detection, //detection,
+                             division, // division
+                             transition, // transition
+                             0, // forbidden_cost_,
+                             true, // with_constraints_,
+                             true, // fixed_detections_,
+                             0.05, //ep_gap_,
+                             false, //with_appearance_,
+                             false, //with_disappearance_,
+                             false //with_tracklets_
+                             );
+    pgm.formulate(dest);
+    pgm.infer();
+    pgm.conclude(dest);
+  }
   
   
   template <typename ArcIterator>
@@ -362,6 +413,8 @@ namespace pgmlink {
       res.push_back(arcIt);
     }
   }
+
+
 
   
   /* template <typename ClusteringAlg>
