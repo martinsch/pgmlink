@@ -341,15 +341,15 @@ namespace pgmlink {
     MergerResolver(HypothesesGraph* g) : g_(g)
     {
       if (!g_)
-	throw std::runtime_error("HypotesesGraph g_ is a null pointer!");
+	throw std::runtime_error("HypotesesGraph* g_ is a null pointer!");
       if (!g_->has_property(merger_resolved_to()))
 	g_->add(merger_resolved_to());
       if (!g_->has_property(node_active2()))
-	throw std::runtime_error("HypothesesGraph g_ does not have property node_active2!");
+	throw std::runtime_error("HypothesesGraph* g_ does not have property node_active2!");
       if (!g_->has_property(arc_active()))
-	throw std::runtime_error("HypothesesGraph g_ does not have property arc_active!");
+	throw std::runtime_error("HypothesesGraph* g_ does not have property arc_active!");
       if (!g_->has_property(arc_distance()))
-	throw std::runtime_error("HypothesesGraph g_ does not have property arc_distance!");
+	throw std::runtime_error("HypothesesGraph* g_ does not have property arc_distance!");
       if (!g_->has_property(node_originated_from()))
 	g_->add(node_originated_from());
       if (!g_->has_property(node_resolution_candidate()))
@@ -366,15 +366,39 @@ namespace pgmlink {
   //// transfer graph to graph only containing only subset of nodes based on tags
   //// needs to be arc iterator
   template <typename NodePropertyTag, typename ArcPropertyTag>
-  void get_subset(HypothesesGraph& src, HypothesesGraph& dest) {
+  void get_subset(SubHypothesesGraph& src,
+                  HypothesesGraph& dest
+                  ) {
     typedef typename property_map<NodePropertyTag, HypothesesGraph::base_graph>::type NodeFilter;
     typedef typename property_map<ArcPropertyTag, HypothesesGraph::base_graph>::type ArcFilter;
 
+    typedef lemon::SubDigraph<HypothesesGraph::base_graph, NodeFilter, ArcFilter> CopyGraph;
+    typedef HypothesesGraph::base_graph GRAPH;
+
+    
     NodeFilter& node_filter_map = src.get(NodePropertyTag());
     ArcFilter& arc_filter_map = src.get(ArcPropertyTag());
+    // std::cout << property_map<NodePropertyTag, HypothesesGraph::base_graph>::name << " "
+    // << property_map<ArcPropertyTag, HypothesesGraph::base_graph>::name << "\n";
     // property_map<PropertyTag, HypothesesGraph::base_graph>::type::ItemIt it(property_tag_map, value);
-    lemon::SubDigraph<HypothesesGraph::base_graph, NodeFilter, ArcFilter> sub(src, node_filter_map, arc_filter_map);
-    lemon::digraphCopy(sub,dest);
+    CopyGraph sub(src, node_filter_map, arc_filter_map);
+    for (typename CopyGraph::NodeIt it(sub); it != lemon::INVALID; ++it) {
+      std::cout << "Id (sub): " << sub.id(it) << "\n";
+    }
+    GRAPH::NodeMap<GRAPH::Node> nr(sub);
+    GRAPH::NodeMap<GRAPH::Node> ncr(dest);
+    GRAPH::ArcMap<GRAPH::Arc> ar(sub);
+    GRAPH::ArcMap<GRAPH::Arc> acr(dest);
+    lemon::digraphCopy<CopyGraph, HypothesesGraph::base_graph>(sub,dest).nodeRef(nr).nodeCrossRef(ncr).arcRef(ar).arcCrossRef(acr).run();
+    /* HypothesesGraph::base_graph::NodeMap<CopyGraph::Node> node_cross_reference(dest);
+    copy.nodeCrossRef(node_cross_reference);
+    copy.arcCrossRef(arc_cross_reference);
+    copy.run();
+    HypothesesGraph::base_graph::ArcMap<CopyGraph::Arc> arc_cross_reference(dest); */
+    
+    for (HypothesesGraph::NodeIt it(dest); it != lemon::INVALID; ++it) {
+      std::cout << "Id (dest): " << dest.id(it) << "\n";
+    }
   }
 
 
