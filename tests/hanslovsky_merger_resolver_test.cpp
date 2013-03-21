@@ -20,6 +20,7 @@
 #include <mlpack/core.hpp>
 #include <mlpack/methods/kmeans/kmeans.hpp>
 #include <lemon/maps.h>
+#include <lemon/concepts/digraph.h>
 
 using namespace pgmlink;
 using namespace std;
@@ -31,12 +32,16 @@ BOOST_AUTO_TEST_CASE( MergerResolver_subgraph ) {
   g1.add(node_active2()).add(arc_active());
   HypothesesGraph::Node n1 = g1.add_node(1);
   HypothesesGraph::Node n2 = g1.add_node(2);
+  HypothesesGraph::Node n3 = g1.add_node(2);
   property_map<node_active2, HypothesesGraph::base_graph>::type& na_map = g1.get(node_active2());
   property_map<arc_active, HypothesesGraph::base_graph>::type& aa_map = g1.get(arc_active());
   na_map.set(n1,true);
   na_map.set(n2,false);
+  na_map.set(n3,true);
   get_subset<node_active2, arc_active>(g1, g2);
-
+/* for (lemon::ListDigraph::NodeIt i(g2); i!=lemon::INVALID; ++i) {
+std::cout << "Id: " << g2.id(i) << "\n";
+}*/
 }
 
 

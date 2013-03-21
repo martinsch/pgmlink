@@ -14,7 +14,9 @@
 namespace pgmlink {
 
   typedef std::vector<std::string> feature_list;
-  
+  template <typename NodeFilter, typename ArcFilter>
+  typedef lemon::SubDigraph<HypothesesGraph::base_graph, NodeFilter, ArcFilter> SubHypothesesGraph
+
   class KMeans;
 
   template <typename T, typename U>
