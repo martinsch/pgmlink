@@ -532,13 +532,18 @@ namespace pgmlink {
                              division, // division
                              transition, // transition
                              0, // forbidden_cost_,
-                             true, // with_constraints_,
-                             true, // fixed_detections_,
-                             0.05, //ep_gap_,
+                             0.05, // ep_gap_,
+                             false, // with_tracklets_,
+                             false, // with_divisions_,
+                             1000000.0, // disappearance_cost_
+                             1000000.0 // appearance_cost
+                             );
+                             
+                             /*
                              false, //with_appearance_,
                              false, //with_disappearance_,
                              false //with_tracklets_
-                             );
+                             );*/
     pgm.formulate(dest);
     pgm.infer();
     pgm.conclude(dest);
