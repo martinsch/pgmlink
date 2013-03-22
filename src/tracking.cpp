@@ -342,6 +342,22 @@ std::vector<double> computeDetProb(double vol, vector<double> means, vector<doub
 
 	return result;
 }
+
+double dot(double x1,double y1,double z1, double x2,double y2,double z2) {
+      return x1*x2 + y1*y2 + z1*z2;
+}
+
+double norm(double x,double y,double z) {
+      return sqrt(dot(x,y,z, x,y,z));
+}
+
+double getCorrectedDistance(Traxel from, Traxel to) {
+	FeatureMap::const_iterator it = from.features.find("com_corrected");
+	if (it == from.features.end()) {
+		throw runtime_error("getCorrectedDistance(): com_corrected feature not found in traxel");
+	}
+	return norm(it->second[0]-to.X(),it->second[1]-to.Y(),it->second[2]-to.Z());
+}
 }
 
 
@@ -472,14 +488,24 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 	g.add(arc_distance()).add(tracklet_intern_dist()).add(node_tracklet()).add(tracklet_intern_arc_ids()).add(traxel_arc_id());
 	property_map<arc_distance, HypothesesGraph::base_graph>::type& arc_distances = g.get(arc_distance());
 	property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g.get(node_traxel());
+	bool with_optical_correction = false;
+	Traxel some_traxel = (*traxel_map.beginValue());
+	if (some_traxel.features.find("com_corrected") != some_traxel.features.end()) {
+		LOG(logINFO) << "optical correction enabled";
+		with_optical_correction = true;
+	}
+
 	for(HypothesesGraph::ArcIt a(g); a!=lemon::INVALID; ++a) {
 		HypothesesGraph::Node from = g.source(a);
 		HypothesesGraph::Node to = g.target(a);
 		Traxel from_tr = traxel_map[from];
 		Traxel to_tr = traxel_map[to];
 
-		double dist = from_tr.distance_to(to_tr);
-		arc_distances.set(a, dist);
+		if (with_optical_correction) {
+			arc_distances.set(a, getCorrectedDistance(from_tr,to_tr));
+		} else {
+			arc_distances.set(a, from_tr.distance_to(to_tr));
+		}
 	}
 
 	cout << "-> init ConservationTracking reasoner" << endl;
