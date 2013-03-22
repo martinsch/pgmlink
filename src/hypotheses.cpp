@@ -143,6 +143,7 @@ namespace pgmlink {
     if (g.getProperties().count("node_active2") > 0) {
     	node_number_of_objects = &g.get(node_active2());
     	with_mergers = true;
+    	LOG(logDEBUG1) << "events(): with_mergers = true";
     }
     bool with_resolved = false;
     property_map<merger_resolved_to, HypothesesGraph::base_graph>::type* resolved_map;
@@ -162,9 +163,18 @@ namespace pgmlink {
     // for every timestep
     LOG(logDEBUG1) << "events(): earliest_timestep: " << g.earliest_timestep();
     LOG(logDEBUG1) << "events(): latest_timestep: " << g.latest_timestep();
+    std::vector<Event> mergers_t0;
+//    std::vector<Event> prev_mergers;
     for(int t = g.earliest_timestep(); t < g.latest_timestep(); ++t) {
         LOG(logDEBUG2) << "events(): processing timestep: " << t;
-	ret->push_back(vector<Event>());
+        ret->push_back(vector<Event>());
+
+//        if(with_mergers) {
+//        	for(std::vector<Event>::const_iterator m_it = prev_mergers.begin(); m_it != prev_mergers.end(); ++m_it) {
+//        		(*ret)[t-g.earliest_timestep()].push_back(*m_it);
+//        	}
+//        	prev_mergers.clear();
+//        }
 
 	map<unsigned int, vector<unsigned int> > resolver_map;
 
@@ -196,11 +206,32 @@ namespace pgmlink {
 
 	    LOG(logDEBUG3) << "Number of detected objects: " << (*node_number_of_objects)[node_at];
 	    if(with_mergers && (*node_number_of_objects)[node_at] > 1) {
+
+//	    if(with_mergers && (*node_number_of_objects)[node_at] > 1) {
+//	    	prev_mergers.clear();
+//			Event e;
+//			e.type = Event::Merger;
+//			e.traxel_ids.push_back(node_traxel_map[node_at].Id);
+//			e.traxel_ids.push_back((*node_number_of_objects)[node_at]);
+//			prev_mergers.push_back(e);
+//			LOG(logDEBUG3) << e;
+//		}
+
+//	    if(t == g.earliest_timestep() && with_mergers && (*node_number_of_objects)[node_at] > 1 ) {
+//			Event e;
+//			e.type = Event::Merger;
+//			e.traxel_ids.push_back(node_traxel_map[node_at].Id);
+//			e.traxel_ids.push_back((*node_number_of_objects)[node_at]);
+//			mergers_t0.push_back(e);
+//			LOG(logDEBUG3) << e;
+//		}
+
+	    if(with_mergers && (*node_number_of_objects)[node_at] > 1 && t > g.earliest_timestep()) {
 			Event e;
 			e.type = Event::Merger;
 			e.traxel_ids.push_back(node_traxel_map[node_at].Id);
 			e.traxel_ids.push_back((*node_number_of_objects)[node_at]);
-			(*ret)[t-g.earliest_timestep()].push_back(e);
+			(*ret)[t-g.earliest_timestep()-1].push_back(e);
 			LOG(logDEBUG3) << e;
 	    }
 
@@ -271,6 +302,7 @@ namespace pgmlink {
 	    }
 	}
 
+
 	for (map<unsigned int, vector<unsigned int> >::iterator map_it = resolver_map.begin(); map_it != resolver_map.end(); ++map_it) {
 	  Event e;
 	  e.type = Event::ResolvedTo;
@@ -282,6 +314,8 @@ namespace pgmlink {
 	  LOG(logDEBUG1) << e;
 	}
 	
+
+
 	// appearances in next timestep
 	LOG(logDEBUG2) << "events(): appearances in next timestep";
 	for(node_timestep_map_t::ItemIt node_at(node_timestep_map, t+1); node_at!=lemon::INVALID; ++node_at) {
@@ -300,21 +334,14 @@ namespace pgmlink {
 	    }
 	}
     }
-//    // mergers in last timestep
-//	if(with_mergers) {
-//		LOG(logDEBUG2) << "events(): mergers in last timestep";
-//		int t = g.latest_timestep();
-//		for(node_timestep_map_t::ItemIt node_at(node_timestep_map, t); node_at!=lemon::INVALID; ++node_at) {
-//			if((*node_number_of_objects)[node_at] > 1) {
-//				Event e;
-//				e.type = Event::Merger;
-//				e.traxel_ids.push_back(node_traxel_map[node_at].Id);
-//				e.traxel_ids.push_back((*node_number_of_objects)[node_at]);
-//				(*ret)[t-g.earliest_timestep()].push_back(e);
-//				LOG(logDEBUG3) << e;
-//			}
-//		}
+
+//    // mergers in first timestep
+//    if(with_mergers) {
+//    	for (std::vector<Event>::const_iterator it = mergers_t0.begin(); it!=mergers_t0.end(); ++it) {
+//    		(*ret)[0].push_back(*it);
+//    	}
 //	}
+
 
     return ret;
   }
@@ -844,6 +871,8 @@ namespace {
 				// if not already present
 				if (lemon::findArc(*graph,neighbor_node,curr_node) == lemon::INVALID) {
 					graph->addArc(neighbor_node, curr_node);
+					LOG(logDEBUG2) << "added backward arc from " << graph->id(neighbor_node) << " to " <<
+							graph->id(curr_node);
 				}
 			}
 		}
