@@ -29,19 +29,43 @@ using namespace boost;
 
 BOOST_AUTO_TEST_CASE( MergerResolver_subgraph ) {
   HypothesesGraph g1, g2;
-  g1.add(node_active2()).add(arc_active());
+  g1.add(node_active()).add(arc_active()).add(node_active2());
   HypothesesGraph::Node n1 = g1.add_node(1);
   HypothesesGraph::Node n2 = g1.add_node(2);
   HypothesesGraph::Node n3 = g1.add_node(2);
-  property_map<node_active2, HypothesesGraph::base_graph>::type& na_map = g1.get(node_active2());
+  property_map<node_active, HypothesesGraph::base_graph>::type& na_map = g1.get(node_active());
   property_map<arc_active, HypothesesGraph::base_graph>::type& aa_map = g1.get(arc_active());
+  property_map<node_active2, HypothesesGraph::base_graph>::type& na2_map = g1.get(node_active2());
   na_map.set(n1,true);
   na_map.set(n2,false);
   na_map.set(n3,true);
-  get_subset<node_active2, arc_active>(g1, g2);
-/* for (lemon::ListDigraph::NodeIt i(g2); i!=lemon::INVALID; ++i) {
-std::cout << "Id: " << g2.id(i) << "\n";
-}*/
+  na2_map.set(n1, 2);
+  na2_map.set(n1, 3);
+  na2_map.set(n1, 1);
+  std::map<HypothesesGraph::Node, HypothesesGraph::Node> nr;
+  std::map<HypothesesGraph::Arc, HypothesesGraph::Arc> ar;
+  std::map<HypothesesGraph::Node, HypothesesGraph::Node> ncr;
+  std::map<HypothesesGraph::Arc, HypothesesGraph::Arc> acr;
+  copy_hypotheses_graph_subset<node_active, arc_active>(g1, g2, nr, ar, ncr, acr);
+  g2.add(node_active()).add(node_active2());
+  translate_property_bool_map<node_active, HypothesesGraph::Node>(g1, g2, nr);
+  translate_property_value_map<node_active2, HypothesesGraph::Node>(g1, g2, nr);
+  property_map<node_active, HypothesesGraph::base_graph>::type& n2a_map = g2.get(node_active());
+  property_map<node_active2, HypothesesGraph::base_graph>::type& n2a2_map = g2.get(node_active2());
+
+  std::map<HypothesesGraph::Node, HypothesesGraph::Node>::iterator it;
+  for (it = nr.begin(); it != nr.end(); ++it) {
+    std::cout << "Id (old): " << g1.id(it->first) <<  "(," <<  na_map[it->first] << "," << na2_map[it->first]
+              << "), Id (new): " << g2.id(it->second) << "," << n2a_map[it->second] << "," << n2a2_map[it->second] << "\n";
+  }
+
+  for (it = ncr.begin(); it != ncr.end(); ++it) {
+    std::cout << "Id (old): " << g1.id(it->second) << "(," << na_map[it->second] << "," << na2_map[it->second]
+              << "), Id (new): " << g2.id(it->first) << ",(" << n2a_map[it->first] << "," << n2a2_map[it->first] << ")\n";
+  }
+
+  
+  
 }
 
 
