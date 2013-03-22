@@ -36,6 +36,9 @@
  */
 
 namespace pgmlink {
+
+
+
   ////
   //// KMeans
   ////
@@ -362,13 +365,111 @@ namespace pgmlink {
 
 
 
+  
   ////
-  //// transfer graph to graph only containing only subset of nodes based on tags
-  //// needs to be arc iterator
+  //// transfer graph to graph containing only subset of nodes based on tags
+  //// 
   template <typename NodePropertyTag, typename ArcPropertyTag>
-  void get_subset(SubHypothesesGraph& src,
-                  HypothesesGraph& dest
+  void copy_hypotheses_graph_subset(const HypothesesGraph& src,
+                                    HypothesesGraph& dest,
+                                    std::map<HypothesesGraph::Node, HypothesesGraph::Node>& nr,
+                                    std::map<HypothesesGraph::Arc, HypothesesGraph::Arc>& ar,
+                                    std::map<HypothesesGraph::Node, HypothesesGraph::Node>& ncr,
+                                    std::map<HypothesesGraph::Arc, HypothesesGraph::Arc>& acr
+                                    ) {
+    typedef typename property_map<NodePropertyTag, HypothesesGraph::base_graph>::type NodeFilter;
+    typedef typename property_map<ArcPropertyTag, HypothesesGraph::base_graph>::type ArcFilter;
+    property_map<node_timestep, HypothesesGraph::base_graph>::type& time_map = src.get(node_timestep());
+    NodeFilter& node_filter_map = src.get(NodePropertyTag());
+    ArcFilter& arc_filter_map = src.get(ArcPropertyTag());
+
+    for (typename NodeFilter::TrueIt nodeIt(node_filter_map); nodeIt != lemon::INVALID; ++nodeIt) {
+      HypothesesGraph::Node node = dest.add_node(time_map[nodeIt]);
+      nr[nodeIt] = node;
+      ncr[node] = nodeIt;
+    }
+
+    for (typename ArcFilter::TrueIt arcIt(arc_filter_map); arcIt != lemon::INVALID; ++arcIt) {
+      HypothesesGraph::Node from = src.source(arcIt);
+      HypothesesGraph::Node to = src.target(arcIt);
+      if (nr.count(from) == 0) {
+        HypothesesGraph::Node node = dest.add_node(time_map[from]);
+        nr[from] = node;
+        ncr[node] = from;
+      }
+      if (nr.count(to) == 0) {
+        HypothesesGraph::Node node = dest.add_node(time_map[to]);
+        nr[to] = node;
+        ncr[node] = to;
+      }
+      HypothesesGraph::Arc arc = dest.addArc(nr[from], nr[to]);
+      ar[arcIt] = arc;
+      acr[arc] = arcIt;
+    }
+  }
+
+  
+  /* template <typename PropertyTag, typename KeyType, typename MapType>
+     void translate_property_map(const HypothesesGraph& src, const HypothesesGraph& dest, const std::map<KeyType, KeyType> dict); */
+
+  
+  template <typename PropertyTag, typename KeyType>
+  void translate_property_value_map(const HypothesesGraph& src,
+                                    const HypothesesGraph& dest,
+                                    std::map<KeyType, KeyType> dict
+                                    ) {
+    typedef typename property_map<PropertyTag, HypothesesGraph::base_graph>::type IterableMap;
+    IterableMap& src_map = src.get(PropertyTag());
+    IterableMap& dest_map = dest.get(PropertyTag());
+    typename IterableMap::ValueIt v_it;
+    for (v_it = src_map.beginValue(); v_it != src_map.endValue(); ++ v_it) {
+      typename IterableMap::ItemIt i_it(src_map, *v_it);
+      for (; i_it != lemon::INVALID; ++i_it) {
+        if (dict.count(i_it) > 0) {
+          dest_map.set(dict[i_it], *v_it);
+        }
+      }
+    }
+  }
+
+
+  template <typename PropertyTag, typename KeyType>
+  void translate_property_bool_map(const HypothesesGraph& src,
+                                   const HypothesesGraph& dest,
+                                   std::map<KeyType,KeyType> dict
+                                   ) {
+    // use c++11 and change for loop to:
+    // for(bool b : {false, true});
+
+    // C++11 !!!
+    
+    bool const bools[] = {false, true};
+    typedef typename property_map<PropertyTag, HypothesesGraph::base_graph>::type IterableMap;
+    IterableMap& src_map = src.get(PropertyTag());
+    IterableMap& dest_map = dest.get(PropertyTag());
+    for (bool const* v_it(bools); v_it != bools + 2; ++v_it) {
+      typename IterableMap::ItemIt i_it(src_map, *v_it);
+      for(; i_it != lemon::INVALID; ++i_it) {
+        if (dict.count(i_it) > 0) {
+          dest_map.set(dict[i_it], *v_it);
+        }
+      }
+    }
+  }
+
+  template <typename NodePropertyTag, typename ArcPropertyTag>
+  void get_subset(const HypothesesGraph& src,
+                  HypothesesGraph& dest,
+                  HypothesesGraph::NodeMap<HypothesesGraph::Node>& nr,
+                  HypothesesGraph::ArcMap<HypothesesGraph::Arc>& ar,
+                  HypothesesGraph::NodeMap<HypothesesGraph::Node>& ncr,
+                  HypothesesGraph::ArcMap<HypothesesGraph::Arc>& acr
                   ) {
+                  /* typename SubHypothesesGraph<NodePropertyTag, ArcPropertyTag>::type::NodeMap<HypothesesGraph::Node> nr&,
+                  typename SubHypothesesGraph<NodePropertyTag, ArcPropertyTag>::type::ArcMap<HypothesesGraph::Arc> ar&,
+                  HypothesesGraph::NodeMap<typename SubHypothesesGraph<NodePropertyTag, ArcPropertyTag>::type::Node> ncr&,
+                  HypothesesGraph::ArcMap<typename SubHypothesesGraph<NodePropertyTag, ArcPropertyTag>::type::Arc> acr& 
+                  ) { */
     typedef typename property_map<NodePropertyTag, HypothesesGraph::base_graph>::type NodeFilter;
     typedef typename property_map<ArcPropertyTag, HypothesesGraph::base_graph>::type ArcFilter;
 
@@ -378,17 +479,9 @@ namespace pgmlink {
     
     NodeFilter& node_filter_map = src.get(NodePropertyTag());
     ArcFilter& arc_filter_map = src.get(ArcPropertyTag());
-    // std::cout << property_map<NodePropertyTag, HypothesesGraph::base_graph>::name << " "
-    // << property_map<ArcPropertyTag, HypothesesGraph::base_graph>::name << "\n";
-    // property_map<PropertyTag, HypothesesGraph::base_graph>::type::ItemIt it(property_tag_map, value);
     CopyGraph sub(src, node_filter_map, arc_filter_map);
-    for (typename CopyGraph::NodeIt it(sub); it != lemon::INVALID; ++it) {
-      std::cout << "Id (sub): " << sub.id(it) << "\n";
-    }
-    GRAPH::NodeMap<GRAPH::Node> nr(sub);
-    GRAPH::NodeMap<GRAPH::Node> ncr(dest);
-    GRAPH::ArcMap<GRAPH::Arc> ar(sub);
-    GRAPH::ArcMap<GRAPH::Arc> acr(dest);
+
+
     lemon::digraphCopy<CopyGraph, HypothesesGraph::base_graph>(sub,dest).nodeRef(nr).nodeCrossRef(ncr).arcRef(ar).arcCrossRef(acr).run();
     /* HypothesesGraph::base_graph::NodeMap<CopyGraph::Node> node_cross_reference(dest);
     copy.nodeCrossRef(node_cross_reference);
@@ -396,20 +489,43 @@ namespace pgmlink {
     copy.run();
     HypothesesGraph::base_graph::ArcMap<CopyGraph::Arc> arc_cross_reference(dest); */
     
-    for (HypothesesGraph::NodeIt it(dest); it != lemon::INVALID; ++it) {
-      std::cout << "Id (dest): " << dest.id(it) << "\n";
-    }
   }
 
 
   void resolve_graph(HypothesesGraph& src, HypothesesGraph& dest) {
-    get_subset<node_resolution_candidate, arc_resolution_candidate>(src, dest);
+    if (!dest.has_property(node_traxel())) {
+      dest.add(node_traxel());
+    }
+    if (!dest.has_property(node_tracklet())) {
+      dest.add(node_tracklet());
+    }
+    if (!dest.has_property(tracklet_intern_dist())) {
+      dest.add(tracklet_intern_dist());
+    }
+    if (!dest.has_property(arc_distance())) {
+      dest.add(arc_distance());
+    }
+    /* HypothesesGraph::NodeMap<HypothesesGraph::Node> nr(dummy_sub);
+    HypothesesGraph::ArcMap<HypothesesGraph::Arc> ar(dummy_sub);
+    HypothesesGraph::NodeMap<HypothesesGraph::Node> ncr(dummy_sub);
+    HypothesesGraph::ArcMap<HypothesesGraph::Arc> acr(dummy_sub); */ 
+    /* SubResolver::NodeMap<HypothesesGraph::base_graph::Node> nr(dummy_sub);
+    SubResolver::ArcMap<HypothesesGraph::base_graph::Arc> ar(dummy_sub);
+    HypothesesGraph::base_graph::NodeMap<SubResolver::Node> ncr(dummy_sub);
+    HypothesesGraph::base_graph::ArcMap<SubResolver::Arc> acr(dummy_sub); */
+    std::map<HypothesesGraph::Node, HypothesesGraph::Node> nr;
+    std::map<HypothesesGraph::Arc, HypothesesGraph::Arc> ar;
+    std::map<HypothesesGraph::Node, HypothesesGraph::Node> ncr;
+    std::map<HypothesesGraph::Arc, HypothesesGraph::Arc> acr;
+    copy_hypotheses_graph_subset<node_resolution_candidate, arc_resolution_candidate>(src, dest, nr, ar, ncr, acr);
     std::vector<double> prob;
     prob.push_back(0.0);
     prob.push_back(1.0);
     boost::function<double(const Traxel&, const size_t)> division = NegLnDivision(1); // weight 1
     boost::function<double(const double)> transition = NegLnTransition(1); // weight 1
     boost::function<double(const Traxel&, const size_t)> detection = boost::bind<double>(NegLnConstant(1,prob), _2);
+    translate_property_value_map<node_traxel, HypothesesGraph::Node>(src, dest, nr);
+    translate_property_value_map<arc_distance, HypothesesGraph::Arc>(src, dest, ar);
     ConservationTracking pgm(
                              1, //max_number_objects_,
                              detection, //detection,
