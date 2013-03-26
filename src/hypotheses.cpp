@@ -184,12 +184,12 @@ namespace pgmlink {
 	    assert(node_traxel_map[node_at].Timestep == t);
 
 	    if (with_origin && (*origin_map)[node_at].size() > 0) {
-	      LOG(logDEBUG1) << "events(): collecting resolver node ids for all merger nodes";
+	      LOG(logDEBUG1) << "events(): collecting resolver node ids for all merger nodes " << t << ", " << (*origin_map)[node_at][0];
 	      resolver_map[(*origin_map)[node_at][0]].push_back(node_traxel_map[node_at].Id);
 	    }
 
 
-	    if (with_resolved && ((*resolved_map)[node_at]).size() > 0) {
+	    /* if (with_resolved && ((*resolved_map)[node_at]).size() > 0) {
 	      // property_map<merger_resolved_to, HypothesesGraph::base_graph>::type::ItemIt resolved_it;
 	      // resolved_it = std::find(resolved_it
 	      LOG(logINFO) << "events(): entered resolved_to event creation...";
@@ -202,7 +202,7 @@ namespace pgmlink {
 	      }
 	      (*ret)[t-g.earliest_timestep()].push_back(e);
 	      LOG(logDEBUG3) << e;
-            }
+              } */
 
 	    LOG(logDEBUG3) << "Number of detected objects: " << (*node_number_of_objects)[node_at];
 	    if(with_mergers && (*node_number_of_objects)[node_at] > 1) {
@@ -297,12 +297,12 @@ namespace pgmlink {
 				(*ret)[t-g.earliest_timestep()].push_back(e);
 				LOG(logDEBUG3) << e;
 		    }
-		break;
+                    break;
 	        }
 	    }
-	}
-
-
+            }
+        }
+        
 	for (map<unsigned int, vector<unsigned int> >::iterator map_it = resolver_map.begin(); map_it != resolver_map.end(); ++map_it) {
 	  Event e;
 	  e.type = Event::ResolvedTo;
@@ -314,7 +314,7 @@ namespace pgmlink {
 	  LOG(logDEBUG1) << e;
 	}
 	
-
+        
 
 	// appearances in next timestep
 	LOG(logDEBUG2) << "events(): appearances in next timestep";
@@ -333,7 +333,7 @@ namespace pgmlink {
 		    LOG(logDEBUG3) << e;	      
 	    }
 	}
-    }
+    
 
 //    // mergers in first timestep
 //    if(with_mergers) {
