@@ -1,4 +1,6 @@
-# pgmLink - Tracking by Assignment with Probabilistic Graphical Models and Others
+# pgmLink - A Tracking-by-Assignment Software
+pgmLink is about *tracking by assignment with probabilistic graphical models and other approaches*.
+
 ## Dependencies
 Dependencies that have to build and installed manually:
 
