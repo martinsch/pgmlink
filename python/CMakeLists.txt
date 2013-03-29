@@ -1,30 +1,26 @@
-#
-# (c) Bernhard X. Kausler, 2010
-#
 
-set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_extensions/)
+cmake_minimum_required(VERSION 2.8)
 
-####################
-### dependencies ###
-####################
-
-find_package( VIGRA REQUIRED )
-find_package( Boost REQUIRED COMPONENTS python serialization )
+##
+# dependencies
+##
+find_package( Boost COMPONENTS python serialization )
 find_package( PythonLibs REQUIRED )
-
-if(VIGRA_FOUND AND Boost_FOUND AND PYTHONLIBS_FOUND)
-  include_directories(${VIGRA_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS})
-  link_directories( ${Boost_LIBRARY_DIRS} ${VIGRA_IMPEX_LIBRARY_DIR} ${PYTHON_LIBRARIES})
+if( NOT(Boost_FOUND AND PYTHONLIBS_FOUND AND CPLEX_FOUND) )
+  message(FATAL_ERROR "Python wrapper requires boost-python, boost-serialization, the python dev libs, and cplex. Turn off python wrapper if you can't satisfy the dependencies.")
 endif()
 
-# assume by default that HDF5 is installed. Set definition for vigra random forest
+if(Boost_FOUND AND PYTHONLIBS_FOUND)
+  include_directories(${Boost_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS})
+  link_directories( ${Boost_LIBRARY_DIRS} ${PYTHON_LIBRARIES})
+endif()
+
+# set definition for vigra random forest
 ADD_DEFINITIONS(-DHasHDF5)
 
-
-
-###############
-### wrapper ###
-###############
+##
+# wrapper
+##
 
 set(PYPGMLINK_SRCS
   pyfield_of_view.cpp
@@ -35,18 +31,15 @@ set(PYPGMLINK_SRCS
   )
 
 add_library(pypgmlink SHARED ${PYPGMLINK_SRCS})
-target_link_libraries(pypgmlink ${Boost_LIBRARIES} pgmlink ilocplex vigraimpex)
+target_link_libraries(pypgmlink pgmlink ${CPLEX_LIBRARIES} ${Boost_LIBRARIES} )
 set_target_properties(pypgmlink PROPERTIES PREFIX "" OUTPUT_NAME "pgmlink")
 
-
+##
 # install
-
-
-
+##
 
 # this will set the install dir to $PYTHON_SITE_PACKAGES
 # make use of ${PYTHON_EXECUTABLE} instead of /usr/bin/python
-
 
 FIND_PACKAGE(PythonInterp)
 IF(NOT DEFINED PYPGMLINK_INSTALL_DIR OR PYPGMLINK_INSTALL_DIR MATCHES "^$")

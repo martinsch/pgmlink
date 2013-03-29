@@ -48,12 +48,28 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_extensions/)
 ##
 # dependencies
 ##
+    find_package( ANN REQUIRED )
+    find_package( Cplex REQUIRED )
     find_package( VIGRA REQUIRED )
     find_package( Lemon REQUIRED )
     find_package( HDF5 REQUIRED )
+    find_package( Boost REQUIRED COMPONENTS serialization )
+    MESSAGE(STATUS "  found: ${Boost_LIBRARIES}")
 
-    include_directories(${VIGRA_INCLUDE_DIR} ${LEMON_INCLUDE_DIR} ${HDF5_INCLUDE_DIRS} )
-    link_directories( ${VIGRA_IMPEX_LIBRARY_DIR} ${LEMON_LIBRARY_DIR} ${HDF5_LIBRARY_DIRS} )
+    include_directories(${ANN_INCLUDE_DIR} ${Cplex_INCLUDE_DIR} ${VIGRA_INCLUDE_DIR} ${LEMON_INCLUDE_DIR} ${HDF5_INCLUDE_DIRS} )
+    link_directories( ${ANN_LIBRARY_DIR} ${Cplex_LIBRARY_DIR} ${VIGRA_IMPEX_LIBRARY_DIR} ${LEMON_LIBRARY_DIR} ${HDF5_LIBRARY_DIRS} )
+
+# print out the dependencies
+MESSAGE(STATUS "Dependencies include dirs (you should check if they match the found libs):")
+MESSAGE(STATUS "  ANN: ${ANN_INCLUDE_DIR}")
+MESSAGE(STATUS "  Cplex: ${CPLEX_INCLUDE_DIR}")
+MESSAGE(STATUS "  VIGRA: ${VIGRA_INCLUDE_DIR}")
+MESSAGE(STATUS "  Lemon: ${LEMON_INCLUDE_DIR}")
+MESSAGE(STATUS "  HDF5: ${HDF5_INCLUDE_DIR}")
+MESSAGE(STATUS "  Boost: ${Boost_INCLUDE_DIRS}")
+
+# hide these variables to have a cleaner interface
+MARK_AS_ADVANCED( Boost_DIR HDF5_DIR )
 
 ##
 # build options
@@ -70,7 +86,7 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_extensions/)
 ##
     IF(NOT CMAKE_BUILD_TYPE)
       SET(CMAKE_BUILD_TYPE Release CACHE STRING
-	"Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
+	"Choose the type of build, options are: Release Debug."
 	FORCE)
     ENDIF(NOT CMAKE_BUILD_TYPE)
 
@@ -78,7 +94,7 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_extensions/)
     SET(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
     SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -Werror")
 
-    SET(WITH_CHECKED_STL "True" CACHE BOOL "Build with checked libg++ for more robust code (may degrade performance).")
+    SET(WITH_CHECKED_STL "True" CACHE BOOL "Build with checked stl for more robust code (may degrade performance; gcc only).")
     IF(WITH_CHECKED_STL)
       ADD_DEFINITIONS(-D_GLIBCXX_DEBUG)
     ENDIF()
@@ -101,10 +117,8 @@ INCLUDE_DIRECTORIES(
 
 FILE(GLOB LIB_SOURCES src/*.cpp)
 
-find_package( Boost REQUIRED COMPONENTS serialization )
-
 ADD_LIBRARY(pgmlink SHARED ${LIB_SOURCES})
-TARGET_LINK_LIBRARIES(pgmlink ${Boost_LIBRARIES} ${HD5_LIBRARIES} ${HDF5_HL_LIBRARIES} ann cplex ilocplex pthread concert ${VIGRA_IMPEX_LIBRARY} ${LEMON_LIBRARIES})
+TARGET_LINK_LIBRARIES(pgmlink ${ANN_LIBRARIES} ${Boost_LIBRARIES} ${HD5_LIBRARIES} ${HDF5_HL_LIBRARIES} ${CPLEX_LIBRARIES} ${VIGRA_IMPEX_LIBRARY} ${LEMON_LIBRARIES})
 
 
 
@@ -140,7 +154,7 @@ endif()
 
 ##
 # Python
-SET(WITH_PYTHON true CACHE BOOL "build with python wrapper")
+SET(WITH_PYTHON true CACHE BOOL "Build with python wrapper.")
 if(WITH_PYTHON)
   add_subdirectory(python/)
 endif()
@@ -149,12 +163,14 @@ endif()
 # API documentation with Doxygen
 find_package(Doxygen)
 if(DOXYGEN_FOUND)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/doc/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/doc/Doxyfile @ONLY)
-add_custom_target(doc
-${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/doc/Doxyfile
-WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doc/
-COMMENT "Generating API documentation with Doxygen" VERBATIM
-)
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/doc/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/doc/Doxyfile @ONLY)
+  add_custom_target(doc
+    ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/doc/Doxyfile
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doc/
+    COMMENT "Generating API documentation with Doxygen" VERBATIM
+    )
+else(DOXYGEN_FOUND)
+  MESSAGE(WARNING "Doxygen not found. Won't add 'doc' build target.")
 endif(DOXYGEN_FOUND)
 
 ##

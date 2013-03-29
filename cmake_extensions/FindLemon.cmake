@@ -1,4 +1,4 @@
-# This module finds an installed Vigra package.
+# This module finds an installed Lemon package.
 #
 # It sets the following variables:
 #  LEMON_FOUND              - Set to false, or undefined, if lemon isn't found.
@@ -14,11 +14,5 @@ SET( LEMON_LIBRARY_DIR ${LEMON_LIBRARY_PATH} CACHE PATH "Path to lemon library."
 # all listed variables are TRUE
 INCLUDE(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(LEMON DEFAULT_MSG LEMON_LIBRARIES LEMON_INCLUDE_DIR)
-IF(LEMON_FOUND)
-    IF (NOT Lemon_FIND_QUIETLY)
-      MESSAGE(STATUS "  > lemon includes: ${LEMON_INCLUDE_DIR}")
-      MESSAGE(STATUS "  > lemon libraries: ${LEMON_LIBRARIES}")
-    ENDIF()
-ENDIF()
 
-MARK_AS_ADVANCED( LEMON_INCLUDE_DIR LEMON_LIBRARIRES)
+MARK_AS_ADVANCED( LEMON_INCLUDE_DIR LEMON_LIBRARIES LEMON_LIBRARY_DIR )
