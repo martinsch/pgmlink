@@ -235,6 +235,12 @@ BOOST_AUTO_TEST_CASE( MergerResolver_resolve_mergers_3 ) {
 
   HypothesesGraph g_res;
   resolve_graph(g, g_res);
+  vector<vector<Event> > ev = *(events(g));
+  for (vector<vector<Event> >::iterator t_it = ev.begin(); t_it != ev.end(); ++t_it) {
+    for (vector<Event>::iterator e_it = t_it->begin(); e_it != t_it->end(); ++ e_it) {
+      cout << *e_it << "\n";
+    }
+  }
 
 }
 
@@ -356,6 +362,17 @@ BOOST_AUTO_TEST_CASE( MergerResolver_resolve_mergers_2 ) {
     }
   }
   BOOST_CHECK_EQUAL(resolve_count, 1);
+
+  HypothesesGraph g_res;
+  // resolve_graph(g, g_res);
+  // prune_inactive(g);
+  vector<vector<Event> > evt = *(events(g));
+  for (vector<vector<Event> >::iterator t_it = evt.begin(); t_it != evt.end(); ++t_it) {
+    for (vector<Event>::iterator e_it = t_it->begin(); e_it != t_it->end(); ++ e_it) {
+      cout << *e_it << "\n";
+    }
+  }
+
 
   
 }
