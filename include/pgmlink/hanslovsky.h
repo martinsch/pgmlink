@@ -505,6 +505,10 @@ namespace pgmlink {
     if (!dest.has_property(arc_distance())) {
       dest.add(arc_distance());
     }
+    if (!dest.has_property(node_originated_from())) {
+      dest.add(node_originated_from());
+    }
+
     /* HypothesesGraph::NodeMap<HypothesesGraph::Node> nr(dummy_sub);
     HypothesesGraph::ArcMap<HypothesesGraph::Arc> ar(dummy_sub);
     HypothesesGraph::NodeMap<HypothesesGraph::Node> ncr(dummy_sub);
@@ -526,6 +530,8 @@ namespace pgmlink {
     boost::function<double(const Traxel&, const size_t)> detection = boost::bind<double>(NegLnConstant(1,prob), _2);
     translate_property_value_map<node_traxel, HypothesesGraph::Node>(src, dest, nr);
     translate_property_value_map<arc_distance, HypothesesGraph::Arc>(src, dest, ar);
+    translate_property_value_map<node_originated_from, HypothesesGraph::Node>(src, dest, nr);
+
     ConservationTracking pgm(
                              1, //max_number_objects_,
                              detection, //detection,
@@ -547,6 +553,8 @@ namespace pgmlink {
     pgm.formulate(dest);
     pgm.infer();
     pgm.conclude(dest);
+
+    translate_property_bool_map<arc_active, HypothesesGraph::Arc>(dest, src, acr);
   }
   
   
