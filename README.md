@@ -20,6 +20,39 @@ Dependencies that should be available as packages:
   - boost-test (optional)
 - doxygen (optional)
 
+### CPLEX
+pgmLink depends on [IBM ILOG CPLEX](http://www-01.ibm.com/software/integration/optimization/cplex-optimization-studio/), in particular `libcplex`, `libilocplex` and `libconcert`. If you are an academic you can obtain a free license from the [IBM Academic Initiative](http://www-03.ibm.com/ibm/university/academic/pub/page/academic_initiative).
+
+#### Installation fails with an *internal LaunchAnywhere application error*
+Some people encounter the following error during the CPLEX installation:
+
+```
+Launching installer...
+
+An internal LaunchAnywhere application error has occured and this application cannot proceed. (LAX)
+
+Stack Trace:
+java.lang.IllegalArgumentException: Invalid Unicode sequence: illegal character
+    at java.util.Properties.loadImpl(Properties.java:356)
+    at java.util.Properties.load(Properties.java:288)
+    at com.zerog.common.java.util.PropertiesUtil.loadProperties(DashoA10*..)
+	at com.zerog.lax.LAX.<init>(DashoA10*..)
+	at com.zerog.lax.LAX.main(DashoA10*..)
+
+```
+This installer bug happens when the installer is called from a shell with a modified appearance (in particular, a modified prompt via PS1). **Install CPLEX from a unaltered shell to circumvent the bug**.
+
+#### CPLEX shared libraries
+
+
+The CPLEX package does not provide shared versions of all required libraries, but only static variants (luckily with PIC). You can link your own shared libraries using the following commands:
+
+```
+g++ -fpic -shared -Wl,-whole-archive libcplex.a -Wl,-no-whole-archive -o libcplex.so
+g++ -fpic -shared -Wl,-whole-archive libilocplex.a -Wl,-no-whole-archive -o libilocplex.so
+g++ -fpic -shared -Wl,-whole-archive libconcert.a -Wl,-no-whole-archive -o libconcert.so
+```
+
 ## How to Build
 pgmLink is built with [cmake](www.cmake.org):
 ```
@@ -38,26 +71,3 @@ There are several build options which you can set - among others - with `ccmake`
 - **WITH_PYTHON**: Add Python wrappers (requires boost-python).
 
 - **WITH_TESTS**: Compile unit tests. You can execute them via `make test`
-
-### CPLEX
-pgmLink depends on [IBM ILOG CPLEX](http://www-01.ibm.com/software/integration/optimization/cplex-optimization-studio/). If you are an academic you can obtain a free license from the [IBM Academic Initiative](http://www-03.ibm.com/ibm/university/academic/pub/page/academic_initiative).
-
-#### Installation fails with an *internal LaunchAnywhere application error*
-Some people encounter the following error during the CPLEX installation:
-
-```
-Launching installer...
-
-An internal LaunchAnywhere application error has occured and this application cannot proceed. (LAX)
-
-Stack Trace:
-java.lang.IllegalArgumentException: Invalid Unicode sequence: illegal character
-    at java.util.Properties.loadImpl(Properties.java:356)
-  at java.util.Properties.load(Properties.java:288)
-	at com.zerog.common.java.util.PropertiesUtil.loadProperties(DashoA10*..)
-	at com.zerog.lax.LAX.<init>(DashoA10*..)
-	at com.zerog.lax.LAX.main(DashoA10*..)
-
-```
-This installer bug happens when the installer is called from a shell with a modified appearance (in particular, a modified prompt via PS1). **Install CPLEX from a unaltered shell to circumvent the bug**.
-
