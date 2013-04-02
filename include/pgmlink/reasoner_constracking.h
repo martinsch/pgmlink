@@ -17,30 +17,36 @@ class Traxel;
 class ConservationTracking : public Reasoner {
     public:
 	ConservationTracking(
-				unsigned int max_number_objects,
-				boost::function<double (const Traxel&, const size_t)> detection,
-			    boost::function<double (const Traxel&, const size_t)> division,
-			    boost::function<double (const double)> transition,
-                double forbidden_cost = 0,
-			    double ep_gap = 0.01,
-			    bool with_tracklets = false,
-			    bool with_divisions = true,
-			    double disappearance_cost = 10,
-			    double appearance_cost = 10
-    )
-    : max_number_objects_(max_number_objects),
-    detection_(detection),
-    division_(division),
-    transition_(transition),
-    forbidden_cost_(forbidden_cost),
-    optimizer_(NULL),
-    ep_gap_(ep_gap),
-    with_tracklets_(with_tracklets),
-    with_divisions_(with_divisions),
-    disappearance_cost_(disappearance_cost),
-    appearance_cost_(appearance_cost),
-    number_of_appearance_nodes_(0),
-    number_of_disappearance_nodes_(0)
+                             unsigned int max_number_objects,
+                             boost::function<double (const Traxel&, const size_t)> detection,
+                             boost::function<double (const Traxel&, const size_t)> division,
+                             boost::function<double (const double)> transition,
+                             double forbidden_cost = 0,
+                             double ep_gap = 0.01,
+                             bool with_tracklets = false,
+                             bool with_divisions = true,
+                             double disappearance_cost = 10,
+                             double appearance_cost = 10,
+                             bool with_misdetections_allowed = true,
+                             bool with_appearance = true,
+                             bool with_disappearance = true
+                             )
+        : max_number_objects_(max_number_objects),
+          detection_(detection),
+          division_(division),
+          transition_(transition),
+          forbidden_cost_(forbidden_cost),
+          optimizer_(NULL),
+          ep_gap_(ep_gap),
+          with_tracklets_(with_tracklets),
+          with_divisions_(with_divisions),
+          disappearance_cost_(disappearance_cost),
+          appearance_cost_(appearance_cost),
+          number_of_appearance_nodes_(0),
+          number_of_disappearance_nodes_(0),
+          with_misdetections_allowed_(with_misdetections_allowed),
+          with_appearance_(with_appearance),
+          with_disappearance_(with_disappearance)
     { };
     ~ConservationTracking();
 
@@ -113,6 +119,10 @@ class ConservationTracking : public Reasoner {
 
     unsigned int number_of_transition_nodes_, number_of_division_nodes_;
     unsigned int number_of_appearance_nodes_, number_of_disappearance_nodes_;
+
+    bool with_misdetections_allowed_;
+    bool with_appearance_;
+    bool with_disappearance_;
 
     HypothesesGraph tracklet_graph_;
     std::map<HypothesesGraph::Node, std::vector<HypothesesGraph::Node> > tracklet2traxel_node_map_;

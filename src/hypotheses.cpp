@@ -54,7 +54,7 @@ namespace pgmlink {
     return *(timesteps_.rbegin());
   }
 
-
+  
     
   HypothesesGraph& prune_inactive(HypothesesGraph& g) {
       LOG(logDEBUG) << "prune_inactive(): entered";
@@ -83,12 +83,18 @@ namespace pgmlink {
       for(inactive_arc_it it(active_arcs); it!=lemon::INVALID; ++it) {
 	arcs_to_prune.push_back(it);
 	assert(g.valid(it));
-      } 
+        LOG(logDEBUG1) << "prune_inactive: arc to be pruned: " << g.id(it);
+      }
+
+      std::sort(arcs_to_prune.begin(), arcs_to_prune.end());
+      std::reverse(arcs_to_prune.begin(), arcs_to_prune.end());
 
       // prune inactive arcs
       for(vector<HypothesesGraph::Arc>::const_iterator it = arcs_to_prune.begin(); it!= arcs_to_prune.end(); ++it) {
-	LOG(logDEBUG3) << "prune_inactive: pruned arc: " << g.id(*it);
-	g.erase(*it);
+        if (g.valid(*it)) {
+          LOG(logDEBUG1) << "prune_inactive: pruned arc: " << g.id(*it);
+          g.erase(*it);
+        }
 	assert(!g.valid(*it));
       }
 
@@ -224,7 +230,7 @@ namespace pgmlink {
 //			e.traxel_ids.push_back((*node_number_of_objects)[node_at]);
 //			mergers_t0.push_back(e);
 //			LOG(logDEBUG3) << e;
-//		}
+            }
 
 	    if(with_mergers && (*node_number_of_objects)[node_at] > 1 && t > g.earliest_timestep()) {
 			Event e;
@@ -299,7 +305,7 @@ namespace pgmlink {
 		    }
                     break;
 	        }
-	    }
+                  //	    }
             }
         }
         

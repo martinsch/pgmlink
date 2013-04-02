@@ -539,10 +539,13 @@ namespace pgmlink {
                              transition, // transition
                              0, // forbidden_cost_,
                              0.05, // ep_gap_,
-                             false, // with_tracklets_,
+                             true, // with_tracklets_,
                              false, // with_divisions_,
-                             1000000.0, // disappearance_cost_
-                             1000000.0 // appearance_cost
+                             0, // disappearance_cost_
+                             0, // appearance_cost
+                             false, // with_misdetections_allowed
+                             false, // with appearance
+                             false // with disappearance
                              );
                              
                              /*
