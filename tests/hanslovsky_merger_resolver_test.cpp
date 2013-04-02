@@ -235,6 +235,16 @@ BOOST_AUTO_TEST_CASE( MergerResolver_resolve_mergers_3 ) {
 
   HypothesesGraph g_res;
   resolve_graph(g, g_res);
+  for (HypothesesGraph::NodeIt n_it(g); n_it != lemon::INVALID; ++n_it) {
+    cout << g.id(n_it) << "\n";
+  }
+  // for (HypothesesGraph::ArcIt a_it(g); a_it != lemon::INVALID; ++ a_it) {
+  property_map<arc_active, HypothesesGraph::base_graph>::type& active_arcs = g.get(arc_active());
+  typedef property_map<arc_active, HypothesesGraph::base_graph>::type::FalseIt inactive_arc_it;
+  for(inactive_arc_it a_it(active_arcs); a_it!=lemon::INVALID; ++a_it) {
+    cout << g.id(a_it) << ": from " << g.id(g.source(a_it)) << " to " << g.id(g.target(a_it)) << "\n";
+  }
+  prune_inactive(g);
   vector<vector<Event> > ev = *(events(g));
   for (vector<vector<Event> >::iterator t_it = ev.begin(); t_it != ev.end(); ++t_it) {
     for (vector<Event>::iterator e_it = t_it->begin(); e_it != t_it->end(); ++ e_it) {
@@ -364,8 +374,17 @@ BOOST_AUTO_TEST_CASE( MergerResolver_resolve_mergers_2 ) {
   BOOST_CHECK_EQUAL(resolve_count, 1);
 
   HypothesesGraph g_res;
-  // resolve_graph(g, g_res);
-  // prune_inactive(g);
+  resolve_graph(g, g_res);
+  for (HypothesesGraph::NodeIt n_it(g); n_it != lemon::INVALID; ++n_it) {
+    cout << g.id(n_it) << "\n";
+  }
+  // for (HypothesesGraph::ArcIt a_it(g); a_it != lemon::INVALID; ++ a_it) {
+  property_map<arc_active, HypothesesGraph::base_graph>::type& active_arcs = g.get(arc_active());
+  typedef property_map<arc_active, HypothesesGraph::base_graph>::type::FalseIt inactive_arc_it;
+  for(inactive_arc_it a_it(active_arcs); a_it!=lemon::INVALID; ++a_it) {
+    cout << g.id(a_it) << ": from " << g.id(g.source(a_it)) << " to " << g.id(g.target(a_it)) << "\n";
+  }
+  prune_inactive(g);
   vector<vector<Event> > evt = *(events(g));
   for (vector<vector<Event> >::iterator t_it = evt.begin(); t_it != evt.end(); ++t_it) {
     for (vector<Event>::iterator e_it = t_it->begin(); e_it != t_it->end(); ++ e_it) {
