@@ -37,6 +37,16 @@
 
 namespace pgmlink {
 
+  ////
+  //// ClusteringMlpackBase
+  ////
+
+  class ClusteringMlpackBase {
+  protected:
+    void copy_centers_to_feature_array(const arma::mat& centers, feature_array& c);
+  public:
+    virtual feature_array operator()() = 0;
+  };
 
 
   ////
@@ -53,12 +63,12 @@ namespace pgmlink {
    * the data given in the form of a feature_array into an appropriate armadillo matrix (arma::mat), that can be used by
    * mlpack
    */
-  class KMeans {
+  class KMeans : public ClusteringMlpackBase {
   private:
     KMeans();
     int k_;
     const feature_array& data_;
-    void copy_centers_to_feature_array(const arma::mat& centers, feature_array& c);
+    // void copy_centers_to_feature_array(const arma::mat& centers, feature_array& c);
   public:
     // tested
     /**
@@ -74,8 +84,31 @@ namespace pgmlink {
      * @brief compute cluster centers and labels for datapoints
      * @returns feature_array that contains the coordinates of k clusters
      */
-    feature_array operator()();
+    virtual feature_array operator()();
   };
+
+
+  class GMM : public ClusteringMlpackBase {
+  private:
+    GMM();
+    int k_;
+    int n_;
+    const feature_array& data_;
+    double score_;
+    int n_trials_;
+  public:
+    // constructor needs to specify number of dimensions
+    // for 2D data, ilastik provides coordinates with 3rd dimension 0
+    // which will cause singular covariance matrix
+    // therefore add option for dimensionality
+    GMM(int k, int n, const feature_array& data, int n_trials=1) :
+      k_(k), n_(n), data_(data), score_(0.0), n_trials_(n_trials) {}
+
+    virtual feature_array operator()();
+    double score() const;
+    
+  };
+    
 
   ////
   //// helper functions
@@ -88,22 +121,7 @@ namespace pgmlink {
    * @param [in,out] out arma::Mat<U> that holds the converted data. For the use in
    * KMeans specify U=double
    */
-  void feature_array_to_arma_mat(const std::vector<T>& in, arma::Mat<U>& out) {
-    int stepSize = out.n_rows;
-    int n = out.n_cols;
-    if (stepSize*n != (int)in.size()) {
-      throw std::range_error("Source vector dimension and matrix dimensions do not agree!");
-    }
-    int count = 0;
-    typename std::vector<T>::const_iterator srcIt = in.begin();
-    while (count < n) {
-      arma::Col<U> col(stepSize);
-      std::copy(srcIt, srcIt+stepSize, col.begin());
-      out.col(count) = col;
-      ++count;
-      srcIt += stepSize;
-    }
-  }
+  void feature_array_to_arma_mat(const std::vector<T>& in, arma::Mat<U>& out);
 
   
   template <typename T>
@@ -118,18 +136,7 @@ namespace pgmlink {
    * The mlpack kMeans implementation does not return the coordinates of the cluster centers.
    * The centers can be computed using the original data and the assignments.
    */
-  void get_centers(const arma::Mat<T>& data, const arma::Col<size_t> labels, arma::Mat<T>& centers, int k) {
-    arma::Col<size_t>::const_iterator labelIt = labels.begin();
-    std::vector<int> clusterSize(k, 0);
-    centers.zeros();
-    for (unsigned int n = 0; n < data.n_cols; ++n, ++labelIt) {
-      ++clusterSize[*labelIt];
-      centers.col(*labelIt) = centers.col(*labelIt) + data.col(n);
-    }
-    for (int i = 0; i < k; ++i) {
-      centers.col(i) /= clusterSize[i];
-    }
-  }
+  void get_centers(const arma::Mat<T>& data, const arma::Col<size_t> labels, arma::Mat<T>& centers, int k);
 
 
   ////
@@ -364,11 +371,106 @@ namespace pgmlink {
   };
 
 
+  ////
+  //// given a graph, do retracking
+  ////
+  void resolve_graph(HypothesesGraph& src, HypothesesGraph& dest);
 
   
   ////
   //// transfer graph to graph containing only subset of nodes based on tags
-  //// 
+  ////
+  template <typename NodePropertyTag, typename ArcPropertyTag>
+  void copy_hypotheses_graph_subset(const HypothesesGraph& src,
+                                    HypothesesGraph& dest,
+                                    std::map<HypothesesGraph::Node, HypothesesGraph::Node>& nr,
+                                    std::map<HypothesesGraph::Arc, HypothesesGraph::Arc>& ar,
+                                    std::map<HypothesesGraph::Node, HypothesesGraph::Node>& ncr,
+                                    std::map<HypothesesGraph::Arc, HypothesesGraph::Arc>& acr
+                                    );
+
+
+  template <typename PropertyTag, typename KeyType>
+  void translate_property_value_map(const HypothesesGraph& src,
+                                    const HypothesesGraph& dest,
+                                    std::map<KeyType, KeyType> dict
+                                    );
+
+
+  template <typename PropertyTag, typename KeyType>
+  void translate_property_bool_map(const HypothesesGraph& src,
+                                   const HypothesesGraph& dest,
+                                   std::map<KeyType,KeyType> dict
+                                   );
+
+
+  template <typename NodePropertyTag, typename ArcPropertyTag>
+  void get_subset(const HypothesesGraph& src,
+                  HypothesesGraph& dest,
+                  HypothesesGraph::NodeMap<HypothesesGraph::Node>& nr,
+                  HypothesesGraph::ArcMap<HypothesesGraph::Arc>& ar,
+                  HypothesesGraph::NodeMap<HypothesesGraph::Node>& ncr,
+                  HypothesesGraph::ArcMap<HypothesesGraph::Arc>& acr
+                  );
+
+  
+  double calculate_BIC(int k, int n, double weight);
+
+
+  void gmm_priors_and_centers(feature_array data, feature_array& priors, feature_array& centers, int k_max, int n, double weight);
+
+
+
+  ////
+  //// IMPLEMENTATIONS ////
+  ////
+
+
+
+  template <typename T, typename U>
+  void feature_array_to_arma_mat(const std::vector<T>& in, arma::Mat<U>& out) {
+    int stepSize = out.n_rows;
+    int n = out.n_cols;
+    if (stepSize*n != (int)in.size()) {
+      throw std::range_error("Source vector dimension and matrix dimensions do not agree!");
+    }
+    int count = 0;
+    typename std::vector<T>::const_iterator srcIt = in.begin();
+    while (count < n) {
+      arma::Col<U> col(stepSize);
+      std::copy(srcIt, srcIt+stepSize, col.begin());
+      out.col(count) = col;
+      ++count;
+      srcIt += stepSize;
+    }
+  }
+
+  
+  template <typename T>
+  void get_centers(const arma::Mat<T>& data, const arma::Col<size_t> labels, arma::Mat<T>& centers, int k) {
+    arma::Col<size_t>::const_iterator labelIt = labels.begin();
+    std::vector<int> clusterSize(k, 0);
+    centers.zeros();
+    for (unsigned int n = 0; n < data.n_cols; ++n, ++labelIt) {
+      ++clusterSize[*labelIt];
+      centers.col(*labelIt) = centers.col(*labelIt) + data.col(n);
+    }
+    for (int i = 0; i < k; ++i) {
+      centers.col(i) /= clusterSize[i];
+    }
+  }
+  
+  
+  template <typename ArcIterator>
+  void MergerResolver::collect_arcs(ArcIterator arcIt,
+				    std::vector<HypothesesGraph::base_graph::Arc>& res) {
+    assert(res.size() == 0);
+    for (; arcIt != lemon::INVALID; ++arcIt) {
+      res.push_back(arcIt);
+    }
+  }
+
+  
   template <typename NodePropertyTag, typename ArcPropertyTag>
   void copy_hypotheses_graph_subset(const HypothesesGraph& src,
                                     HypothesesGraph& dest,
@@ -491,18 +593,6 @@ namespace pgmlink {
     
   }
 
-
-  void resolve_graph(HypothesesGraph& src, HypothesesGraph& dest);
-  
-  
-  template <typename ArcIterator>
-  void MergerResolver::collect_arcs(ArcIterator arcIt,
-				    std::vector<HypothesesGraph::base_graph::Arc>& res) {
-    assert(res.size() == 0);
-    for (; arcIt != lemon::INVALID; ++arcIt) {
-      res.push_back(arcIt);
-    }
-  }
 
 
 
