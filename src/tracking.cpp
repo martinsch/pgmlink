@@ -16,6 +16,7 @@
 #include "pgmlink/reasoner_nearestneighbor.h"
 #include "pgmlink/reasoner_nntracklets.h"
 #include "pgmlink/reasoner_constracking.h"
+#include "pgmlink/hanslovsky.h"
 
 using namespace std;
 using boost::shared_ptr;
@@ -510,6 +511,19 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 
 	cout << "-> pruning inactive hypotheses" << endl;
 	prune_inactive(*graph);
+
+        if (with_merger_resolution_) {
+          cout << "-> resolving mergers" << endl;
+          MergerResolver m(graph);
+          FeatureExtractorMCOMsFromKMeans extractor;
+          DistanceFromCOMs distance;
+          FeatureHandlerFromTraxels handler(extractor, distance);
+          m.resolve_mergers(handler);
+        
+          HypothesesGraph g_res;
+          resolve_graph(*graph, g_res);
+          prune_inactive(*graph);
+        }
 
 	cout << "-> constructing events" << endl;
 

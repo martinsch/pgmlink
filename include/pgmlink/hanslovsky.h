@@ -492,73 +492,7 @@ namespace pgmlink {
   }
 
 
-  void resolve_graph(HypothesesGraph& src, HypothesesGraph& dest) {
-    if (!dest.has_property(node_traxel())) {
-      dest.add(node_traxel());
-    }
-    if (!dest.has_property(node_tracklet())) {
-      dest.add(node_tracklet());
-    }
-    if (!dest.has_property(tracklet_intern_dist())) {
-      dest.add(tracklet_intern_dist());
-    }
-    if (!dest.has_property(arc_distance())) {
-      dest.add(arc_distance());
-    }
-    if (!dest.has_property(node_originated_from())) {
-      dest.add(node_originated_from());
-    }
-
-    /* HypothesesGraph::NodeMap<HypothesesGraph::Node> nr(dummy_sub);
-    HypothesesGraph::ArcMap<HypothesesGraph::Arc> ar(dummy_sub);
-    HypothesesGraph::NodeMap<HypothesesGraph::Node> ncr(dummy_sub);
-    HypothesesGraph::ArcMap<HypothesesGraph::Arc> acr(dummy_sub); */ 
-    /* SubResolver::NodeMap<HypothesesGraph::base_graph::Node> nr(dummy_sub);
-    SubResolver::ArcMap<HypothesesGraph::base_graph::Arc> ar(dummy_sub);
-    HypothesesGraph::base_graph::NodeMap<SubResolver::Node> ncr(dummy_sub);
-    HypothesesGraph::base_graph::ArcMap<SubResolver::Arc> acr(dummy_sub); */
-    std::map<HypothesesGraph::Node, HypothesesGraph::Node> nr;
-    std::map<HypothesesGraph::Arc, HypothesesGraph::Arc> ar;
-    std::map<HypothesesGraph::Node, HypothesesGraph::Node> ncr;
-    std::map<HypothesesGraph::Arc, HypothesesGraph::Arc> acr;
-    copy_hypotheses_graph_subset<node_resolution_candidate, arc_resolution_candidate>(src, dest, nr, ar, ncr, acr);
-    std::vector<double> prob;
-    prob.push_back(0.0);
-    prob.push_back(1.0);
-    boost::function<double(const Traxel&, const size_t)> division = NegLnDivision(1); // weight 1
-    boost::function<double(const double)> transition = NegLnTransition(1); // weight 1
-    boost::function<double(const Traxel&, const size_t)> detection = boost::bind<double>(NegLnConstant(1,prob), _2);
-    translate_property_value_map<node_traxel, HypothesesGraph::Node>(src, dest, nr);
-    translate_property_value_map<arc_distance, HypothesesGraph::Arc>(src, dest, ar);
-    translate_property_value_map<node_originated_from, HypothesesGraph::Node>(src, dest, nr);
-
-    ConservationTracking pgm(
-                             1, //max_number_objects_,
-                             detection, //detection,
-                             division, // division
-                             transition, // transition
-                             0, // forbidden_cost_,
-                             0.05, // ep_gap_,
-                             true, // with_tracklets_,
-                             false, // with_divisions_,
-                             0, // disappearance_cost_
-                             0, // appearance_cost
-                             false, // with_misdetections_allowed
-                             false, // with appearance
-                             false // with disappearance
-                             );
-                             
-                             /*
-                             false, //with_appearance_,
-                             false, //with_disappearance_,
-                             false //with_tracklets_
-                             );*/
-    pgm.formulate(dest);
-    pgm.infer();
-    pgm.conclude(dest);
-
-    translate_property_bool_map<arc_active, HypothesesGraph::Arc>(dest, src, acr);
-  }
+  void resolve_graph(HypothesesGraph& src, HypothesesGraph& dest);
   
   
   template <typename ArcIterator>
