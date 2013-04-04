@@ -4,6 +4,7 @@
 #include <sstream>
 #include <utility>
 #include <vector>
+#include <algorithm>
 
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
@@ -53,7 +54,7 @@ namespace pgmlink {
     return *(timesteps_.rbegin());
   }
 
-
+  
     
   HypothesesGraph& prune_inactive(HypothesesGraph& g) {
       LOG(logDEBUG) << "prune_inactive(): entered";
@@ -81,12 +82,20 @@ namespace pgmlink {
 
       for(inactive_arc_it it(active_arcs); it!=lemon::INVALID; ++it) {
 	arcs_to_prune.push_back(it);
-      } 
+	assert(g.valid(it));
+        LOG(logDEBUG1) << "prune_inactive: arc to be pruned: " << g.id(it);
+      }
+
+      std::sort(arcs_to_prune.begin(), arcs_to_prune.end());
+      std::reverse(arcs_to_prune.begin(), arcs_to_prune.end());
 
       // prune inactive arcs
       for(vector<HypothesesGraph::Arc>::const_iterator it = arcs_to_prune.begin(); it!= arcs_to_prune.end(); ++it) {
-	LOG(logDEBUG3) << "prune_inactive: pruned arc: " << g.id(*it);
-	g.erase(*it);
+        if (g.valid(*it)) {
+          LOG(logDEBUG1) << "prune_inactive: pruned arc: " << g.id(*it);
+          g.erase(*it);
+        }
+	assert(!g.valid(*it));
       }
 
       // prune inactive nodes 
@@ -98,12 +107,14 @@ namespace pgmlink {
   		for (HypothesesGraph::NodeIt it(g); it != lemon::INVALID; ++it) {
   			if (!(*active2_nodes)[it]) {
   				nodes_to_prune.push_back(it);
+				assert(g.valid(it));
   			}
   		}
       } else {
     	typedef property_map<node_active, HypothesesGraph::base_graph>::type::FalseIt inactive_node_it;
 		for (inactive_node_it it(*active_nodes); it != lemon::INVALID; ++it) {
 			nodes_to_prune.push_back(it);
+			assert(g.valid(it));
 		}
       }
 
@@ -111,6 +122,7 @@ namespace pgmlink {
       for(vector<HypothesesGraph::Node>::const_iterator it = nodes_to_prune.begin(); it!= nodes_to_prune.end(); ++it) {
 	LOG(logDEBUG3) << "prune_inactive: pruned node: " << g.id(*it);
 	g.erase(*it);
+	assert(!g.valid(*it));
       } 
 
       return g;
@@ -126,6 +138,7 @@ namespace pgmlink {
     typedef property_map<node_traxel, HypothesesGraph::base_graph>::type node_traxel_map_t;
     node_traxel_map_t& node_traxel_map = g.get(node_traxel());
     property_map<division_active, HypothesesGraph::base_graph>::type* division_node_map;
+    
     bool with_division_detection = false;
     if (g.getProperties().count("division_active") > 0) {
     	division_node_map = &g.get(division_active());
@@ -137,6 +150,20 @@ namespace pgmlink {
     	node_number_of_objects = &g.get(node_active2());
     	with_mergers = true;
     	LOG(logDEBUG1) << "events(): with_mergers = true";
+    }
+    bool with_resolved = false;
+    property_map<merger_resolved_to, HypothesesGraph::base_graph>::type* resolved_map;
+    if (g.getProperties().count("merger_resolved_to") > 0 && false) {
+      resolved_map = &g.get(merger_resolved_to());
+      with_resolved = true;
+      LOG(logDEBUG1) << "events(): with_resolved enabled";
+    }
+    bool with_origin = true;
+    property_map<node_originated_from, HypothesesGraph::base_graph>::type* origin_map;
+    if (g.getProperties().count("node_originated_from") > 0) {
+      origin_map = &g.get(node_originated_from());
+      with_origin = true;
+      LOG(logDEBUG1) << "events(): with_origin enabeld";
     }
 
     // for every timestep
@@ -155,10 +182,38 @@ namespace pgmlink {
 //        	prev_mergers.clear();
 //        }
 
+	map<unsigned int, vector<unsigned int> > resolver_map;
+
 	// for every node: destiny
 	LOG(logDEBUG2) << "events(): for every node: destiny";
 	for(node_timestep_map_t::ItemIt node_at(node_timestep_map, t); node_at!=lemon::INVALID; ++node_at) {
 	    assert(node_traxel_map[node_at].Timestep == t);
+
+	    if (with_origin && (*origin_map)[node_at].size() > 0 && t > g.earliest_timestep()) {
+	      LOG(logINFO) << "events(): collecting resolver node ids for all merger nodes " << t << ", " << (*origin_map)[node_at][0];
+	      resolver_map[(*origin_map)[node_at][0]].push_back(node_traxel_map[node_at].Id);
+              const std::vector<float>& tmp_feat = (node_traxel_map[node_at].features.find("com"))->second; //node_traxel_map[node_at].features["com"];
+              std::copy(tmp_feat.begin(), tmp_feat.end(),
+                        std::back_insert_iterator<std::vector<unsigned> >(resolver_map[(*origin_map)[node_at][0]]));
+	    }
+
+
+	    /* if (with_resolved && ((*resolved_map)[node_at]).size() > 0) {
+	      // property_map<merger_resolved_to, HypothesesGraph::base_graph>::type::ItemIt resolved_it;
+	      // resolved_it = std::find(resolved_it
+	      LOG(logINFO) << "events(): entered resolved_to event creation...";
+	      Event e;
+	      e.type = Event::ResolvedTo;
+	      e.traxel_ids.push_back(node_traxel_map[node_at].Id);
+	      std::vector<unsigned int> ids = (*resolved_map)[node_at];
+	      for (std::vector<unsigned int>::iterator it = ids.begin(); it != ids.end(); ++it) {
+		e.traxel_ids.push_back(*it);
+	      }
+	      (*ret)[t-g.earliest_timestep()].push_back(e);
+	      LOG(logDEBUG3) << e;
+              } */
+
+	    LOG(logDEBUG3) << "Number of detected objects: " << (*node_number_of_objects)[node_at];
 
 //	    if(with_mergers && (*node_number_of_objects)[node_at] > 1) {
 //	    	prev_mergers.clear();
@@ -252,10 +307,31 @@ namespace pgmlink {
 		    }
 		break;
 	        }
-	    }
-	}
+                  //	    }
+            }
+        }
+        if (t > g.earliest_timestep()) {
+          for (map<unsigned int, vector<unsigned int> >::iterator map_it = resolver_map.begin(); map_it != resolver_map.end(); ++map_it) {
+            Event e;
+            e.type = Event::ResolvedTo;
+            e.traxel_ids.push_back(map_it->first);
+            for (std::vector<unsigned int>::iterator it = map_it->second.begin(); it != map_it->second.end(); ++it) {
+              e.traxel_ids.push_back(*it);
+            }
+            (*ret)[t-g.earliest_timestep() - 1].push_back(e);
+            LOG(logDEBUG1) << e;
 
-
+            Event e_m;
+            e_m.type = Event::Merger;
+            e_m.traxel_ids.push_back(map_it->first);
+            // divide by 4: 1 traxel id + 3 coordinates of com
+            e_m.traxel_ids.push_back(map_it->second.size()/4);
+            (*ret)[t-g.earliest_timestep()-1].push_back(e_m);
+            LOG(logDEBUG3) << e_m;
+          }
+        }
+	
+        
 
 	// appearances in next timestep
 	LOG(logDEBUG2) << "events(): appearances in next timestep";
@@ -274,7 +350,7 @@ namespace pgmlink {
 		    LOG(logDEBUG3) << e;	      
 	    }
 	}
-    }
+    
 
 //    // mergers in first timestep
 //    if(with_mergers) {
@@ -284,6 +360,8 @@ namespace pgmlink {
 //	}
 
 
+    
+    }
     return ret;
   }
 

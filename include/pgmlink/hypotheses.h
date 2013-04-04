@@ -11,6 +11,7 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <map>
 #include <boost/serialization/set.hpp>
 #include <boost/shared_ptr.hpp>
 #include <lemon/list_graph.h>
@@ -187,6 +188,47 @@ namespace pgmlink {
     };
     template <typename Graph>
       const std::string property_map<division_active,Graph>::name = "division_active";
+
+  // merger_resolved_to
+  struct merger_resolved_to {};
+  template <typename Graph>
+  struct property_map<merger_resolved_to, Graph> {
+    // typedef std::map<typename Graph::Node, std::vector<unsigned int> > type;
+    typedef lemon::IterableValueMap<Graph, typename Graph::Node, std::vector<unsigned int> > type;
+    static const std::string name;
+  };
+  template <typename Graph>
+  const std::string property_map<merger_resolved_to, Graph>::name = "merger_resolved_to";
+
+  // node_originated_from
+  struct node_originated_from {};
+  template <typename Graph>
+  struct property_map<node_originated_from, Graph> {
+    typedef lemon::IterableValueMap<Graph, typename Graph::Node, std::vector<unsigned int> > type;
+    static const std::string name;
+  };
+  template <typename Graph>
+  const std::string property_map<node_originated_from, Graph>::name = "node_originated_from";
+
+  // node_resolution_candidate
+  struct node_resolution_candidate {};
+  template <typename Graph>
+  struct property_map<node_resolution_candidate, Graph> {
+    typedef lemon::IterableBoolMap<Graph, typename Graph::Node> type;
+    static const std::string name;
+  };
+  template <typename Graph>
+  const std::string property_map<node_resolution_candidate, Graph>::name = "node_resolution_candidate";
+
+  // arc_resolution_candidate
+  struct arc_resolution_candidate {};
+  template <typename Graph>
+  struct property_map<arc_resolution_candidate, Graph> {
+    typedef lemon::IterableBoolMap<Graph, typename Graph::Arc> type;
+    static const std::string name;
+  };
+  template <typename Graph>
+  const std::string property_map<arc_resolution_candidate, Graph>::name = "arc_resolution_candidate";
 
 
 

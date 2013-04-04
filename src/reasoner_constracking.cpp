@@ -658,6 +658,59 @@ void ConservationTracking::add_constraints(const HypothesesGraph& g) {
 				LOG(logDEBUG3) << "ConservationTracking::add_constraints:" <<
 						" V_i[nu] = 1 => A_i[nu] = 1 v A_i[0] = 1 added for " << "n = " << app_node_map_[n];
 			}
+                        if (!with_misdetections_allowed_) {
+                          cplex_idxs.clear();
+                          coeffs.clear();
+                          cplex_idxs.push_back(cplex_id(dis_node_map_[n],0));
+                          coeffs.push_back(1);
+                          cplex_idxs.push_back(cplex_id(app_node_map_[n],0));
+                          coeffs.push_back(1);
+
+                          // V_i[0] = 0 => 1 <= A_i[0]
+                          // A_i[0] = 0 => 1 <= V_i[0]
+                          // V_i <= m, A_i <= m
+                          // 1 <= Dis_i[0] + App_i[0] <= 2*m
+                          optimizer_->addConstraint(cplex_idxs.begin(),
+                                                    cplex_idxs.end(), coeffs.begin(), 0, 1 );
+                        }
+
+                        if (!with_appearance_) {
+                          for (unsigned nu = 1; nu <= max_number_objects_; ++nu) {
+                            for (unsigned eta = nu+1; eta <= max_number_objects_; ++eta) {
+                              cplex_idxs.clear();
+                              coeffs.clear();
+                              cplex_idxs.push_back(cplex_id(dis_node_map_[n], nu));
+                              coeffs.push_back(1);
+                              cplex_idxs.push_back(cplex_id(app_node_map_[n], eta));
+                              coeffs.push_back(1);
+
+                              // V_i[nu] >= A_i[eta] forall nu >= eta
+                              // V_i[nu] - A_i[eta] >= 0 forall nu >= eta
+                              optimizer_->addConstraint(cplex_idxs.begin(),
+                                                        cplex_idxs.end(), coeffs.begin(), 0, 1);
+                            }
+                          }
+                        }
+
+                        if (!with_disappearance_) {
+                          for (unsigned nu = 1; nu <= max_number_objects_; ++nu) {
+                            for (unsigned eta = nu+1; eta <= max_number_objects_; ++eta) {
+                              cplex_idxs.clear();
+                              coeffs.clear();
+                              cplex_idxs.push_back(cplex_id(app_node_map_[n], nu));
+                              coeffs.push_back(1);
+                              cplex_idxs.push_back(cplex_id(dis_node_map_[n], eta));
+                              coeffs.push_back(1);
+
+                              // A_i[nu] >= A_i[eta] forall nu >= eta
+                              // V_i[nu] - A_i[eta] >= 0 forall nu >= eta
+                              optimizer_->addConstraint(cplex_idxs.begin(),
+                                                        cplex_idxs.end(), coeffs.begin(), 0, 1);
+                              
+                            }
+                          }
+                          }
+                      
 		}
 	}
 
