@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include <cassert>
 #include <algorithm>
+#include <iterator>
 
 
 // external headers
@@ -10,6 +11,7 @@
 #include <armadillo>
 #include <mlpack/core.hpp>
 #include <mlpack/methods/kmeans/kmeans.hpp>
+#include <mlpack/methods/gmm/gmm.hpp>
 
 
 // pgmlink headers
@@ -20,6 +22,24 @@
 
 
 namespace pgmlink {
+  ////
+  //// ClusteringMlpackBase
+  ////
+  void ClusteringMlpackBase::copy_centers_to_feature_array(const arma::mat& centers, feature_array& c) {
+    int n = centers.n_cols;
+    int stepSize = centers.n_rows;
+    
+    if (stepSize*n != (int)c.size()) {
+      throw std::range_error("Source matrix dimensions and vector dimension do not agree!");
+    }
+
+    feature_array::iterator it = c.begin();
+    for (int i = 0; i < n; ++i, it += stepSize) {
+      arma::vec col = centers.col(i);
+      std::copy(col.begin(), col.end(), it);
+    }
+  }
+
   ////
   //// KMeans
   ////
@@ -36,9 +56,33 @@ namespace pgmlink {
     copy_centers_to_feature_array(centers, fa_centers);
     return fa_centers;
   }
+
+
+  ////
+  //// GMM
+  ////
+  feature_array GMM::operator()() {
+    mlpack::gmm::GMM<> gmm(k_, n_);
+    int n_samples = data_.size()/n_;
+    arma::mat data(n_,n_samples);
+    arma::Col<size_t> labels;
+    feature_array_to_arma_mat(data_, data);
+    score_ = gmm.Estimate(data, n_trials_);
+    std::vector<arma::vec> centers = gmm.Means();
+    feature_array fa_centers;
+    for (std::vector<arma::vec>::iterator it = centers.begin(); it != centers.end(); ++it) {
+      std::copy(it->begin(), it->end(), std::back_insert_iterator<feature_array >(fa_centers));
+    }
+    return fa_centers;
+  }
+
+
+  double GMM::score() const {
+    return score_;
+  }
   
 
-  void KMeans::copy_centers_to_feature_array(const arma::mat& centers, feature_array& c) {
+  /*void KMeans::copy_centers_to_feature_array(const arma::mat& centers, feature_array& c) {
     int n = centers.n_cols;
     int stepSize = centers.n_rows;
     
@@ -51,7 +95,7 @@ namespace pgmlink {
       arma::vec col = centers.col(i);
       std::copy(col.begin(), col.end(), it);
     }
-  }
+  }*/
  
 
 
@@ -457,4 +501,41 @@ namespace pgmlink {
     translate_property_bool_map<arc_active, HypothesesGraph::Arc>(dest, src, acr);
   }
 
+
+  double calculate_BIC(int k, int n_samples, double weight, const GMM& gmm) {
+    return gmm.score()/n_samples - weight*k; 
+  }
+
+
+  void gmm_priors_and_centers(feature_array data, feature_array& priors, feature_array& centers, int k_max, int n, double weight, double n_zero_prob=0.1) {
+    assert(priors.size() == 0);
+    assert(centers.size() == 0);
+    assert(n_zero_prob > 0.0);
+    assert(n_zero_prob < 1.0);
+    priors.push_back(n_zero_prob);
+    double n_not_zero_prob = 1 - n_zero_prob;
+    std::back_insert_iterator<feature_array > push_back_iterator(centers);
+    int n_samples = data.size()/n;
+    double min_bic = 0.0;
+    double partition_function = 0.0;
+    for (int k = 1; k <= k_max; ++k) {
+      GMM gmm(k, n, data);
+      feature_array means = gmm();
+      double curr_bic = calculate_BIC(k, n_samples, weight, gmm);
+      if (curr_bic < min_bic) {
+        min_bic = curr_bic;
+      }
+      priors.push_back(curr_bic);
+      partition_function += curr_bic;
+      std::copy(means.begin(), means.end(), push_back_iterator);
+    }
+    partition_function -= k_max*min_bic;
+    for (feature_array::iterator it = priors.begin(); it != priors.end(); ++it) {
+      *it = n_not_zero_prob*(*it - min_bic)/partition_function;
+    }
+  }
+
 }
+
+
+
