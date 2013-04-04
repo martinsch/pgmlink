@@ -136,7 +136,8 @@ namespace pgmlink {
   	      double disappearance_cost = 0,
   	      double appearance_cost = 0,
 		  const std::vector<double> means = std::vector<double>(),
-		  const std::vector<double> sigmas = std::vector<double>()
+		  const std::vector<double> sigmas = std::vector<double>(),
+                  bool with_merger_resolution = true
   	      )
         : max_number_objects_(max_number_objects),
         	max_dist_(max_neighbor_distance), division_threshold_(division_threshold),
@@ -150,7 +151,8 @@ namespace pgmlink {
         disappearance_cost_(disappearance_cost),
         appearance_cost_(appearance_cost),
         means_(means),
-        sigmas_(sigmas){}
+            sigmas_(sigmas),
+            with_merger_resolution_(with_merger_resolution) {}
       std::vector< std::vector<Event> > operator()(TraxelStore&);
 
       /**
@@ -173,6 +175,7 @@ namespace pgmlink {
       bool with_divisions_;
       double disappearance_cost_, appearance_cost_;
       std::vector<double> means_, sigmas_;
+    bool with_merger_resolution_;
       shared_ptr<std::vector< std::map<unsigned int, bool> > > last_detections_;
     };
 }

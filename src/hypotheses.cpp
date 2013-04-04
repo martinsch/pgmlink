@@ -189,9 +189,12 @@ namespace pgmlink {
 	for(node_timestep_map_t::ItemIt node_at(node_timestep_map, t); node_at!=lemon::INVALID; ++node_at) {
 	    assert(node_traxel_map[node_at].Timestep == t);
 
-	    if (with_origin && (*origin_map)[node_at].size() > 0) {
-	      LOG(logDEBUG1) << "events(): collecting resolver node ids for all merger nodes " << t << ", " << (*origin_map)[node_at][0];
+	    if (with_origin && (*origin_map)[node_at].size() > 0 && t > g.earliest_timestep()) {
+	      LOG(logINFO) << "events(): collecting resolver node ids for all merger nodes " << t << ", " << (*origin_map)[node_at][0];
 	      resolver_map[(*origin_map)[node_at][0]].push_back(node_traxel_map[node_at].Id);
+              const std::vector<float>& tmp_feat = (node_traxel_map[node_at].features.find("com"))->second; //node_traxel_map[node_at].features["com"];
+              std::copy(tmp_feat.begin(), tmp_feat.end(),
+                        std::back_insert_iterator<std::vector<unsigned> >(resolver_map[(*origin_map)[node_at][0]]));
 	    }
 
 
@@ -211,7 +214,6 @@ namespace pgmlink {
               } */
 
 	    LOG(logDEBUG3) << "Number of detected objects: " << (*node_number_of_objects)[node_at];
-	    if(with_mergers && (*node_number_of_objects)[node_at] > 1) {
 
 //	    if(with_mergers && (*node_number_of_objects)[node_at] > 1) {
 //	    	prev_mergers.clear();
@@ -230,7 +232,7 @@ namespace pgmlink {
 //			e.traxel_ids.push_back((*node_number_of_objects)[node_at]);
 //			mergers_t0.push_back(e);
 //			LOG(logDEBUG3) << e;
-            }
+//		}
 
 	    if(with_mergers && (*node_number_of_objects)[node_at] > 1 && t > g.earliest_timestep()) {
 			Event e;
@@ -303,22 +305,31 @@ namespace pgmlink {
 				(*ret)[t-g.earliest_timestep()].push_back(e);
 				LOG(logDEBUG3) << e;
 		    }
-                    break;
+		break;
 	        }
                   //	    }
             }
         }
-        
-	for (map<unsigned int, vector<unsigned int> >::iterator map_it = resolver_map.begin(); map_it != resolver_map.end(); ++map_it) {
-	  Event e;
-	  e.type = Event::ResolvedTo;
-	  e.traxel_ids.push_back(map_it->first);
-	  for (std::vector<unsigned int>::iterator it = map_it->second.begin(); it != map_it->second.end(); ++it) {
-	    e.traxel_ids.push_back(*it);
-	  }
-	  (*ret)[t-g.earliest_timestep()].push_back(e);
-	  LOG(logDEBUG1) << e;
-	}
+        if (t > g.earliest_timestep()) {
+          for (map<unsigned int, vector<unsigned int> >::iterator map_it = resolver_map.begin(); map_it != resolver_map.end(); ++map_it) {
+            Event e;
+            e.type = Event::ResolvedTo;
+            e.traxel_ids.push_back(map_it->first);
+            for (std::vector<unsigned int>::iterator it = map_it->second.begin(); it != map_it->second.end(); ++it) {
+              e.traxel_ids.push_back(*it);
+            }
+            (*ret)[t-g.earliest_timestep() - 1].push_back(e);
+            LOG(logDEBUG1) << e;
+
+            Event e_m;
+            e_m.type = Event::Merger;
+            e_m.traxel_ids.push_back(map_it->first);
+            // divide by 4: 1 traxel id + 3 coordinates of com
+            e_m.traxel_ids.push_back(map_it->second.size()/4);
+            (*ret)[t-g.earliest_timestep()-1].push_back(e_m);
+            LOG(logDEBUG3) << e_m;
+          }
+        }
 	
         
 
