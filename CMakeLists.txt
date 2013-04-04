@@ -110,7 +110,7 @@ find_package( Boost REQUIRED COMPONENTS serialization )
 
 ADD_LIBRARY(pgmlink SHARED ${LIB_SOURCES})
 #TARGET_LINK_LIBRARIES(pgmlink ${LIBS} ${VIGRA_NUMPY_CORE_LIBRARY} vigraimpex boost_python ${PYTHON_LIBRARIES} ${FFTW3_LIBRARIES} fftw3 fftw3f fftw3_threads ${HD5_LIBRARIES} ${HDF5_HL_LIBRARIES} ann cplex ilocplex pthread concert ${VIGRA_IMPEX_LIBRARY} ${LEMON_LIBRARIES} )
-TARGET_LINK_LIBRARIES(pgmlink ${LIBS} boost_python ${PYTHON_LIBRARIES} ${FFTW3_LIBRARIES} fftw3 fftw3f fftw3_threads ${HD5_LIBRARIES} ${HDF5_HL_LIBRARIES} ann cplex ilocplex pthread concert ${VIGRA_IMPEX_LIBRARY} ${LEMON_LIBRARIES} )
+TARGET_LINK_LIBRARIES(pgmlink ${LIBS} boost_python ${PYTHON_LIBRARIES} ${FFTW3_LIBRARIES} fftw3 fftw3f fftw3_threads ${HD5_LIBRARIES} ${HDF5_HL_LIBRARIES} ann cplex ilocplex pthread concert ${VIGRA_IMPEX_LIBRARY} ${LEMON_LIBRARIES} mlpack)
 
 
 ### Always use full RPATH

@@ -89,7 +89,7 @@ namespace pgmlink {
       // stability of iterators to elements and not actual memory addresses
       return *boost::any_cast<boost::shared_ptr<typename property_map<PropertyTag, Graph>::type> >(properties_.find(name)->second);
     } else {
-      throw std::runtime_error("PropertyGraph::get(): property not found");
+      throw std::runtime_error("PropertyGraph::get(): property " + name + " not found");
     }
   }
   
