@@ -17,7 +17,6 @@ void export_cross_correlation();
 
 BOOST_PYTHON_MODULE( pgmlink )
 {
-	vigra::import_vigranumpy();
     export_field_of_view();
     export_hypotheses();
     export_track();
