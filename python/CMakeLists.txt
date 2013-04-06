@@ -33,10 +33,11 @@ set(PYPGMLINK_SRCS
   pytrack.cpp
   pytraxels.cpp
   pycrosscorrelation.cpp
+  pyhanslovsky.cpp
   )
 
 add_library(pypgmlink SHARED ${PYPGMLINK_SRCS})
-target_link_libraries(pypgmlink ${Boost_LIBRARIES} pgmlink ilocplex vigraimpex)
+target_link_libraries(pypgmlink ${Boost_LIBRARIES} pgmlink ilocplex vigraimpex pgmlink)
 set_target_properties(pypgmlink PROPERTIES PREFIX "" OUTPUT_NAME "pgmlink")
 
 
