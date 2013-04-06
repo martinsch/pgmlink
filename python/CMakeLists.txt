@@ -33,7 +33,7 @@ set(PYPGMLINK_SRCS
   pytrack.cpp
   pytraxels.cpp
   pycrosscorrelation.cpp
-  pyhanslovsky.cpp
+  pymerger_resolving.cpp
   )
 
 add_library(pypgmlink SHARED ${PYPGMLINK_SRCS})
@@ -64,4 +64,4 @@ SET(PYPGMLINK_INSTALL_DIR ${PYPGMLINK_INSTALL_DIR}
 FILE(RELATIVE_PATH PYPGMLINK_INSTALL_DIR ${CMAKE_INSTALL_PREFIX} ${PYPGMLINK_INSTALL_DIR})
 
 INSTALL(TARGETS pypgmlink
-        DESTINATION ${PYPGMLINK_INSTALL_DIR})
+        DESTINATION ${PYPGMLINK_INSTALL_DIR})   

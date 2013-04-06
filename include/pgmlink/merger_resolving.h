@@ -1,5 +1,5 @@
-#ifndef HANSLOVSKY_H
-#define HANSLOVSKY_H
+#ifndef MERGER_RESOLVING_H
+#define MERGER_RESOLVING_H
 
 // stl headers
 #include <vector>
@@ -21,7 +21,7 @@
 #include "pgmlink/event.h"
 #include "pgmlink/traxels.h"
 #include "pgmlink/reasoner.h"
-#include "pgmlink/hanslovsky_grammar.h"
+#include "pgmlink/merger_resolving_grammar.h"
 #include "pgmlink/reasoner_constracking.h"
 #include "pgmlink/feature.h"
 
@@ -632,4 +632,4 @@ namespace pgmlink {
 }
 
 
-#endif /* HANSLOVSKY_H */
+#endif /* MERGER_RESOLVING_H */

@@ -16,7 +16,7 @@
 #include "pgmlink/reasoner_nearestneighbor.h"
 #include "pgmlink/reasoner_nntracklets.h"
 #include "pgmlink/reasoner_constracking.h"
-#include "pgmlink/hanslovsky.h"
+#include "pgmlink/merger_resolving.h"
 
 using namespace std;
 using boost::shared_ptr;

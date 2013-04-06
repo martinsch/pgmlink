@@ -2,7 +2,7 @@
 #define NO_IMPORT_ARRAY
 
 #include <boost/python.hpp>
-#include "pgmlink/hanslovsky.h"
+#include "pgmlink/merger_resolving.h"
 
 
 using namespace std;
