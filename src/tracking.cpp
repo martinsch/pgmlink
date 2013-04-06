@@ -373,31 +373,17 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 	boost::function<double(const Traxel&, const size_t)> detection, division;
 	boost::function<double(const double)> transition;
 
-	if (use_size_dependent_detection_) {
-//		LOG(logINFO) << "Loading Random Forest";
-//		vigra::RandomForest<RF::RF_LABEL_TYPE> rf = RF::getRandomForest(detection_rf_fn_);
-//		std::vector<std::string> rf_features;
-//		rf_features.push_back("volume");
-//		rf_features.push_back("bbox");
-//		rf_features.push_back("position");
-//		rf_features.push_back("com");
-//		rf_features.push_back("pc");
-//		rf_features.push_back("intensity");
-//		rf_features.push_back("intminmax");
-//		rf_features.push_back("pair");
-//		rf_features.push_back("sgf");
-//		rf_features.push_back("lcom");
-//		rf_features.push_back("lpc");
-//		rf_features.push_back("lintensity");
-//		rf_features.push_back("lintminmax");
-//		rf_features.push_back("lpair");
-//		rf_features.push_back("lsgf");
-
-//		LOG(logINFO) << "Predicting cellness";
-//		RF::predict_traxels(ts, rf, rf_features, 1, "cellness");
-
-//		double s2 = sigma_;
-
+	bool use_classifier_prior = false;
+	Traxel trax = *(ts.begin());
+	FeatureMap::const_iterator it = trax.features.find("detProb");
+	if(it != trax.features.end()) {
+		use_classifier_prior = true;
+	}
+	if (use_classifier_prior) {
+		LOG(logINFO) << "Using classifier prior";
+		detection = NegLnDetection(detection_weight);
+	} else if (use_size_dependent_detection_) {
+		LOG(logINFO) << "Using size dependent prior";
 		vector<double> means;
 		if (means_.size() == 0 ) {
 			for(int i = 0; i<max_number_objects_+1; ++i) {
@@ -454,6 +440,7 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 		}
 		detection = NegLnDetection(detection_weight); // weight 1
 	} else {
+		LOG(logINFO) << "Using size hard prior";
 		// assume a quasi geometric distribution
 		vector<double> prob_vector;
 		double p = 0.7; // e.g. for max_number_objects_=3, p=0.7: P(X=(0,1,2,3)) = (0.027, 0.7, 0.21, 0.063)
