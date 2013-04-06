@@ -507,31 +507,18 @@ namespace pgmlink {
   }
 
 
-  void gmm_priors_and_centers(const feature_array& data, feature_array& priors, feature_array& centers, int k_max, int n, double weight, double n_zero_prob=0.1) {
+  void gmm_priors_and_centers(const feature_array& data, feature_array& priors, feature_array& centers, int k_max, int n, double weight) {
     assert(priors.size() == 0);
     assert(centers.size() == 0);
-    assert(n_zero_prob > 0.0);
-    assert(n_zero_prob < 1.0);
-    priors.push_back(n_zero_prob);
-    double n_not_zero_prob = 1 - n_zero_prob;
+
     std::back_insert_iterator<feature_array > push_back_iterator(centers);
     int n_samples = data.size()/n;
-    double min_bic = 0.0;
-    double partition_function = 0.0;
     for (int k = 1; k <= k_max; ++k) {
       GMM gmm(k, n, data);
       feature_array means = gmm();
       double curr_bic = calculate_BIC(k, n_samples, weight, gmm);
-      if (curr_bic < min_bic) {
-        min_bic = curr_bic;
-      }
       priors.push_back(curr_bic);
-      partition_function += curr_bic;
       std::copy(means.begin(), means.end(), push_back_iterator);
-    }
-    partition_function -= k_max*min_bic;
-    for (feature_array::iterator it = priors.begin(); it != priors.end(); ++it) {
-      *it = n_not_zero_prob*(*it - min_bic)/partition_function;
     }
   }
 

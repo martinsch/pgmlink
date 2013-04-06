@@ -9,7 +9,6 @@ using namespace std;
 using namespace pgmlink;
 using namespace boost::python;
 
-
 void export_gmm() {
   def("gmm_priors_and_centers", gmm_priors_and_centers);
 }

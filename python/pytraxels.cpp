@@ -105,6 +105,7 @@ namespace pgmlink {
 void export_traxels() {
     class_< feature_array >("feature_array")
       .def(vector_indexing_suite< feature_array >() )
+      .def("push_back", &feature_array::push_back)
       ;
 
     class_< ComLocator >("ComLocator")
