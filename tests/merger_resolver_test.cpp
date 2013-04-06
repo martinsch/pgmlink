@@ -1,4 +1,4 @@
-#define BOOST_TEST_MODULE hanslovsky_merger_resolver_test
+#define BOOST_TEST_MODULE merger_resolver_test
 
 #include <stdexcept>
 #include <cstring>
@@ -13,7 +13,7 @@
 #include "pgmlink/traxels.h"
 // enable tests of private class members
 #define private public
-#include "pgmlink/hanslovsky.h"
+#include "pgmlink/merger_resolving.h"
 #undef private
 
 #include <armadillo>

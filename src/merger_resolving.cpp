@@ -15,7 +15,7 @@
 
 
 // pgmlink headers
-#include "pgmlink/hanslovsky.h"
+#include "pgmlink/merger_resolving.h"
 #include "pgmlink/hypotheses.h"
 #include "pgmlink/event.h"
 #include "pgmlink/traxels.h"

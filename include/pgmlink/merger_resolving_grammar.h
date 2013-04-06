@@ -1,5 +1,5 @@
-#ifndef HANSLOVSKY_GRAMMAR_H
-#define HANSLOVSKY_GRAMMAR_H
+#ifndef MERGER_RESOLVING_GRAMMAR_H
+#define MERGER_RESOLVING_GRAMMAR_H
 
 // stl headers
 #include <vector>
@@ -65,4 +65,4 @@ namespace pgmlink {
 
 }
 
-#endif /* HANSLOVSKY_GRAMMAR_H */
+#endif /* MERGER_RESOLVING_GRAMMAR_H */
