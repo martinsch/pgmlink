@@ -417,7 +417,7 @@ namespace pgmlink {
   double calculate_BIC(int k, int n, double weight);
 
 
-  void gmm_priors_and_centers(feature_array data, feature_array& priors, feature_array& centers, int k_max, int n, double weight);
+  void gmm_priors_and_centers(const feature_array& data, feature_array& priors, feature_array& centers, int k_max, int n, double weight);
 
 
 

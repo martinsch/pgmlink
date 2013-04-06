@@ -103,7 +103,9 @@ namespace pgmlink {
 } /* namespace pgmlink */
 
 void export_traxels() {
-    class_< feature_array >("feature_array");
+    class_< feature_array >("feature_array")
+      .def(vector_indexing_suite< feature_array >() )
+      ;
 
     class_< ComLocator >("ComLocator")
       .def_readwrite("x_scale", &ComLocator::x_scale)
