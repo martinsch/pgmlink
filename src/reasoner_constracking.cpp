@@ -370,7 +370,7 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
 				// if only one of the variables is > 0, then it is an appearance in this time frame
 				// or a disappearance in the next timeframe. Hence, add the cost of appearance/disappearance
 				// to the detection cost
-				table.set_value(coords, energy+cost[var_idx]);
+				table.set_value(coords, energy+state*cost[var_idx]);
 				coords[var_idx] = 0;
 				LOG(logDEBUG4) << "ConservationTracking::add_finite_factors: var_idx " << var_idx <<
 									" = " << energy;
