@@ -12,6 +12,7 @@
 #include <mlpack/core.hpp>
 #include <mlpack/methods/kmeans/kmeans.hpp>
 #include <mlpack/methods/gmm/gmm.hpp>
+#include <omp.h>
 
 
 // pgmlink headers
@@ -80,7 +81,34 @@ namespace pgmlink {
   double GMM::score() const {
     return score_;
   }
+  ////
+  //// GMMInitalizeArma
+  ////
+
+  feature_array GMMInitializeArma::operator()() {
+    feature_array ret;
+    // std::back_insert_iterator<feature_array > bii(ret);
+    // arma::vec d = this->operator()("this is so dirty!");
+    // std::copy(d.begin(), d.end(), bii);
+    return ret;
+  }
   
+
+  std::vector<arma::vec> GMMInitializeArma::operator()(const char* dirty_hack) {
+    mlpack::gmm::GMM<> gmm(k_, data_.n_rows);
+    score_ = gmm.Estimate(data_, n_trials_);
+    std::vector<arma::vec> centers = gmm.Means();
+    return centers;
+  }
+
+  
+  double GMMInitializeArma::score() const {
+    return score_;
+  }
+
+
+
+
 
   /*void KMeans::copy_centers_to_feature_array(const arma::mat& centers, feature_array& c) {
     int n = centers.n_cols;
@@ -114,6 +142,25 @@ namespace pgmlink {
     FeatureExtractorMCOMsFromMCOMs extractor;
     return extractor(trax, nMergers, max_id);
   }
+
+
+  ////
+  //// FeatureExtractorMCOMsFromGMM
+  ////
+  std::vector<Traxel> FeatureExtractorMCOMsFromGMM::operator() (Traxel trax,
+                                                                size_t nMergers,
+                                                                unsigned int max_id
+                                                                ){
+    std::map<std::string, feature_array>::iterator it = trax.features.find("coordinates");
+    assert(it != trax.features.end());
+    std::vector<Traxel> res;
+    int ndim = 3;
+    GMM gmm(nMergers, ndim, it->second);
+    trax.features["mergerCOMs"] = gmm();
+    FeatureExtractorMCOMsFromMCOMs extractor;
+    return extractor(trax, nMergers, max_id);
+  }
+    
 
 
   ////
@@ -502,23 +549,50 @@ namespace pgmlink {
   }
 
 
-  double calculate_BIC(int k, int n_samples, double weight, const GMM& gmm) {
-    return gmm.score()/n_samples - weight*k; 
+  double calculate_BIC(int k, int n_samples, double regularization_weight, const ClusteringMlpackBase& gmm) {
+    return gmm.score()/n_samples - regularization_weight*k; 
   }
 
 
-  void gmm_priors_and_centers(const feature_array& data, feature_array& priors, feature_array& centers, int k_max, int n, double weight) {
+  void gmm_priors_and_centers(const feature_array& data, feature_array& priors, feature_array& centers, int k_max, int ndim, double regularization_weight) {
     assert(priors.size() == 0);
     assert(centers.size() == 0);
-
-    std::back_insert_iterator<feature_array > push_back_iterator(centers);
-    int n_samples = data.size()/n;
+    priors.resize(k_max);
+    centers.resize((k_max*(k_max+1))/2*ndim);
+    // std::back_insert_iterator<feature_array > push_back_iterator(centers);
+    int n_samples = data.size()/ndim;
+#   pragma omp parallel for
     for (int k = 1; k <= k_max; ++k) {
-      GMM gmm(k, n, data);
+      GMM gmm(k, ndim, data);
       feature_array means = gmm();
-      double curr_bic = calculate_BIC(k, n_samples, weight, gmm);
-      priors.push_back(curr_bic);
-      std::copy(means.begin(), means.end(), push_back_iterator);
+      double curr_bic = calculate_BIC(k, n_samples, regularization_weight, gmm);
+      priors.at(k-1) = curr_bic;
+      std::copy(means.begin(), means.end(), centers.begin() + ((k-1)*k)/2*ndim);
+      // priors.push_back(curr_bic);
+      // std::copy(means.begin(), means.end(), push_back_iterator);
+    }
+  }
+
+  
+  void gmm_priors_and_centers_arma(const arma::mat& data, feature_array& priors, feature_array& centers, int k_max, int ndim, double regularization_weight) {
+    assert(priors.size() == 0);
+    assert(centers.size() == 0);
+    priors.resize(k_max);
+    centers.resize((k_max*(k_max+1))/2*ndim);
+    // std::back_insert_iterator<feature_array > push_back_iterator(centers);
+    int n_samples = data.size()/ndim;
+#   pragma omp parallel for
+    for (int k = 1; k <= k_max; ++k) {
+      GMMInitializeArma gmm(k, data);
+      std::vector<arma::vec> means = gmm("terrible hack");
+      double curr_bic = calculate_BIC(k, n_samples, regularization_weight, gmm);
+      priors.at(k-1) = curr_bic;
+      unsigned idx = 0;
+      for (std::vector<arma::vec>::iterator it = means.begin(); it != means.end(); ++it) {
+        std::copy(it->begin(), it->end(), centers.begin() + ((idx+k-1)*(idx+k))/2*ndim);
+      }
+      // priors.push_back(curr_bic);
+      // std::copy(means.begin(), means.end(), push_back_iterator);
     }
   }
 
