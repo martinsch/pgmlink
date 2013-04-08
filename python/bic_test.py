@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import vigra
 from pgmlink import feature_array, gmm_priors_and_centers
 import numpy as np
 import sys
@@ -11,7 +12,7 @@ def append_np_array_to_feature_array(np_array, feat_array):
 if __name__ == "__main__":
 
     for weight in range(1,11):
-        w = 2.0/weight
+        w = 1.0/weight
         print "weight =", w
         data = feature_array()
         # cluster around 0
