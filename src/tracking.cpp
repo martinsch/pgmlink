@@ -528,7 +528,8 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
         if (with_merger_resolution_) {
           cout << "-> resolving mergers" << endl;
           MergerResolver m(graph);
-          FeatureExtractorMCOMsFromKMeans extractor;
+          // FeatureExtractorMCOMsFromKMeans extractor;
+          FeatureExtractorMCOMsFromGMM extractor;
           DistanceFromCOMs distance;
           FeatureHandlerFromTraxels handler(extractor, distance);
           m.resolve_mergers(handler);
