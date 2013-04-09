@@ -45,7 +45,9 @@ namespace pgmlink {
   protected:
     void copy_centers_to_feature_array(const arma::mat& centers, feature_array& c);
   public:
+    virtual ~ClusteringMlpackBase() {}
     virtual feature_array operator()() = 0;
+    virtual double score() const {return 0.0;}
   };
 
 
@@ -107,6 +109,24 @@ namespace pgmlink {
     virtual feature_array operator()();
     double score() const;
     
+  };
+
+
+  class GMMInitializeArma : public ClusteringMlpackBase {
+  private:
+    GMMInitializeArma();
+    int k_;
+    const arma::mat& data_;
+    double score_;
+    int n_trials_;
+  public:
+    GMMInitializeArma(int k, const arma::mat& data, int n_trials=1) :
+      k_(k), data_(data), score_(0.0), n_trials_(n_trials) {}
+
+    virtual feature_array operator()();
+    std::vector<arma::vec> operator()(const char* dirty_hack);
+    double score() const;
+
   };
     
 
@@ -180,6 +200,13 @@ namespace pgmlink {
     virtual std::vector<Traxel> operator()(Traxel trax, size_t nMergers, unsigned int max_id);
   };
 
+
+  ////
+  //// FeatureExtractorMCOMsFromGMM
+  ////
+  class FeatureExtractorMCOMsFromGMM : public FeatureExtractorBase {
+    virtual std::vector<Traxel> operator()(Traxel trax, size_t nMergers, unsigned int max_id);
+  };
 
   ////
   //// DistanceBase
@@ -374,7 +401,8 @@ namespace pgmlink {
   ////
   //// given a graph, do retracking
   ////
-  void resolve_graph(HypothesesGraph& src, HypothesesGraph& dest);
+  void resolve_graph(HypothesesGraph& src, HypothesesGraph& dest, boost::function<double(const double)> transition, double ep_gap, bool with_tracklets);
+  // void resolve_graph(HypothesesGraph& src, HypothesesGraph& dest);
 
   
   ////
@@ -419,6 +447,7 @@ namespace pgmlink {
 
   void gmm_priors_and_centers(const feature_array& data, feature_array& priors, feature_array& centers, int k_max, int n, double weight);
 
+  void gmm_priors_and_centers_arma(const arma::mat& data, feature_array& priors, feature_array& centers, int k_max, int ndim, double regularization_weight);
 
 
   ////

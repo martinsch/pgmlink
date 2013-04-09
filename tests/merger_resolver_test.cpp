@@ -236,7 +236,7 @@ BOOST_AUTO_TEST_CASE( MergerResolver_resolve_mergers_3 ) {
   
 
   HypothesesGraph g_res;
-  resolve_graph(g, g_res);
+  resolve_graph(g, g_res, NegLnTransition(1), 0.05, false);
   prune_inactive(g);
 
   vector<vector<Event> > ev = *(events(g));
@@ -371,7 +371,7 @@ BOOST_AUTO_TEST_CASE( MergerResolver_resolve_mergers_2 ) {
   BOOST_CHECK_EQUAL(resolve_count, 1);
 
   HypothesesGraph g_res;
-  resolve_graph(g, g_res);
+  resolve_graph(g, g_res, NegLnTransition(1), 0.05, false);
   prune_inactive(g);
   vector<vector<Event> > evt = *(events(g));
   for (vector<vector<Event> >::iterator t_it = evt.begin(); t_it != evt.end(); ++t_it) {

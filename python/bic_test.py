@@ -34,3 +34,26 @@ if __name__ == "__main__":
         for k in range(k_max):
             print "   -> k = %d:" % (k+1,), priors[k]
         print
+    print
+
+    for weight in range(1,11):
+        w = 1.0/weight
+        print "weight =", w
+        # cluster around 0
+        c = np.random.randn(50)
+        # cluster around off1
+        off1=6
+        c = np.append(c,np.random.randn(50) + off1)
+        # cluster around off2
+        off2=18
+        c = np.append(c,np.random.randn(50) + off2)
+        centers = feature_array()
+        priors = feature_array()
+        n = 1
+        k_max = 5
+        c = c.reshape((1,) + c.shape)
+        gmm_priors_and_centers(c, priors, centers, k_max, n, w)
+        for k in range(k_max):
+            print "   -> k = %d:" % (k+1,), priors[k]
+        print centers[0], centers[1], centers[2], centers[3]
+        print

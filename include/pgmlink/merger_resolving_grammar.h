@@ -29,6 +29,10 @@ namespace pgmlink {
 
   class KMeans;
 
+  class GMM;
+  
+  class GMMInitalizeArma;
+
   template <typename T, typename U>
   void feature_array_to_arma_mat(const std::vector<T>& in,
 				 arma::Mat<U>& out);
