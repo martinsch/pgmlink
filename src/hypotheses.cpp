@@ -158,7 +158,7 @@ namespace pgmlink {
       with_resolved = true;
       LOG(logDEBUG1) << "events(): with_resolved enabled";
     }
-    bool with_origin = true;
+    bool with_origin = false;
     property_map<node_originated_from, HypothesesGraph::base_graph>::type* origin_map;
     if (g.getProperties().count("node_originated_from") > 0) {
       origin_map = &g.get(node_originated_from());
