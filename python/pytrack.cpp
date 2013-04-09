@@ -77,6 +77,7 @@ void export_track() {
 	.value("Appearance", Event::Appearance)
 	.value("Disappearance", Event::Disappearance)
 	.value("Merger", Event::Merger)
+	.value("MultiFrameMove", Event::MultiFrameMove)
 	.value("Void", Event::Void)
     ;
 
