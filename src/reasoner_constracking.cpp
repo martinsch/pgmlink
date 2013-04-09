@@ -333,14 +333,55 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
 		size_t num_vars = 0;
 		vector<size_t> vi;
 		vector<double> cost;
+
+		bool hasOutarcs = false;
+		for (HypothesesGraph::OutArcIt a(g, n); a != lemon::INVALID; ++a) {
+			hasOutarcs = true;
+			break;
+		}
+		bool hasInarcs = false;
+		for (HypothesesGraph::InArcIt a(g, n); a != lemon::INVALID; ++a) {
+			hasInarcs = true;
+			break;
+		}
+		int node_begin_time = -1;
+		int node_end_time = -1;
+		if (with_tracklets_) {
+			node_begin_time = tracklet_map[n].front().Timestep;
+			node_end_time = tracklet_map[n].back().Timestep;
+		} else {
+			node_begin_time = traxel_map[n].Timestep;
+			node_end_time = traxel_map[n].Timestep;
+		}
+		bool singleNodeTrack = !hasInarcs && !hasOutarcs;
+
 		if (app_node_map_.count(n) > 0) {
 			vi.push_back(app_node_map_[n]);
-			cost.push_back(appearance_cost_);
+			if (node_begin_time == g.earliest_timestep()) {
+				// pay no appearance costs in the first timestep
+				cost.push_back(0.);
+			} else {
+				cost.push_back(appearance_cost_);
+			}
 			++num_vars;
 		}
 		if (dis_node_map_.count(n) > 0) {
 			vi.push_back(dis_node_map_[n]);
-			cost.push_back(disappearance_cost_);
+			double c = 0;
+			if (singleNodeTrack) {
+				// single node tracks only have a disappearance node but not an appearance node
+				// also consider tracklets here which can reach over multiple time steps
+				if (node_end_time != g.latest_timestep()) {
+					c += disappearance_cost_;
+				}
+				if (node_begin_time != g.earliest_timestep()) {
+					// single node tracks do not have an appearance node, hence handle appearance here
+					c += appearance_cost_;
+				}
+			} else if (node_end_time != g.latest_timestep()) {
+				c += disappearance_cost_;
+			}
+			cost.push_back(c);
 			++num_vars;
 		}
 
