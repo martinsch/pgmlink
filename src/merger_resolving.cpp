@@ -77,6 +77,9 @@ namespace pgmlink {
   }
 
 
+  /**
+   * returns n*log_likelihood of the model
+   */
   double GMM::score() const {
     return score_;
   }
