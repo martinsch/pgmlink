@@ -401,7 +401,8 @@ namespace pgmlink {
   ////
   //// given a graph, do retracking
   ////
-  void resolve_graph(HypothesesGraph& src, HypothesesGraph& dest);
+  void resolve_graph(HypothesesGraph& src, HypothesesGraph& dest, boost::function<double(const double)> transition, double ep_gap, bool with_tracklets);
+  // void resolve_graph(HypothesesGraph& src, HypothesesGraph& dest);
 
   
   ////

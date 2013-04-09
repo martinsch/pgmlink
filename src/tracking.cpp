@@ -535,7 +535,7 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
           m.resolve_mergers(handler);
         
           HypothesesGraph g_res;
-          resolve_graph(*graph, g_res);
+          resolve_graph(*graph, g_res, transition, ep_gap_, with_tracklets_);
           prune_inactive(*graph);
         }
 
