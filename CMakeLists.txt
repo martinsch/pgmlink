@@ -56,8 +56,8 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_extensions/)
     find_package( Boost REQUIRED COMPONENTS serialization )
     MESSAGE(STATUS "  found: ${Boost_LIBRARIES}")
 
-    include_directories(${ANN_INCLUDE_DIR} ${Cplex_INCLUDE_DIR} ${VIGRA_INCLUDE_DIR} ${LEMON_INCLUDE_DIR} ${HDF5_INCLUDE_DIRS} )
-    link_directories( ${ANN_LIBRARY_DIR} ${Cplex_LIBRARY_DIR} ${VIGRA_IMPEX_LIBRARY_DIR} ${LEMON_LIBRARY_DIR} ${HDF5_LIBRARY_DIRS} )
+    include_directories(${ANN_INCLUDE_DIR} ${CPLEX_INCLUDE_DIRS} ${VIGRA_INCLUDE_DIR} ${LEMON_INCLUDE_DIR} ${HDF5_INCLUDE_DIRS} )
+    link_directories( ${ANN_LIBRARY_DIR} ${VIGRA_IMPEX_LIBRARY_DIR} ${LEMON_LIBRARY_DIR} ${HDF5_LIBRARY_DIRS} )
 
 # print out the dependencies
 MESSAGE(STATUS "Dependencies include dirs (you should check if they match the found libs):")
@@ -115,6 +115,9 @@ INCLUDE_DIRECTORIES(
   "${PROJECT_SOURCE_DIR}/include/" 
 )
 
+##
+# libpgmlink
+##
 FILE(GLOB LIB_SOURCES src/*.cpp)
 
 ADD_LIBRARY(pgmlink SHARED ${LIB_SOURCES})

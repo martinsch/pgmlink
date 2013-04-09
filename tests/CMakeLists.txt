@@ -57,6 +57,3 @@ foreach(test_src ${OGM_TEST_SRCS})
   target_link_libraries( ${test_name} ${CPLEX_LIBRARIES} )
   add_test( ${test_name} ${test_name} )
 endforeach(test_src)
-
-
-
