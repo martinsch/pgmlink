@@ -14,7 +14,12 @@ GET_FILENAME_COMPONENT(VIGRA_IMPEX_LIBRARY_PATH ${VIGRA_IMPEX_LIBRARY} PATH)
 SET( VIGRA_IMPEX_LIBRARY_DIR ${VIGRA_IMPEX_LIBRARY_PATH} CACHE PATH "Path to Vigra impex library.")
 
 EXECUTE_PROCESS ( COMMAND python -c "from distutils.sysconfig import get_python_lib; print get_python_lib()" OUTPUT_VARIABLE PYTHON_SITE_PACKAGES OUTPUT_STRIP_TRAILING_WHITESPACE)
-FIND_FILE(VIGRA_NUMPY_CORE_LIBRARY vigranumpycore.so PATHS ${PYTHON_SITE_PACKAGES} ENV PYTHONPATH PATH_SUFFIXES vigra)
+FIND_FILE(VIGRA_NUMPY_CORE_LIBRARY 
+          NAMES vigranumpycore.so vigranumpycore.pyd
+          PATHS ${PYTHON_SITE_PACKAGES} 
+                ENV PYTHONPATH
+                ${CMAKE_PREFIX_PATH}/python/Lib/site-packages # Windows, buildem system
+          PATH_SUFFIXES vigra)
 
 
 # handle the QUIETLY and REQUIRED arguments and set VIGRA_FOUND to TRUE if 
