@@ -135,8 +135,6 @@ namespace pgmlink {
   	      bool with_divisions=true,
   	      double disappearance_cost = 0,
   	      double appearance_cost = 0,
-		  const std::vector<double> means = std::vector<double>(),
-		  const std::vector<double> sigmas = std::vector<double>(),
                   bool with_merger_resolution = true
   	      )
         : max_number_objects_(max_number_objects),
@@ -150,8 +148,8 @@ namespace pgmlink {
         with_divisions_(with_divisions),
         disappearance_cost_(disappearance_cost),
         appearance_cost_(appearance_cost),
-        means_(means),
-            sigmas_(sigmas),
+            means_(std::vector<double>()),
+            sigmas_(std::vector<double>()),
             with_merger_resolution_(with_merger_resolution) {}
       std::vector< std::vector<Event> > operator()(TraxelStore&);
 
