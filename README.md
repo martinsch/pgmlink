@@ -13,7 +13,6 @@ Dependencies that have to be built and installed manually:
 Dependencies that should be available as packages:
 
 - ann
-- hdf5   
 - boost
   - boost-serialization
   - boost-python (optional)

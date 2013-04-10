@@ -1,6 +1,4 @@
-##
 # our functions and macros
-##
     # logging_level_to_define()
     # Gives the define corresponding to a global logging level.
     #
@@ -45,19 +43,15 @@ PROJECT(pgmlink)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_extensions/)
 
 
-##
 # dependencies
-##
-    find_package( ANN REQUIRED )
-    find_package( Cplex REQUIRED )
-    find_package( VIGRA REQUIRED )
-    find_package( Lemon REQUIRED )
-    find_package( HDF5 REQUIRED )
-    find_package( Boost REQUIRED COMPONENTS serialization )
-    MESSAGE(STATUS "  found: ${Boost_LIBRARIES}")
+find_package( ANN REQUIRED )
+find_package( Cplex REQUIRED )
+find_package( VIGRA REQUIRED )
+find_package( Lemon REQUIRED )
+find_package( Boost REQUIRED COMPONENTS serialization )
+MESSAGE(STATUS "  found: ${Boost_LIBRARIES}")
 
-    include_directories(${ANN_INCLUDE_DIR} ${CPLEX_INCLUDE_DIRS} ${VIGRA_INCLUDE_DIR} ${LEMON_INCLUDE_DIR} ${HDF5_INCLUDE_DIRS} )
-    link_directories( ${ANN_LIBRARY_DIR} ${VIGRA_IMPEX_LIBRARY_DIR} ${LEMON_LIBRARY_DIR} ${HDF5_LIBRARY_DIRS} )
+include_directories(${ANN_INCLUDE_DIR} ${CPLEX_INCLUDE_DIRS} ${VIGRA_INCLUDE_DIR} ${LEMON_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
 
 # print out the dependencies
 MESSAGE(STATUS "Dependencies include dirs (you should check if they match the found libs):")
@@ -65,51 +59,43 @@ MESSAGE(STATUS "  ANN: ${ANN_INCLUDE_DIR}")
 MESSAGE(STATUS "  Cplex: ${CPLEX_INCLUDE_DIR}")
 MESSAGE(STATUS "  VIGRA: ${VIGRA_INCLUDE_DIR}")
 MESSAGE(STATUS "  Lemon: ${LEMON_INCLUDE_DIR}")
-MESSAGE(STATUS "  HDF5: ${HDF5_INCLUDE_DIR}")
 MESSAGE(STATUS "  Boost: ${Boost_INCLUDE_DIRS}")
 
 # hide these variables to have a cleaner interface
-MARK_AS_ADVANCED( Boost_DIR HDF5_DIR )
+MARK_AS_ADVANCED( Boost_DIR )
 
-##
 # build options
-##
+## logging level
+SET(LOGGING_LEVEL "INFO" CACHE STRING "Choose a global logging level: NO_LOGGING, ERROR, WARNING, INFO, DEBUG, DEBUG1, ..., DEBUG4")
 
-    # logging level
-    SET(LOGGING_LEVEL "INFO" CACHE STRING "Choose a global logging level: NO_LOGGING, ERROR, WARNING, INFO, DEBUG, DEBUG1, ..., DEBUG4")
+## unit tests
+SET(WITH_TESTS "False" CACHE BOOL "Build tests.")
 
-    # unit tests
-    SET(WITH_TESTS "False" CACHE BOOL "Build tests.")
+## build type and compiler options
+IF(NOT CMAKE_BUILD_TYPE)
+  SET(CMAKE_BUILD_TYPE Release CACHE STRING
+    "Choose the type of build, options are: Release Debug."
+    FORCE)
+ENDIF(NOT CMAKE_BUILD_TYPE)
 
-##
-# build type and compiler options
-##
-    IF(NOT CMAKE_BUILD_TYPE)
-      SET(CMAKE_BUILD_TYPE Release CACHE STRING
-	"Choose the type of build, options are: Release Debug."
-	FORCE)
-    ENDIF(NOT CMAKE_BUILD_TYPE)
+SET(CMAKE_CXX_FLAGS "-Wall -Wextra -Wfatal-errors -std=c++98 -pedantic -pthread")
+SET(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
+SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -Werror")
 
-    SET(CMAKE_CXX_FLAGS "-Wall -Wextra -Wfatal-errors -std=c++98 -pedantic -pthread")
-    SET(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
-    SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -Werror")
+SET(WITH_CHECKED_STL "True" CACHE BOOL "Build with checked stl for more robust code (may degrade performance; gcc only).")
+IF(WITH_CHECKED_STL)
+  ADD_DEFINITIONS(-D_GLIBCXX_DEBUG)
+ENDIF()
 
-    SET(WITH_CHECKED_STL "True" CACHE BOOL "Build with checked stl for more robust code (may degrade performance; gcc only).")
-    IF(WITH_CHECKED_STL)
-      ADD_DEFINITIONS(-D_GLIBCXX_DEBUG)
-    ENDIF()
-    
-    #CPLEX switch to be compatible with STL
-    ADD_DEFINITIONS(-DIL_STD)
+#CPLEX switch to be compatible with STL
+ADD_DEFINITIONS(-DIL_STD)
 
-    # assume by default that HDF5 is installed. Set definition for vigra random forest
-    ADD_DEFINITIONS(-DHasHDF5)
+# assume by default that HDF5 is installed. Set definition for vigra random forest
+ADD_DEFINITIONS(-DHasHDF5)
 
-##
 # global logging level
-##
-    LOGGING_LEVEL_TO_DEFINE(LOGGING_LEVEL LOG_DEFINE)
-    ADD_DEFINITIONS(-D FILELOG_MAX_LEVEL=${LOG_DEFINE})
+LOGGING_LEVEL_TO_DEFINE(LOGGING_LEVEL LOG_DEFINE)
+ADD_DEFINITIONS(-D FILELOG_MAX_LEVEL=${LOG_DEFINE})
 
 INCLUDE_DIRECTORIES(
   "${PROJECT_SOURCE_DIR}/include/" 
@@ -121,10 +107,7 @@ INCLUDE_DIRECTORIES(
 FILE(GLOB LIB_SOURCES src/*.cpp)
 
 ADD_LIBRARY(pgmlink SHARED ${LIB_SOURCES})
-TARGET_LINK_LIBRARIES(pgmlink ${ANN_LIBRARIES} ${Boost_LIBRARIES} ${HD5_LIBRARIES} ${HDF5_HL_LIBRARIES} ${CPLEX_LIBRARIES} ${VIGRA_IMPEX_LIBRARY} ${LEMON_LIBRARIES})
-
-
-
+TARGET_LINK_LIBRARIES(pgmlink ${ANN_LIBRARIES} ${Boost_LIBRARIES}  ${CPLEX_LIBRARIES} ${VIGRA_IMPEX_LIBRARY} ${LEMON_LIBRARIES})
 
 ### Always use full RPATH
 
@@ -140,7 +123,6 @@ SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 # add the automatically determined parts of the RPATH
 # which point to directories outside the build tree to the install RPATH
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-
 
 # the RPATH to be used when installing, but only if it's not a system directory
 LIST(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/lib" isSystemDir)
