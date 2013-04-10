@@ -385,9 +385,13 @@ namespace pgmlink {
         assert(node_traxel_map[node_at].Timestep == t);
         if (origin_map[node_at].size()) {
           for(HypothesesGraph::InArcIt in_it(g, node_at); in_it != lemon::INVALID; ++in_it) {
+            HypothesesGraph::Node src_node = g.source(in_it);
+            if (origin_map[src_node].size()) {
+              break;
+            }
             Event e;
             e.type = Event::MultiFrameMove;
-            Traxel trax = node_traxel_map[g.source(in_it)];
+            Traxel trax = node_traxel_map[src_node];
             e.traxel_ids.push_back(trax.Id);
             int t_local = t+1;
             HypothesesGraph::Node n = node_at;
