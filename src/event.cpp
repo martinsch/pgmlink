@@ -87,6 +87,9 @@ ostream& operator<< (ostream &out, const Event &e)
   case Event::ResolvedTo:
     type = "ResolvedTo";
     break;
+  case Event::MultiFrameMove:
+    type = "MultiFrameMove";
+    break;
   default:
     type = "unknown";
     break;

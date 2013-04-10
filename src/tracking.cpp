@@ -525,6 +525,8 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 	cout << "-> pruning inactive hypotheses" << endl;
 	prune_inactive(*graph);
 
+        boost::shared_ptr<std::vector< std::vector<Event> > > ev = events(*graph);
+
         if (with_merger_resolution_) {
           cout << "-> resolving mergers" << endl;
           MergerResolver m(graph);
@@ -539,9 +541,11 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
           prune_inactive(*graph);
         }
 
+        boost::shared_ptr<std::vector< std::vector<Event> > > multi_frame_moves = multi_frame_move_events(*graph);
+
 	cout << "-> constructing events" << endl;
 
-	return *events(*graph);
+	return *merge_event_vectors(*ev, *multi_frame_moves);
 }
 
 vector<map<unsigned int, bool> > ConsTracking::detections() {

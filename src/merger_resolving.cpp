@@ -291,7 +291,7 @@ namespace pgmlink {
       new_ids.push_back(it->Id);
       // store parent (merger) node. this is used for creating the resolved_to event later
       origin_map.set(new_node, std::vector<unsigned int>(1, trax.Id));
-      LOG(logINFO) << "FeatureHandlerFromTraxels::operator(): added " << trax.Id << " to origin_map[" << g.id(new_node) << "]";
+      LOG(logDEBUG3) << "FeatureHandlerFromTraxels::operator(): added " << trax.Id << " to origin_map[" << g.id(new_node) << "]";
       node_resolution_map.set(new_node, true);
  
     }
