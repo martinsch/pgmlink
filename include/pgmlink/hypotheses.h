@@ -269,6 +269,8 @@ namespace pgmlink {
 		  const HypothesesGraph& traxel_graph, HypothesesGraph& tracklet_graph);
   HypothesesGraph& prune_inactive(HypothesesGraph&);
   boost::shared_ptr<std::vector< std::vector<Event> > > events(const HypothesesGraph&);
+  boost::shared_ptr<std::vector< std::vector<Event> > > multi_frame_move_events(const HypothesesGraph& g);
+  boost::shared_ptr<std::vector< std::vector<Event> > > merge_event_vectors(const std::vector<std::vector<Event> >& ev1, const std::vector<std::vector<Event> >& ev2);
   boost::shared_ptr<std::vector< std::map<unsigned int, bool> > > state_of_nodes(const HypothesesGraph&);
 
   // lemon graph format (lgf) serialization
