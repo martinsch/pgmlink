@@ -41,7 +41,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 PROJECT(pgmlink)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_extensions/)
-
+message( "\nConfiguring pgmlink:" )
 
 # dependencies
 find_package( ANN REQUIRED )
@@ -49,102 +49,61 @@ find_package( Cplex REQUIRED )
 find_package( VIGRA REQUIRED )
 find_package( Lemon REQUIRED )
 find_package( Boost REQUIRED COMPONENTS serialization )
-MESSAGE(STATUS "  found: ${Boost_LIBRARIES}")
+message(STATUS "  found: ${Boost_LIBRARIES}")
 
-include_directories(${ANN_INCLUDE_DIR} ${CPLEX_INCLUDE_DIRS} ${VIGRA_INCLUDE_DIR} ${LEMON_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
+include_directories(${PROJECT_SOURCE_DIR}/include/ ${ANN_INCLUDE_DIR} ${CPLEX_INCLUDE_DIRS} ${VIGRA_INCLUDE_DIR} ${LEMON_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
 
-# print out the dependencies
-MESSAGE(STATUS "Dependencies include dirs (you should check if they match the found libs):")
-MESSAGE(STATUS "  ANN: ${ANN_INCLUDE_DIR}")
-MESSAGE(STATUS "  Cplex: ${CPLEX_INCLUDE_DIR}")
-MESSAGE(STATUS "  VIGRA: ${VIGRA_INCLUDE_DIR}")
-MESSAGE(STATUS "  Lemon: ${LEMON_INCLUDE_DIR}")
-MESSAGE(STATUS "  Boost: ${Boost_INCLUDE_DIRS}")
-
-# hide these variables to have a cleaner interface
-MARK_AS_ADVANCED( Boost_DIR )
-
-# build options
-## logging level
-SET(LOGGING_LEVEL "INFO" CACHE STRING "Choose a global logging level: NO_LOGGING, ERROR, WARNING, INFO, DEBUG, DEBUG1, ..., DEBUG4")
-
-## unit tests
-SET(WITH_TESTS "False" CACHE BOOL "Build tests.")
-
-## build type and compiler options
-IF(NOT CMAKE_BUILD_TYPE)
-  SET(CMAKE_BUILD_TYPE Release CACHE STRING
-    "Choose the type of build, options are: Release Debug."
-    FORCE)
-ENDIF(NOT CMAKE_BUILD_TYPE)
-
-SET(CMAKE_CXX_FLAGS "-Wall -Wextra -Wfatal-errors -std=c++98 -pedantic -pthread")
-SET(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
-SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -Werror")
-
-SET(WITH_CHECKED_STL "True" CACHE BOOL "Build with checked stl for more robust code (may degrade performance; gcc only).")
-IF(WITH_CHECKED_STL)
-  ADD_DEFINITIONS(-D_GLIBCXX_DEBUG)
-ENDIF()
-
-#CPLEX switch to be compatible with STL
+# CPLEX switch to be compatible with STL
 ADD_DEFINITIONS(-DIL_STD)
-
 # assume by default that HDF5 is installed. Set definition for vigra random forest
 ADD_DEFINITIONS(-DHasHDF5)
 
+# print out the dependencies
+message(STATUS "Dependencies include dirs (you should check if they match the found libs):")
+message(STATUS "  ANN: ${ANN_INCLUDE_DIR}")
+message(STATUS "  Cplex: ${CPLEX_INCLUDE_DIR}")
+message(STATUS "  VIGRA: ${VIGRA_INCLUDE_DIR}")
+message(STATUS "  Lemon: ${LEMON_INCLUDE_DIR}")
+message(STATUS "  Boost: ${Boost_INCLUDE_DIRS}")
+
+# hide these variables to have a cleaner interface
+mark_as_advanced( Boost_DIR )
+
+# build options
+
+# logging level
+set(LOGGING_LEVEL "INFO" CACHE STRING "Choose a global logging level: NO_LOGGING, ERROR, WARNING, INFO, DEBUG, DEBUG1, ..., DEBUG4")
+# unit tests
+set(WITH_TESTS "False" CACHE BOOL "Build tests.")
+# build type and compiler options
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release CACHE STRING
+    "Choose the type of build, options are: Release Debug."
+    FORCE)
+endif(NOT CMAKE_BUILD_TYPE)
+
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wfatal-errors -std=c++98 -pedantic -pthread")
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Werror")
+
+set(WITH_CHECKED_STL "True" CACHE BOOL "Build with checked stl for more robust code (may degrade performance; gcc only).")
+if(WITH_CHECKED_STL)
+  add_definitions(-D_GLIBCXX_DEBUG)
+endif()
+
 # global logging level
-LOGGING_LEVEL_TO_DEFINE(LOGGING_LEVEL LOG_DEFINE)
-ADD_DEFINITIONS(-D FILELOG_MAX_LEVEL=${LOG_DEFINE})
+logging_level_to_define(LOGGING_LEVEL LOG_DEFINE)
+add_definitions(-D FILELOG_MAX_LEVEL=${LOG_DEFINE})
 
-INCLUDE_DIRECTORIES(
-  "${PROJECT_SOURCE_DIR}/include/" 
-)
-
-##
 # libpgmlink
-##
-FILE(GLOB LIB_SOURCES src/*.cpp)
+file(GLOB LIB_SOURCES src/*.cpp)
+add_library(pgmlink SHARED ${LIB_SOURCES})
+target_link_libraries(pgmlink ${ANN_LIBRARIES} ${Boost_LIBRARIES}  ${CPLEX_LIBRARIES} ${VIGRA_IMPEX_LIBRARY} ${LEMON_LIBRARIES})
 
-ADD_LIBRARY(pgmlink SHARED ${LIB_SOURCES})
-TARGET_LINK_LIBRARIES(pgmlink ${ANN_LIBRARIES} ${Boost_LIBRARIES}  ${CPLEX_LIBRARIES} ${VIGRA_IMPEX_LIBRARY} ${LEMON_LIBRARIES})
+# Install target pgmlink
+install(TARGETS pgmlink
+        DESTINATION lib)
 
-### Always use full RPATH
-
-# use, i.e. don't skip the full RPATH for the build tree
-SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
-
-# when building, don't use the install RPATH already
-# (but later on when installing)
-SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE) 
-
-SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
-
-# add the automatically determined parts of the RPATH
-# which point to directories outside the build tree to the install RPATH
-SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-
-# the RPATH to be used when installing, but only if it's not a system directory
-LIST(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/lib" isSystemDir)
-IF("${isSystemDir}" STREQUAL "-1")
-   SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
-ENDIF("${isSystemDir}" STREQUAL "-1")
-
-##
-# Tests
-if(WITH_TESTS)
-  enable_testing()
-  add_subdirectory(tests/)
-endif()
-
-##
-# Python
-SET(WITH_PYTHON true CACHE BOOL "Build with python wrapper.")
-if(WITH_PYTHON)
-  add_subdirectory(python/)
-endif()
-
-##
 # API documentation with Doxygen
 find_package(Doxygen)
 if(DOXYGEN_FOUND)
@@ -158,8 +117,14 @@ else(DOXYGEN_FOUND)
   MESSAGE(WARNING "Doxygen not found. Won't add 'doc' build target.")
 endif(DOXYGEN_FOUND)
 
-##
-# Install target pgmlink
-INSTALL(TARGETS pgmlink
-        DESTINATION lib)
+# Tests
+if(WITH_TESTS)
+  enable_testing()
+  add_subdirectory(tests/)
+endif()
 
+# Python
+SET(WITH_PYTHON true CACHE BOOL "Build with python wrapper.")
+if(WITH_PYTHON)
+  add_subdirectory(python/)
+endif()
