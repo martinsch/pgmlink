@@ -376,12 +376,22 @@ BOOST_AUTO_TEST_CASE( MergerResolver_resolve_mergers_2 ) {
   vector<vector<Event> > evt = *(events(g));
   for (vector<vector<Event> >::iterator t_it = evt.begin(); t_it != evt.end(); ++t_it) {
     for (vector<Event>::iterator e_it = t_it->begin(); e_it != t_it->end(); ++ e_it) {
-      cout << *e_it << "\n";
+      cout << "t=" << t_it - evt.begin() + 1 << ": " << *e_it << "\n";
     }
   }
 
+  vector<vector<Event> > evts = *(multi_frame_move_events(g));
+  for (vector<vector<Event> >::iterator t_it = evts.begin(); t_it != evts.end(); ++t_it) {
+    for (vector<Event>::iterator e_it = t_it->begin(); e_it != t_it->end(); ++ e_it) {
+      cout << "t=" << t_it - evts.begin() + 1 << ": " << *e_it << "\n";
+    }
+  }
 
-  
+  vector<vector<Event> > merged_ev = *merge_event_vectors(evt, evts);
+  for (vector<vector<Event> >::iterator t_it = merged_ev.begin(); t_it != merged_ev.end(); ++t_it) {
+    size_t pos = t_it - merged_ev.begin();
+    BOOST_CHECK_EQUAL(t_it->size(), (evt.begin()+pos)->size() + (evts.begin()+pos)->size());
+  }
 }
 
 
@@ -1001,7 +1011,7 @@ BOOST_AUTO_TEST_CASE( MergerResolver_kmeans) {
 //}
 
 
-BOOST_AUTO_TEST_CASE( Merger_Resolver_GMM ) {
+/* BOOST_AUTO_TEST_CASE( Merger_Resolver_GMM ) {
   float arr[] = {-6, -5, -4, 6, 5, 4};
   float arr_res[] = {-5, 5};
   feature_array data(arr, arr + sizeof(arr)/sizeof(arr[0]));
@@ -1009,6 +1019,6 @@ BOOST_AUTO_TEST_CASE( Merger_Resolver_GMM ) {
   feature_array centers = gmm();
   cout << "GMM score: " << gmm.score() << "\n";
   BOOST_CHECK_EQUAL_COLLECTIONS(centers.begin(), centers.end(), arr_res, arr_res+sizeof(arr_res)/sizeof(arr_res[0]));
-}
+} */
 
 // EOF

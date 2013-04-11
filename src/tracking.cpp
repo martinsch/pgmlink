@@ -525,11 +525,15 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 	cout << "-> pruning inactive hypotheses" << endl;
 	prune_inactive(*graph);
 
+        cout << "-> constructing unresolved events" << endl;
+        boost::shared_ptr<std::vector< std::vector<Event> > > ev = events(*graph);
+        
+
         if (with_merger_resolution_) {
           cout << "-> resolving mergers" << endl;
           MergerResolver m(graph);
           // FeatureExtractorMCOMsFromKMeans extractor;
-          FeatureExtractorMCOMsFromGMM extractor;
+          FeatureExtractorMCOMsFromGMM extractor(number_of_dimensions_);
           DistanceFromCOMs distance;
           FeatureHandlerFromTraxels handler(extractor, distance);
           m.resolve_mergers(handler);
@@ -537,11 +541,23 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
           HypothesesGraph g_res;
           resolve_graph(*graph, g_res, transition, ep_gap_, with_tracklets_);
           prune_inactive(*graph);
+
+          cout << "-> constructing resolved events" << endl;
+          boost::shared_ptr<std::vector< std::vector<Event> > > multi_frame_moves = multi_frame_move_events(*graph);
+
+          cout << "-> merging unresolved and resolved events" << endl;
+          return *merge_event_vectors(*ev, *multi_frame_moves);
         }
 
-	cout << "-> constructing events" << endl;
+        else {
+          return *ev;
+        }
 
-	return *events(*graph);
+        
+
+	
+
+	
 }
 
 vector<map<unsigned int, bool> > ConsTracking::detections() {

@@ -67,12 +67,22 @@ namespace pgmlink {
     int n_samples = data_.size()/n_;
     arma::mat data(n_,n_samples);
     arma::Col<size_t> labels;
-    feature_array_to_arma_mat(data_, data);
+    LOG(logINFO) << "GMM:operator(): n_=" << n_;
+    if (n_ == 2) {
+      feature_array_to_arma_mat_skip_last_dimension(data_, data, 3);
+    } else if(n_ == 3) {
+      feature_array_to_arma_mat(data_, data);
+    } else {
+      throw std::runtime_error("Number of spatial dimensions other than 2 or 3 would not make sense!");
+    }
     score_ = gmm.Estimate(data, n_trials_);
     std::vector<arma::vec> centers = gmm.Means();
     feature_array fa_centers;
     for (std::vector<arma::vec>::iterator it = centers.begin(); it != centers.end(); ++it) {
       std::copy(it->begin(), it->end(), std::back_insert_iterator<feature_array >(fa_centers));
+      if (n_ == 2) {
+        fa_centers.push_back(0);
+      }
     }
     return fa_centers;
   }
@@ -157,8 +167,7 @@ namespace pgmlink {
     std::map<std::string, feature_array>::iterator it = trax.features.find("coordinates");
     assert(it != trax.features.end());
     std::vector<Traxel> res;
-    int ndim = 3;
-    GMM gmm(nMergers, ndim, it->second);
+    GMM gmm(nMergers, n_dim_, it->second);
     trax.features["mergerCOMs"] = gmm();
     FeatureExtractorMCOMsFromMCOMs extractor;
     return extractor(trax, nMergers, max_id);
@@ -306,7 +315,7 @@ namespace pgmlink {
       new_ids.push_back(it->Id);
       // store parent (merger) node. this is used for creating the resolved_to event later
       origin_map.set(new_node, std::vector<unsigned int>(1, trax.Id));
-      LOG(logINFO) << "FeatureHandlerFromTraxels::operator(): added " << trax.Id << " to origin_map[" << g.id(new_node) << "]";
+      LOG(logDEBUG3) << "FeatureHandlerFromTraxels::operator(): added " << trax.Id << " to origin_map[" << g.id(new_node) << "]";
       node_resolution_map.set(new_node, true);
  
     }
