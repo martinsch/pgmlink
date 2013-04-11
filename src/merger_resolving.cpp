@@ -226,17 +226,25 @@ namespace pgmlink {
     property_map<arc_active, HypothesesGraph::base_graph>::type& arc_active_map = g.get(arc_active());
     property_map<arc_resolution_candidate, HypothesesGraph::base_graph>::type& arc_resolution_map = g.get(arc_resolution_candidate());
 
-
+    std::vector<int> arc_ids;
     // add incoming arcs
     for (it = sources.begin(); it != sources.end(); ++it) {
       HypothesesGraph::Node from = g.source(*it);
       double dist = distance(g, from, n);
       HypothesesGraph::Arc arc = g.addArc(from, n);
+      arc_ids.push_back(g.id(arc));
       arc_distances.set(arc, dist);
       arc_active_map.set(arc, true);
       arc_resolution_map.set(arc, true);
       // LOG?
     }
+//    for(it = sources.begin(); it != sources.end(); ++it) {
+//    	HypothesesGraph::Node from = g.source(*it);
+//	  double dist = distance(g, from, n);
+//	  arc_distances.set(arc, dist);
+//	        arc_active_map.set(arc, true);
+//	        arc_resolution_map.set(arc, true);
+//    }
 
     // add outgoing arcs
     for (it = targets.begin(); it != targets.end(); ++it) {
@@ -246,8 +254,15 @@ namespace pgmlink {
       arc_distances.set(arc, dist);
       arc_active_map.set(arc, true);
       arc_resolution_map.set(arc, true);
+      arc_ids.push_back(g.id(arc));
       // LOG?
     }
+    LOG(logDEBUG) << "FeatureHandlerBase::add_arcs_for_replacement_node: checking states of arcs";
+//    arc_active_map = g.get(arc_active());
+	for(std::vector<int>::const_iterator arc_it = arc_ids.begin(); arc_it != arc_ids.end(); ++arc_it) {
+		HypothesesGraph::Arc arc = g.arcFromId(*arc_it);
+		assert(arc_active_map[arc]);
+	}
   }
     
 
@@ -334,6 +349,7 @@ namespace pgmlink {
     property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g_->get(node_traxel());
     property_map<arc_active, HypothesesGraph::base_graph>::type& arc_active_map = g_->get(arc_active());
 
+    std::vector<int> arc_ids;
     // add incoming arcs
     for(it = src.begin(); it != src.end(); ++it) {
       HypothesesGraph::Node from = g_->source(*it);
@@ -343,6 +359,7 @@ namespace pgmlink {
       // add distance and activate arcs
       arc_distances.set(arc, dist);
       arc_active_map.set(arc, true);
+      arc_ids.push_back(g_->id(arc));
       LOG(logDEBUG3) << "MergerResolver::add_arcs_for_replacement_node(): added incoming arc: (" << from_tr.Id << "," << trax.Id << "), dist=" << dist << ", state=" << arc_active_map[arc];
     }
 
@@ -355,8 +372,15 @@ namespace pgmlink {
       // add distance and activate arcs
       arc_distances.set(arc, dist);
       arc_active_map.set(arc, true);
+      arc_ids.push_back(g_->id(arc));
       LOG(logDEBUG3) << "MergerResolver::add_arcs_for_replacement_node(): added outgoing arc " << g_->id(arc)  << " (" << trax.Id << "," << to_tr.Id << "), dist=" << dist << ", state=" << arc_active_map[arc];
     }
+
+    LOG(logDEBUG) << "MergerResolver::add_arcs_for_replacement_node: checking states of arcs";
+        for(std::vector<int>::const_iterator arc_it = arc_ids.begin(); arc_it != arc_ids.end(); ++it) {
+        	HypothesesGraph::Arc arc = g_->arcFromId(*arc_it);
+        	assert(arc_active_map[arc]);
+        }
   }
 
   void MergerResolver::deactivate_arcs(std::vector<HypothesesGraph::base_graph::Arc> arcs) {
@@ -369,7 +393,7 @@ namespace pgmlink {
       LOG(logDEBUG3) << "MergerResolver::deactivate_arcs(): setting arc " << g_->id(*it)  << " (" << g_->get(node_traxel())[g_->source((*it))].Id << "," << g_->get(node_traxel())[g_->target((*it))].Id << ") property arc_active to false";
 	arc_active_map.set(*it, false);
 	//      }
-	g_->erase(*it);
+//	g_->erase(*it);
     }
   }
 
@@ -534,11 +558,11 @@ namespace pgmlink {
                              false, // with_divisions_,
                              0, // disappearance_cost_
                              0, // appearance_cost
-                             false, // with_misdetections_allowed
-                             false, // with appearance
-                             false // with disappearance
+                             false // with_misdetections_allowed
+//                             false, // with appearance
+//                             false // with disappearance
                              );
-                             
+
     /*
       false, //with_appearance_,
       false, //with_disappearance_,

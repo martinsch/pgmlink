@@ -143,6 +143,7 @@ void ConservationTracking::conclude(HypothesesGraph& g) {
 	// the node is also active if its disappearance node is active
 	for (std::map<HypothesesGraph::Node, size_t>::const_iterator it =
 			dis_node_map_.begin(); it != dis_node_map_.end(); ++it) {
+
 		if (solution[it->second] > 0) {
 			if (with_tracklets_) {
 				// set state of tracklet nodes
@@ -502,8 +503,19 @@ void ConservationTracking::add_constraints(const HypothesesGraph& g) {
 	LOG(logDEBUG) << "ConservationTracking::add_constraints: entered";
 	typedef opengm::LPCplex<pgm::OpengmModelDeprecated::ogmGraphicalModel,pgm::OpengmModelDeprecated::ogmAccumulator> cplex;
 
+
+	property_map<node_tracklet, HypothesesGraph::base_graph>::type& tracklet_map = g.get(node_tracklet());
+
 	LOG(logDEBUG) << "ConservationTracking::add_constraints: transitions";
 	for (HypothesesGraph::NodeIt n(g); n != lemon::INVALID; ++n) {
+		std::stringstream traxel_names_ss;
+		for (std::vector<Traxel>::const_iterator trax_it = tracklet_map[n].begin(); trax_it != tracklet_map[n].end(); ++trax_it){
+			traxel_names_ss << trax_it->Id << " ";
+		}
+		std::string traxel_names = traxel_names_ss.str();
+
+
+
 		vector<size_t> cplex_idxs, cplex_idxs2;
 		vector<int> coeffs, coeffs2;
 
@@ -526,7 +538,7 @@ void ConservationTracking::add_constraints(const HypothesesGraph& g) {
 					optimizer_->addConstraint(cplex_idxs.begin(),
 								cplex_idxs.end(), coeffs.begin(), 0, 1);
 					LOG(logDEBUG3) << "ConservationTracking::add_constraints:" <<
-							" Y_ij <= App_i added for "
+							" Y_ij <= App_i added for Traxel " << traxel_names << ", "
 							<< "n = " << app_node_map_[n] << ", a = " << arc_map_[a] << ", nu = " << nu << ", mu = " << mu;
 				}
 			}
@@ -564,7 +576,7 @@ void ConservationTracking::add_constraints(const HypothesesGraph& g) {
 			optimizer_->addConstraint(cplex_idxs.begin(),
 					cplex_idxs.end(), coeffs.begin(), 0, 0);
 			LOG(logDEBUG3) << "ConservationTracking::add_constraints:" <<
-					" sum(Y_ij) = D_i + App_i added for "	<< "n = " << app_node_map_[n];
+					" sum(Y_ij) = D_i + App_i added for Traxel " << traxel_names << ", "	<< "n = " << app_node_map_[n];
 
 		}
 
@@ -584,7 +596,7 @@ void ConservationTracking::add_constraints(const HypothesesGraph& g) {
 			optimizer_->addConstraint(cplex_idxs.begin(),
 					cplex_idxs.end(), coeffs.begin(), -1, 0);
 			LOG(logDEBUG3) << "ConservationTracking::add_constraints:" <<
-					" D_i=1 => App_i =1 added for " << "n = " << app_node_map_[n] << ", d = " << div_node_map_[n];
+					" D_i=1 => App_i =1 added for  Traxel " << traxel_names << ", " << "n = " << app_node_map_[n] << ", d = " << div_node_map_[n];
 
 
 			// couple divsion and transition: D_1 = 1 => sum_k(Y_ik) = 2
@@ -607,7 +619,7 @@ void ConservationTracking::add_constraints(const HypothesesGraph& g) {
  				   optimizer_->addConstraint(cplex_idxs.begin(),
 							cplex_idxs.end(), coeffs.begin(), 0, 1);
 					LOG(logDEBUG3) << "ConservationTracking::add_constraints:" <<
-							" D_i=1 => Y_i[nu]=0 added for " << "d = " << div_node_map_[n] << ", y = " << arc_map_[a] << ", nu = " << nu;
+							" D_i=1 => Y_i[nu]=0 added for Traxel " << traxel_names << ", " << "d = " << div_node_map_[n] << ", y = " << arc_map_[a] << ", nu = " << nu;
 
 				}
 
@@ -619,7 +631,7 @@ void ConservationTracking::add_constraints(const HypothesesGraph& g) {
 			optimizer_->addConstraint(cplex_idxs2.begin(),
 					cplex_idxs2.end(), coeffs2.begin(), -int(max_number_objects_), 0);
 			LOG(logDEBUG3) << "ConservationTracking::add_constraints:" <<
-					" D_i = 1 => sum_k(Y_ik) = 2 added for " << "d = " << div_node_map_[n];
+					" D_i = 1 => sum_k(Y_ik) = 2 added for Traxel " << traxel_names << ", " << "d = " << div_node_map_[n];
 		}
 
 
@@ -650,7 +662,7 @@ void ConservationTracking::add_constraints(const HypothesesGraph& g) {
 			optimizer_->addConstraint(cplex_idxs.begin(),
 					cplex_idxs.end(), coeffs.begin(), 0, 0);
 			LOG(logDEBUG3) << "ConservationTracking::add_constraints:" <<
-					" sum_k(Y_kj) = Dis_j added for " << "n = " << dis_node_map_[n];
+					" sum_k(Y_kj) = Dis_j added for Traxel " << traxel_names << ", " << "n = " << dis_node_map_[n];
 		}
 
 
@@ -676,7 +688,7 @@ void ConservationTracking::add_constraints(const HypothesesGraph& g) {
 				optimizer_->addConstraint(cplex_idxs.begin(),
 						cplex_idxs.end(), coeffs.begin(), -1, 0);
 				LOG(logDEBUG3) << "ConservationTracking::add_constraints:" <<
-						" A_i[nu] = 1 => V_i[nu] = 1 v V_i[0] = 1 added for " << "n = " << app_node_map_[n];
+						" A_i[nu] = 1 => V_i[nu] = 1 v V_i[0] = 1 added for Traxel " << traxel_names << ", " << "n = " << app_node_map_[n];
 			}
 
 			for (size_t nu = 1; nu <= max_number_objects_; ++nu) {
@@ -697,66 +709,65 @@ void ConservationTracking::add_constraints(const HypothesesGraph& g) {
 				optimizer_->addConstraint(cplex_idxs.begin(),
 						cplex_idxs.end(), coeffs.begin(), -1, 0);
 				LOG(logDEBUG3) << "ConservationTracking::add_constraints:" <<
-						" V_i[nu] = 1 => A_i[nu] = 1 v A_i[0] = 1 added for " << "n = " << app_node_map_[n];
+						" V_i[nu] = 1 => A_i[nu] = 1 v A_i[0] = 1 added for Traxel " << traxel_names << ", " << "n = " << app_node_map_[n];
 			}
-                        if (!with_misdetections_allowed_) {
-                          cplex_idxs.clear();
-                          coeffs.clear();
-                          cplex_idxs.push_back(cplex_id(dis_node_map_[n],0));
-                          coeffs.push_back(1);
-                          cplex_idxs.push_back(cplex_id(app_node_map_[n],0));
-                          coeffs.push_back(1);
-
-                          // V_i[0] = 0 => 1 <= A_i[0]
-                          // A_i[0] = 0 => 1 <= V_i[0]
-                          // V_i <= m, A_i <= m
-                          // 1 <= Dis_i[0] + App_i[0] <= 2*m
-                          optimizer_->addConstraint(cplex_idxs.begin(),
-                                                    cplex_idxs.end(), coeffs.begin(), 0, 1 );
-                        }
-
-                        if (!with_appearance_) {
-                          for (unsigned nu = 1; nu <= max_number_objects_; ++nu) {
-                            for (unsigned eta = nu+1; eta <= max_number_objects_; ++eta) {
-                              cplex_idxs.clear();
-                              coeffs.clear();
-                              cplex_idxs.push_back(cplex_id(dis_node_map_[n], nu));
-                              coeffs.push_back(1);
-                              cplex_idxs.push_back(cplex_id(app_node_map_[n], eta));
-                              coeffs.push_back(1);
-
-                              // V_i[nu] >= A_i[eta] forall nu >= eta
-                              // V_i[nu] - A_i[eta] >= 0 forall nu >= eta
-                              optimizer_->addConstraint(cplex_idxs.begin(),
-                                                        cplex_idxs.end(), coeffs.begin(), 0, 1);
-                            }
-                          }
-                        }
-
-                        if (!with_disappearance_) {
-                          for (unsigned nu = 1; nu <= max_number_objects_; ++nu) {
-                            for (unsigned eta = nu+1; eta <= max_number_objects_; ++eta) {
-                              cplex_idxs.clear();
-                              coeffs.clear();
-                              cplex_idxs.push_back(cplex_id(app_node_map_[n], nu));
-                              coeffs.push_back(1);
-                              cplex_idxs.push_back(cplex_id(dis_node_map_[n], eta));
-                              coeffs.push_back(1);
-
-                              // A_i[nu] >= A_i[eta] forall nu >= eta
-                              // V_i[nu] - A_i[eta] >= 0 forall nu >= eta
-                              optimizer_->addConstraint(cplex_idxs.begin(),
-                                                        cplex_idxs.end(), coeffs.begin(), 0, 1);
-                              
-                            }
-                          }
-                          }
-                      
 		}
-	}
 
+
+		if (!with_misdetections_allowed_) {
+		  cplex_idxs.clear();
+		  coeffs.clear();
+		  if (dis_node_map_.count(n) > 0) {
+			  cplex_idxs.push_back(cplex_id(dis_node_map_[n],0));
+			  coeffs.push_back(1);
+		  }
+		  if (app_node_map_.count(n) > 0) {
+			  cplex_idxs.push_back(cplex_id(app_node_map_[n],0));
+			  coeffs.push_back(1);
+		  }
+
+		  // V_i[0] = 0 => 1 <= A_i[0]
+		  // A_i[0] = 0 => 1 <= V_i[0]
+		  // V_i <= m, A_i <= m
+		  // 0 <= Dis_i[0] + App_i[0] <= 0
+		  optimizer_->addConstraint(cplex_idxs.begin(),
+									cplex_idxs.end(), coeffs.begin(), 0, 0);
+		  LOG(logDEBUG3) << "ConservationTracking::add_constraints:" <<
+							" A_i[0] + V_i[0] = 0 added for Traxel " << traxel_names;
+		}
+
+		if (!with_appearance_ && (dis_node_map_.count(n) > 0)) {
+			cplex_idxs.clear();
+			coeffs.clear();
+			cplex_idxs.push_back(cplex_id(dis_node_map_[n],0));
+			coeffs.push_back(1);
+			// V_i[0] != 0
+			// 1 <= V_i[0] <= m
+			optimizer_->addConstraint(cplex_idxs.begin(),
+										cplex_idxs.end(), coeffs.begin(), 1, max_number_objects_ );
+			  LOG(logDEBUG3) << "ConservationTracking::add_constraints:" <<
+								" V_i[0] => 1 added for Traxel " << traxel_names << ", " << "n = " << dis_node_map_[n];
+		}
+
+		if (!with_appearance_ && (app_node_map_.count(n) > 0)) {
+			cplex_idxs.clear();
+			coeffs.clear();
+			cplex_idxs.push_back(cplex_id(app_node_map_[n],0));
+			coeffs.push_back(1);
+			// A_i[0] != 0
+			// 1 <= A_i[0] <= m
+			optimizer_->addConstraint(cplex_idxs.begin(),
+										cplex_idxs.end(), coeffs.begin(), 1, max_number_objects_ );
+			  LOG(logDEBUG3) << "ConservationTracking::add_constraints:" <<
+								" A_i[0] => 1 added for Traxel " << traxel_names << ", " << "n = " << app_node_map_[n];
+		}
+	  }
+                      
 
 }
+
+
+
 
 
 
