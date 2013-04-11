@@ -406,8 +406,8 @@ namespace pgmlink {
                 trax = node_traxel_map[n];
                 assert(t_local == trax.Timestep);
                 e.traxel_ids.push_back(trax.Id);
-                e.traxel_ids.push_back(t-1);
-                multi_frame_move_map[t_local-1].push_back(e);
+                e.traxel_ids.push_back(t-1-g.earliest_timestep());
+                multi_frame_move_map[t_local-g.earliest_timestep()].push_back(e);
                 break;
               }
               ++t_local;
