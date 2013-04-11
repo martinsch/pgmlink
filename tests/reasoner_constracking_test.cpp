@@ -943,3 +943,149 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Tracklets ) {
 	}
 	BOOST_CHECK_EQUAL(moves, 6);
 }
+
+
+BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Merger3 ) {
+
+	std::cout << "Constructing HypothesesGraph" << std::endl;
+	std::cout << std::endl;
+
+	typedef HypothesesGraph::ArcIt ArcIt2;
+	typedef HypothesesGraph::Arc Arc;
+	typedef HypothesesGraph::NodeIt NodeIt;
+	typedef HypothesesGraph::Node Node;
+	using lemon::INVALID;
+
+	std::cout << "Adding Traxels to TraxelStore" << std::endl;
+	std::cout << std::endl;
+
+	//  t=1      2       3
+	//  1				1
+	//    |		       |
+	//      ---- 2 ----  		1
+	//    |			   |	  |
+	//  1				1 ----
+	//  					  |
+	//							0
+	TraxelStore ts;
+	Traxel n11, n12, n21, n31, n32, n41, n42, n43;
+	feature_array com(feature_array::difference_type(3));
+	feature_array divProb(feature_array::difference_type(1));
+	feature_array detProb(feature_array::difference_type(3));
+	feature_array count(feature_array::difference_type(1));
+	feature_array coordinates(feature_array::difference_type(2*3));
+
+	n11.Id = 11; n11.Timestep = 1; com[0] = 854; com[1] = 718; com[2] = 0; divProb[0] = 0.01;
+	detProb[0] = 0.01; detProb[1] = 0.98; detProb[2] = 0.01;
+	n11.features["com"] = com; n11.features["divProb"] = divProb; n11.features["detProb"] = detProb;
+	coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
+	coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
+	n11.features["coordinates"] = coordinates;
+	add(ts,n11);
+
+	n12.Id = 12; n12.Timestep = 1; com[0] = 846; com[1] = 751; com[2] = 0; divProb[0] = 0.01;
+	detProb[0] = 0.01; detProb[1] = 0.98; detProb[2] = 0.01;
+	n12.features["com"] = com; n12.features["divProb"] = divProb; n12.features["detProb"] = detProb;
+	coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
+	coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
+	n12.features["coordinates"] = coordinates;
+	add(ts,n12);
+
+	n21.Id = 21; n21.Timestep = 2; com[0] = 845; com[1] = 732; com[2] = 0; divProb[0] = 0.01;
+	detProb[0] = 0.01; detProb[1] = 0.01; detProb[2] = 0.98;
+	n21.features["com"] = com; n21.features["divProb"] = divProb; n21.features["detProb"] = detProb;
+	coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
+	coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
+	n21.features["coordinates"] = coordinates;
+	add(ts,n21);
+
+	n31.Id = 31; n31.Timestep = 3; com[0] = 853; com[1] = 724; com[2] = 0; divProb[0] = 0.01;
+	detProb[0] = 0.01; detProb[1] = 0.98; detProb[2] = 0.01;
+	n31.features["com"] = com; n31.features["divProb"] = divProb; n31.features["detProb"] = detProb;
+	coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
+	coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
+	n31.features["coordinates"] = coordinates;
+	add(ts,n31);
+
+	n32.Id = 32; n32.Timestep = 3; com[0] = 835; com[1] = 747; com[2] = 0; divProb[0] = 0.01;
+	detProb[0] = 0.01; detProb[1] = 0.98; detProb[2] = 0.01;
+	n32.features["com"] = com; n32.features["divProb"] = divProb; n32.features["detProb"] = detProb;
+	coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
+	coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
+	n32.features["coordinates"] = coordinates;
+	add(ts,n32);
+
+	n41.Id = 41; n41.Timestep = 4; com[0] = 825; com[1] = 753; com[2] = 0; divProb[0] = 0.01;
+	detProb[0] = 0.01; detProb[1] = 0.98; detProb[2] = 0.01;
+	n41.features["com"] = com; n41.features["divProb"] = divProb; n41.features["detProb"] = detProb;
+	coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
+	coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
+	n41.features["coordinates"] = coordinates;
+	add(ts,n41);
+
+	n42.Id = 42; n42.Timestep = 4; com[0] = 842; com[1] = 761; com[2] = 0; divProb[0] = 0.01;
+	detProb[0] = 0.98; detProb[1] = 0.01; detProb[2] = 0.01;
+	n42.features["com"] = com; n42.features["divProb"] = divProb; n42.features["detProb"] = detProb;
+	coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
+	coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
+	n42.features["coordinates"] = coordinates;
+	add(ts,n42);
+
+	n43.Id = 43; n43.Timestep = 4; com[0] = 853; com[1] = 724; com[2] = 0; divProb[0] = 0.01;
+	detProb[0] = 0.01; detProb[1] = 0.98; detProb[2] = 0.01;
+	n43.features["com"] = com; n43.features["divProb"] = divProb; n43.features["detProb"] = detProb;
+	coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
+	coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
+	n43.features["coordinates"] = coordinates;
+	add(ts,n43);
+
+
+	std::cout << "Initialize Conservation tracking" << std::endl;
+	std::cout << std::endl;
+
+	ConsTracking tracking = ConsTracking(
+			  2, // max_number_objects
+		      99999, // max_neighbor_distance
+			  0.1, // division_threshold
+			  "none", // random_forest_filename
+	  	      false, // detection_by_volume
+	  	      0, // forbidden_cost
+	  	      0.05, // ep_gap
+	  	      double(1.1), // avg_obj_size
+			  true, // with_tracklets
+			  10.0, //division_weight
+			  10.0, //transition_weight
+			  true, //with_divisions
+			  500., // disappearance_cost,
+			  500., // appearance_cost
+			  std::vector<double>(), // means
+			  std::vector<double>(), // sigmas
+			  true //with_merger_resolution
+	  	      );
+
+	std::cout << "Run Conservation tracking" << std::endl;
+	std::cout << std::endl;
+	std::vector< std::vector<Event> > events = tracking(ts);
+
+	size_t t = 1;
+	size_t apps = 0;
+	size_t disapps = 0;
+	size_t num_events = 0;
+	for (std::vector< std::vector<Event> >::const_iterator it_t = events.begin(); it_t != events.end(); ++it_t) {
+		for (std::vector<Event>::const_iterator it = (*it_t).begin(); it!=(*it_t).end(); ++it) {
+			Event e = *it;
+			if (e.type == Event::Appearance) {
+				++apps;
+			}
+			if (e.type == Event::Disappearance) {
+				++disapps;
+			}
+			++num_events;
+		}
+		++t;
+	}
+
+	BOOST_CHECK_EQUAL(apps, 0);
+	BOOST_CHECK_EQUAL(disapps, 0);
+	BOOST_CHECK_GE(num_events, 3);
+}
