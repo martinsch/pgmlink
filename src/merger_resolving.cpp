@@ -64,10 +64,10 @@ namespace pgmlink {
   ////
   feature_array GMM::operator()() {
     mlpack::gmm::GMM<> gmm(k_, n_);
-    int n_samples = data_.size()/n_;
+    int n_samples = data_.size()/3;
     arma::mat data(n_,n_samples);
     arma::Col<size_t> labels;
-    LOG(logINFO) << "GMM:operator(): n_=" << n_;
+    LOG(logDEBUG1) << "GMM::operator(): n_=" << n_;
     if (n_ == 2) {
       feature_array_to_arma_mat_skip_last_dimension(data_, data, 3);
     } else if(n_ == 3) {
@@ -402,7 +402,7 @@ namespace pgmlink {
       LOG(logDEBUG3) << "MergerResolver::deactivate_arcs(): setting arc " << g_->id(*it)  << " (" << g_->get(node_traxel())[g_->source((*it))].Id << "," << g_->get(node_traxel())[g_->target((*it))].Id << ") property arc_active to false";
 	arc_active_map.set(*it, false);
 	//      }
-//	g_->erase(*it);
+        g_->erase(*it);
     }
   }
 
@@ -490,6 +490,7 @@ namespace pgmlink {
 
   HypothesesGraph* MergerResolver::resolve_mergers(FeatureHandlerBase& handler) {
     // extract property maps and iterators from graph
+    LOG(logDEBUG) << "resolve_mergers() entered";
     property_map<node_active2, HypothesesGraph::base_graph>::type& active_map = g_->get(node_active2());
     property_map<node_active2, HypothesesGraph::base_graph>::type::ValueIt active_valueIt = active_map.beginValue();
 
