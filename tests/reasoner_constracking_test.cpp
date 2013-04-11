@@ -1078,6 +1078,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Merger3 ) {
 			if (e.type == Event::Disappearance) {
 				++disapps;
 			}
+			cout << e << endl;
 			++num_events;
 		}
 		++t;
