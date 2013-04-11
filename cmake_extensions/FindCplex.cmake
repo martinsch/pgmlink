@@ -8,7 +8,7 @@
 #  CPLEX_LIBRARIES          - library files
 
 ## config
-set(CPLEX_ROOT_DIR "" CACHE PATH "CPLEX root directory")
+set(CPLEX_ROOT_DIR "" CACHE PATH "Hint the CPLEX Optimization Studio root directory (set if autodiscovery fails)")
 
 if(WIN32)
   if(NOT CPLEX_WIN_VERSION)
