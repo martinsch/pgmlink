@@ -51,14 +51,14 @@ void export_track() {
     ;
 
     class_<ConsTracking>("ConsTracking",
-                         init<int,double,double,string,bool,double,double,double,bool,double,double,bool,double,double, bool>(
+                         init<int,double,double,string,bool,double,double,double,bool,double,double,bool,double,double, bool, int>(
 						args("max_number_objects", "max_neighbor_distance", "division_threshold",
 							"detection_rf_filename", "size_dependent_detection_prob", "forbidden_cost",
 							"ep_gap", "avg_obj_size",
 							"with_tracklets",
 							"division_weight", "transition_weight",
 							"with_divisions",
-                                                     "disappearance_cost", "appearance_cost", "with_merger_resolution")))
+                                                     "disappearance_cost", "appearance_cost", "with_merger_resolution", "number_of_dimensions")))
 	  .def("__call__", &ConsTracking::operator())
 	  .def("detections", &ConsTracking::detections)
 	;

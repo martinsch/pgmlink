@@ -1011,7 +1011,7 @@ BOOST_AUTO_TEST_CASE( MergerResolver_helper_functions_get_centers ) {
 }
 
 
-BOOST_AUTO_TEST_CASE( Merger_Resolver_GMM ) {
+/* BOOST_AUTO_TEST_CASE( Merger_Resolver_GMM ) {
   float arr[] = {-6, -5, -4, 6, 5, 4};
   float arr_res[] = {-5, 5};
   feature_array data(arr, arr + sizeof(arr)/sizeof(arr[0]));
@@ -1019,6 +1019,6 @@ BOOST_AUTO_TEST_CASE( Merger_Resolver_GMM ) {
   feature_array centers = gmm();
   cout << "GMM score: " << gmm.score() << "\n";
   BOOST_CHECK_EQUAL_COLLECTIONS(centers.begin(), centers.end(), arr_res, arr_res+sizeof(arr_res)/sizeof(arr_res[0]));
-}
+} */
 
 // EOF
