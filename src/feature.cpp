@@ -15,7 +15,7 @@ namespace pgmlink {
     double feature = 0;    
 
     if( angle_constraint_ ) {
-      double pi = acos(-1);
+      double pi = acos(-1.);
       double angle = ancestor.angle(child1, child2);
       if (angle/pi < min_angle_) {
 	feature += 10000000000000;
@@ -107,7 +107,7 @@ namespace pgmlink {
   double GeometryDivision::operator()(const Traxel& ancestor,
 				      const Traxel& child1,
 				      const Traxel& child2) const {
-    double pi = acos(-1);
+    double pi = acos(-1.);
     double angle = ancestor.angle(child1, child2);
     double feature = 0;
     if (angle/pi < 0.8) {
