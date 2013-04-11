@@ -380,13 +380,13 @@ namespace pgmlink {
   boost::shared_ptr<std::vector< std::vector<Event> > > merge_event_vectors(const std::vector<std::vector<Event> >& ev1, const std::vector<std::vector<Event> >& ev2) {
     assert(ev1.size() == ev2.size());
     shared_ptr<std::vector< std::vector<Event> > > ret(new vector< vector<Event> >);
-    std::vector<std::vector<Event> >::iterator it1 = ev1.begin();
-    std::vector<std::vector<Event> >::iterator it2 = ev2.begin();
-    for (; it1 != it1.end(); ++it1, ++it2) {
-      ret->push_back(vector<Event>);
+    std::vector<std::vector<Event> >::const_iterator it1 = ev1.begin();
+    std::vector<std::vector<Event> >::const_iterator it2 = ev2.begin();
+    for (; it1 != ev1.end(); ++it1, ++it2) {
+      ret->push_back(vector<Event>());
       std::back_insert_iterator<vector<Event> > push_back_inserter(*(ret->rbegin()));
-      std::copy(it1->begin(); it1->end(); push_back_inserter);
-      std::copy(it2->begin(); it2->end(); push_back_inserter);
+      std::copy(it1->begin(), it1->end(), push_back_inserter);
+      std::copy(it2->begin(), it2->end(), push_back_inserter);
     }
     return ret;
   }
@@ -910,14 +910,16 @@ namespace {
 			assert(curr_node != neighbor_node);
 			if (!reverse) {
 				// if we go through the graph forward in time, add an arc from curr_node to neighbor_node
+				LOG(logDEBUG4) << "added arc from traxel " << traxelmap[curr_node].Id << " to " <<
+						traxelmap[neighbor_node].Id;
 				graph->addArc(curr_node, neighbor_node);
 			} else {
 				// if we go through the graph backward in time, add an arc from neighbor_node to curr_node
 				// if not already present
 				if (lemon::findArc(*graph,neighbor_node,curr_node) == lemon::INVALID) {
 					graph->addArc(neighbor_node, curr_node);
-					LOG(logDEBUG2) << "added backward arc from " << graph->id(neighbor_node) << " to " <<
-							graph->id(curr_node);
+					LOG(logDEBUG4) << "added backward arc from traxel " << traxelmap[neighbor_node].Id << " to " <<
+							traxelmap[curr_node].Id;
 				}
 			}
 		}
