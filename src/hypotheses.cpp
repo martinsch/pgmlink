@@ -373,8 +373,63 @@ namespace pgmlink {
     node_timestep_map_t& node_timestep_map = g.get(node_timestep());
     typedef property_map<node_traxel, HypothesesGraph::base_graph>::type node_traxel_map_t;
     node_traxel_map_t& node_traxel_map = g.get(node_traxel());
+    typedef property_map<node_originated_from, HypothesesGraph::base_graph>::type origin_map_t;
+    origin_map_t& origin_map = g.get(node_originated_from());
+
+    std::map<int, std::vector<Event> > multi_frame_move_map;
+
+    for(int t = g.earliest_timestep(); t < g.latest_timestep(); ++t) {
+      LOG(logDEBUG2) << "events(): processing timestep: " << t;
+      ret->push_back(vector<Event>());
+      for(node_timestep_map_t::ItemIt node_at(node_timestep_map, t); node_at!=lemon::INVALID; ++node_at) {
+        assert(node_traxel_map[node_at].Timestep == t);
+        if (origin_map[node_at].size()) {
+          for(HypothesesGraph::InArcIt in_it(g, node_at); in_it != lemon::INVALID; ++in_it) {
+            HypothesesGraph::Node src_node = g.source(in_it);
+            if (origin_map[src_node].size()) {
+              break;
+            }
+            Event e;
+            e.type = Event::MultiFrameMove;
+            Traxel trax = node_traxel_map[src_node];
+            e.traxel_ids.push_back(trax.Id);
+            int t_local = t+1;
+            HypothesesGraph::Node n = node_at;
+            while (t_local <= g.latest_timestep()) {
+              HypothesesGraph::OutArcIt merge_it(g, n);
+              if (merge_it == lemon::INVALID) {
+                break;
+              }
+              n = g.target(merge_it);
+              assert(t_local == node_timestep_map[n]);
+              if (!origin_map[n].size()) {
+                trax = node_traxel_map[n];
+                assert(t_local == trax.Timestep);
+                e.traxel_ids.push_back(trax.Id);
+                e.traxel_ids.push_back(t-1-g.earliest_timestep());
+                multi_frame_move_map[t_local-g.earliest_timestep()].push_back(e);
+                break;
+              }
+              ++t_local;
+            }
+            // trax = node_traxel_map[n];
+            // assert(t_local == trax.Timestep+1);
+            // e.traxel_ids.push_back(trax.Id);
+            // e.traxel_ids.push_back(t-1);
+            // multi_frame_move_map[t_local-1].push_back(e);
+          }
+        }
+      }
+      
+    }
+
+    std::map<int, std::vector<Event> >::iterator map_it = multi_frame_move_map.begin();
+    for (; map_it != multi_frame_move_map.end(); ++map_it) {
+      (*ret)[map_it->first-1] = map_it->second;
+    }
+    
     return ret;
-  }
+  } /* multi_frame_move_events */
 
 
   boost::shared_ptr<std::vector< std::vector<Event> > > merge_event_vectors(const std::vector<std::vector<Event> >& ev1, const std::vector<std::vector<Event> >& ev2) {

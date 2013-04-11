@@ -143,6 +143,10 @@ namespace pgmlink {
    */
   void feature_array_to_arma_mat(const std::vector<T>& in, arma::Mat<U>& out);
 
+
+  template <typename T, typename U>
+  void feature_array_to_arma_mat_skip_last_dimension(const std::vector<T>& in, arma::Mat<U>& out, int last_dimension);
+
   
   template <typename T>
   // tested
@@ -205,6 +209,10 @@ namespace pgmlink {
   //// FeatureExtractorMCOMsFromGMM
   ////
   class FeatureExtractorMCOMsFromGMM : public FeatureExtractorBase {
+  private:
+    int n_dim_;
+  public:
+    FeatureExtractorMCOMsFromGMM(int n_dim) : n_dim_(n_dim) {}
     virtual std::vector<Traxel> operator()(Traxel trax, size_t nMergers, unsigned int max_id);
   };
 
@@ -471,6 +479,24 @@ namespace pgmlink {
       out.col(count) = col;
       ++count;
       srcIt += stepSize;
+    }
+  }
+
+  
+  template <typename T, typename U>
+  void feature_array_to_arma_mat_skip_last_dimension(const std::vector<T>& in, arma::Mat<U>& out, int last_dimension) {
+    int stepSize = out.n_rows;
+    int n = out.n_cols;
+    int count = 0;
+    assert(last_dimension*n == in.size());
+    assert(stepSize == last_dimension-1);
+    typename std::vector<T>::const_iterator srcIt = in.begin();
+    while (count < n) {
+      arma::Col<U> col(stepSize);
+      std::copy(srcIt, srcIt+stepSize, col.begin());
+      out.col(count) = col;
+      ++count;
+      srcIt += last_dimension;
     }
   }
 
