@@ -29,7 +29,8 @@ class ConservationTracking : public Reasoner {
                              double appearance_cost = 10,
                              bool with_misdetections_allowed = true,
                              bool with_appearance = true,
-                             bool with_disappearance = true
+                             bool with_disappearance = true,
+                             double transition_parameter = 5
                              )
         : max_number_objects_(max_number_objects),
           detection_(detection),
@@ -46,7 +47,8 @@ class ConservationTracking : public Reasoner {
           number_of_disappearance_nodes_(0),
           with_misdetections_allowed_(with_misdetections_allowed),
           with_appearance_(with_appearance),
-          with_disappearance_(with_disappearance)
+          with_disappearance_(with_disappearance),
+          transition_parameter_(transition_parameter)
     { };
     ~ConservationTracking();
 
@@ -123,6 +125,8 @@ class ConservationTracking : public Reasoner {
     bool with_misdetections_allowed_;
     bool with_appearance_;
     bool with_disappearance_;
+
+    double transition_parameter_;
 
     HypothesesGraph tracklet_graph_;
     std::map<HypothesesGraph::Node, std::vector<HypothesesGraph::Node> > tracklet2traxel_node_map_;

@@ -275,7 +275,7 @@ void ConservationTracking::add_disappearance_nodes(const HypothesesGraph& g) {
 		pgm_->Model()->addVariable(max_number_objects_+1);
 		dis_node_map_[n] = pgm_->Model()->numberOfVariables() - 1;
 		assert(pgm_->Model()->numberOfLabels(dis_node_map_[n]) == max_number_objects_ + 1);
-		LOG(logDEBUG4) << "detection node added with id " << dis_node_map_[n];
+		LOG(logDEBUG4) << "disappearance node added with id " << dis_node_map_[n];
 		++count;
 	}
 	number_of_disappearance_nodes_ = count;
@@ -312,8 +312,8 @@ void ConservationTracking::add_division_nodes(const HypothesesGraph& g) {
 }
 
 namespace{
-double get_transition_prob(double distance, size_t state) {
-	double prob = exp(- distance / 5);
+double get_transition_prob(double distance, size_t state, double alpha) {
+	double prob = exp(- distance / alpha);
 	if (state == 0) {
 		return 1 - prob;
 	}
@@ -400,7 +400,7 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
 				// add all transition factors of the internal arcs
 				for (std::vector<double>::const_iterator intern_dist_it = tracklet_intern_dist_map[n].begin();
 						intern_dist_it != tracklet_intern_dist_map[n].end(); ++intern_dist_it) {
-					energy += transition_(get_transition_prob(*intern_dist_it, state));
+					energy += transition_(get_transition_prob(*intern_dist_it, state, transition_parameter_));
 				}
 			} else {
 				energy = detection_(traxel_map[n], state);
@@ -445,7 +445,7 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
 		// ITER first_ogm_idx, ITER last_ogm_idx, VALUE init, size_t states_per_var
 		pgm::OpengmExplicitFactor<double> table(vi, vi + 1, 0, (max_number_objects_ + 1));
 		for (size_t state = 0; state <= max_number_objects_; ++state) {
-			double energy = transition_(get_transition_prob(arc_distances[a], state));
+			double energy = transition_(get_transition_prob(arc_distances[a], state, transition_parameter_));
 			LOG(logDEBUG2) << "ConservationTracking::add_finite_factors: transition[" << state <<
 					"] = " << energy;
 			coords[0] = state;

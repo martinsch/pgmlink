@@ -440,7 +440,7 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 		}
 		detection = NegLnDetection(detection_weight); // weight 1
 	} else {
-		LOG(logINFO) << "Using size hard prior";
+		LOG(logINFO) << "Using hard prior";
 		// assume a quasi geometric distribution
 		vector<double> prob_vector;
 		double p = 0.7; // e.g. for max_number_objects_=3, p=0.7: P(X=(0,1,2,3)) = (0.027, 0.7, 0.21, 0.063)
@@ -507,7 +507,8 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 			with_tracklets_,
 			with_divisions_,
 			disappearance_cost_,
-			appearance_cost_
+			appearance_cost_,
+			transition_parameter_
 			);
 
 	cout << "-> formulate ConservationTracking model" << endl;
