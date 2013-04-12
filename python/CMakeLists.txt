@@ -37,7 +37,7 @@ set(PYPGMLINK_SRCS
   )
 
 add_library(pypgmlink SHARED ${PYPGMLINK_SRCS})
-target_link_libraries(pypgmlink ${Boost_LIBRARIES} pgmlink ilocplex vigraimpex pgmlink)
+target_link_libraries(pypgmlink ${Boost_LIBRARIES} python2.7 pgmlink ilocplex vigraimpex pgmlink)
 set_target_properties(pypgmlink PROPERTIES PREFIX "" OUTPUT_NAME "pgmlink")
 
 
