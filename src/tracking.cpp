@@ -68,9 +68,11 @@ vector<vector<Event> > ChaingraphTracking::operator()(TraxelStore& ts) {
             assert(trax.features["detProb"].size() == 2);
             ts.replace(it, trax);
           }
-        } else {
-		detection = NegLnCellness(det_);
-		misdetection = NegLnOneMinusCellness(mis_);
+          detection = NegLnCellness(det_);
+          misdetection = NegLnOneMinusCellness(mis_);
+	} else {
+		  detection = ConstantFeature(det_);
+		  misdetection = ConstantFeature(mis_);
 	}
 
 	cout << "-> building hypotheses" << endl;
