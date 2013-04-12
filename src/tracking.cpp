@@ -61,7 +61,14 @@ vector<vector<Event> > ChaingraphTracking::operator()(TraxelStore& ts) {
 
 		detection = NegLnCellness(det_);
 		misdetection = NegLnOneMinusCellness(mis_);
-	} else {
+	} else if (ts.begin()->features.find("detProb") != ts.begin()->features.end()) {
+          for (TraxelStore::iterator it = ts.begin(); it != ts.end(); ++it) {
+            Traxel trax = *it;
+            trax.features["cellness"] = trax.features["detProb"];
+            assert(trax.features["detProb"].size() == 2);
+            ts.replace(it, trax);
+          }
+        } else {
 	  detection = ConstantFeature(det_);
 	  misdetection = ConstantFeature(mis_);
 	}
