@@ -400,11 +400,7 @@ class FILELOG_DECLSPEC FILELog : public Log<Output2FILE> {};
 // (It is using static internal buffers in some functions like ctime() .)
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
     } // Temporarily close pgmlink namespace to include the external Windows headers.
-
-    // winsocks2.h has always to be included BEFORE windows.h
-	// We don't use winsocks2 here, but it may be used in a file including this header.
-	#include <winsock2.h>
-	#include <windows.h>
+#include <vigra/windows.h>
 
 // Reopen the pgmlink namespace.
 namespace pgmlink {
