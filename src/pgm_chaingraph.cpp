@@ -420,7 +420,7 @@ namespace pgmlink {
       std::vector<size_t> coords;
 
       std::set<size_t > entries;
-      for(size_t i = 0; i < static_cast<size_t>(std::pow(2, table_dim)); ++i) {
+      for(size_t i = 0; i < static_cast<size_t>(std::pow(2., static_cast<int>(table_dim))); ++i) {
 	entries.insert( entries.end(), i );
       }
 	
@@ -530,7 +530,7 @@ namespace pgmlink {
       std::vector<size_t> coords;
       
       std::set<size_t > entries;
-      for(size_t i = 0; i < static_cast<size_t>(std::pow(2, table_dim)); ++i) {
+      for(size_t i = 0; i < static_cast<size_t>(std::pow(2., static_cast<int>(table_dim))); ++i) {
 	entries.insert( entries.end(), i );
       }
 

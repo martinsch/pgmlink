@@ -1,10 +1,8 @@
 #include <cassert>
 #include <exception>
 #include <string>
-#include "pgmlink/log.h"
 #include "pgmlink/randomforest.h"
-
-using namespace std;
+#include "pgmlink/log.h"
 
 namespace pgmlink {
     namespace RF {
@@ -12,7 +10,7 @@ namespace pgmlink {
         vigra::RandomForest<RF_LABEL_TYPE> getRandomForest(std::string filename)
         {
             // check if file exists
-            FILE* pFile = fopen ( filename.c_str(), "r" );
+            FILE* pFile = std::fopen ( filename.c_str(), "r" );
             if ( pFile == NULL){
                 throw std::runtime_error("pgmlink: Could not create Random Forest. Input file does not exist.");
             }
@@ -87,7 +85,7 @@ namespace pgmlink {
         }
 
       namespace {
-	void save_as_feature(Traxel& tr, const string& name, feature_type value) {
+	void save_as_feature(Traxel& tr, const std::string& name, feature_type value) {
 	  pgmlink::feature_array feat;
 	  feat.push_back(value);
           tr.features[name] = feat;

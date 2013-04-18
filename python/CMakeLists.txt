@@ -3,8 +3,13 @@ message( "\nConfiguring python wrapper:" )
 
 # dependencies
 find_package( Boost REQUIRED COMPONENTS python serialization )
-find_package( PythonLibs REQUIRED )
-find_package( PythonInterp REQUIRED )
+if(WIN32)
+  set(PYTHON_EXECUTABLE "" CACHE PATH "")
+  set(PYTHON_INCLUDE_DIRS "" CACHE PATH "")
+else()
+  find_package( PythonLibs REQUIRED )
+  find_package( PythonInterp REQUIRED )
+endif()
 
 include_directories( ${Boost_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS} )
 

@@ -22,6 +22,19 @@
 #include "pgmlink/hypotheses.h"
 #include "pgmlink/feature.h"
 
+// Both boost and lemon define the same template ignore_unused_variable_warning<T>.
+// Using boost templates with lemon types triggers ADL and the (MSVC++) compiler can't
+// resolve the name. Therefore with explicitly define an overload for the two
+// involved lemon types in the boost namespace.
+namespace boost {
+    inline void ignore_unused_variable_warning(const lemon::ListDigraphBase::Node& x) {
+          boost::ignore_unused_variable_warning(x);
+    }
+    inline void ignore_unused_variable_warning(const lemon::ListDigraphBase::Arc& x) {
+          boost::ignore_unused_variable_warning(x);
+    }
+}
+
 namespace pgmlink {
   namespace pgm {
   namespace chaingraph {
@@ -235,7 +248,7 @@ namespace pgmlink {
 /* implementation */
 /**/
 #include <boost/ptr_container/ptr_vector.hpp>
-#include <pgmlink/ext_opengm/structsvm.hxx>
+//#include <pgmlink/ext_opengm/structsvm.hxx>
 #include <iostream>
 
 namespace pgmlink {

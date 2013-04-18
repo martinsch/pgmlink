@@ -78,7 +78,7 @@ private:
     std::map<FunctionIdentifier, IndexType> feature_ids_; // map function id to weight index
 
 
-    template<size_t FUNCTION_INDEX, class FUNCTION_TYPE, class t, class op, class function_type_list, class space, bool editable>
+    template<size_t FUNCTION_INDEX, class FUNCTION_TYPE, class t, class function_type_list, class space, bool editable>
     friend struct detail_graphical_model::WeightAccessor;
 
     template<size_t FUNCTION_TYPE_INDEX, class FUNCTION_TYPE, class LLM>
