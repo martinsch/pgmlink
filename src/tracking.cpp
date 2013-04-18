@@ -22,6 +22,11 @@ namespace pgmlink {
 ////
 //// class ChaingraphTracking
 ////
+
+void ChaingraphTracking::set_with_divisions(bool state) {
+	with_divisions_ = state;
+}
+
 vector<vector<Event> > ChaingraphTracking::operator()(TraxelStore& ts) {
 	cout << "-> building feature functions " << endl;
 	SquaredDistance move;
@@ -77,8 +82,11 @@ vector<vector<Event> > ChaingraphTracking::operator()(TraxelStore& ts) {
 						 opportunity_cost_,
 						 forbidden_cost_);
 	  
-	  b.with_divisions(division)
-	   .with_detection_vars(detection, misdetection);
+	  if (with_divisions_) {
+		  b.with_divisions(division);
+	  }
+
+	  b.with_detection_vars(detection, misdetection);
 	  mrf = std::auto_ptr<Chaingraph>(new Chaingraph(b, with_constraints_, ep_gap_, fixed_detections_));
 	} else {
 	  pgm::chaingraph::ECCV12ModelBuilder b(appearance,
@@ -87,8 +95,11 @@ vector<vector<Event> > ChaingraphTracking::operator()(TraxelStore& ts) {
 					      opportunity_cost_,
 					      forbidden_cost_);
 	  
-	  b.with_divisions(division)
-	   .with_detection_vars(detection, misdetection);
+	  if (with_divisions_) {
+		  b.with_divisions(division);
+	  }
+
+	  b.with_detection_vars(detection, misdetection);
 	  mrf = std::auto_ptr<Chaingraph>(new Chaingraph(b, with_constraints_, ep_gap_, fixed_detections_));
 	}
 

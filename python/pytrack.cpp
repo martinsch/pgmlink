@@ -29,10 +29,16 @@ void export_track() {
     ;
 
     class_<ChaingraphTracking>("ChaingraphTracking", 
-			       init<string,double,double,double,double,bool,double,double,bool,bool,double,double,double, double>(
-							  args("random_forest_filename", "appearance", "disappearance", "detection", "misdetection", "use_random_forest", "opportunity_cost", "forbidden_cost", "with_constraints", "fixed_detections", "mean_div_dist", "min_angle", "ep_gap", "n_neighbors")))
+			       init<string,double,double,double,double,
+			       	   bool,double,double,bool,
+			       	   bool,double,double,double,double>(
+							  args("random_forest_filename", "appearance", "disappearance", "detection", "misdetection",
+									  "use_random_forest", "opportunity_cost", "forbidden_cost", "with_constraints",
+									  "fixed_detections", "mean_div_dist", "min_angle", "ep_gap", "n_neighbors"
+									  )))
       .def("__call__", &ChaingraphTracking::operator())
-      .def("detections", &ChaingraphTracking::detections) 
+      .def("detections", &ChaingraphTracking::detections)
+      .def("set_with_divisions", &ChaingraphTracking::set_with_divisions)
     ;
 
     enum_<Event::EventType>("EventType")

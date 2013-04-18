@@ -599,9 +599,9 @@ namespace pgmlink {
       if( !has_detection_vars() ) {
 	throw std::runtime_error("ECCV12ModelBuilder::build(): option without detection vars not yet implemented");
       }
-      if( !has_divisions() ) {
-	throw std::runtime_error("ECCV12ModelBuilder::build(): option without divisions not yet implemented");
-      }
+//      if( !has_divisions() ) {
+//	throw std::runtime_error("ECCV12ModelBuilder::build(): option without divisions not yet implemented");
+//      }
 
       Model* model( new Model() );
       
@@ -726,22 +726,24 @@ namespace pgmlink {
 	}
       
 	// division configurations
-	coords = std::vector<size_t>(table_dim, 0);
-	coords[0] = 1;
-	// (1,0,0,1,0,1,0,0) 
-	for(unsigned int i = 1; i < table_dim - 1; ++i) {
-	  for(unsigned int j = i+1; j < table_dim; ++j) {
-	    coords[i] = 1;
-	    coords[j] = 1;
-	    table.set_value(coords, division()(traxel_map[n],
-					      traxel_map[hypotheses.target(arcs[i-1])],
-					      traxel_map[hypotheses.target(arcs[j-1])]
-					      ));
-	  
-	    // reset
-	    coords[i] = 0;
-	    coords[j] = 0;
-	  }
+	if (has_divisions()) {
+		coords = std::vector<size_t>(table_dim, 0);
+		coords[0] = 1;
+		// (1,0,0,1,0,1,0,0)
+		for(unsigned int i = 1; i < table_dim - 1; ++i) {
+		  for(unsigned int j = i+1; j < table_dim; ++j) {
+			coords[i] = 1;
+			coords[j] = 1;
+			table.set_value(coords, division()(traxel_map[n],
+							  traxel_map[hypotheses.target(arcs[i-1])],
+							  traxel_map[hypotheses.target(arcs[j-1])]
+							  ));
+
+			// reset
+			coords[i] = 0;
+			coords[j] = 0;
+		  }
+		}
 	}
 
 	table.add_to( *m.opengm_model );      
