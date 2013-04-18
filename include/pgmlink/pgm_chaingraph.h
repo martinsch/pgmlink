@@ -233,11 +233,11 @@ namespace pgmlink {
       void add_incoming_factor( const HypothesesGraph&, Model&, const HypothesesGraph::Node& ) const;
     };
       
-    class ModelTrainer {
-    public:
-      template<class IT1, class IT2, class IT3>
-	std::vector<OpengmModel::ValueType> train(IT1 samples_begin, IT1 samples_end, IT2 node_labels, IT3 arc_labels) const;
-    };
+    /* class ModelTrainer { */
+    /* public: */
+    /*   template<class IT1, class IT2, class IT3> */
+    /* 	std::vector<OpengmModel::ValueType> train(IT1 samples_begin, IT1 samples_end, IT2 node_labels, IT3 arc_labels) const; */
+    /* }; */
 
   } /* namespace chaingraph */
   } /* namespace pgm */
@@ -252,81 +252,81 @@ namespace pgmlink {
 #include <iostream>
 
 namespace pgmlink {
-  template<class IT1, class IT2, class IT3>
-    std::vector<pgm::OpengmModel::ValueType> pgm::chaingraph::ModelTrainer::train(IT1 samples_begin, IT1 samples_end, IT2 node_labels, IT3 arc_labels) const {
-    std::cout << "begin training\n";
-    // for each sample: build chaingraph model
-    boost::ptr_vector<pgm::chaingraph::Model> models;
+  /* template<class IT1, class IT2, class IT3> */
+  /*   std::vector<pgm::OpengmModel::ValueType> pgm::chaingraph::ModelTrainer::train(IT1 samples_begin, IT1 samples_end, IT2 node_labels, IT3 arc_labels) const { */
+  /*   std::cout << "begin training\n"; */
+  /*   // for each sample: build chaingraph model */
+  /*   boost::ptr_vector<pgm::chaingraph::Model> models; */
 
 
-    SquaredDistance move;
-    ConstantFeature appearance(1);
-    ConstantFeature disappearance(1);
-    GeometryDivision2 division(0, 0);
-    ConstantFeature det(10);
-    ConstantFeature ndet (200);
+  /*   SquaredDistance move; */
+  /*   ConstantFeature appearance(1); */
+  /*   ConstantFeature disappearance(1); */
+  /*   GeometryDivision2 division(0, 0); */
+  /*   ConstantFeature det(10); */
+  /*   ConstantFeature ndet (200); */
 
-    pgm::chaingraph::TrainableModelBuilder b;
-    b.move(move)
-      .appearance(appearance)
-      .disappearance(disappearance)
-      //.opportunity_cost(1)
-      .forbidden_cost(1000000000)
-      .without_detection_vars()
-      .without_divisions()
-      //.with_detection_vars(det, ndet)
-      //.with_divisions(division);
-      ;
+  /*   pgm::chaingraph::TrainableModelBuilder b; */
+  /*   b.move(move) */
+  /*     .appearance(appearance) */
+  /*     .disappearance(disappearance) */
+  /*     //.opportunity_cost(1) */
+  /*     .forbidden_cost(1000000000) */
+  /*     .without_detection_vars() */
+  /*     .without_divisions() */
+  /*     //.with_detection_vars(det, ndet) */
+  /*     //.with_divisions(division); */
+  /*     ; */
 
-    for(IT1 sample=samples_begin; sample!=samples_end; ++sample){
-      models.push_back(b.build(*sample));
-    }
+  /*   for(IT1 sample=samples_begin; sample!=samples_end; ++sample){ */
+  /*     models.push_back(b.build(*sample)); */
+  /*   } */
 
-    // convert HypothesesGraph labels to OpengmModel labels
-    IT2 cur_node_labels = node_labels;
-    IT3 cur_arc_labels = arc_labels;
-    std::vector<std::vector<pgm::OpengmModel::LabelType> > var_labels(std::distance(samples_begin, samples_end));
-    for (int i=0; i < std::distance(samples_begin, samples_end); ++i) {
-      var_labels[i] = std::vector<pgm::OpengmModel::LabelType>(models[i].opengm_model->numberOfVariables());
-      for(pgm::chaingraph::Model::var_t var_idx = 0; var_idx < var_labels[i].size(); ++var_idx) {
-	switch(models[i].var_category(var_idx)) {
-	case pgm::chaingraph::Model::node_var: {
-	  pgm::chaingraph::Model::node_t n = models[i].node_of_var(var_idx);
-	  var_labels[i][var_idx] = (*cur_node_labels)[n];
-	} break; 
-	case pgm::chaingraph::Model::arc_var: {
-	  pgm::chaingraph::Model::arc_t a = models[i].arc_of_var(var_idx);
-	  var_labels[i][var_idx] = (*cur_arc_labels)[a];
-	} break;
-	  default:
-	    throw std::runtime_error("chaingraph::ModelTrainer::train(): unknown var category encountered");
-	    break;
-	  }
-      }
-      ++cur_node_labels;
-      ++cur_arc_labels;
-    }
+  /*   // convert HypothesesGraph labels to OpengmModel labels */
+  /*   IT2 cur_node_labels = node_labels; */
+  /*   IT3 cur_arc_labels = arc_labels; */
+  /*   std::vector<std::vector<pgm::OpengmModel::LabelType> > var_labels(std::distance(samples_begin, samples_end)); */
+  /*   for (int i=0; i < std::distance(samples_begin, samples_end); ++i) { */
+  /*     var_labels[i] = std::vector<pgm::OpengmModel::LabelType>(models[i].opengm_model->numberOfVariables()); */
+  /*     for(pgm::chaingraph::Model::var_t var_idx = 0; var_idx < var_labels[i].size(); ++var_idx) { */
+  /* 	switch(models[i].var_category(var_idx)) { */
+  /* 	case pgm::chaingraph::Model::node_var: { */
+  /* 	  pgm::chaingraph::Model::node_t n = models[i].node_of_var(var_idx); */
+  /* 	  var_labels[i][var_idx] = (*cur_node_labels)[n]; */
+  /* 	} break;  */
+  /* 	case pgm::chaingraph::Model::arc_var: { */
+  /* 	  pgm::chaingraph::Model::arc_t a = models[i].arc_of_var(var_idx); */
+  /* 	  var_labels[i][var_idx] = (*cur_arc_labels)[a]; */
+  /* 	} break; */
+  /* 	  default: */
+  /* 	    throw std::runtime_error("chaingraph::ModelTrainer::train(): unknown var category encountered"); */
+  /* 	    break; */
+  /* 	  } */
+  /*     } */
+  /*     ++cur_node_labels; */
+  /*     ++cur_arc_labels; */
+  /*   } */
     
 
 
-    //// train with opengm
-    // prepare input
-    std::vector<pgm::OpengmModel> ogm_models;
-    for(size_t i = 0; i < models.size(); ++i) {
-      ogm_models.push_back(*(models[i].opengm_model));
-    }
+  /*   //// train with opengm */
+  /*   // prepare input */
+  /*   std::vector<pgm::OpengmModel> ogm_models; */
+  /*   for(size_t i = 0; i < models.size(); ++i) { */
+  /*     ogm_models.push_back(*(models[i].opengm_model)); */
+  /*   } */
     
-    opengm::StructSvmDlib<pgm::OpengmModel> svm(ogm_models, var_labels);
-    svm.set_c(10000);
-    //svm.set_epsilon(0.00);
-    std::cout << "svm.get_c(): " << svm.get_c() << "\n"; 
-    std::cout << "svm.get_epsilon(): " << svm.get_epsilon() << "\n"; 
+  /*   opengm::StructSvmDlib<pgm::OpengmModel> svm(ogm_models, var_labels); */
+  /*   svm.set_c(10000); */
+  /*   //svm.set_epsilon(0.00); */
+  /*   std::cout << "svm.get_c(): " << svm.get_c() << "\n";  */
+  /*   std::cout << "svm.get_epsilon(): " << svm.get_epsilon() << "\n";  */
 
-    vector<pgm::OpengmModel::ValueType> w;
-    svm.train(w);
+  /*   vector<pgm::OpengmModel::ValueType> w; */
+  /*   svm.train(w); */
      
-    return w;
-  }
+  /*   return w; */
+  /* } */
 } /* namespace pgmlink */
 
 #endif /* PGMLINK_PGM_CHAINGRAPH_H */
