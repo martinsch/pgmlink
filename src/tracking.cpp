@@ -27,6 +27,10 @@ void ChaingraphTracking::set_with_divisions(bool state) {
 	with_divisions_ = state;
 }
 
+void ChaingraphTracking::set_cplex_timeout(double seconds) {
+	cplex_timeout_ = seconds;
+}
+
 vector<vector<Event> > ChaingraphTracking::operator()(TraxelStore& ts) {
 	cout << "-> building feature functions " << endl;
 	SquaredDistance move;
@@ -87,7 +91,7 @@ vector<vector<Event> > ChaingraphTracking::operator()(TraxelStore& ts) {
 	  }
 
 	  b.with_detection_vars(detection, misdetection);
-	  mrf = std::auto_ptr<Chaingraph>(new Chaingraph(b, with_constraints_, ep_gap_, fixed_detections_));
+	  mrf = std::auto_ptr<Chaingraph>(new Chaingraph(b, with_constraints_, ep_gap_, fixed_detections_, cplex_timeout_));
 	} else {
 	  pgm::chaingraph::ECCV12ModelBuilder b(appearance,
 					      disappearance,
@@ -100,7 +104,7 @@ vector<vector<Event> > ChaingraphTracking::operator()(TraxelStore& ts) {
 	  }
 
 	  b.with_detection_vars(detection, misdetection);
-	  mrf = std::auto_ptr<Chaingraph>(new Chaingraph(b, with_constraints_, ep_gap_, fixed_detections_));
+	  mrf = std::auto_ptr<Chaingraph>(new Chaingraph(b, with_constraints_, ep_gap_, fixed_detections_, cplex_timeout_));
 	}
 
 	cout << "-> formulate MRF model" << endl;

@@ -54,6 +54,7 @@ void Chaingraph::formulate( const HypothesesGraph& hypotheses ) {
     param.verbose_ = true;
     param.integerConstraint_ = true;
     param.epGap_ = ep_gap_;
+    param.timeLimit_ = cplex_timeout_;
     LOG(logDEBUG) << "Chaingraph::formulate ep_gap = " << param.epGap_;
     pgm::OpengmLPCplex* cplex = new pgm::OpengmLPCplex(*(linking_model_->opengm_model), param);
     optimizer_ = cplex; // opengm::Inference optimizer_

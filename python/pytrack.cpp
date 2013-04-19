@@ -39,6 +39,7 @@ void export_track() {
       .def("__call__", &ChaingraphTracking::operator())
       .def("detections", &ChaingraphTracking::detections)
       .def("set_with_divisions", &ChaingraphTracking::set_with_divisions)
+      .def("set_cplex_timeout", &ChaingraphTracking::set_cplex_timeout)
     ;
 
     enum_<Event::EventType>("EventType")

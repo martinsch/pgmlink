@@ -122,7 +122,8 @@ namespace pgmlink {
 	disappearance_(disappearance),
 	move_(move),
 	opportunity_cost_(opportunity_cost),
-	forbidden_cost_(forbidden_cost) {}
+	forbidden_cost_(forbidden_cost),
+	cplex_timeout_(1e+75) {}
 
       virtual chaingraph::ModelBuilder* clone() const = 0;
       virtual ~ModelBuilder() {}
@@ -165,6 +166,10 @@ namespace pgmlink {
       void add_hard_constraints( const Model&, const HypothesesGraph&, OpengmLPCplex& );
       void fix_detections( const Model&, const HypothesesGraph&, OpengmLPCplex& );
 
+      // cplex parameters
+      void set_cplex_timeout( double seconds );
+
+
     protected:
       void add_detection_vars( const HypothesesGraph&, Model& ) const;
       void add_assignment_vars( const HypothesesGraph&, Model& ) const;
@@ -191,6 +196,7 @@ namespace pgmlink {
       function<double (const Traxel&,const Traxel&,const Traxel&)> division_;
       double opportunity_cost_;
       double forbidden_cost_;
+      double cplex_timeout_;
     };
       
     class TrainableModelBuilder : public chaingraph::ModelBuilder {

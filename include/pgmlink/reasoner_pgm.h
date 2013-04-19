@@ -38,12 +38,14 @@ namespace pgmlink {
 
     Chaingraph(bool with_constraints = true,
 	       double ep_gap = 0.01,
-	       bool fixed_detections = false
+	       bool fixed_detections = false,
+	       double cplex_timeout = 1e+75
 	       )
       : optimizer_(NULL),
       with_constraints_(with_constraints),
       fixed_detections_(fixed_detections),
       ep_gap_(ep_gap),
+      cplex_timeout_(cplex_timeout),
       builder_(NULL)
 	{ builder_ = new pgm::chaingraph::ECCV12ModelBuilder(); (*builder_).with_detection_vars().with_divisions(); }
     
@@ -51,12 +53,14 @@ namespace pgmlink {
   Chaingraph(const pgm::chaingraph::ModelBuilder& builder,
 	     bool with_constraints = true,
 	     double ep_gap = 0.01,
-	     bool fixed_detections = false
+	     bool fixed_detections = false,
+	     double cplex_timeout = 1e+75
     ) 
     : optimizer_(NULL),
     with_constraints_(with_constraints),
     fixed_detections_(fixed_detections),
     ep_gap_(ep_gap),
+    cplex_timeout_(cplex_timeout),
     builder_(builder.clone())
     {};
     ~Chaingraph();
@@ -104,6 +108,7 @@ namespace pgmlink {
     bool fixed_detections_;
 
     double ep_gap_;
+    double cplex_timeout_;
     pgm::chaingraph::ModelBuilder* builder_;
 };
 
