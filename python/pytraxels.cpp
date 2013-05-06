@@ -10,8 +10,6 @@
 #include <boost/python/return_internal_reference.hpp>
 #include <boost/utility.hpp>
 
-#include <vigra/numpy_array.hxx>
-#include <vigra/numpy_array_converters.hxx>
 #include <vigra/multi_array.hxx>
 
 #include "../include/pgmlink/traxels.h"

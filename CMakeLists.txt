@@ -55,7 +55,9 @@ include_directories(${PROJECT_SOURCE_DIR}/include/ ${ANN_INCLUDE_DIR} ${CPLEX_IN
 
 # CPLEX switch to be compatible with STL
 ADD_DEFINITIONS(-DIL_STD)
-# assume by default that HDF5 is installed. Set definition for vigra random forest
+
+## vigra defines
+## assume that HDF5 is installed (for vigra random forest)
 ADD_DEFINITIONS(-DHasHDF5)
 
 # print out the dependencies
