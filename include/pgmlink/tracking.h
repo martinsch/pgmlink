@@ -32,14 +32,17 @@ namespace pgmlink {
 	      double mean_div_dist=25,
 	      double min_angle=0,
 	      double ep_gap=0.01,
-              int nneighbors=6,
-	      bool alternative_builder=false
+	      int n_neighbors=6,
+	      bool with_divisions = true,
+	      double cplex_timeout = 1e+75,
+	      bool alternative_builder=false 
 	      )
       : app_(appearance), dis_(disappearance), det_(detection), mis_(misdetection), 
       rf_fn_(random_forest_filename), use_rf_(cellness_by_random_forest), 
       opportunity_cost_(opportunity_cost), forbidden_cost_(forbidden_cost), with_constraints_(with_constraints),
       fixed_detections_(fixed_detections), mean_div_dist_(mean_div_dist), min_angle_(min_angle),
-      ep_gap_(ep_gap), nneighbors_(nneighbors), alternative_builder_(alternative_builder) {}
+      ep_gap_(ep_gap), n_neighbors_(n_neighbors), with_divisions_(with_divisions),
+      cplex_timeout_(cplex_timeout), alternative_builder_(alternative_builder) {}
     std::vector< std::vector<Event> > operator()(TraxelStore&);
 
     /**
@@ -47,6 +50,12 @@ namespace pgmlink {
      */
     std::vector< std::map<unsigned int, bool> > detections();
     
+    /**
+     * Setter functions
+     */
+    void set_with_divisions(bool);
+    void set_cplex_timeout(double);
+
   private:
     double app_, dis_, det_, mis_;
     const std::string rf_fn_;
@@ -57,7 +66,9 @@ namespace pgmlink {
     bool fixed_detections_;
     double mean_div_dist_, min_angle_;
     double ep_gap_;
-    int nneighbors_;
+    int n_neighbors_;
+    bool with_divisions_;
+    double cplex_timeout_;
     bool alternative_builder_;
     shared_ptr<std::vector< std::map<unsigned int, bool> > > last_detections_;
   };

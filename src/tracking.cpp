@@ -8,10 +8,10 @@
 #include <boost/shared_array.hpp>
 
 #include "pgmlink/feature.h"
-#include "pgmlink/graphical_model.h"
+#include "pgmlink/pgm.h"
 #include "pgmlink/hypotheses.h"
 #include "pgmlink/log.h"
-#include "pgmlink/reasoner_opengm.h"
+#include "pgmlink/reasoner_pgm.h"
 #include "pgmlink/tracking.h"
 #include "pgmlink/reasoner_nearestneighbor.h"
 #include "pgmlink/reasoner_nntracklets.h"
@@ -26,6 +26,15 @@ namespace pgmlink {
 ////
 //// class ChaingraphTracking
 ////
+
+void ChaingraphTracking::set_with_divisions(bool state) {
+	with_divisions_ = state;
+}
+
+void ChaingraphTracking::set_cplex_timeout(double seconds) {
+	cplex_timeout_ = seconds;
+}
+
 vector<vector<Event> > ChaingraphTracking::operator()(TraxelStore& ts) {
 	cout << "-> building feature functions " << endl;
 	SquaredDistance move;
@@ -71,38 +80,44 @@ vector<vector<Event> > ChaingraphTracking::operator()(TraxelStore& ts) {
           detection = NegLnCellness(det_);
           misdetection = NegLnOneMinusCellness(mis_);
 	} else {
-		  detection = ConstantFeature(det_);
-		  misdetection = ConstantFeature(mis_);
+	  detection = ConstantFeature(det_);
+	  misdetection = ConstantFeature(mis_);
 	}
 
 	cout << "-> building hypotheses" << endl;
-	SingleTimestepTraxel_HypothesesBuilder::Options builder_opts(nneighbors_, 50);
+	SingleTimestepTraxel_HypothesesBuilder::Options builder_opts(n_neighbors_, 50);
 	SingleTimestepTraxel_HypothesesBuilder hyp_builder(&ts, builder_opts);
-	shared_ptr<HypothesesGraph> graph = shared_ptr<HypothesesGraph>(hyp_builder.build());
+	boost::shared_ptr<HypothesesGraph> graph = boost::shared_ptr<HypothesesGraph>(hyp_builder.build());
 
 	cout << "-> init MRF reasoner" << endl;
 	std::auto_ptr<Chaingraph> mrf;
 
 	if(alternative_builder_) {
-	  pgm::TrainableChaingraphModelBuilder b(appearance,
+	  pgm::chaingraph::TrainableModelBuilder b(appearance,
 						 disappearance,
 						 move,
 						 opportunity_cost_,
 						 forbidden_cost_);
 	  
-	  b.with_divisions(division)
-	   .with_detection_vars(detection, misdetection);
-	  mrf = std::auto_ptr<Chaingraph>(new Chaingraph(b, with_constraints_, ep_gap_, fixed_detections_));
+	  if (with_divisions_) {
+		  b.with_divisions(division);
+	  }
+
+	  b.with_detection_vars(detection, misdetection);
+	  mrf = std::auto_ptr<Chaingraph>(new Chaingraph(b, with_constraints_, ep_gap_, fixed_detections_, cplex_timeout_));
 	} else {
-	  pgm::ChaingraphModelBuilderECCV12 b(appearance,
+	  pgm::chaingraph::ECCV12ModelBuilder b(appearance,
 					      disappearance,
 					      move,
 					      opportunity_cost_,
 					      forbidden_cost_);
 	  
-	  b.with_divisions(division)
-	   .with_detection_vars(detection, misdetection);
-	  mrf = std::auto_ptr<Chaingraph>(new Chaingraph(b, with_constraints_, ep_gap_, fixed_detections_));
+	  if (with_divisions_) {
+		  b.with_divisions(division);
+	  }
+
+	  b.with_detection_vars(detection, misdetection);
+	  mrf = std::auto_ptr<Chaingraph>(new Chaingraph(b, with_constraints_, ep_gap_, fixed_detections_, cplex_timeout_));
 	}
 
 	cout << "-> formulate MRF model" << endl;

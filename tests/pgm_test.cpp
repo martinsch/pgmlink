@@ -7,7 +7,7 @@
 #include <vigra/multi_array.hxx>
 
 #include "pgmlink/feature.h"
-#include "pgmlink/graphical_model.h"
+#include "pgmlink/pgm.h"
 #include "pgmlink/traxels.h"
 #include "pgmlink/event.h"
 
