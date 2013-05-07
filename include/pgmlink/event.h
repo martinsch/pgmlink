@@ -8,6 +8,7 @@
 #define EVENT_H
 #include <vector>
 #include <ostream>
+#include <stdexcept>
 
 namespace pgmlink {
   class Event {
@@ -54,6 +55,63 @@ namespace pgmlink {
     std::vector<double> weights_;
     std::vector<double> features_;
   };
+
+  struct EventsStatistics {
+  EventsStatistics() : n_total(0), n_mov(0), n_div(0), n_app(0), n_dis(0) {}
+    EventsStatistics& operator+=( const EventsStatistics& rhs ) {
+      n_total += rhs.n_total;
+      n_mov += rhs.n_mov;
+      n_div += rhs.n_div;
+      n_app += rhs.n_app;
+      n_dis += rhs.n_dis;
+      return *this;
+    }
+    size_t n_total, n_mov, n_div, n_app, n_dis;
+  };
+  inline EventsStatistics operator+( EventsStatistics lhs, const EventsStatistics& rhs ) {
+    lhs += rhs;
+    return lhs;
+  }
+  inline std::ostream& operator<<(std::ostream& os, const EventsStatistics& obj) { 
+    os << "#total: " << obj.n_total
+       << ", #move: " << obj.n_mov
+       << ", #division: " << obj.n_div
+       << ", #app.: " << obj.n_app
+       << ", #disapp.: " << obj.n_dis;
+    return os;
+  } 
+
+  template<class event_it>
+    EventsStatistics collect_events_statistics(event_it begin, event_it end, bool ignore_unknown_events=false) {
+    EventsStatistics stats;
+    for(event_it event=begin; event!=end; ++event) {
+      switch(event->type) {
+      case Event::Move:
+	stats.n_mov += 1;
+	stats.n_total += 1;
+	break;
+      case Event::Division:
+	stats.n_div += 1;
+	stats.n_total += 1;
+	break;
+      case Event::Appearance:
+	stats.n_app += 1;
+	stats.n_total += 1;
+	break;
+      case Event::Disappearance:
+	stats.n_dis += 1;
+	stats.n_total += 1;
+	break;
+      default:
+	if(!ignore_unknown_events) {
+	  throw std::runtime_error("collect_events_statistics(): unknown event type encountered");
+	}
+	break;
+      }
+    }
+    return stats;
+  }
+
 } /* namespace pgmlink */
 
 #endif /* EVENT_H */

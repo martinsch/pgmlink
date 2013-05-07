@@ -132,7 +132,7 @@ namespace pgmlink {
 
   boost::shared_ptr<std::vector< std::vector<Event> > > events(const HypothesesGraph& g) {
     LOG(logDEBUG) << "events(): entered";
-    shared_ptr<std::vector< std::vector<Event> > > ret(new vector< vector<Event> >);
+    boost::shared_ptr<std::vector< std::vector<Event> > > ret(new vector< vector<Event> >);
     typedef property_map<node_timestep, HypothesesGraph::base_graph>::type node_timestep_map_t;
     node_timestep_map_t& node_timestep_map = g.get(node_timestep());
     typedef property_map<node_traxel, HypothesesGraph::base_graph>::type node_traxel_map_t;
@@ -733,7 +733,7 @@ void addArcsToGraph(const HypothesesGraph& traxel_graph, HypothesesGraph& trackl
   //
   boost::shared_ptr<std::vector< std::map<unsigned int, bool> > > state_of_nodes(const HypothesesGraph& g) {
     LOG(logDEBUG) << "detections(): entered";
-    shared_ptr<vector< map<unsigned int, bool> > > ret(new vector< map<unsigned int, bool> >);
+    boost::shared_ptr<vector< map<unsigned int, bool> > > ret(new vector< map<unsigned int, bool> >);
 
     // required node properties: timestep, traxel, active
     typedef property_map<node_timestep, HypothesesGraph::base_graph>::type node_timestep_map_t;

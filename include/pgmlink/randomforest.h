@@ -6,15 +6,13 @@
 
 #ifndef RANDOMFOREST_H
 #define RANDOMFOREST_H
-
 #include <string>
 #include <vector>
 
+#include <vigra/multi_array.hxx>
+#include <vigra/hdf5impex.hxx>
 #include <vigra/random_forest.hxx>
 #include <vigra/random_forest_hdf5_impex.hxx>
-#include <vigra/multi_array.hxx>
-
-#include <vigra/hdf5impex.hxx>
 
 #include "pgmlink/traxels.h"
 

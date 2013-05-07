@@ -6,7 +6,7 @@
 #include <opengm/inference/inference.hxx>
 #include <opengm/inference/lpcplex.hxx>
 
-#include "pgmlink/graphical_model.h"
+#include "pgmlink/pgm.h"
 #include "pgmlink/hypotheses.h"
 #include "pgmlink/reasoner.h"
 
