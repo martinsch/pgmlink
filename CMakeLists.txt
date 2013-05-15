@@ -49,6 +49,7 @@ find_package( Cplex REQUIRED )
 find_package( VIGRA REQUIRED )
 find_package( Lemon REQUIRED )
 find_package( Boost REQUIRED COMPONENTS serialization )
+find_package( HDF5 REQUIRED COMPONENTS HL)
 message(STATUS "  found: ${Boost_LIBRARIES}")
 
 include_directories(${PROJECT_SOURCE_DIR}/include/ ${ANN_INCLUDE_DIR} ${CPLEX_INCLUDE_DIRS} ${VIGRA_INCLUDE_DIR} ${LEMON_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
@@ -67,6 +68,7 @@ message(STATUS "  Cplex: ${CPLEX_INCLUDE_DIR}")
 message(STATUS "  VIGRA: ${VIGRA_INCLUDE_DIR}")
 message(STATUS "  Lemon: ${LEMON_INCLUDE_DIR}")
 message(STATUS "  Boost: ${Boost_INCLUDE_DIRS}")
+message(STATUS "  HDF5:  ${HDF5_INCLUDE_DIRS}")
 
 # hide these variables to have a cleaner interface
 mark_as_advanced( Boost_DIR )
@@ -102,7 +104,7 @@ add_definitions(-D FILELOG_MAX_LEVEL=${LOG_DEFINE})
 # libpgmlink
 file(GLOB LIB_SOURCES src/*.cpp)
 add_library(pgmlink SHARED ${LIB_SOURCES})
-target_link_libraries(pgmlink ${ANN_LIBRARIES} ${Boost_LIBRARIES}  ${CPLEX_LIBRARIES} ${VIGRA_IMPEX_LIBRARY} ${LEMON_LIBRARIES})
+target_link_libraries(pgmlink ${ANN_LIBRARIES} ${Boost_LIBRARIES}  ${CPLEX_LIBRARIES} ${VIGRA_IMPEX_LIBRARY} ${LEMON_LIBRARIES} ${HDF5_LIBRARIES})
 
 # Install target pgmlink
 install(TARGETS pgmlink

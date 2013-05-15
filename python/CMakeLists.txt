@@ -11,7 +11,7 @@ else()
   find_package( PythonInterp REQUIRED )
 endif()
 
-include_directories( ${Boost_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS} )
+include_directories( ${Boost_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS}/python2.7 )
 
 # pypgmlink
 set(PYPGMLINK_SRCS
@@ -23,7 +23,7 @@ set(PYPGMLINK_SRCS
   )
 
 add_library(pypgmlink SHARED ${PYPGMLINK_SRCS})
-target_link_libraries(pypgmlink pgmlink ${Boost_LIBRARIES} )
+target_link_libraries(pypgmlink pgmlink ${Boost_LIBRARIES} ${PYTHON_LIBRARIES} )
 set_target_properties(pypgmlink PROPERTIES PREFIX "" OUTPUT_NAME "pgmlink")
 
 # install
