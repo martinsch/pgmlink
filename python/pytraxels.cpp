@@ -2,6 +2,8 @@
 #include <string>
 #include <sstream>
 
+#include "../include/pgmlink/traxels.h"
+#include <vigra/multi_array.hxx>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/python.hpp>
@@ -10,9 +12,7 @@
 #include <boost/python/return_internal_reference.hpp>
 #include <boost/utility.hpp>
 
-#include <vigra/multi_array.hxx>
 
-#include "../include/pgmlink/traxels.h"
 
 using namespace pgmlink;
 using namespace boost::python;

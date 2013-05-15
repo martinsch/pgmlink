@@ -1,11 +1,11 @@
 #include <vector>
 
-#include <boost/python.hpp>
+#include "../include/pgmlink/tracking.h"
 #include <boost/utility.hpp>
 #include <boost/python/suite/indexing/map_indexing_suite.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#include <boost/python.hpp>
 
-#include "../include/pgmlink/tracking.h"
 
 using namespace std;
 using namespace pgmlink;
