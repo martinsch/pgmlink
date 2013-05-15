@@ -49,6 +49,7 @@ find_package( Cplex REQUIRED )
 find_package( VIGRA REQUIRED )
 find_package( Lemon REQUIRED )
 find_package( Boost REQUIRED COMPONENTS serialization )
+# find hdf5 for OSX
 find_package( HDF5 REQUIRED COMPONENTS HL)
 message(STATUS "  found: ${Boost_LIBRARIES}")
 
@@ -104,6 +105,7 @@ add_definitions(-D FILELOG_MAX_LEVEL=${LOG_DEFINE})
 # libpgmlink
 file(GLOB LIB_SOURCES src/*.cpp)
 add_library(pgmlink SHARED ${LIB_SOURCES})
+# link with python for OSX
 target_link_libraries(pgmlink ${ANN_LIBRARIES} ${Boost_LIBRARIES}  ${CPLEX_LIBRARIES} ${VIGRA_IMPEX_LIBRARY} ${LEMON_LIBRARIES} ${HDF5_LIBRARIES})
 
 # Install target pgmlink

@@ -22,9 +22,10 @@ set(PYPGMLINK_SRCS
   pytraxels.cpp
   )
 
-add_library(pypgmlink SHARED ${PYPGMLINK_SRCS})
+add_library(pypgmlink SHARED ${PYPGMLINK_SRCS})# link with python for OSX
+# link with python for OSX
 target_link_libraries(pypgmlink pgmlink ${Boost_LIBRARIES} ${PYTHON_LIBRARIES} )
-set_target_properties(pypgmlink PROPERTIES PREFIX "" OUTPUT_NAME "pgmlink")
+set_target_properties(pypgmlink PROPERTIES PREFIX "" OUTPUT_NAME "pgmlink" SUFFIX ".so")
 
 # install
 
