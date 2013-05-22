@@ -7,12 +7,12 @@
 #ifndef TRACKING_H
 #define TRACKING_H
 
+#include "pgmlink/randomforest.h"
 #include <vector>
 #include <string>
 #include <boost/shared_ptr.hpp>
 
 #include "pgmlink/event.h"
-#include "pgmlink/randomforest.h"
 #include "pgmlink/traxels.h"
 #include "pgmlink/field_of_view.h"
 
