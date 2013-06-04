@@ -56,8 +56,11 @@ if(WIN32)
   # it wrongly discovers the dlls instead of the lib files
   # see: www.cmake.org/Bug/bug_relationship_graph.php?bug_id=14111
   # therefore we set the variable manually
-  set( HDF5_LIBRARIES hdf5dll hdf5_hldll )
+  find_library( HDF5_IMPORT_LIB hdf5dll )
+  find_library( HDF5_HL_IMPORT_LIB hdf5_hldll )
+  set( HDF5_LIBRARIES ${HDF5_IMPORT_LIB} ${HDF5_HL_IMPORT_LIB} )
   message(STATUS "HDF5: autodiscovery is broken on WIN32; using global search paths")
+  message(STATUS "HDF5: found ${HDF5_LIBRARIES}")
 else()
   find_package( HDF5 REQUIRED COMPONENTS C HL)
 endif()
