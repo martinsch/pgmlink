@@ -134,7 +134,9 @@ target_link_libraries(pgmlink ${ANN_LIBRARIES} ${Boost_LIBRARIES}  ${CPLEX_LIBRA
 
 # Install target pgmlink
 install(TARGETS pgmlink
-        DESTINATION lib)
+	ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION lib
+        RUNTIME DESTINATION bin)
 
 # API documentation with Doxygen
 find_package(Doxygen)
