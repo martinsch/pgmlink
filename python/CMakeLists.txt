@@ -6,6 +6,7 @@ find_package( Boost REQUIRED COMPONENTS python serialization )
 if(WIN32)
   set(PYTHON_EXECUTABLE "" CACHE PATH "")
   set(PYTHON_INCLUDE_DIRS "" CACHE PATH "")
+  set(PYTHON_LIBRARIES "" CACHE PATH "")
 else()
   find_package( PythonLibs REQUIRED )
   find_package( PythonInterp REQUIRED )
@@ -22,8 +23,7 @@ set(PYPGMLINK_SRCS
   pytraxels.cpp
   )
 
-add_library(pypgmlink SHARED ${PYPGMLINK_SRCS})# link with python for OSX
-# link with python for OSX
+add_library(pypgmlink SHARED ${PYPGMLINK_SRCS})#
 target_link_libraries(pypgmlink pgmlink ${Boost_LIBRARIES} ${PYTHON_LIBRARIES} )
 set_target_properties(pypgmlink PROPERTIES PREFIX "" OUTPUT_NAME "pgmlink" SUFFIX ".so")
 
