@@ -13,6 +13,8 @@
 #include "pgmlink/pgmlink_export.h"
 
 namespace pgmlink {
+  template class PGMLINK_EXPORT std::vector<unsigned int>;
+
   class PGMLINK_EXPORT Event {
   public:
   Event() : n_features_(0) { type = Void; };
