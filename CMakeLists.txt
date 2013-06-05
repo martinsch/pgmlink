@@ -119,9 +119,17 @@ logging_level_to_define(LOGGING_LEVEL LOG_DEFINE)
 add_definitions(-D FILELOG_MAX_LEVEL=${LOG_DEFINE})
 
 # libpgmlink
+include( GenerateExportHeader )
+add_compiler_export_flags() # enable dynamic symbol export/import for shared libs
+
 file(GLOB LIB_SOURCES src/*.cpp)
 add_library(pgmlink SHARED ${LIB_SOURCES})
-# link with python for OSX
+
+generate_export_header( pgmlink ) # generates pgmlink_export.h
+file( MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/pgmlink )
+file( RENAME ${CMAKE_CURRENT_BINARY_DIR}/pgmlink_export.h  ${CMAKE_CURRENT_BINARY_DIR}/include/pgmlink/pgmlink_export.h )
+include_directories( ${CMAKE_CURRENT_BINARY_DIR}/include )
+
 target_link_libraries(pgmlink ${ANN_LIBRARIES} ${Boost_LIBRARIES}  ${CPLEX_LIBRARIES} ${VIGRA_IMPEX_LIBRARY} ${LEMON_LIBRARIES} ${HDF5_LIBRARIES} )
 
 # Install target pgmlink

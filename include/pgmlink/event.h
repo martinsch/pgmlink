@@ -10,8 +10,10 @@
 #include <ostream>
 #include <stdexcept>
 
+#include "pgmlink/pgmlink_export.h"
+
 namespace pgmlink {
-  class Event {
+  class PGMLINK_EXPORT Event {
   public:
   Event() : n_features_(0) { type = Void; };
     
@@ -55,7 +57,7 @@ namespace pgmlink {
     std::vector<double> features_;
   };
 
-  struct EventsStatistics {
+  struct PGMLINK_EXPORT EventsStatistics {
   EventsStatistics() : n_total(0), n_mov(0), n_div(0), n_app(0), n_dis(0) {}
     EventsStatistics& operator+=( const EventsStatistics& rhs ) {
       n_total += rhs.n_total;
