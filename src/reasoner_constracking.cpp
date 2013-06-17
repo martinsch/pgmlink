@@ -57,6 +57,7 @@
 
 	LOG(logDEBUG) << "ConservationTracking::formulate: add_finite_factors";
 	add_finite_factors(*graph);
+	LOG(logDEBUG) << "ConservationTracking::formulate: finished add_finite_factors";
 	typedef opengm::LPCplex<pgm::OpengmModelDeprecated::ogmGraphicalModel,pgm::OpengmModelDeprecated::ogmAccumulator> cplex_optimizer;
 	cplex_optimizer::Parameter param;
 	param.verbose_ = true;
@@ -362,7 +363,11 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
 				// pay no appearance costs in the first timestep
 				cost.push_back(0.);
 			} else {
-				cost.push_back(appearance_cost_);
+				if(with_tracklets_){
+					cost.push_back(appearance_cost_(tracklet_map[n].front()));
+				} else {
+					cost.push_back(appearance_cost_(traxel_map[n]));
+				}
 			}
 			++num_vars;
 		}
@@ -373,14 +378,26 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
 				// single node tracks only have a disappearance node but not an appearance node
 				// also consider tracklets here which can reach over multiple time steps
 				if (node_end_time != g.latest_timestep()) {
-					c += disappearance_cost_;
+					if(with_tracklets_){
+						c += disappearance_cost_(tracklet_map[n].back());
+					}else {
+						c += disappearance_cost_(traxel_map[n]);
+					}
 				}
 				if (node_begin_time != g.earliest_timestep()) {
 					// single node tracks do not have an appearance node, hence handle appearance here
-					c += appearance_cost_;
+					if(with_tracklets_){
+						c += appearance_cost_(tracklet_map[n].front());
+					}else {
+						c += appearance_cost_(traxel_map[n]);
+					}
 				}
 			} else if (node_end_time != g.latest_timestep()) {
-				c += disappearance_cost_;
+				if(with_tracklets_){
+					c += disappearance_cost_(tracklet_map[n].back());
+				}else {
+					c += disappearance_cost_(traxel_map[n]);
+				}
 			}
 			cost.push_back(c);
 			++num_vars;

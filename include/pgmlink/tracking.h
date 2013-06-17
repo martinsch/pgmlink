@@ -148,7 +148,9 @@ namespace pgmlink {
   	      double appearance_cost = 0,
 		  bool with_merger_resolution = true,
 		  int n_dim = 3,
-		  double transition_parameter = 5.
+		  double transition_parameter = 5.,
+		  double border_width = 0,
+		  FieldOfView fov = FieldOfView()
   	      )
         : max_number_objects_(max_number_objects),
         	max_dist_(max_neighbor_distance), division_threshold_(division_threshold),
@@ -165,7 +167,9 @@ namespace pgmlink {
 		sigmas_(std::vector<double>()),
 		with_merger_resolution_(with_merger_resolution),
 		number_of_dimensions_(n_dim),
-		transition_parameter_(transition_parameter){}
+		transition_parameter_(transition_parameter),
+		border_width_(border_width),
+		fov_(fov){}
       std::vector< std::vector<Event> > operator()(TraxelStore&);
 
       /**
@@ -192,6 +196,8 @@ namespace pgmlink {
       shared_ptr<std::vector< std::map<unsigned int, bool> > > last_detections_;
       int number_of_dimensions_;
       double transition_parameter_;
+      double border_width_;
+      FieldOfView fov_;
     };
 }
 

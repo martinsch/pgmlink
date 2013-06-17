@@ -9,6 +9,7 @@
 #include "pgmlink/pgm.h"
 #include "pgmlink/hypotheses.h"
 #include "pgmlink/reasoner.h"
+#include "pgmlink/feature.h"
 
 namespace pgmlink {
 class Traxel;
@@ -25,8 +26,8 @@ class ConservationTracking : public Reasoner {
                              double ep_gap = 0.01,
                              bool with_tracklets = false,
                              bool with_divisions = true,
-                             double disappearance_cost = 10,
-                             double appearance_cost = 10,
+                             boost::function<double (const Traxel&)> disappearance_cost_fn = ConstantFeature(500.0),
+                             boost::function<double (const Traxel&)> appearance_cost_fn = ConstantFeature(500.0),
                              bool with_misdetections_allowed = true,
                              bool with_appearance = true,
                              bool with_disappearance = true,
@@ -41,8 +42,8 @@ class ConservationTracking : public Reasoner {
           ep_gap_(ep_gap),
           with_tracklets_(with_tracklets),
           with_divisions_(with_divisions),
-          disappearance_cost_(disappearance_cost),
-          appearance_cost_(appearance_cost),
+          disappearance_cost_(disappearance_cost_fn),
+          appearance_cost_(appearance_cost_fn),
           number_of_appearance_nodes_(0),
           number_of_disappearance_nodes_(0),
           with_misdetections_allowed_(with_misdetections_allowed),
@@ -102,7 +103,10 @@ class ConservationTracking : public Reasoner {
     // energy functions
     boost::function<double (const Traxel&, const size_t)> detection_;
     boost::function<double (const Traxel&, const size_t)> division_;
+    boost::function<double (const Traxel&)> disappearance_cost_;
+    boost::function<double (const Traxel&)> appearance_cost_;
     boost::function<double (const double)> transition_;
+
     double forbidden_cost_;
     
     shared_ptr<pgm::OpengmModelDeprecated> pgm_;
@@ -117,7 +121,7 @@ class ConservationTracking : public Reasoner {
 
     bool with_tracklets_, with_divisions_;
 
-    double disappearance_cost_, appearance_cost_;
+   //double disappearance_cost_, appearance_cost_;
 
     unsigned int number_of_transition_nodes_, number_of_division_nodes_;
     unsigned int number_of_appearance_nodes_, number_of_disappearance_nodes_;

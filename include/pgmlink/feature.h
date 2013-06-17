@@ -8,7 +8,9 @@
 #define FEATURE_H
 
 #include <stdexcept>
+#include "pgmlink/log.h"
 #include "pgmlink/traxels.h"
+#include "pgmlink/field_of_view.h"
 #include <cmath>
 
 namespace pgmlink {
@@ -131,6 +133,41 @@ private:
     bool early_;
     int margin_t_;
   };
+
+
+  /**
+       @brief Zero after normalized spatial margin
+    */
+    class SpatialBorderAwareWeight {
+    public:
+	  SpatialBorderAwareWeight( double weight, double margin, FieldOfView& fov) :
+		  w_(weight), margin_(margin), fov_(fov){}
+
+      double operator()( const Traxel& tr ) const {
+    	LOG(logDEBUG1) << "SpatialBorderAwareWeight(): margin" << margin_;
+    	double t = tr.Timestep; //no time is needed
+    	double x = tr.X(), y = tr.Y(), z = tr.Z();
+    	LOG(logDEBUG4) <<  "x " << x;
+    	LOG(logDEBUG4) <<  "y " << y;
+    	LOG(logDEBUG4) <<  "z " << z;
+    	double distance_to_border = fov_.relative_spatial_margin(t,x,y,z);
+    	LOG(logDEBUG4) << "SpatialBorderAwareWeight(): distance " << distance_to_border;
+    // STEP FUNCTION, when cells are closer to border than the margin the penalty is less
+    // Case when margin = 0, the weight is returned constant.
+  	if( distance_to_border < margin_) {
+  	  LOG(logDEBUG3) << "SpatialBorderAwareWeight(): distance smaller than margin, energy: " << 0.0;
+  	  return 0;
+  	} else {
+  		LOG(logDEBUG3) << "SpatialBorderAwareWeight(): distance greater or equal than margin, energy: " << w_;
+  		return w_;
+  	}
+      }
+    private:
+      double w_;
+      double margin_;
+      FieldOfView fov_;
+    };
+
 
   /**
      @brief Primitive fixed value feature.

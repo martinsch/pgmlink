@@ -556,6 +556,9 @@ namespace pgmlink {
     translate_property_value_map<node_traxel, HypothesesGraph::Node>(src, dest, nr);
     translate_property_value_map<arc_distance, HypothesesGraph::Arc>(src, dest, ar);
     translate_property_value_map<node_originated_from, HypothesesGraph::Node>(src, dest, nr);
+    boost::function<double(const Traxel&)> appearance_cost = ConstantFeature(0.0);
+    boost::function<double(const Traxel&)> disappearance_cost = ConstantFeature(0.0);
+
 
     ConservationTracking pgm(
                              1, //max_number_objects_,
@@ -566,8 +569,8 @@ namespace pgmlink {
                              ep_gap, // ep_gap_, übergeben
                              with_tracklets, // with_tracklets_, übergeben
                              false, // with_divisions_,
-                             0, // disappearance_cost_
-                             0, // appearance_cost
+                             disappearance_cost, // disappearance_cost_
+                             appearance_cost, // appearance_cost
                              false // with_misdetections_allowed
 //                             false, // with appearance
 //                             false // with disappearance
