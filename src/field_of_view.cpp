@@ -36,6 +36,7 @@ namespace pgmlink {
   }
 
   bool FieldOfView::contains( double t, double x, double y, double z ) const {
+
     if(    lb_[0] <= t && t <= ub_[0]
 	&& lb_[1] <= x && x <= ub_[1]
 	&& lb_[2] <= y && y <= ub_[2]
@@ -108,16 +109,17 @@ namespace pgmlink {
 
   double FieldOfView::spatial_margin( double /*t*/, double x, double y, double z ) const {
     // the eight corners of the fov cube
+	// note: this function is not spatial since lb_[0] is the time!!
     double c1[3], c2[3], c3[3], c4[3], c5[3], c6[3], /*c7[3],*/ c8[3];
-    c1[0] = lb_[0]; c1[1] = lb_[1]; c1[2] = lb_[2];
-    c2[0] = ub_[0]; c2[1] = lb_[1]; c2[2] = lb_[2];
-    c3[0] = ub_[0]; c3[1] = ub_[1]; c3[2] = lb_[2];
-    c4[0] = lb_[0]; c4[1] = ub_[1]; c4[2] = lb_[2];
+    c1[0] = lb_[1]; c1[1] = lb_[2]; c1[2] = lb_[3];
+    c2[0] = ub_[1]; c2[1] = lb_[2]; c2[2] = lb_[3];
+    c3[0] = ub_[1]; c3[1] = ub_[2]; c3[2] = lb_[3];
+    c4[0] = lb_[1]; c4[1] = ub_[2]; c4[2] = lb_[3];
     
-    c5[0] = lb_[0]; c5[1] = lb_[1]; c5[2] = ub_[2];
-    c6[0] = ub_[0]; c6[1] = lb_[1]; c6[2] = ub_[2];
-    //c7[0] = ub_[0]; c7[1] = ub_[1]; c7[2] = ub_[2]; // unused
-    c8[0] = lb_[0]; c8[1] = ub_[1]; c8[2] = ub_[2];
+    c5[0] = lb_[1]; c5[1] = lb_[2]; c5[2] = ub_[3];
+    c6[0] = ub_[1]; c6[1] = lb_[2]; c6[2] = ub_[3];
+    //c7[0] = ub_[1]; c7[1] = ub_[2]; c7[2] = ub_[3]; // unused
+    c8[0] = lb_[1]; c8[1] = ub_[2]; c8[2] = ub_[3];
 
     // distances to the six faces of the cube
     double ds[6];
@@ -131,6 +133,43 @@ namespace pgmlink {
     return *min_element(ds, ds+6);
   }
   
+  double FieldOfView::relative_spatial_margin( double /*t*/, double x, double y, double z ) const {
+	  //distance to 6 cuboid planes, in the 2D case where Z=0,
+	  //we take the planes with Z upper bound set to 1.0
+	  //and return the distances to the 4 corresponding planes
+	  double zub = 1.0;// 2D case
+	  int vlen = 4;
+
+	  if (ub_[3] - lb_[3] > 0 ){ //3D case
+		  zub = ub_[3];
+		  vlen = 6;
+	  }
+	// the eight corners of the fov cube
+	double c1[3], c2[3], c3[3], c4[3], c5[3], c6[3], /*c7[3],*/ c8[3];
+	c1[0] = lb_[1]; c1[1] = lb_[2]; c1[2] = lb_[3];
+	c2[0] = ub_[1]; c2[1] = lb_[2]; c2[2] = lb_[3];
+	c3[0] = ub_[1]; c3[1] = ub_[2]; c3[2] = lb_[3];
+	c4[0] = lb_[1]; c4[1] = ub_[2]; c4[2] = lb_[3];
+
+	c5[0] = lb_[1]; c5[1] = lb_[2]; c5[2] = zub;
+	c6[0] = ub_[1]; c6[1] = lb_[2]; c6[2] = zub;
+	//c7[0] = ub_[1]; c7[1] = ub_[2]; c7[2] = zub; // unused
+	c8[0] = lb_[1]; c8[1] = ub_[2]; c8[2] = zub;
+
+	// distances to the six faces of the cube
+	double ds[6];
+	double q[3] = {x, y, z};
+	ds[0] = abs_distance(c1, c2, c5, q) / ((ub_[2] - lb_[2]) / 2); //normalize relative to radius of range
+	ds[1] = abs_distance(c2, c3, c6, q) / ((ub_[1] - lb_[1]) / 2);
+	ds[2] = abs_distance(c4, c3, c8, q) / ((ub_[2] - lb_[2]) / 2);
+	ds[3] = abs_distance(c1, c4, c5, q) / ((ub_[1] - lb_[1]) / 2);
+	ds[4] = abs_distance(c1, c2, c4, q) / ((zub - lb_[3]) / 2);
+	ds[5] = abs_distance(c5, c6, c8, q) / ((zub - lb_[3]) / 2);
+
+	return *min_element(ds, ds+vlen);
+
+  }
+
   double FieldOfView::temporal_margin( double t, double /*x*/, double /*y*/, double /*z*/ ) const {
     return min(abs(t - lb_[0]), abs(t - ub_[0]));
   }
