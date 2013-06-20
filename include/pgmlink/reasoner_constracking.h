@@ -103,8 +103,6 @@ class ConservationTracking : public Reasoner {
     // energy functions
     boost::function<double (const Traxel&, const size_t)> detection_;
     boost::function<double (const Traxel&, const size_t)> division_;
-    boost::function<double (const Traxel&)> disappearance_cost_;
-    boost::function<double (const Traxel&)> appearance_cost_;
     boost::function<double (const double)> transition_;
 
     double forbidden_cost_;
@@ -121,7 +119,8 @@ class ConservationTracking : public Reasoner {
 
     bool with_tracklets_, with_divisions_;
 
-   //double disappearance_cost_, appearance_cost_;
+    boost::function<double (const Traxel&)> disappearance_cost_;
+    boost::function<double (const Traxel&)> appearance_cost_;
 
     unsigned int number_of_transition_nodes_, number_of_division_nodes_;
     unsigned int number_of_appearance_nodes_, number_of_disappearance_nodes_;
