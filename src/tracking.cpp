@@ -519,10 +519,9 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 			arc_distances.set(a, from_tr.distance_to(to_tr));
 		}
 	}
-	//begin edge-aware costs, implementation of border-aware costs for appearance and disappearance
 	//border_width_ is given in normalized scale, 1 corresponds to a maximal distance of dim_range/2
 	boost::function<double(const Traxel&)> appearance_cost_fn, disappearance_cost_fn;
-	LOG(logINFO) << "-> using border-aware appearance and disappearance costs, with margin: " << border_width_;
+	LOG(logINFO) << "  using border-aware appearance and disappearance costs, with margin: " << border_width_;
 	appearance_cost_fn = SpatialBorderAwareWeight(appearance_cost_, border_width_, fov_);
 	disappearance_cost_fn = SpatialBorderAwareWeight(disappearance_cost_, border_width_, fov_);
 
