@@ -374,4 +374,24 @@ double NegLnConstant::operator ()(size_t state) const {
     return cost_cellness;
   }
 
+  ////
+  //// SpatialBorderAwareWeight
+  ////
+ double SpatialBorderAwareWeight::operator()( const Traxel& tr ) const {
+	LOG(logDEBUG4) << "SpatialBorderAwareWeight(): margin" << margin_;
+   double t = tr.Timestep;
+	double x = tr.X(), y = tr.Y(), z = tr.Z();
+	double distance_to_border = fov_.relative_spatial_margin(t,x,y,z);
+	LOG(logDEBUG4) << "SpatialBorderAwareWeight(): distance to border = " << distance_to_border;
+	if( distance_to_border < margin_) {
+	  double linear_cost = (distance_to_border / margin_) * cost_; //normalize distance within the border to range (0,1)
+	  LOG(logDEBUG4) << "SpatialBorderAwareWeight(): distance smaller than margin, energy: " << linear_cost;
+	  return linear_cost;
+	} else {
+		LOG(logDEBUG4) << "SpatialBorderAwareWeight(): distance greater than margin, energy: " << cost_;
+		return cost_;
+	}
+  }
+
+
 } /* namespace pgmlink */
