@@ -21,6 +21,7 @@
 #include "pgmlink/reasoner_constracking.h"
 #include "pgmlink/traxels.h"
 #include "pgmlink/tracking.h"
+#include "pgmlink/field_of_view.h"
 
 using namespace pgmlink;
 using namespace std;
@@ -1043,6 +1044,8 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Merger3 ) {
 	std::cout << "Initialize Conservation tracking" << std::endl;
 	std::cout << std::endl;
 
+   FieldOfView fov(0, 0, 0, 0, 4, 1000, 1000, 1); // tlow, xlow, ylow, zlow, tup, xup, yup, zup
+
 	ConsTracking tracking = ConsTracking(
 			  2, // max_number_objects
 		      99999, // max_neighbor_distance
@@ -1058,7 +1061,11 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Merger3 ) {
 			  true, //with_divisions
 			  500., // disappearance_cost,
 			  500., // appearance_cost
-			  true //with_merger_resolution
+			  true, //with_merger_resolution
+			  2, //n_dim
+			  5, //transition_parameter
+			  0, //border_width for app/disapp costs
+           fov
 	  	      );
 
 	std::cout << "Run Conservation tracking" << std::endl;
