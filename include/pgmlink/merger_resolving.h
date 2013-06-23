@@ -145,7 +145,7 @@ namespace pgmlink {
 
 
   template <typename T, typename U>
-  void feature_array_to_arma_mat_skip_last_dimension(const std::vector<T>& in, arma::Mat<U>& out, int last_dimension);
+  void feature_array_to_arma_mat_skip_last_dimension(const std::vector<T>& in, arma::Mat<U>& out, unsigned int last_dimension);
 
   
   template <typename T>
@@ -484,10 +484,10 @@ namespace pgmlink {
 
   
   template <typename T, typename U>
-  void feature_array_to_arma_mat_skip_last_dimension(const std::vector<T>& in, arma::Mat<U>& out, int last_dimension) {
-    int stepSize = out.n_rows;
-    int n = out.n_cols;
-    int count = 0;
+  void feature_array_to_arma_mat_skip_last_dimension(const std::vector<T>& in, arma::Mat<U>& out, unsigned int last_dimension) {
+    unsigned int stepSize = out.n_rows;
+    unsigned int n = out.n_cols;
+    unsigned int count = 0;
     assert(last_dimension*n == in.size());
     assert(stepSize == last_dimension-1);
     typename std::vector<T>::const_iterator srcIt = in.begin();
