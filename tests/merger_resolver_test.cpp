@@ -34,7 +34,6 @@ BOOST_AUTO_TEST_CASE( MergerResolver_subgraph ) {
   HypothesesGraph::Node n2 = g1.add_node(2);
   HypothesesGraph::Node n3 = g1.add_node(2);
   property_map<node_active, HypothesesGraph::base_graph>::type& na_map = g1.get(node_active());
-  property_map<arc_active, HypothesesGraph::base_graph>::type& aa_map = g1.get(arc_active());
   property_map<node_active2, HypothesesGraph::base_graph>::type& na2_map = g1.get(node_active2());
   na_map.set(n1,true);
   na_map.set(n2,false);
@@ -93,18 +92,18 @@ BOOST_AUTO_TEST_CASE( MergerResolver_resolve_mergers_3 ) {
   LOG(logINFO) << "Starting test MergerResolver_resolve_mergers_3";
   //  t=1       2
   //       --- (2)
-  //     /
+  //     |
   //   (3) --- (1)
 
   // -> each of the nodes in timesteps t has a possible arc to all nodes in t+1
   //    o ----- o
-  //     \     /
+  //     |     |
   //      -----
-  //     / \ / \
+  //     | | | |
   //    o --x-- o
-  //     \ / \ /
+  //     | | | |
   //      -----
-  //     /     \
+  //     |     |
   //    o ----- o
 
   HypothesesGraph g;
@@ -260,16 +259,16 @@ BOOST_AUTO_TEST_CASE( MergerResolver_resolve_mergers_2 ) {
   
   //  t=1      2      3
   //    o ----    ----o
-  //          \  /
+  //          | |
   //           O
-  //          / \
+  //          | |
   //    o ----    ----o
 
   // ->
   //    o ---- o ---- o
-  //     \    / \    /
+  //     |    | |    |
   //       --     --
-  //     /    \ /    \
+  //     |    | |    |
   //    o ---- o ---- o
 
   HypothesesGraph g;
@@ -401,16 +400,16 @@ BOOST_AUTO_TEST_CASE( MergerResolver_resolve_mergers ) {
   g.add(node_traxel()).add(arc_distance()).add(arc_active()).add(node_active2()).add(merger_resolved_to());
   //  t=1      2
   //    o ----  
-  //          \ 
+  //          | 
   //           O
-  //          / 
+  //          | 
   //    o ----   
 
   // ->
   //    o ---- o
-  //     \    / 
+  //     |    | 
   //       --   
-  //     /    \ 
+  //     |    | 
   //    o ---- o
 
   feature_array com(3,0);
@@ -529,16 +528,16 @@ BOOST_AUTO_TEST_CASE( MergerResolver_refine_node ) {
 
   //  t=1      2      3 
   //    o ----   --- o
-  //          \ /
+  //          | |
   //           O
-  //          / \
+  //          | |
   //    o ----   --- o
 
   // ->
   //    o ---- o ---- o
-  //     \    / \    /
+  //     |    | |    |
   //       --     --
-  //     /    \ /    \
+  //     |    | |    |
   //    o ---- o ---- o
 
   
