@@ -151,13 +151,7 @@ namespace pgmlink {
     	with_mergers = true;
     	LOG(logDEBUG1) << "events(): with_mergers = true";
     }
-    bool with_resolved = false;
-    property_map<merger_resolved_to, HypothesesGraph::base_graph>::type* resolved_map;
-    if (g.getProperties().count("merger_resolved_to") > 0 && false) {
-      resolved_map = &g.get(merger_resolved_to());
-      with_resolved = true;
-      LOG(logDEBUG1) << "events(): with_resolved enabled";
-    }
+
     bool with_origin = false;
     property_map<node_originated_from, HypothesesGraph::base_graph>::type* origin_map;
     if (g.getProperties().count("node_originated_from") > 0) {

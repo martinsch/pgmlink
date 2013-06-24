@@ -107,7 +107,7 @@ namespace pgmlink {
   }
   
 
-  std::vector<arma::vec> GMMInitializeArma::operator()(const char* dirty_hack) {
+  std::vector<arma::vec> GMMInitializeArma::operator()(const char*) {
     mlpack::gmm::GMM<> gmm(k_, data_.n_rows);
     score_ = gmm.Estimate(data_, n_trials_);
     std::vector<arma::vec> centers = gmm.Means();
