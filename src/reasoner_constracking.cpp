@@ -69,6 +69,11 @@
 
 	LOG(logDEBUG) << "ConservationTracking::formulate: add_constraints";
 	add_constraints(*graph);
+	
+	LOG(logINFO) << "number_of_transition_nodes_ = " << number_of_transition_nodes_;
+	LOG(logINFO) << "number_of_appearance_nodes_ = " << number_of_appearance_nodes_;
+	LOG(logINFO) << "number_of_disappearance_nodes_ = " << number_of_disappearance_nodes_;
+	LOG(logINFO) << "number_of_division_nodes_ = " << number_of_division_nodes_;
 
 }
 
