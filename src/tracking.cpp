@@ -32,6 +32,25 @@ void ChaingraphTracking::set_cplex_timeout(double seconds) {
 }
 
 vector<vector<Event> > ChaingraphTracking::operator()(TraxelStore& ts) {
+  LOG(logINFO) << "Calling chaingraph tracking with the following parameters:\n"
+	       << "\trandom forest filename: " << rf_fn_ << "\n"
+	       << "\tappearance: " << app_ << "\n"
+               << "\tdisappearance: " << dis_ << "\n"
+    	       << "\tdetection: " << det_ << "\n"
+    	       << "\tmisdetection: " << mis_  << "\n"
+    	       << "\tcellness_by_random_forest: " << use_rf_  << "\n"
+    	       << "\topportunity cost: " << opportunity_cost_ << "\n"
+    	       << "\tforbidden cost: " << forbidden_cost_ << "\n"
+    	       << "\twith constraints: " << with_constraints_ << "\n"
+    	       << "\tfixed detections: " << fixed_detections_ << "\n"
+    	       << "\tmean division distance: " << mean_div_dist_ << "\n"
+    	       << "\tminimal division angle: " << min_angle_  << "\n"
+    	       << "\tcplex ep gap: " << ep_gap_ << "\n"
+    	       << "\tn neighbors: " <<  n_neighbors_ << "\n"
+   	       << "\twith divisions: " << with_divisions_  << "\n"
+   	       << "\tcplex timeout: " << cplex_timeout_ << "\n"
+   	       << "\talternative builder: " << alternative_builder_;
+
 	cout << "-> building feature functions " << endl;
 	SquaredDistance move;
 	BorderAwareConstant appearance(app_, earliest_timestep(ts), true, 0);
