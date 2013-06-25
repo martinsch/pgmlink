@@ -8,8 +8,14 @@
 //boost
 #include <boost/shared_ptr.hpp>
 
-// external headers
+// armadillo
 #include <armadillo>
+
+
+// mlpack
+#include <mlpack/core.hpp>
+#include <mlpack/methods/kmeans/kmeans.hpp>
+#include <mlpack/methods/gmm/gmm.hpp>
 
 // pgmlink headers
 #include "pgmlink/traxels.h"
@@ -17,17 +23,29 @@
 
 
 namespace pgmlink {
+  class ClusteringMlpackBase;
+
+  
+  class ClusteringMlpackBuilderBase;
+
+  
+  typedef boost::shared_ptr<ClusteringMlpackBase> ClusteringPtr;
+
+  typedef boost::shared_ptr<ClusteringMlpackBuilderBase> ClusteringBuilderPtr;
   ////
   //// ClusteringMlpackBase
   ////
-
   class ClusteringMlpackBase {
+  private:
+    arma::mat data_arma_;
   protected:
     void copy_centers_to_feature_array(const arma::mat& centers, feature_array& c);
   public:
     virtual ~ClusteringMlpackBase() {}
     virtual feature_array operator()() = 0;
     virtual double score() const {return 0.0;}
+    virtual const arma::mat& get_data_arma() const;
+    virtual unsigned get_cluster_assignment(const arma::vec& sample, const uint cluster_id) = 0;
   };
 
 
@@ -50,6 +68,7 @@ namespace pgmlink {
     KMeans();
     int k_;
     const feature_array& data_;
+    arma::mat data_arma_;
     // void copy_centers_to_feature_array(const arma::mat& centers, feature_array& c);
   public:
     // tested
@@ -59,7 +78,7 @@ namespace pgmlink {
      * @param [in] data feature_array storing data
      */
     KMeans(int k, const feature_array& data) :
-      k_(k), data_(data) {}
+      k_(k), data_(data), data_arma_(arma::mat()) {}
 
     // tested
     /**
@@ -67,9 +86,13 @@ namespace pgmlink {
      * @returns feature_array that contains the coordinates of k clusters
      */
     virtual feature_array operator()();
+    virtual unsigned get_cluster_assignment(const arma::vec& sample, const uint cluster_id);
   };
 
 
+  ////
+  //// GMM
+  ////
   class GMM : public ClusteringMlpackBase {
   private:
     GMM();
@@ -78,30 +101,33 @@ namespace pgmlink {
     const feature_array& data_;
     double score_;
     int n_trials_;
+    arma::mat data_arma_;
   public:
     // constructor needs to specify number of dimensions
     // for 2D data, ilastik provides coordinates with 3rd dimension 0
     // which will cause singular covariance matrix
     // therefore add option for dimensionality
     GMM(int k, int n, const feature_array& data, int n_trials=1) :
-      k_(k), n_(n), data_(data), score_(0.0), n_trials_(n_trials) {}
+      k_(k), n_(n), data_(data), score_(0.0), n_trials_(n_trials), data_arma_(arma::mat()) {}
 
     virtual feature_array operator()();
+    virtual unsigned get_cluster_assignment(const arma::vec& sample, const uint cluster_id);
     double score() const;
-    
   };
 
-
+  ////
+  //// GMMInitializeArma
+  ////
   class GMMInitializeArma : public ClusteringMlpackBase {
   private:
     GMMInitializeArma();
     int k_;
-    const arma::mat& data_;
+    arma::mat data_arma_;
     double score_;
     int n_trials_;
   public:
     GMMInitializeArma(int k, const arma::mat& data, int n_trials=1) :
-      k_(k), data_(data), score_(0.0), n_trials_(n_trials) {}
+      k_(k), data_arma_(data), score_(0.0), n_trials_(n_trials) {}
 
     virtual feature_array operator()();
     std::vector<arma::vec> operator()(const char* dirty_hack);
@@ -109,13 +135,41 @@ namespace pgmlink {
 
   };
 
-
+  ////
+  //// ClusteringMlpackBuilderBase
+  ////
   class ClusteringMlpackBuilderBase {
   private:
-    
   public:
+    virtual ClusteringPtr build(const feature_array& data) = 0;
   };
-   
+
+  ////
+  //// KMeansBuilder
+  ////
+  class KMeansBuilder : public ClusteringMlpackBuilderBase {
+  private:
+    int k_;
+  public:
+    KMeansBuilder();
+    KMeansBuilder(int k);
+    virtual ClusteringPtr build(const feature_array& data);
+  };
+
+
+  ////
+  //// GMMBuilder
+  ////
+  class GMMBuilder : public ClusteringMlpackBuilderBase {
+  private:
+    int k_;
+    int n_;
+    int n_trials_;
+  public:
+    GMMBuilder();
+    GMMBuilder(int k, int n, int n_trials);
+    virtual ClusteringPtr build(const feature_array& data);
+  };
     
 
   ////

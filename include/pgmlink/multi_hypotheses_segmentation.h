@@ -22,12 +22,6 @@ namespace pgmlink {
   class MultiSegmenterBuilder;
 
 
-  typedef boost::shared_ptr<ClusteringMlpackBase> ClusteringPtr;
-
-
-  typedef boost::shared_ptr<ClusteringMlpackBuilderBase> ClusteringBuilderPtr;
-
-
   typedef boost::shared_ptr<MultiSegmenter> MultiSegmenterPtr;
 
 
@@ -39,12 +33,14 @@ namespace pgmlink {
   class MultiSegmenter {
   private:
     const std::vector<unsigned>& n_clusters_;
+    const feature_array& data_;
     ClusteringPtr clusterer_;
     MultiSegmenter();
   public:
     MultiSegmenter(const std::vector<unsigned>& n_clusters,
                    ClusteringPtr clusterer);
-    vigra::MultiArrayView<2, unsigned> operator()();
+    vigra::MultiArrayView<2, unsigned> operator()(uint offset = 0);
+    unsigned assign(const arma::Col& sample, const uint& n_mixtures);
   };
 
 
@@ -55,9 +51,9 @@ namespace pgmlink {
   private:
     const std::vector<unsigned>& n_clusters_;
     ClusteringBuilderPtr clustering_builder_;
-  public:
     MultiSegmenterBuilder();
-    MultiSegmenterBuilder(std::vector<unsigned> n_clusters,
+  public:
+    MultiSegmenterBuilder(const std::vector<unsigned>& n_clusters,
                            ClusteringBuilderPtr clustering_builder);
     MultiSegmenterPtr build(const feature_array& data);
   };
