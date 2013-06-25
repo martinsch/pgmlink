@@ -11,6 +11,7 @@
 
 #include "pgmlink/hypotheses.h"
 #include "pgmlink/traxels.h"
+#include "pgmlink/clustering.h"
 // enable tests of private class members
 #define private public
 #include "pgmlink/merger_resolving.h"
