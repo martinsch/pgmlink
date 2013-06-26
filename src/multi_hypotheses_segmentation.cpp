@@ -26,24 +26,23 @@ namespace pgmlink {
     clusterer_(clusterer) {}
 
 
-  vigra::MultiArrayView<2, unsigned> MultiSegmenter::operator()(uint offset) {
+  vigra::MultiArray<2, unsigned> MultiSegmenter::operator()(uint offset) {
     const arma::mat& data_arma_ = clusterer_->get_data_arma();
     unsigned n_samples = data_arma_.n_cols;
     unsigned n_layers = n_clusters_.size();
-    vigra::MultiArray<2, unsigned> res(vigra::Shape2(n_samples, n_layers));
-    vigra::MultiArrayView<1, unsigned, vigra::StridedArrayTag> res_curr;
+    vigra::MultiArray<2, unsigned> res(vigra::Shape2(n_samples, n_layers), 0u);
     std::vector<unsigned>::const_iterator it = n_clusters_.begin();
     unsigned layer_index = 0;
     unsigned sample_index;
     for (; it != n_clusters_.end(); ++it, ++layer_index) {
       clusterer_->set_k_clusters(*it);
       clusterer_->operator()();
-      res_curr = res.bindAt(1, layer_index);
       for (sample_index = 0; sample_index < n_samples; ++sample_index) {
-        res_curr(sample_index) = assign(data_arma_.col(sample_index)) + offset;
+        res(sample_index, layer_index) = assign(data_arma_.col(sample_index)) + offset;
       }
+      offset += *it;
     }
-    return vigra::MultiArrayView<2, unsigned>(res);
+    return res;
   }
 
 

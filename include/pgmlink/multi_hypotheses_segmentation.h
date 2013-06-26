@@ -38,7 +38,7 @@ namespace pgmlink {
   public:
     MultiSegmenter(const std::vector<unsigned>& n_clusters,
                    ClusteringPtr clusterer);
-    vigra::MultiArrayView<2, unsigned> operator()(uint offset = 0);
+    vigra::MultiArray<2, unsigned> operator()(uint offset = 0);
     unsigned assign(const arma::vec& sample);
   };
 

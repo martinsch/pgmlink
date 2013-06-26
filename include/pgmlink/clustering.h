@@ -37,14 +37,13 @@ namespace pgmlink {
   ////
   class ClusteringMlpackBase {
   private:
-    arma::mat data_arma_;
   protected:
     void copy_centers_to_feature_array(const arma::mat& centers, feature_array& c);
   public:
     virtual ~ClusteringMlpackBase() {}
     virtual feature_array operator()() = 0;
     virtual double score() const {return 0.0;}
-    virtual const arma::mat& get_data_arma() const;
+    virtual const arma::mat& get_data_arma() const = 0;
     virtual unsigned get_cluster_assignment(const arma::vec& sample) {return 0;}
     virtual void set_k_clusters(unsigned k) {return;}
   };
@@ -87,6 +86,7 @@ namespace pgmlink {
      * @returns feature_array that contains the coordinates of k clusters
      */
     virtual feature_array operator()();
+    virtual const arma::mat& get_data_arma() const;
   };
 
 
@@ -114,6 +114,7 @@ namespace pgmlink {
     virtual unsigned get_cluster_assignment(const arma::vec& sample);
     double score() const;
     virtual void set_k_clusters(unsigned k);
+    virtual const arma::mat& get_data_arma() const;
   };
 
   ////
@@ -133,6 +134,7 @@ namespace pgmlink {
     virtual feature_array operator()();
     std::vector<arma::vec> operator()(const char* dirty_hack);
     double score() const;
+    virtual const arma::mat& get_data_arma() const;
   };
 
   ////

@@ -38,9 +38,7 @@ namespace pgmlink {
   }
 
 
-  const arma::mat& ClusteringMlpackBase::get_data_arma() const {
-    return data_arma_;
-  }
+  
 
 
   ////
@@ -63,29 +61,33 @@ namespace pgmlink {
   }
 
 
+  const arma::mat& KMeans::get_data_arma() const {
+    return data_arma_;
+  }
+
+
   ////
   //// GMM
   ////
   GMM::GMM(int k, int n, const feature_array& data, int n_trials) :
     k_(k), n_(n), data_(data), score_(0.0), n_trials_(n_trials), data_arma_(arma::mat()), gmm_(k, n) {
+    int n_samples = data_.size()/3;
+    data_arma_ = arma::mat(n_,n_samples);
+    if (n_ == 2) {
+      feature_array_to_arma_mat_skip_last_dimension(data_, data_arma_, 3);
+    } else if(n_ == 3) {
+      feature_array_to_arma_mat(data_, data_arma_);
+    } else {
+      throw std::runtime_error("Number of spatial dimensions other than 2 or 3 would not make sense!");
+    }
     
   }
 
   
   feature_array GMM::operator()() {
-    int n_samples = data_.size()/3;
-    arma::Col<size_t> labels;
+    
+    // arma::Col<size_t> labels;
     LOG(logDEBUG1) << "GMM::operator(): n_=" << n_;
-    if (data_arma_.is_empty()) {
-      data_arma_ = arma::mat(n_,n_samples);
-      if (n_ == 2) {
-        feature_array_to_arma_mat_skip_last_dimension(data_, data_arma_, 3);
-      } else if(n_ == 3) {
-        feature_array_to_arma_mat(data_, data_arma_);
-      } else {
-        throw std::runtime_error("Number of spatial dimensions other than 2 or 3 would not make sense!");
-      }
-    }
     score_ = gmm_.Estimate(data_arma_, n_trials_);
     std::vector<arma::vec> centers = gmm_.Means();
     feature_array fa_centers;
@@ -106,6 +108,7 @@ namespace pgmlink {
     for (int idx = 0; idx < k_; ++idx) {
       prob = gmm_.Probability(sample, idx);
       if (prob > max_prob) {
+        max_prob = prob;
         assignment = idx;
       }
     }
@@ -123,7 +126,12 @@ namespace pgmlink {
 
   void GMM::set_k_clusters(unsigned k) {
     k_ = k;
-    gmm_.Gaussians() = k_;
+    gmm_ = mlpack::gmm::GMM<>(k_, n_);
+  }
+
+
+  const arma::mat& GMM::get_data_arma() const {
+    return data_arma_;
   }
     
 
@@ -151,6 +159,11 @@ namespace pgmlink {
   
   double GMMInitializeArma::score() const {
     return score_;
+  }
+
+
+  const arma::mat& GMMInitializeArma::get_data_arma() const {
+    return data_arma_;
   }
 
 
