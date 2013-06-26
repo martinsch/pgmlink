@@ -45,7 +45,8 @@ namespace pgmlink {
     virtual feature_array operator()() = 0;
     virtual double score() const {return 0.0;}
     virtual const arma::mat& get_data_arma() const;
-    virtual unsigned get_cluster_assignment(const arma::vec& sample, const uint cluster_id) = 0;
+    virtual unsigned get_cluster_assignment(const arma::vec& sample) {return 0;}
+    virtual void set_k_clusters(unsigned k) {return;}
   };
 
 
@@ -86,7 +87,6 @@ namespace pgmlink {
      * @returns feature_array that contains the coordinates of k clusters
      */
     virtual feature_array operator()();
-    virtual unsigned get_cluster_assignment(const arma::vec& sample, const uint cluster_id);
   };
 
 
@@ -102,17 +102,18 @@ namespace pgmlink {
     double score_;
     int n_trials_;
     arma::mat data_arma_;
+    mlpack::gmm::GMM<> gmm_;
   public:
     // constructor needs to specify number of dimensions
     // for 2D data, ilastik provides coordinates with 3rd dimension 0
     // which will cause singular covariance matrix
     // therefore add option for dimensionality
-    GMM(int k, int n, const feature_array& data, int n_trials=1) :
-      k_(k), n_(n), data_(data), score_(0.0), n_trials_(n_trials), data_arma_(arma::mat()) {}
+    GMM(int k, int n, const feature_array& data, int n_trials=1);
 
     virtual feature_array operator()();
-    virtual unsigned get_cluster_assignment(const arma::vec& sample, const uint cluster_id);
+    virtual unsigned get_cluster_assignment(const arma::vec& sample);
     double score() const;
+    virtual void set_k_clusters(unsigned k);
   };
 
   ////
@@ -132,7 +133,6 @@ namespace pgmlink {
     virtual feature_array operator()();
     std::vector<arma::vec> operator()(const char* dirty_hack);
     double score() const;
-
   };
 
   ////

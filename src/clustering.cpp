@@ -66,8 +66,13 @@ namespace pgmlink {
   ////
   //// GMM
   ////
+  GMM::GMM(int k, int n, const feature_array& data, int n_trials) :
+    k_(k), n_(n), data_(data), score_(0.0), n_trials_(n_trials), data_arma_(arma::mat()), gmm_(k, n) {
+    
+  }
+
+  
   feature_array GMM::operator()() {
-    mlpack::gmm::GMM<> gmm(k_, n_);
     int n_samples = data_.size()/3;
     arma::Col<size_t> labels;
     LOG(logDEBUG1) << "GMM::operator(): n_=" << n_;
@@ -81,8 +86,8 @@ namespace pgmlink {
         throw std::runtime_error("Number of spatial dimensions other than 2 or 3 would not make sense!");
       }
     }
-    score_ = gmm.Estimate(data_arma_, n_trials_);
-    std::vector<arma::vec> centers = gmm.Means();
+    score_ = gmm_.Estimate(data_arma_, n_trials_);
+    std::vector<arma::vec> centers = gmm_.Means();
     feature_array fa_centers;
     for (std::vector<arma::vec>::iterator it = centers.begin(); it != centers.end(); ++it) {
       std::copy(it->begin(), it->end(), std::back_insert_iterator<feature_array >(fa_centers));
@@ -94,11 +99,17 @@ namespace pgmlink {
   }
 
 
-  unsigned GMM::get_cluster_assignment(const arma::vec& sample, const uint cluster_id) {
-    unsigned res = 0;
+  unsigned GMM::get_cluster_assignment(const arma::vec& sample) {
+    unsigned assignment = 0;
+    double max_prob = 0.0;
     double prob = 0.0;
     for (int idx = 0; idx < k_; ++idx) {
+      prob = gmm_.Probability(sample, idx);
+      if (prob > max_prob) {
+        assignment = idx;
+      }
     }
+    return assignment;
   }
 
 
@@ -108,6 +119,15 @@ namespace pgmlink {
   double GMM::score() const {
     return score_;
   }
+
+
+  void GMM::set_k_clusters(unsigned k) {
+    k_ = k;
+    gmm_.Gaussians() = k_;
+  }
+    
+
+
   ////
   //// GMMInitalizeArma
   ////
