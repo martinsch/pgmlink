@@ -27,11 +27,11 @@ namespace pgmlink {
     clusterer_(clusterer) {}
 
 
-  vigra::MultiArray<2, unsigned> MultiSegmenter::operator()(uint offset) {
+  vigra::MultiArray<2, label_type> MultiSegmenter::operator()(uint offset) {
     const arma::mat& data_arma_ = clusterer_->get_data_arma();
     unsigned n_samples = data_arma_.n_cols;
     unsigned n_layers = n_clusters_.size();
-    vigra::MultiArray<2, unsigned> res(vigra::Shape2(n_samples, n_layers), 0u);
+    vigra::MultiArray<2, label_type> res(vigra::Shape2(n_samples, n_layers), 0u);
     std::vector<unsigned>::const_iterator it = n_clusters_.begin();
     unsigned layer_index = 0;
     unsigned sample_index;
@@ -47,7 +47,7 @@ namespace pgmlink {
   }
 
 
-  unsigned MultiSegmenter::assign(const arma::vec& sample) {
+  label_type MultiSegmenter::assign(const arma::vec& sample) {
     return clusterer_->get_cluster_assignment(sample);
   }
 
@@ -72,12 +72,12 @@ namespace pgmlink {
   ////
   //// MultiSegmentContainer
   ////
-  MultiSegmentContainer::MultiSegmentContainer(vigra::MultiArrayView<2, unsigned> assignments,
+  MultiSegmentContainer::MultiSegmentContainer(vigra::MultiArrayView<2, label_type> assignments,
                                                const feature_array& coordinates) :
     assignments_(assignments), coordinates_(coordinates) {
     
   }
-  int MultiSegmentContainer::to_images(vigra::MultiArrayView<4, unsigned> dest) {
+  int MultiSegmentContainer::to_images(vigra::MultiArrayView<4, label_type> dest) {
     if (coordinates_.size()/3 != assignments_.shape()[0]) {
       // number of samples in coordinates differ from number of samples
       // in assignments

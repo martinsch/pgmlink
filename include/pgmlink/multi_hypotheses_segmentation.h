@@ -3,6 +3,8 @@
 
 // stl
 #include <vector>
+#include <set>
+#include <map>
 
 // vigra
 #include <vigra/multi_array.hxx>
@@ -24,10 +26,22 @@ namespace pgmlink {
 
   class ConnectedComponentsToMultiSegments;
 
+  template <int N>
+  class AdjacencyListBuilder;
+
+  class NeighborhoodVisitorBase;
+
+  typedef unsigned label_type;
+
   typedef boost::shared_ptr<MultiSegmenter> MultiSegmenterPtr;
 
-  typedef boost::shared_ptr<std::vector<vigra::MultiArray<2, unsigned> > > AssignmentListPtr;
+  typedef boost::shared_ptr<std::vector<vigra::MultiArray<2, label_type> > > AssignmentListPtr;
 
+  typedef boost::shared_ptr<std::map<unsigned, std::set<label_type> > > AdjacenyListPtr;
+
+  typedef boost::shared_ptr<NeighborhoodVisitorBase> NeighborhoodVisitorPtr;
+
+  
 
 
 
@@ -67,22 +81,25 @@ namespace pgmlink {
   ////
   class MultiSegmentContainer {
   private:
-    const vigra::MultiArrayView<2, unsigned> assignments_;
+    const vigra::MultiArrayView<2, label_type> assignments_;
     const feature_array& coordinates_;
     MultiSegmentContainer();
   public:
-    MultiSegmentContainer(vigra::MultiArrayView<2, unsigned> assignments,
+    MultiSegmentContainer(vigra::MultiArrayView<2, label_type> assignments,
                           const feature_array& coordinates_);
-    int to_images(vigra::MultiArrayView<4, unsigned> dest);
+    int to_images(vigra::MultiArrayView<4, label_type> dest);
   };
 
 
+  ////
+  //// ConnectedComponentsToMultiSegments
+  ////
   class ConnectedComponentsToMultiSegments {
   private:
     const std::vector<feature_array >& components_coordinates_;
     const std::vector<unsigned>& n_clusters_;
     ClusteringBuilderPtr clustering_builder_;
-    unsigned starting_index_;
+    label_type starting_index_;
 
     AssignmentListPtr assignments_;
 
@@ -91,11 +108,32 @@ namespace pgmlink {
     ConnectedComponentsToMultiSegments(const std::vector<feature_array >& components_coordinates,
                                        const std::vector<unsigned>& n_clusters,
                                        ClusteringBuilderPtr clustering_builder,
-                                       unsigned starting_index=1);
+                                       label_type starting_index=1);
     
     AssignmentListPtr get_assignments();
-    void to_images(vigra::MultiArray<4, unsigned>& dest);
+    void to_images(vigra::MultiArray<4, label_type>& dest);
   };
+
+
+  ////
+  //// AdjacencyListBuilder
+  ////
+  /* template <int N>
+  class AdjacencyListBuilder {
+  private:
+    vigra::MultiArrayView<N, unsigned> label_image_;
+    NeighborhoodVisitorPtr neighborhood_accessor;
+  public:
+    AdjacencyListBuilder();
+    AdjacencyListBuilder(vigra::MultiArrayView<N, unsigned> label_image,
+                         NeighborhoodVisitorPtr neighborhood_accessor);
+    AdjacenyListPtr create_adjacency_list();
+  }; */
+
+
+  ////
+  //// NeighborhoodVisitor
+  ////
   
 
 }
