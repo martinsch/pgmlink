@@ -28,8 +28,12 @@ namespace pgmlink {
 
   template <int N>
   class AdjacencyListBuilder;
-
+  
+  template <int N, typename T>
   class NeighborhoodVisitorBase;
+
+  template <typename T, typename U>
+  class PixelActorBase;
 
   typedef unsigned label_type;
 
@@ -37,9 +41,9 @@ namespace pgmlink {
 
   typedef boost::shared_ptr<std::vector<vigra::MultiArray<2, label_type> > > AssignmentListPtr;
 
-  typedef boost::shared_ptr<std::map<unsigned, std::set<label_type> > > AdjacenyListPtr;
+  typedef std::map<unsigned, std::set<label_type> > AdjacencyList;
 
-  typedef boost::shared_ptr<NeighborhoodVisitorBase> NeighborhoodVisitorPtr;
+  typedef boost::shared_ptr<AdjacencyList > AdjacenyListPtr;
 
   
 
@@ -118,24 +122,91 @@ namespace pgmlink {
   ////
   //// AdjacencyListBuilder
   ////
-  /* template <int N>
+  template <int N>
   class AdjacencyListBuilder {
+  public:
+    typedef boost::shared_ptr<NeighborhoodVisitorBase<N, unsigned> > NeighborhoodVisitorPtr;
   private:
     vigra::MultiArrayView<N, unsigned> label_image_;
-    NeighborhoodVisitorPtr neighborhood_accessor;
+    NeighborhoodVisitorPtr neighborhood_accessor_;
   public:
     AdjacencyListBuilder();
     AdjacencyListBuilder(vigra::MultiArrayView<N, unsigned> label_image,
                          NeighborhoodVisitorPtr neighborhood_accessor);
     AdjacenyListPtr create_adjacency_list();
-  }; */
+  };
 
 
   ////
-  //// NeighborhoodVisitor
+  //// NeighborhoodVisitorBase
   ////
+  template <int N, typename T>
+  class NeighborhoodVisitorBase {
+  public:
+    typedef boost::shared_ptr<PixelActorBase<T, T> > PixelActorPtr;
+  private:
+    PixelActorPtr pixel_actor_;
+  public:
+    virtual void visit(const typename vigra::MultiArrayView<N, T>::difference_type& index) = 0;
+  };
+
+
+  ////
+  //// NeighborhoodVisitor2D4Neighborhood
+  ////
+  class NeighborhoodVisitor2D4Neighborhood : public NeighborhoodVisitorBase<2, label_type> {
+  private:
+    NeighborhoodVisitor2D4Neighborhood();
+  public:
+    NeighborhoodVisitor2D4Neighborhood(PixelActorPtr pixel_actor);
+    virtual void visit(const typename vigra::MultiArrayView<2, label_type>::difference_type& index);
+  };
+
+
+  ////
+  //// PixelActorBase
+  ////
+  template <typename T, typename U>
+  class PixelActorBase {
+  private:
+  public:
+    virtual void act(const T& pixel_value, const U& comparison_value) = 0;
+  };
   
 
+  /* IMPLEMENTATIONS */
+
+
+  ////
+  //// NeighborhoodVisitorBase
+  ////
+  template <int N>
+  AdjacencyListBuilder<N>::AdjacencyListBuilder() :
+    label_image_(),
+    neighborhood_accessor_() {
+
+  }
+
+
+  template <int N>
+  AdjacencyListBuilder<N>::AdjacencyListBuilder(vigra::MultiArrayView<N, unsigned> label_image,
+                                                NeighborhoodVisitorPtr neighborhood_accessor) :
+    label_image_(label_image),
+    neighborhood_accessor_(neighborhood_accessor) {
+
+  }
+
+
+  template<int N>
+  AdjacenyListPtr AdjacencyListBuilder<N>::create_adjacency_list() {
+    AdjacenyListPtr adjacency_list(new AdjacencyList);
+    if (!label_image_.hasData()) {
+      return adjacency_list;
+    }
+    
+    return adjacency_list;
+  }
+  
 }
 
 #endif /* MULTI_HYPOTHESES_SEGMENTATION_H */
