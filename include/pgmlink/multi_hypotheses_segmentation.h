@@ -5,12 +5,11 @@
 #include <vector>
 #include <set>
 #include <map>
-#include <iostream>
 
 // vigra
-#include <vigra/multi_array.hxx>
-#include <vigra/multi_iterator.hxx>
-#include <vigra/multi_iterator_coupled.hxx>
+#include <vigra/multi_array.hxx> // vigra::MultiArray
+#include <vigra/multi_iterator.hxx> // vigra::MultiIterator
+#include <vigra/multi_iterator_coupled.hxx> // vigra::CoupledIteratorType
 
 // boost
 #include <boost/shared_ptr.hpp>
@@ -18,9 +17,21 @@
 // pgmlink
 #include <pgmlink/clustering.h>
 #include <pgmlink/traxels.h>
+#include <pgmlink/graph.h>
+
+// lemon
+#include <lemon/list_graph.h> // lemon::ListGraph
+#include <lemon/maps.h> // lemon::IterableValueMap
 
 
 namespace pgmlink {
+
+  template <typename T, typename U>
+  struct AdjacencyList;
+
+  template <typename T, typename U>
+  struct AdjacencyListPtr;
+
   class MultiSegmenter;
   
   class MultiSegmenterBuilder;
@@ -31,6 +42,9 @@ namespace pgmlink {
 
   template <int N>
   class AdjacencyListBuilder;
+
+  template <typename T, typename U>
+  class ListInserterBase;
   
   template <int N, typename T>
   class NeighborhoodVisitorBase;
@@ -44,12 +58,62 @@ namespace pgmlink {
 
   typedef boost::shared_ptr<std::vector<vigra::MultiArray<2, label_type> > > AssignmentListPtr;
 
-  typedef std::map<unsigned, std::set<label_type> > AdjacencyList;
+  typedef PropertyGraph<lemon::ListGraph> AdjacencyGraph;
 
-  typedef boost::shared_ptr<AdjacencyList > AdjacencyListPtr;
+  typedef boost::shared_ptr<AdjacencyGraph > AdjacencyGraphPtr;
 
   
+  ////
+  //// node_neighbors
+  ////  
+  struct node_neighbors {};
+  template <typename Graph>
+  struct property_map<node_neighbors, Graph> {
+    typedef lemon::IterableValueMap<Graph, typename Graph::Node, AdjacencyList<label_type, label_type> > type;
+    static const std::string name;
+  };
 
+
+  ////
+  //// arc_dissimilarity
+  ////
+  struct arc_dissimilarity {};
+  template <typename Graph>
+  struct property_map<arc_dissimilarity, Graph> {
+    typedef lemon::IterableValueMap<Graph, typename Graph::Arc, double> type;
+    static const std::string name;
+  };
+
+
+
+  ////
+  //// node_label
+  ////
+  struct node_label {};
+  template <typename Graph>
+  struct property_map<node_label, Graph> {
+    typedef lemon::IterableValueMap<Graph, typename Graph::Node, label_type> type;
+    static const std::string name;
+  };
+
+
+
+  ////
+  //// AdjacencyList
+  ////
+  template <typename T, typename U>
+  struct AdjacencyList {
+    typedef std::map<T, std::set<U> > type;
+  };
+
+
+  ////
+  //// AdjacencyListPtr
+  ////
+  template <typename T, typename U>
+  struct AdjacencyListPtr {
+    typedef boost::shared_ptr<AdjacencyList<T, U> > type;
+  };
 
 
   ////
@@ -133,11 +197,56 @@ namespace pgmlink {
   private:
     vigra::MultiArrayView<N, unsigned> label_image_;
     NeighborhoodVisitorPtr neighborhood_accessor_;
+    boost::shared_ptr<ListInserterBase<label_type, label_type> > list_inserter_;
   public:
     AdjacencyListBuilder();
     AdjacencyListBuilder(vigra::MultiArrayView<N, label_type> label_image,
-                         NeighborhoodVisitorPtr neighborhood_accessor);
-    AdjacencyListPtr create_adjacency_list();
+                         NeighborhoodVisitorPtr neighborhood_accessor,
+                         boost::shared_ptr<ListInserterBase<label_type, label_type> > list_inserter);
+    void create_adjacency_list();
+  };
+
+
+  ////
+  //// ListInserterBase
+  ////
+  template <typename T, typename U>
+  class ListInserterBase {
+  private:
+  public:
+    virtual ~ListInserterBase() {}
+    virtual void add_to_list(const T& key,
+                             const U& value) = 0;
+  };
+
+
+  ////
+  //// ListInserterMap
+  ////
+  template <typename T, typename U>
+  class ListInserterMap : public ListInserterBase<T, U> {
+  private:
+    typename AdjacencyListPtr<T, U>::type adjacency_list_;
+  public:
+    ListInserterMap();
+    ListInserterMap(typename AdjacencyListPtr<T, U>::type adjacency_list);
+    virtual void add_to_list(const T& key,
+                             const U& value);
+  };
+
+
+  ////
+  //// ListInserterGraph
+  ////
+  template <typename T, typename U>
+  class ListInserterGraph : public ListInserterBase<T, U> {
+  private:
+    AdjacencyGraphPtr adjacency_graph_;
+  public:
+    ListInserterGraph();
+    ListInserterGraph(AdjacencyGraphPtr adjacency_graph);
+    virtual void add_to_list(const T& key,
+                             const U& value);
   };
 
 
@@ -160,7 +269,7 @@ namespace pgmlink {
   template <typename T>
   class NeighborhoodVisitor2DRightLower : public NeighborhoodVisitorBase<2, T> {
   public:
-    typedef boost::shared_ptr<PixelActorBase<T, T, AdjacencyList> > PixelActorPtr;
+    typedef boost::shared_ptr<PixelActorBase<T, T, typename AdjacencyList<T, T>::type > > PixelActorPtr;
   private:
     PixelActorPtr pixel_actor_;
     NeighborhoodVisitor2DRightLower();
@@ -189,16 +298,37 @@ namespace pgmlink {
   //// PixelActorFindNeighbors
   ////
   template <typename T>
-  class PixelActorFindNeighbors : public PixelActorBase<T, T, AdjacencyList> {
+  class PixelActorFindNeighbors : public PixelActorBase<T, T, ListInserterBase<T, T> > {
   private:
   public:
     virtual void act(const T& pixel_value,
                      const T& comparison_value,
-                     AdjacencyList& result);
+                     ListInserterBase<T, T>& result);
   };
   
 
   /* IMPLEMENTATIONS */
+  
+
+  ////
+  //// node_neighbors
+  ////  
+  template <typename Graph>
+  const std::string property_map<node_neighbors, Graph>::name = "node_neighbors";
+
+
+  ////
+  //// arc_dissimilarity
+  ////
+  template <typename Graph>
+  const std::string property_map<arc_dissimilarity, Graph>::name = "arc_dissimilarity";
+
+
+  ////
+  //// node_label
+  ////
+  template <typename Graph>
+  const std::string property_map<node_label, Graph>::name = "node_label";
 
 
   ////
@@ -207,25 +337,27 @@ namespace pgmlink {
   template <int N>
   AdjacencyListBuilder<N>::AdjacencyListBuilder() :
     label_image_(),
-    neighborhood_accessor_() {
+    neighborhood_accessor_(),
+    list_inserter_() {
 
   }
 
 
   template <int N>
   AdjacencyListBuilder<N>::AdjacencyListBuilder(vigra::MultiArrayView<N, unsigned> label_image,
-                                                NeighborhoodVisitorPtr neighborhood_accessor) :
+                                                NeighborhoodVisitorPtr neighborhood_accessor,
+                                                boost::shared_ptr<ListInserterBase<label_type, label_type> > list_inserter) :
     label_image_(label_image),
-    neighborhood_accessor_(neighborhood_accessor) {
+    neighborhood_accessor_(neighborhood_accessor),
+    list_inserter_(list_inserter) {
 
   }
 
 
   template<int N>
-  AdjacencyListPtr AdjacencyListBuilder<N>::create_adjacency_list() {
-    AdjacencyListPtr adjacency_list(new AdjacencyList);
+  void AdjacencyListBuilder<N>::create_adjacency_list() {
     if (!label_image_.hasData()) {
-      return adjacency_list;
+      return;
     }
     // NeighborhoodVisitorBase<N, label_type>::PixelActorPtr pixel_actor(new PixelActorFindNeighbors<label_type>);
     Iterator start = createCoupledIterator(label_image_, label_image_);
@@ -233,7 +365,30 @@ namespace pgmlink {
     for (Iterator it = start; it != end; ++it) {
       // do something
     }
-    return adjacency_list;
+  }
+
+
+  ////
+  //// ListInserterMap
+  ////
+  template <typename T, typename U>
+  ListInserterMap<T, U>::ListInserterMap() :
+    adjacency_list_(new typename AdjacencyList<T, T>::type) {
+
+  }
+
+  
+  template <typename T, typename U>
+  ListInserterMap<T, U>::ListInserterMap(typename AdjacencyListPtr<T, U>::type adjacency_list) :
+    adjacency_list_(adjacency_list) {
+
+  }
+
+
+  template <typename T, typename U>
+  void ListInserterMap<T, U>::add_to_list(const T& key,
+                                          const U& value) {
+    // (*adjacency_list_)[
   }
 
 
@@ -261,7 +416,7 @@ namespace pgmlink {
   template <typename T>
   void PixelActorFindNeighbors<T>::act(const T& pixel_value,
                                        const T& comparison_value,
-                                       AdjacencyList& result) {
+                                       ListInserterBase<T, T>& result) {
     return;
   }
 
