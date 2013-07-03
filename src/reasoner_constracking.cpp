@@ -86,7 +86,7 @@ void ConservationTracking::infer() {
 
 void ConservationTracking::conclude(HypothesesGraph& g) {
     // extract solution from optimizer
-    vector < pgm::OpengmModelDeprecated::ogmInference::LabelType > solution;
+    vector<pgm::OpengmModelDeprecated::ogmInference::LabelType> solution;
     opengm::InferenceTermination status = optimizer_->arg(solution);
     if (status != opengm::NORMAL) {
         throw runtime_error("GraphicalModel::infer(): solution extraction terminated abnormally");
@@ -520,15 +520,16 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
 }
 
 size_t ConservationTracking::cplex_id(size_t opengm_id, size_t state) {
-    size_t number_of_nodes_with_multiple_states = number_of_transition_nodes_
-            + number_of_appearance_nodes_ + number_of_disappearance_nodes_;
-    if (opengm_id <= (number_of_nodes_with_multiple_states)) {
-        return (max_number_objects_ + 1) * opengm_id + state;
-    } else if (opengm_id <= (number_of_nodes_with_multiple_states + number_of_division_nodes_)) {
-        return (max_number_objects_ + 1) * (number_of_nodes_with_multiple_states)
-                + 2 * (opengm_id - number_of_nodes_with_multiple_states) + state;
-    }
-    throw std::runtime_error("cplex_id(): open_gm id does not exist");
+    return optimizer_->lpNodeVi(opengm_id, state);
+//    size_t number_of_nodes_with_multiple_states = number_of_transition_nodes_
+//            + number_of_appearance_nodes_ + number_of_disappearance_nodes_;
+//    if (opengm_id <= (number_of_nodes_with_multiple_states)) {
+//        return (max_number_objects_ + 1) * opengm_id + state;
+//    } else if (opengm_id <= (number_of_nodes_with_multiple_states + number_of_division_nodes_)) {
+//        return (max_number_objects_ + 1) * (number_of_nodes_with_multiple_states)
+//                + 2 * (opengm_id - number_of_nodes_with_multiple_states) + state;
+//    }
+//    throw std::runtime_error("cplex_id(): open_gm id does not exist");
 }
 
 void ConservationTracking::add_constraints(const HypothesesGraph& g) {
@@ -557,9 +558,8 @@ void ConservationTracking::add_constraints(const HypothesesGraph& g) {
         size_t num_outarcs = 0;
         // couple detection and transitions: Y_ij <= App_i
         for (HypothesesGraph::OutArcIt a(g, n); a != lemon::INVALID; ++a) {
-            assert(
-                    app_node_map_.count(n) > 0
-                            && "this node should be contained in app_node_map_ since it has outgoing arcs");
+            assert(app_node_map_.count(n) > 0
+                    && "this node should be contained in app_node_map_ since it has outgoing arcs");
             for (size_t nu = 0; nu < max_number_objects_; ++nu) {
                 for (size_t mu = nu + 1; mu <= max_number_objects_; ++mu) {
                     cplex_idxs.clear();
