@@ -6,7 +6,6 @@
 #include <boost/function.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/shared_array.hpp>
-#include <boost/algorithm/cxx11/all_of.hpp>
 
 #include "pgmlink/feature.h"
 #include "pgmlink/pgm.h"
@@ -386,13 +385,6 @@ double getCorrectedDistance(Traxel from, Traxel to) {
 }
 }
 
-////
-//// helpfer function needed for boost::algorithm::all_of
-//// 
-template <typename T>
-bool has_data(const std::vector<T>& vector) {
-  return vector.size() > 0;
-}
 
 ////
 //// class ConsTracking
@@ -567,7 +559,7 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
         boost::shared_ptr<std::vector< std::vector<Event> > > ev = events(*graph);
         
 
-        if (with_merger_resolution_ && boost::algorithm::all_of(*ev, has_data<Event>) > 0u) {
+        if (with_merger_resolution_ && ev->size() > 0u) {
           cout << "-> resolving mergers" << endl;
           MergerResolver m(graph);
           // FeatureExtractorMCOMsFromKMeans extractor;
