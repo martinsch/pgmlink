@@ -559,7 +559,7 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
         boost::shared_ptr<std::vector< std::vector<Event> > > ev = events(*graph);
         
 
-        if (with_merger_resolution_) {
+        if (with_merger_resolution_ && ev->size() > 0u) {
           cout << "-> resolving mergers" << endl;
           MergerResolver m(graph);
           // FeatureExtractorMCOMsFromKMeans extractor;
