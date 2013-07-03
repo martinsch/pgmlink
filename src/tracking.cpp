@@ -385,6 +385,27 @@ double getCorrectedDistance(Traxel from, Traxel to) {
 }
 }
 
+////
+//// helper function needed for boost::algorithm::all_of
+//// 
+template <typename T>
+bool has_data(const std::vector<T>& vector) {
+  return vector.size() > 0;
+}
+
+
+////
+//// helper function equivalent to all_of (c++11)
+////
+template<class InputIterator, class UnaryPredicate>
+bool all_true (InputIterator first, InputIterator last, UnaryPredicate pred) {
+  while (first!=last) {
+    if (!pred(*first)) return false;
+    ++first;
+  }
+  return true;
+}
+
 
 ////
 //// class ConsTracking
@@ -559,7 +580,7 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
         boost::shared_ptr<std::vector< std::vector<Event> > > ev = events(*graph);
         
 
-        if (with_merger_resolution_) {
+        if (with_merger_resolution_ && all_true(ev->begin(), ev->end(), has_data<Event>)) {
           cout << "-> resolving mergers" << endl;
           MergerResolver m(graph);
           // FeatureExtractorMCOMsFromKMeans extractor;
