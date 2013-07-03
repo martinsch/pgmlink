@@ -78,7 +78,7 @@ namespace pgmlink {
     
   }
   int MultiSegmentContainer::to_images(vigra::MultiArrayView<4, label_type> dest) {
-    if (coordinates_.size()/3 != assignments_.shape()[0]) {
+    if (coordinates_.size()/3 != static_cast<unsigned>(assignments_.shape()[0])) {
       // number of samples in coordinates differ from number of samples
       // in assignments
       return 1;

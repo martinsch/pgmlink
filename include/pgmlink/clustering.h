@@ -44,8 +44,8 @@ namespace pgmlink {
     virtual feature_array operator()() = 0;
     virtual double score() const {return 0.0;}
     virtual const arma::mat& get_data_arma() const = 0;
-    virtual unsigned get_cluster_assignment(const arma::vec& sample) {return 0;}
-    virtual void set_k_clusters(unsigned k) {return;}
+    virtual unsigned get_cluster_assignment(const arma::vec&) {return 0;}
+    virtual void set_k_clusters(unsigned) {return;}
   };
 
 
