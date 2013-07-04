@@ -10,6 +10,7 @@
 #include <vigra/multi_array.hxx> // vigra::MultiArray
 #include <vigra/multi_iterator.hxx> // vigra::MultiIterator
 #include <vigra/multi_iterator_coupled.hxx> // vigra::CoupledIteratorType
+#include <vigra/tinyvector.hxx> // vigra::TinyVector
 
 // boost
 #include <boost/shared_ptr.hpp>
@@ -32,6 +33,12 @@ namespace pgmlink {
   template <typename T, typename U>
   struct AdjacencyListPtr;
 
+  template <typename T, typename U>
+  struct PixelActorPtr;
+
+  template <int N, typename T>
+  struct NeighborhoodVisitorPtr;
+
   class MultiSegmenter;
   
   class MultiSegmenterBuilder;
@@ -40,7 +47,7 @@ namespace pgmlink {
 
   class ConnectedComponentsToMultiSegments;
 
-  template <int N>
+  template <int N, typename T>
   class AdjacencyListBuilder;
 
   template <typename T, typename U>
@@ -49,7 +56,7 @@ namespace pgmlink {
   template <int N, typename T>
   class NeighborhoodVisitorBase;
 
-  template <typename T, typename U, typename V>
+  template <typename T, typename U>
   class PixelActorBase;
 
   typedef unsigned label_type;
@@ -112,7 +119,35 @@ namespace pgmlink {
   ////
   template <typename T, typename U>
   struct AdjacencyListPtr {
-    typedef boost::shared_ptr<AdjacencyList<T, U> > type;
+    typedef boost::shared_ptr<typename AdjacencyList<T, U>::type > type;
+  };
+
+
+  ////
+  //// ListInserterPtr
+  ////
+  template <typename T, typename U>
+  struct ListInserterPtr {
+    typedef typename boost::shared_ptr<ListInserterBase<T, U> > type;
+  };
+
+
+  ////
+  //// PixelActorPtr
+  ////
+  template <typename T, typename U>
+  struct PixelActorPtr {
+    typedef typename boost::shared_ptr<PixelActorBase<T, U> > type;
+  };
+
+
+
+  ////
+  //// NeighborhoodVisitorPtr
+  ////
+  template <int N, typename T>
+  struct NeighborhoodVisitorPtr {
+    typedef boost::shared_ptr<NeighborhoodVisitorBase<N, T> > type;
   };
 
 
@@ -189,20 +224,17 @@ namespace pgmlink {
   ////
   //// AdjacencyListBuilder
   ////
-  template <int N>
+  template <int N, typename T>
   class AdjacencyListBuilder {
   public:
-    typedef boost::shared_ptr<NeighborhoodVisitorBase<N, label_type> > NeighborhoodVisitorPtr;
-    typedef typename vigra::CoupledIteratorType<N, label_type, label_type>::type Iterator;
+    typedef typename vigra::CoupledIteratorType<N, T>::type Iterator;
   private:
-    vigra::MultiArrayView<N, unsigned> label_image_;
-    NeighborhoodVisitorPtr neighborhood_accessor_;
-    boost::shared_ptr<ListInserterBase<label_type, label_type> > list_inserter_;
-  public:
+    vigra::MultiArrayView<N, T> label_image_;
+    typename NeighborhoodVisitorPtr<N, T>::type neighborhood_accessor_;
     AdjacencyListBuilder();
-    AdjacencyListBuilder(vigra::MultiArrayView<N, label_type> label_image,
-                         NeighborhoodVisitorPtr neighborhood_accessor,
-                         boost::shared_ptr<ListInserterBase<label_type, label_type> > list_inserter);
+  public:
+    AdjacencyListBuilder(vigra::MultiArrayView<N, T> label_image,
+                         typename NeighborhoodVisitorPtr<N, T>::type neighborhood_accessor);
     void create_adjacency_list();
   };
 
@@ -259,38 +291,35 @@ namespace pgmlink {
   public:
     ~NeighborhoodVisitorBase() {}
     virtual void visit(const vigra::MultiArrayView<N,T> image,
-                       const typename AdjacencyListBuilder<N>::Iterator pixel) = 0;
+                       const typename AdjacencyListBuilder<N, T>::Iterator pixel) = 0;
   };
 
 
   ////
   //// NeighborhoodVisitor2D4Neighborhood
   ////
-  template <typename T>
-  class NeighborhoodVisitor2DRightLower : public NeighborhoodVisitorBase<2, T> {
-  public:
-    typedef boost::shared_ptr<PixelActorBase<T, T, typename AdjacencyList<T, T>::type > > PixelActorPtr;
+  template <int N, typename T>
+  class NeighborhoodVisitorAdjacentPlusOne : public NeighborhoodVisitorBase<N, T> {
   private:
-    PixelActorPtr pixel_actor_;
-    NeighborhoodVisitor2DRightLower();
+    typename PixelActorPtr<T, T>::type pixel_actor_;
+    NeighborhoodVisitorAdjacentPlusOne();
   public:
-    NeighborhoodVisitor2DRightLower(PixelActorPtr pixel_actor);
-    virtual void visit(const vigra::MultiArrayView<2, T> image,
-                       const AdjacencyListBuilder<2>::Iterator pixel);
+    NeighborhoodVisitorAdjacentPlusOne(typename PixelActorPtr<T, T>::type pixel_actor);
+    virtual void visit(const vigra::MultiArrayView<N, T> image,
+                       const typename AdjacencyListBuilder<N, T>::Iterator pixel);
   };
 
 
   ////
   //// PixelActorBase
   ////
-  template <typename T, typename U, typename V>
+  template <typename T, typename U>
   class PixelActorBase {
   private:
   public:
     virtual ~PixelActorBase() {}
     virtual void act(const T& pixel_value,
-                     const U& comparison_value,
-                     V& result) = 0;
+                     const U& comparison_value) = 0;
   };
 
 
@@ -298,12 +327,14 @@ namespace pgmlink {
   //// PixelActorFindNeighbors
   ////
   template <typename T>
-  class PixelActorFindNeighbors : public PixelActorBase<T, T, ListInserterBase<T, T> > {
+  class PixelActorFindNeighbors : public PixelActorBase<T, T> {
   private:
+    typename ListInserterPtr<T, T>::type inserter_;
+    PixelActorFindNeighbors();
   public:
+    PixelActorFindNeighbors(typename ListInserterPtr<T, T>::type inserter);
     virtual void act(const T& pixel_value,
-                     const T& comparison_value,
-                     ListInserterBase<T, T>& result);
+                     const T& comparison_value);
   };
   
 
@@ -334,36 +365,79 @@ namespace pgmlink {
   ////
   //// AdjacencyListBuilder
   ////
-  template <int N>
-  AdjacencyListBuilder<N>::AdjacencyListBuilder() :
+  template <int N, typename T>
+  AdjacencyListBuilder<N, T>::AdjacencyListBuilder() :
     label_image_(),
-    neighborhood_accessor_(),
-    list_inserter_() {
+    neighborhood_accessor_() {
 
   }
 
 
-  template <int N>
-  AdjacencyListBuilder<N>::AdjacencyListBuilder(vigra::MultiArrayView<N, unsigned> label_image,
-                                                NeighborhoodVisitorPtr neighborhood_accessor,
-                                                boost::shared_ptr<ListInserterBase<label_type, label_type> > list_inserter) :
+  template <int N, typename T>
+  AdjacencyListBuilder<N, T>::AdjacencyListBuilder(vigra::MultiArrayView<N, T> label_image,
+                                                   typename NeighborhoodVisitorPtr<N, T>::type neighborhood_accessor) :
     label_image_(label_image),
-    neighborhood_accessor_(neighborhood_accessor),
-    list_inserter_(list_inserter) {
+    neighborhood_accessor_(neighborhood_accessor) {
 
   }
 
 
-  template<int N>
-  void AdjacencyListBuilder<N>::create_adjacency_list() {
+  template<int N, typename T>
+  void AdjacencyListBuilder<N, T>::create_adjacency_list() {
     if (!label_image_.hasData()) {
       return;
     }
-    // NeighborhoodVisitorBase<N, label_type>::PixelActorPtr pixel_actor(new PixelActorFindNeighbors<label_type>);
-    Iterator start = createCoupledIterator(label_image_, label_image_);
+    // NeighborhoodVisitorBase<N, label_type>::PixelActorPtr<T, T>::type pixel_actor(new PixelActorFindNeighbors<label_type>);
+    Iterator start = createCoupledIterator(label_image_);
     Iterator end = start.getEndIterator();
     for (Iterator it = start; it != end; ++it) {
-      // do something
+      neighborhood_accessor_->visit(label_image_,
+                                    it);
+    }
+  }
+
+
+
+  ////
+  //// NeighborhoodVisitor2DRightLower
+  ////
+  template <int N, typename T>
+  NeighborhoodVisitorAdjacentPlusOne<N, T>::NeighborhoodVisitorAdjacentPlusOne(typename PixelActorPtr<T, T>::type pixel_actor) : 
+    pixel_actor_(pixel_actor) {
+    
+  }
+
+
+
+  template <int N, typename T>
+  void NeighborhoodVisitorAdjacentPlusOne<N, T>::visit(const vigra::MultiArrayView<N, T> image,
+                                                       const typename AdjacencyListBuilder<N, T>::Iterator pixel) {
+    vigra::TinyVector<long, N> coordinates = pixel.get<0>();
+    for (int dimension = 0; dimension < N; ++dimension) {
+      coordinates[dimension] += 1;
+      if (image.isInside(coordinates)) {
+        pixel_actor_->act(image[coordinates], pixel.get<1>());
+      }
+      coordinates[dimension] -= 1;
+    }
+    return;
+  }
+  
+
+  ////
+  //// PixelActorFindNeighbors
+  ////
+  template <typename T>
+  PixelActorFindNeighbors<T>::PixelActorFindNeighbors(typename ListInserterPtr<T, T>::type inserter) :
+    inserter_(inserter) {}
+
+
+  template <typename T>
+  void PixelActorFindNeighbors<T>::act(const T& pixel_value,
+                                       const T& comparison_value) {
+    if (pixel_value != comparison_value) {
+      inserter_->add_to_list(pixel_value, comparison_value);
+      inserter_->add_to_list(comparison_value, pixel_value);
     }
   }
 
@@ -373,53 +447,44 @@ namespace pgmlink {
   ////
   template <typename T, typename U>
   ListInserterMap<T, U>::ListInserterMap() :
-    adjacency_list_(new typename AdjacencyList<T, T>::type) {
-
-  }
+    adjacency_list_(new typename AdjacencyList<T, T>::type) {}
 
   
   template <typename T, typename U>
   ListInserterMap<T, U>::ListInserterMap(typename AdjacencyListPtr<T, U>::type adjacency_list) :
-    adjacency_list_(adjacency_list) {
-
-  }
+    adjacency_list_(adjacency_list) {}
 
 
   template <typename T, typename U>
   void ListInserterMap<T, U>::add_to_list(const T& key,
                                           const U& value) {
-    // (*adjacency_list_)[
+    (*adjacency_list_)[key].insert(value);
   }
 
 
   ////
-  //// NeighborhoodVisitor2DRightLower
+  //// ListInserterGraph
   ////
-  template <typename T>
-  NeighborhoodVisitor2DRightLower<T>::NeighborhoodVisitor2DRightLower(PixelActorPtr pixel_actor) : 
-    pixel_actor_(pixel_actor) {
-    
+  template <typename T, typename U>
+  ListInserterGraph<T, U>::ListInserterGraph() :
+    adjacency_graph_(new AdjacencyGraph) {
+    adjacency_graph_->add(node_neighbors()).add(arc_dissimilarity());
   }
 
 
-
-  template <typename T>
-  void NeighborhoodVisitor2DRightLower<T>::visit(const vigra::MultiArrayView<2, T> image,
-                                                 const AdjacencyListBuilder<2>::Iterator pixel) {
-    return;
-  }
-  
-
-  ////
-  //// PixelActorFindNeighbors
-  ////
-  template <typename T>
-  void PixelActorFindNeighbors<T>::act(const T& pixel_value,
-                                       const T& comparison_value,
-                                       ListInserterBase<T, T>& result) {
-    return;
+  template <typename T, typename U>
+  ListInserterGraph<T, U>::ListInserterGraph(AdjacencyGraphPtr adjacency_graph) :
+    adjacency_graph_(adjacency_graph) {
+    adjacency_graph_->add(node_neighbors()).add(arc_dissimilarity());
   }
 
+
+  template <typename T, typename U>
+  void ListInserterGraph<T, U>::add_to_list(const T& key,
+                                      const U& value) {
+    adjacency_graph_->get(node_neighbors())[key].insert(value);
+    // also add dissimilarity to arcs?
+  }
 
 
 
