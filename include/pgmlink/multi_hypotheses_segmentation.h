@@ -76,7 +76,7 @@ namespace pgmlink {
   struct node_neighbors {};
   template <typename Graph>
   struct property_map<node_neighbors, Graph> {
-    typedef lemon::IterableValueMap<Graph, typename Graph::Node, AdjacencyList<label_type, label_type> > type;
+    typedef lemon::IterableValueMap<Graph, typename Graph::Node, std::set<label_type> > type;
     static const std::string name;
   };
 
@@ -103,6 +103,16 @@ namespace pgmlink {
     static const std::string name;
   };
 
+
+  ////
+  //// node_contains
+  ////
+  struct node_contains {};
+  template <typename Graph>
+  struct property_map<node_contains, Graph> {
+    typedef lemon::IterableValueMap<Graph, typename Graph::Node, std::set<label_type> > type;
+    static const std::string name;
+  };
 
 
   ////
@@ -360,6 +370,13 @@ namespace pgmlink {
   ////
   template <typename Graph>
   const std::string property_map<node_label, Graph>::name = "node_label";
+
+
+  ////
+  //// node_contains
+  ////
+  template <typename Graph>
+  const std::string property_map<node_contains, Graph>::name = "node_contains";
 
 
   ////
