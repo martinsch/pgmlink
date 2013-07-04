@@ -435,7 +435,9 @@ namespace pgmlink {
   template <typename T>
   void PixelActorFindNeighbors<T>::act(const T& pixel_value,
                                        const T& comparison_value) {
-    if (pixel_value != comparison_value) {
+    if (pixel_value != comparison_value &&
+        pixel_value != 0 &&
+        comparison_value != 0) {
       inserter_->add_to_list(pixel_value, comparison_value);
       inserter_->add_to_list(comparison_value, pixel_value);
     }
