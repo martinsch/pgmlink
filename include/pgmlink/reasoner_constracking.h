@@ -44,6 +44,8 @@ class ConservationTracking : public Reasoner {
           with_divisions_(with_divisions),
           disappearance_cost_(disappearance_cost_fn),
           appearance_cost_(appearance_cost_fn),
+          number_of_transition_nodes_(0), 
+          number_of_division_nodes_(0),
           number_of_appearance_nodes_(0),
           number_of_disappearance_nodes_(0),
           with_misdetections_allowed_(with_misdetections_allowed),
