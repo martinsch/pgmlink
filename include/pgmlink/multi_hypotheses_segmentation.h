@@ -60,8 +60,6 @@ namespace pgmlink {
   template <typename T, typename U>
   class PixelActorBase;
 
-  typedef unsigned label_type;
-
   typedef boost::shared_ptr<MultiSegmenter> MultiSegmenterPtr;
 
   typedef boost::shared_ptr<std::vector<vigra::MultiArray<2, label_type> > > AssignmentListPtr;
@@ -69,51 +67,6 @@ namespace pgmlink {
   typedef PropertyGraph<lemon::ListGraph> AdjacencyGraph;
 
   typedef boost::shared_ptr<AdjacencyGraph > AdjacencyGraphPtr;
-
-  
-  ////
-  //// node_neighbors
-  ////  
-  struct node_neighbors {};
-  template <typename Graph>
-  struct property_map<node_neighbors, Graph> {
-    typedef lemon::IterableValueMap<Graph, typename Graph::Node, std::set<label_type> > type;
-    static const std::string name;
-  };
-
-
-  ////
-  //// arc_dissimilarity
-  ////
-  struct arc_dissimilarity {};
-  template <typename Graph>
-  struct property_map<arc_dissimilarity, Graph> {
-    typedef lemon::IterableValueMap<Graph, typename Graph::Arc, double> type;
-    static const std::string name;
-  };
-
-
-
-  ////
-  //// node_label
-  ////
-  struct node_label {};
-  template <typename Graph>
-  struct property_map<node_label, Graph> {
-    typedef lemon::IterableValueMap<Graph, typename Graph::Node, label_type> type;
-    static const std::string name;
-  };
-
-
-  ////
-  //// node_contains
-  ////
-  struct node_contains {};
-  template <typename Graph>
-  struct property_map<node_contains, Graph> {
-    typedef lemon::IterableValueMap<Graph, typename Graph::Node, std::set<label_type> > type;
-    static const std::string name;
-  };
 
 
   ////
@@ -350,34 +303,6 @@ namespace pgmlink {
   
 
   /* IMPLEMENTATIONS */
-  
-
-  ////
-  //// node_neighbors
-  ////  
-  template <typename Graph>
-  const std::string property_map<node_neighbors, Graph>::name = "node_neighbors";
-
-
-  ////
-  //// arc_dissimilarity
-  ////
-  template <typename Graph>
-  const std::string property_map<arc_dissimilarity, Graph>::name = "arc_dissimilarity";
-
-
-  ////
-  //// node_label
-  ////
-  template <typename Graph>
-  const std::string property_map<node_label, Graph>::name = "node_label";
-
-
-  ////
-  //// node_contains
-  ////
-  template <typename Graph>
-  const std::string property_map<node_contains, Graph>::name = "node_contains";
 
 
   ////
