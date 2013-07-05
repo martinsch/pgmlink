@@ -15,14 +15,15 @@
 // boost
 #include <boost/shared_ptr.hpp>
 
-// pgmlink
-#include <pgmlink/clustering.h>
-#include <pgmlink/traxels.h>
-#include <pgmlink/graph.h>
-
 // lemon
 #include <lemon/list_graph.h> // lemon::ListGraph
 #include <lemon/maps.h> // lemon::IterableValueMap
+
+// pgmlink
+#include <pgmlink/clustering.h>
+#include <pgmlink/traxels.h>
+#include <pgmlink/region_graph.h>
+#include <pgmlink/graph.h>
 
 
 namespace pgmlink {
