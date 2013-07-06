@@ -1,6 +1,13 @@
 // stl
-#include <set>
-#include <algorithm>
+#include <set> // std::set
+#include <algorithm> // std::copy
+#include <functional> //std::not_equal_to
+#include <iterator> // std::insert_iterator
+
+// boost
+#include <boost/range/adaptors.hpp> // boost::adaptors::filter
+#include <boost/range/algorithm.hpp> // boost::copy
+#include <boost/mpl/copy_if.hpp> // boost::copy_if
 
 // lemon
 #include <lemon/list_graph.h> // lemon::ListGraph
@@ -9,6 +16,8 @@
 //pgmlink
 #include <pgmlink/region_graph.h>
 
+
+namespace ba = boost::adaptors;
 
 
 namespace pgmlink {
@@ -20,6 +29,23 @@ namespace pgmlink {
     add(node_neighbors()).add(arc_dissimilarity()).add(node_label()).add(node_contains()).add(node_conflicts());
   }
 
+
+  void RegionGraph::union_neighbors(const Region& r1,
+                                    const Region& r2,
+                                    const Region& new_region) {
+    NeighborMap& neighbor_map = get(node_neighbors());
+    const std::set<Region>& neighbors1 = neighbor_map[r1];
+    const std::set<Region>& neighbors2 = neighbor_map[r2];
+
+    std::set<Region>& neighbors_new = neighbor_map.get_value(new_region);
+
+    boost::copy(neighbors1 | ba::filtered(std::bind1st(std::not_equal_to<Region>(), r2)),
+                std::inserter(neighbors_new, neighbors_new.begin()));
+    boost::copy(ba::filter(neighbors2,
+                           std::bind1st(std::not_equal_to<Region>(), r1)),
+                           std::inserter(neighbors_new, neighbors_new.begin()));
+  }
+
   
   int RegionGraph::merge_regions(Region r1, Region r2) {
     if (!valid(r1)) {
@@ -28,17 +54,17 @@ namespace pgmlink {
     if (!valid(r2)) {
       return 2;
     }
-    /*Region new_region = addNode();
+    Region new_region = addNode();
     ++maximum_label_;
 
-    NeighborMap& neighbors = get(node_neighbors());
-    DissimilarityMap& dissimilarity = get(node_dissimilarity());
-    LabelMap& labels = get(node_labels());
-    ContainingMap& contains = get(node_contains());
-    ConflictMap& conflicts = get(node_conflicts());
+    
+    // DissimilarityMap& dissimilarity_map = get(arc_dissimilarity());
+    LabelMap& labels_map = get(node_label());
+    // ContainingMap& contains_map = get(node_contains());
+    // ConflictMap& conflicts_map = get(node_conflicts());
 
-    neighbors.set(new_region, create_union(r1, r2));
-    labels.set(new_region, max_label);*/
+    union_neighbors(r1, r2, new_region);
+    labels_map.set(new_region, maximum_label_);
     
 
     
