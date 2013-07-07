@@ -120,9 +120,33 @@ namespace pgmlink {
     return 0;
   }
 
-  int RegionGraph::merge_regions(int, int) {
-    
-    return 0;
+  
+  int RegionGraph::merge_regions(label_type label1, label_type label2) {
+    const LabelMap& label_map = get(node_label());
+    LabelMap::ValueIt it;
+    Region r1, r2;
+    bool label1_exists = false;
+    bool label2_exists = false;
+    for (it = label_map.beginValue(); it != label_map.endValue(); ++it) {
+      if (label1 == *it) {
+        label1_exists = true;
+        r1 = LabelMap::ItemIt(label_map, *it);
+      }
+      if (label2 == *it) {
+        label2_exists = true;
+        r2 = LabelMap::ItemIt(label_map, *it);
+      }
+      if (label1_exists && label2_exists) {
+        break;
+      }
+    }
+    if (!label1_exists) {
+      return 3;
+    }
+    if (!label2_exists) {
+      return 4;
+    }
+    return merge_regions(r1, r2);
   }
 
 }

@@ -165,7 +165,7 @@ namespace pgmlink {
   public:
     RegionGraph();
     int merge_regions(Region r1, Region r2);
-    int merge_regions(int label1, int label2);
+    int merge_regions(label_type label1, label_type label2);
   };
 
   
