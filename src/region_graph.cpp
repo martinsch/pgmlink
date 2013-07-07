@@ -90,13 +90,11 @@ namespace pgmlink {
   }
 
   
-  int RegionGraph::merge_regions(Region r1, Region r2) {
-    if (!valid(r1)) {
-      return 1;
+  RegionGraph::Region RegionGraph::merge_regions(Region r1, Region r2) {
+    if (!valid(r1) || !valid(r2)) {
+      return lemon::INVALID;
     }
-    if (!valid(r2)) {
-      return 2;
-    }
+
     Region new_region = addNode();
     ++maximum_label_;
 
@@ -117,11 +115,11 @@ namespace pgmlink {
     
 
     
-    return 0;
+    return new_region;
   }
 
   
-  int RegionGraph::merge_regions(label_type label1, label_type label2) {
+  RegionGraph::Region RegionGraph::merge_regions(label_type label1, label_type label2) {
     const LabelMap& label_map = get(node_label());
     LabelMap::ValueIt it;
     Region r1, r2;
@@ -140,11 +138,8 @@ namespace pgmlink {
         break;
       }
     }
-    if (!label1_exists) {
-      return 3;
-    }
-    if (!label2_exists) {
-      return 4;
+    if (!label1_exists || !label2_exists) {
+      return lemon::INVALID;
     }
     return merge_regions(r1, r2);
   }
