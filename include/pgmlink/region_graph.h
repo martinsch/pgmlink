@@ -196,7 +196,7 @@ namespace pgmlink {
       begin_(begin),
       end_(end) {}
     bool operator()(const ComparisonValue& compare) const {
-      return std::find(begin_, end_, compare) == end_;
+      return !(std::find(begin_, end_, compare) == end_);
     }
   };
 
