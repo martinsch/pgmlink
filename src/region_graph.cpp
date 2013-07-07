@@ -149,4 +149,13 @@ namespace pgmlink {
     return merge_regions(r1, r2);
   }
 
+
+  int RegionGraph::add_region(label_type label) {
+    Region region = addNode();
+    get(node_label()).set(region, label);
+    get(node_level()).set(region, 0u);
+    maximum_label_ = std::max(label, maximum_label_);
+    return maximum_label_;
+  }
+
 }
