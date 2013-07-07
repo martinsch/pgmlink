@@ -4,6 +4,8 @@
 // stl
 #include <set>
 #include <map>
+#include <algorithm>
+#include <functional>
 
 // boost
 #include <boost/shared_ptr.hpp>
@@ -109,6 +111,21 @@ namespace pgmlink {
 
   template <typename Graph>
   const std::string property_map<node_contains, Graph>::name = "node_contains";
+  
+
+  ////
+  //// node_level
+  ////
+  struct node_level {};
+  template <typename Graph>
+  struct property_map<node_level, Graph> {
+    typedef lemon::IterableValueMap<Graph, typename Graph::Node, unsigned> type;
+    static const std::string name;
+  };
+
+  template <typename Graph>
+  const std::string property_map<node_level, Graph>::name = "node_level";
+
 
 
   ////
@@ -136,6 +153,7 @@ namespace pgmlink {
     typedef property_map<node_label, base_graph>::type LabelMap;
     typedef property_map<node_contains, base_graph>::type ContainingMap;
     typedef property_map<node_conflicts, base_graph>::type ConflictMap;
+    typedef property_map<node_level, base_graph>::type LevelMap;
   private:
     label_type maximum_label_;
     void union_neighbors(const Region& r1,
@@ -150,6 +168,38 @@ namespace pgmlink {
     int merge_regions(int label1, int label2);
   };
 
+  
+  template <typename InputIterator, typename OutputIterator, typename UnaryPredicate>
+  OutputIterator conditional_copy (InputIterator first, InputIterator last,
+                                   OutputIterator result, UnaryPredicate pred) {
+    while (first!=last) {
+      if (pred(*first)) {
+        *result = *first;
+        ++result;
+      }
+      ++first;
+    }
+    return result;
+  }
+
+  template <typename InputIterator, typename ComparisonValue>
+  class IsContainedFunctor : public std::unary_function<ComparisonValue, bool> {
+  private:
+    InputIterator begin_;
+    InputIterator end_;
+    IsContainedFunctor();
+  public:
+    IsContainedFunctor(InputIterator begin,
+                         InputIterator end) :
+      begin_(begin),
+      end_(end) {}
+    bool operator()(const ComparisonValue& compare) const {
+      return std::find(begin_, end_, compare) == end_;
+    }
+  };
+
+  typedef IsContainedFunctor<std::set<RegionGraph::Region>::iterator,
+                             RegionGraph::Region> IsInRegionSet;
 
 }
 
