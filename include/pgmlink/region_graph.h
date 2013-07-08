@@ -91,7 +91,7 @@ namespace pgmlink {
   struct node_label {};
   template <typename Graph>
   struct property_map<node_label, Graph> {
-    typedef lemon::IterableValueMap<Graph, typename Graph::Node, label_type> type;
+    typedef lemon::CrossRefMap<Graph, typename Graph::Node, label_type> type;
     static const std::string name;
   };
 
@@ -129,7 +129,8 @@ namespace pgmlink {
 
 
   ////
-  //// node_confligts
+  //// node_conflicts
+  ////
   struct node_conflicts {};
   template <typename Graph>
   struct property_map<node_conflicts, Graph> {
@@ -139,6 +140,21 @@ namespace pgmlink {
 
   template <typename Graph>
   const std::string property_map<node_conflicts, Graph>::name = "node_conflicts";
+
+
+  ////
+  //// node_connceted_component
+  ////
+  struct node_connected_component {};
+  template <typename Graph>
+  struct property_map<node_connected_component, Graph> {
+    typedef lemon::CrossRefMap<Graph, typename Graph::Node, label_type> type;
+    static const std::string name;
+  };
+
+  template <typename Graph>
+  const std::string property_map<node_connected_component, Graph>::name = "node_connected_component";
+  
 
 
   ////
@@ -154,6 +170,7 @@ namespace pgmlink {
     typedef property_map<node_contains, base_graph>::type ContainingMap;
     typedef property_map<node_conflicts, base_graph>::type ConflictMap;
     typedef property_map<node_level, base_graph>::type LevelMap;
+    typedef property_map<node_connected_component, base_graph>::type ConnectedComponentMap;
   private:
     label_type maximum_label_;
     void union_neighbors(const Region& r1,

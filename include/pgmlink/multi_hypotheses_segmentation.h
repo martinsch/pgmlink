@@ -213,6 +213,8 @@ namespace pgmlink {
     virtual ~ListInserterBase() {}
     virtual void add_to_list(const T& key,
                              const U& value) = 0;
+    virtual void add_to_connected_component(const T& key,
+                                            const U& component) = 0;
   };
 
 
@@ -226,8 +228,11 @@ namespace pgmlink {
   public:
     ListInserterMap();
     ListInserterMap(typename AdjacencyListPtr<T, U>::type adjacency_list);
+    virtual ~ListInserterMap() {}
     virtual void add_to_list(const T& key,
                              const U& value);
+    virtual void add_to_connected_component(const T& key,
+                                            const U& component);
   };
 
 
@@ -241,8 +246,11 @@ namespace pgmlink {
   public:
     ListInserterGraph();
     ListInserterGraph(AdjacencyGraphPtr adjacency_graph);
+    virtual ~ListInserterGraph() {};
     virtual void add_to_list(const T& key,
                              const U& value);
+    virtual void add_to_connected_component(const T& key,
+                                            const U& component);
   };
 
 
@@ -315,7 +323,7 @@ namespace pgmlink {
   ////
   //// RegionMergingGraph
   ////
-  class RegiongMergingGraph : public RegionMergingPolicyBase {
+  class RegionMergingGraph : public RegionMergingPolicyBase {
   private:
     AdjacencyGraphPtr graph_;
     unsigned maximum_merges_per_connected_component_;
@@ -434,20 +442,31 @@ namespace pgmlink {
   }
 
 
+  template <typename T, typename U>
+  void ListInserterMap<T, U>::add_to_connected_component(const T&,
+                                                         const U&) {
+
+  }
+
+
   ////
   //// ListInserterGraph
   ////
   template <typename T, typename U>
   ListInserterGraph<T, U>::ListInserterGraph() :
     adjacency_graph_(new AdjacencyGraph) {
-    adjacency_graph_->add(node_neighbors()).add(arc_dissimilarity());
+    adjacency_graph_->add(node_neighbors())
+      .add(arc_dissimilarity())
+      .add(node_connected_component());
   }
 
 
   template <typename T, typename U>
   ListInserterGraph<T, U>::ListInserterGraph(AdjacencyGraphPtr adjacency_graph) :
     adjacency_graph_(adjacency_graph) {
-    adjacency_graph_->add(node_neighbors()).add(arc_dissimilarity());
+    adjacency_graph_->add(node_neighbors())
+      .add(arc_dissimilarity())
+      .add(node_connected_component());
   }
 
 
@@ -456,14 +475,17 @@ namespace pgmlink {
                                             const U& value) {
     
     AdjacencyGraph::LabelMap& label_map = adjacency_graph_->get(node_label());
-    AdjacencyGraph::LabelMap::ValueIt value_it = label_map.beginValue();
+    /*AdjacencyGraph::LabelMap::ValueIt value_it = label_map.beginValue();
     for (; value_it != label_map.endValue(); ++value_it) {
       if (*value_it == key) {
         break;
       }
+    }*/
+    AdjacencyGraph::Region region = label_map(key);
+    if (region == lemon::INVALID) {
+      region = adjacency_graph_->add_region(key);
     }
-    AdjacencyGraph::Region region;
-    if (value_it == label_map.endValue()) {
+    /*if (value_it == label_map.endValue()) {
       region = adjacency_graph_->add_region(key);
     } else {
       region = AdjacencyGraph::LabelMap::ItemIt(label_map, key);
@@ -473,15 +495,32 @@ namespace pgmlink {
       if (*value_it == value) {
         break;
       }
+    } */
+    AdjacencyGraph::Region neighbor = label_map(value);
+    if (neighbor == lemon::INVALID) {
+      neighbor = adjacency_graph_->add_region(value);
     }
-    AdjacencyGraph::Region neighbor;
-    if (value_it == label_map.endValue()) {
+    /*if (value_it == label_map.endValue()) {
       neighbor = adjacency_graph_->add_region(value);
     } else {
       neighbor = AdjacencyGraph::LabelMap::ItemIt(label_map, value);
-    }
+    } */
     adjacency_graph_->get(node_neighbors()).get_value(region).insert(neighbor);
     // also add dissimilarity to arcs?
+  }
+
+
+  template <typename T, typename U>
+  void ListInserterGraph<T, U>::add_to_connected_component(const T& key,
+                                                           const U& component) {
+    AdjacencyGraph::ConnectedComponentMap& connected_component_map =
+      adjacency_graph_->get(node_connected_component());
+    AdjacencyGraph::LabelMap& label_map = adjacency_graph_->get(node_label());
+    AdjacencyGraph::Region region = label_map(key);
+    if (region == lemon::INVALID) {
+      region = adjacency_graph_->add_region(key);
+    }
+    connected_component_map.set(region, component);
   }
 
 

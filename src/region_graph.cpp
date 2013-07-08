@@ -30,7 +30,8 @@ namespace pgmlink {
       .add(node_label())
       .add(node_contains())
       .add(node_conflicts())
-      .add(node_level());
+      .add(node_level())
+      .add(node_connected_component());
   }
 
 
@@ -103,6 +104,7 @@ namespace pgmlink {
     LabelMap& labels_map = get(node_label());
     LevelMap& level_map = get(node_level());
     ContainingMap& contains_map = get(node_contains());
+    ConnectedComponentMap& connected_component_map = get(node_connected_component());
 
     union_conflicts(r1, r2, new_region);
     union_neighbors(r1, r2, new_region);
@@ -112,6 +114,8 @@ namespace pgmlink {
     std::set<Region>& contains_new = contains_map.get_value(new_region);
     contains_new.insert(r1);
     contains_new.insert(r2);
+
+    connected_component_map.set(new_region, connected_component_map[r1]);
     
 
     
@@ -122,7 +126,7 @@ namespace pgmlink {
   RegionGraph::Region RegionGraph::merge_regions(label_type label1, label_type label2) {
     const LabelMap& label_map = get(node_label());
     LabelMap::ValueIt it;
-    Region r1, r2;
+    /* Region r1, r2;
     bool label1_exists = false;
     bool label2_exists = false;
     for (it = label_map.beginValue(); it != label_map.endValue(); ++it) {
@@ -139,6 +143,11 @@ namespace pgmlink {
       }
     }
     if (!label1_exists || !label2_exists) {
+      return lemon::INVALID;
+      } */
+    Region r1 = label_map(label1);
+    Region r2 = label_map(label2);
+    if (r1 == lemon::INVALID || r2 == lemon::INVALID) {
       return lemon::INVALID;
     }
     return merge_regions(r1, r2);
