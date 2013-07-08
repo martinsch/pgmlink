@@ -48,6 +48,9 @@ namespace pgmlink {
 
   class ConnectedComponentsToMultiSegments;
 
+  template <typename T, typename U>
+  class ParentConnectedComponentBase;
+
   template <int N, typename T>
   class AdjacencyListBuilder;
 
@@ -105,13 +108,21 @@ namespace pgmlink {
   };
 
 
-
   ////
   //// NeighborhoodVisitorPtr
   ////
   template <int N, typename T>
   struct NeighborhoodVisitorPtr {
     typedef boost::shared_ptr<NeighborhoodVisitorBase<N, T> > type;
+  };
+
+
+  ////
+  //// ParentConnectedComponentPtr
+  ////
+  template <typename T, typename U>
+  struct ParentConnectedComponentPtr {
+    typedef boost::shared_ptr<ParentConnectedComponentBase<T, T> > type;
   };
 
 
@@ -196,18 +207,44 @@ namespace pgmlink {
     vigra::MultiArrayView<N, T> label_image_;
     vigra::MultiArrayView<N, T> connected_component_image_;
     typename NeighborhoodVisitorPtr<N, T>::type neighborhood_accessor_;
-    AdjacencyGraphPtr adjacency_graph_;
+    typename ParentConnectedComponentPtr<T, T>::type parent_connected_component_;
+
     AdjacencyListBuilder();
-    void add_to_connected_component(const T& key,
-                                    const T& component);
   public:
     AdjacencyListBuilder(vigra::MultiArrayView<N, T> label_image,
                          vigra::MultiArrayView<N, T> connected_component_image,
                          typename NeighborhoodVisitorPtr<N, T>::type neighborhood_accessor,
-                         AdjacencyGraphPtr adjacency_graph);
+                         typename ParentConnectedComponentPtr<T, T>::type parent_connected_component);
     void create_adjacency_list();
   };
 
+
+  ////
+  //// ParentConnectedComponentBase
+  ////
+  template <typename T, typename U>
+  class ParentConnectedComponentBase {
+  public:
+    virtual ~ParentConnectedComponentBase() {}
+    virtual void add_to_connected_component(const T& key,
+                                            const U& component) {}
+  };
+
+
+  ////
+  //// ParentConnectedComponentGraph
+  ////
+  template <typename T, typename U>
+  class ParentConnectedComponentGraph : public ParentConnectedComponentBase<T, U> {
+  private:
+    AdjacencyGraphPtr adjacency_graph_;
+  public:
+    ParentConnectedComponentGraph();
+    ParentConnectedComponentGraph(AdjacencyGraphPtr adjacency_graph);
+    virtual ~ParentConnectedComponentGraph() {}
+    virtual void add_to_connected_component(const T& key,
+                                            const U& component);
+  };
 
   ////
   //// ListInserterBase
@@ -348,7 +385,7 @@ namespace pgmlink {
     label_image_(),
     connected_component_image_(),
     neighborhood_accessor_(),
-    adjacency_graph_(new AdjacencyGraph) {
+    parent_connected_component_() {
 
   }
 
@@ -357,11 +394,11 @@ namespace pgmlink {
   AdjacencyListBuilder<N, T>::AdjacencyListBuilder(vigra::MultiArrayView<N, T> label_image,
                                                    vigra::MultiArrayView<N, T> connected_component_image,
                                                    typename NeighborhoodVisitorPtr<N, T>::type neighborhood_accessor,
-                                                   AdjacencyGraphPtr adjacency_graph) :
+                                                   typename ParentConnectedComponentPtr<T, T>::type parent_connected_component) :
     label_image_(label_image),
     connected_component_image_(connected_component_image),
-      neighborhood_accessor_(neighborhood_accessor),
-      adjacency_graph_(adjacency_graph) {
+    neighborhood_accessor_(neighborhood_accessor),
+    parent_connected_component_(parent_connected_component) {
 
   }
 
@@ -377,22 +414,40 @@ namespace pgmlink {
     for (Iterator it = start; it != end; ++it) {
       neighborhood_accessor_->visit(label_image_,
                                     it);
-      add_to_connected_component(it.get<1>(), it.get<2>());
+      parent_connected_component_->add_to_connected_component(it.get<1>(), it.get<2>());
     }
   }
 
-template <int N, typename T>
-void AdjacencyListBuilder<N, T>::add_to_connected_component(const T& key,
-                                                            const T& component) {
-  AdjacencyGraph::ConnectedComponentMap& connected_component_map =
-    adjacency_graph_->get(node_connected_component());
-  AdjacencyGraph::LabelMap& label_map = adjacency_graph_->get(node_label());
-  AdjacencyGraph::Region region = label_map(key);
-  if (region == lemon::INVALID) {
-    region = adjacency_graph_->add_region(key);
+
+  ////
+  //// ParentConnectedComponentGraph
+  ////
+  template <typename T, typename U>
+  ParentConnectedComponentGraph<T, U>::ParentConnectedComponentGraph() :
+    adjacency_graph_(new AdjacencyGraph) {
+    adjacency_graph_->add(node_connected_component());
   }
-  connected_component_map.set(region, component);
-}
+
+
+  template <typename T, typename U>
+  ParentConnectedComponentGraph<T, U>::ParentConnectedComponentGraph(AdjacencyGraphPtr adjacency_graph) :
+    adjacency_graph_(adjacency_graph) {
+    adjacency_graph_->add(node_connected_component());
+  }
+
+
+  template <typename T, typename U>
+  void ParentConnectedComponentGraph<T, U>::add_to_connected_component(const T& key,
+                                                                       const U& component) {
+    AdjacencyGraph::ConnectedComponentMap& connected_component_map =
+      adjacency_graph_->get(node_connected_component());
+    AdjacencyGraph::LabelMap& label_map = adjacency_graph_->get(node_label());
+    AdjacencyGraph::Region region = label_map(key);
+    if (region == lemon::INVALID) {
+      region = adjacency_graph_->add_region(key);
+    }
+    connected_component_map.set(region, component);
+  }
 
 
 
