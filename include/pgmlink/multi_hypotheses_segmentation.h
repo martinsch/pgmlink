@@ -449,9 +449,9 @@ namespace pgmlink {
     }
     AdjacencyGraph::Region neighbor;
     if (value_it == label_map.endValue()) {
-      neighbor = adjacency_graph_->add_region(key);
+      neighbor = adjacency_graph_->add_region(value);
     } else {
-      neighbor = AdjacencyGraph::LabelMap::ItemIt(label_map, key);
+      neighbor = AdjacencyGraph::LabelMap::ItemIt(label_map, value);
     }
     adjacency_graph_->get(node_neighbors()).get_value(region).insert(neighbor);
     // also add dissimilarity to arcs?
