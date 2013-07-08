@@ -64,7 +64,7 @@ namespace pgmlink {
 
   typedef boost::shared_ptr<std::vector<vigra::MultiArray<2, label_type> > > AssignmentListPtr;
 
-  typedef PropertyGraph<lemon::ListGraph> AdjacencyGraph;
+  typedef RegionGraph AdjacencyGraph;
 
   typedef boost::shared_ptr<AdjacencyGraph > AdjacencyGraphPtr;
 
@@ -426,8 +426,34 @@ namespace pgmlink {
 
   template <typename T, typename U>
   void ListInserterGraph<T, U>::add_to_list(const T& key,
-                                      const U& value) {
-    adjacency_graph_->get(node_neighbors())[key].insert(value);
+                                            const U& value) {
+    
+    AdjacencyGraph::LabelMap& label_map = adjacency_graph_->get(node_label());
+    AdjacencyGraph::LabelMap::ValueIt value_it = label_map.beginValue();
+    for (; value_it != label_map.endValue(); ++value_it) {
+      if (*value_it == key) {
+        break;
+      }
+    }
+    AdjacencyGraph::Region region;
+    if (value_it == label_map.endValue()) {
+      region = adjacency_graph_->add_region(key);
+    } else {
+      region = AdjacencyGraph::LabelMap::ItemIt(label_map, key);
+    }
+    for (value_it = label_map.beginValue();
+         value_it != label_map.endValue(); ++value_it) {
+      if (*value_it == value) {
+        break;
+      }
+    }
+    AdjacencyGraph::Region neighbor;
+    if (value_it == label_map.endValue()) {
+      neighbor = adjacency_graph_->add_region(key);
+    } else {
+      neighbor = AdjacencyGraph::LabelMap::ItemIt(label_map, key);
+    }
+    adjacency_graph_->get(node_neighbors()).get_value(region).insert(neighbor);
     // also add dissimilarity to arcs?
   }
 
