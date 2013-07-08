@@ -300,6 +300,33 @@ namespace pgmlink {
     virtual void act(const T& pixel_value,
                      const T& comparison_value);
   };
+
+
+  ////
+  //// RegionMergingPolicyBase
+  ////
+  class RegionMergingPolicyBase {
+  public:
+    virtual ~RegionMergingPolicyBase() {}
+    virtual void merge() = 0;
+  };
+
+
+  ////
+  //// RegionMergingGraph
+  ////
+  class RegiongMergingGraph : public RegionMergingPolicyBase {
+  private:
+    AdjacencyGraphPtr graph_;
+    unsigned maximum_merges_per_connected_component_;
+    unsigned maximum_merges_per_patch_;
+  public:
+    RegionMergingGraph();
+    RegionMergingGraph(AdjacencyGraphPtr graph,
+                       unsigned maximum_merges_per_connected_component,
+                       unsigned maximum_merges_per_patch);
+    virtual void merge();
+  };
   
 
   /* IMPLEMENTATIONS */
