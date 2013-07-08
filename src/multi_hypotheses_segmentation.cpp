@@ -154,4 +154,53 @@ namespace pgmlink {
       segment_container.to_images(dest);
     }
   }
+
+
+  ////
+  //// RegionMergingGraph
+  ////
+  RegionMergingGraph::RegionMergingGraph() :
+    adjacency_graph_(new AdjacencyGraph),
+    maximum_merges_per_connected_component_(1u),
+    maximum_merges_per_patch_(1u) {
+    adjacency_graph_->add(node_merged_n_times());
+  }
+
+
+  RegionMergingGraph::RegionMergingGraph(AdjacencyGraphPtr adjacency_graph,
+                                         unsigned maximum_merges_per_connected_component,
+                                         unsigned maximum_merges_per_patch) :
+    adjacency_graph_(adjacency_graph),
+    maximum_merges_per_connected_component_(maximum_merges_per_connected_component),
+    maximum_merges_per_patch_(maximum_merges_per_patch) {
+    adjacency_graph_->add(node_merged_n_times());
+    // .add(connected_component_merged_n_times());
+  }
+
+
+  void RegionMergingGraph::merge() {
+    std::map<label_type, unsigned> number_of_merges_per_connected_component;
+    RegionGraph::ConnectedComponentMap& component_map_ = adjacency_graph_->get(node_connected_component());
+    do {
+      bool break_condition = true;
+      for (RegionGraph::ConnectedComponentMap::ValueIt component_it = component_map_.beginValue();
+           component_it != component_map_.endValue();
+           ++component_it) {
+        unsigned& number_of_mergers =
+          number_of_merges_per_connected_component[*component_it];
+        number_of_mergers += 1;
+        if (number_of_mergers < maximum_merges_per_connected_component_) {
+          break_condition = false;
+        }
+      }
+      if (break_condition) break;
+    } while(true);
+  }
+
+
 }
+
+
+
+
+

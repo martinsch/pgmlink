@@ -370,6 +370,7 @@ namespace pgmlink {
     RegionMergingGraph(AdjacencyGraphPtr adjacency_graph,
                        unsigned maximum_merges_per_connected_component,
                        unsigned maximum_merges_per_patch);
+    ~RegionMergingGraph() {}
     virtual void merge();
   };
   
@@ -414,7 +415,10 @@ namespace pgmlink {
     for (Iterator it = start; it != end; ++it) {
       neighborhood_accessor_->visit(label_image_,
                                     it);
-      parent_connected_component_->add_to_connected_component(it.get<1>(), it.get<2>());
+
+      if (true) {
+        parent_connected_component_->add_to_connected_component(it.get<1>(), it.get<2>());
+      }
     }
   }
 
@@ -442,6 +446,7 @@ namespace pgmlink {
     AdjacencyGraph::ConnectedComponentMap& connected_component_map =
       adjacency_graph_->get(node_connected_component());
     AdjacencyGraph::LabelMap& label_map = adjacency_graph_->get(node_label());
+    AdjacencyGraph::ConflictMap& conflict_map = adjacency_graph_->get(node_conflicts());
     AdjacencyGraph::Region region = label_map(key);
     if (region == lemon::INVALID) {
       region = adjacency_graph_->add_region(key);

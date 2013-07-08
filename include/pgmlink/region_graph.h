@@ -154,7 +154,35 @@ namespace pgmlink {
 
   template <typename Graph>
   const std::string property_map<node_connected_component, Graph>::name = "node_connected_component";
-  
+
+
+  ////
+  //// node_merged_n_times
+  ////
+  struct node_merged_n_times {};
+  template <typename Graph>
+  struct property_map<node_merged_n_times, Graph> {
+    typedef IterableEditableValueMap<Graph, typename Graph::Node, unsigned> type;
+    static const std::string name;
+  };
+
+  template <typename Graph>
+  const std::string property_map<node_merged_n_times, Graph>::name = "node_merged_n_times";
+
+
+  ////
+  //// connected_component_merged_n_times
+  ////
+  struct connected_component_merged_n_times {};
+  template <typename Graph>
+  struct property_map<connected_component_merged_n_times, Graph> {
+    typedef IterableEditableValueMap<Graph, label_type, unsigned> type;
+    static const std::string name;
+  };
+
+  template <typename Graph>
+  const std::string property_map<connected_component_merged_n_times, Graph>::name =
+    "connected_component_merged_n_times";
 
 
   ////
