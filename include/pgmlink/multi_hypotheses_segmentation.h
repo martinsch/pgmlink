@@ -191,14 +191,20 @@ namespace pgmlink {
   template <int N, typename T>
   class AdjacencyListBuilder {
   public:
-    typedef typename vigra::CoupledIteratorType<N, T>::type Iterator;
+    typedef typename vigra::CoupledIteratorType<N, T, T>::type Iterator;
   private:
     vigra::MultiArrayView<N, T> label_image_;
+    vigra::MultiArrayView<N, T> connected_component_image_;
     typename NeighborhoodVisitorPtr<N, T>::type neighborhood_accessor_;
+    AdjacencyGraphPtr adjacency_graph_;
     AdjacencyListBuilder();
+    void add_to_connected_component(const T& key,
+                                    const T& component);
   public:
     AdjacencyListBuilder(vigra::MultiArrayView<N, T> label_image,
-                         typename NeighborhoodVisitorPtr<N, T>::type neighborhood_accessor);
+                         vigra::MultiArrayView<N, T> connected_component_image,
+                         typename NeighborhoodVisitorPtr<N, T>::type neighborhood_accessor,
+                         AdjacencyGraphPtr adjacency_graph);
     void create_adjacency_list();
   };
 
@@ -213,8 +219,6 @@ namespace pgmlink {
     virtual ~ListInserterBase() {}
     virtual void add_to_list(const T& key,
                              const U& value) = 0;
-    virtual void add_to_connected_component(const T& key,
-                                            const U& component) = 0;
   };
 
 
@@ -231,8 +235,6 @@ namespace pgmlink {
     virtual ~ListInserterMap() {}
     virtual void add_to_list(const T& key,
                              const U& value);
-    virtual void add_to_connected_component(const T& key,
-                                            const U& component);
   };
 
 
@@ -249,8 +251,6 @@ namespace pgmlink {
     virtual ~ListInserterGraph() {};
     virtual void add_to_list(const T& key,
                              const U& value);
-    virtual void add_to_connected_component(const T& key,
-                                            const U& component);
   };
 
 
@@ -325,12 +325,12 @@ namespace pgmlink {
   ////
   class RegionMergingGraph : public RegionMergingPolicyBase {
   private:
-    AdjacencyGraphPtr graph_;
+    AdjacencyGraphPtr adjacency_graph_;
     unsigned maximum_merges_per_connected_component_;
     unsigned maximum_merges_per_patch_;
   public:
     RegionMergingGraph();
-    RegionMergingGraph(AdjacencyGraphPtr graph,
+    RegionMergingGraph(AdjacencyGraphPtr adjacency_graph,
                        unsigned maximum_merges_per_connected_component,
                        unsigned maximum_merges_per_patch);
     virtual void merge();
@@ -346,16 +346,22 @@ namespace pgmlink {
   template <int N, typename T>
   AdjacencyListBuilder<N, T>::AdjacencyListBuilder() :
     label_image_(),
-    neighborhood_accessor_() {
+    connected_component_image_(),
+    neighborhood_accessor_(),
+    adjacency_graph_(new AdjacencyGraph) {
 
   }
 
 
   template <int N, typename T>
   AdjacencyListBuilder<N, T>::AdjacencyListBuilder(vigra::MultiArrayView<N, T> label_image,
-                                                   typename NeighborhoodVisitorPtr<N, T>::type neighborhood_accessor) :
+                                                   vigra::MultiArrayView<N, T> connected_component_image,
+                                                   typename NeighborhoodVisitorPtr<N, T>::type neighborhood_accessor,
+                                                   AdjacencyGraphPtr adjacency_graph) :
     label_image_(label_image),
-    neighborhood_accessor_(neighborhood_accessor) {
+    connected_component_image_(connected_component_image),
+      neighborhood_accessor_(neighborhood_accessor),
+      adjacency_graph_(adjacency_graph) {
 
   }
 
@@ -366,13 +372,28 @@ namespace pgmlink {
       return;
     }
     // NeighborhoodVisitorBase<N, label_type>::PixelActorPtr<T, T>::type pixel_actor(new PixelActorFindNeighbors<label_type>);
-    Iterator start = createCoupledIterator(label_image_);
+    Iterator start = createCoupledIterator(label_image_, connected_component_image_);
     Iterator end = start.getEndIterator();
     for (Iterator it = start; it != end; ++it) {
       neighborhood_accessor_->visit(label_image_,
                                     it);
+      add_to_connected_component(it.get<1>(), it.get<2>());
     }
   }
+
+template <int N, typename T>
+void AdjacencyListBuilder<N, T>::add_to_connected_component(const T& key,
+                                                            const T& component) {
+  AdjacencyGraph::ConnectedComponentMap& connected_component_map =
+    adjacency_graph_->get(node_connected_component());
+  AdjacencyGraph::LabelMap& label_map = adjacency_graph_->get(node_label());
+  AdjacencyGraph::Region region = label_map(key);
+  if (region == lemon::INVALID) {
+    region = adjacency_graph_->add_region(key);
+  }
+  connected_component_map.set(region, component);
+}
+
 
 
 
@@ -442,11 +463,6 @@ namespace pgmlink {
   }
 
 
-  template <typename T, typename U>
-  void ListInserterMap<T, U>::add_to_connected_component(const T&,
-                                                         const U&) {
-
-  }
 
 
   ////
@@ -510,18 +526,6 @@ namespace pgmlink {
   }
 
 
-  template <typename T, typename U>
-  void ListInserterGraph<T, U>::add_to_connected_component(const T& key,
-                                                           const U& component) {
-    AdjacencyGraph::ConnectedComponentMap& connected_component_map =
-      adjacency_graph_->get(node_connected_component());
-    AdjacencyGraph::LabelMap& label_map = adjacency_graph_->get(node_label());
-    AdjacencyGraph::Region region = label_map(key);
-    if (region == lemon::INVALID) {
-      region = adjacency_graph_->add_region(key);
-    }
-    connected_component_map.set(region, component);
-  }
 
 
 
