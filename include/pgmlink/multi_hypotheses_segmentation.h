@@ -71,6 +71,20 @@ namespace pgmlink {
 
   typedef boost::shared_ptr<AdjacencyGraph > AdjacencyGraphPtr;
 
+  ////
+  //// DefaultValue
+  ////
+  template <typename T>
+  struct DefaultValue {
+    static const T value;
+  };
+
+  template <typename T>
+  const T DefaultValue<T>::value = T();
+
+  template <>
+  const label_type DefaultValue<label_type>::value = 0;
+
 
   ////
   //// AdjacencyList
@@ -228,6 +242,7 @@ namespace pgmlink {
     virtual ~ParentConnectedComponentBase() {}
     virtual void add_to_connected_component(const T& key,
                                             const U& component) {}
+    virtual void create_conflicts() {}
   };
 
 
@@ -244,6 +259,7 @@ namespace pgmlink {
     virtual ~ParentConnectedComponentGraph() {}
     virtual void add_to_connected_component(const T& key,
                                             const U& component);
+    virtual void create_conflicts();
   };
 
   ////
@@ -365,11 +381,13 @@ namespace pgmlink {
     AdjacencyGraphPtr adjacency_graph_;
     unsigned maximum_merges_per_connected_component_;
     unsigned maximum_merges_per_patch_;
+    label_type starting_label_;
   public:
     RegionMergingGraph();
     RegionMergingGraph(AdjacencyGraphPtr adjacency_graph,
                        unsigned maximum_merges_per_connected_component,
-                       unsigned maximum_merges_per_patch);
+                       unsigned maximum_merges_per_patch,
+                       label_type starting_label);
     ~RegionMergingGraph() {}
     virtual void merge();
   };
@@ -416,10 +434,11 @@ namespace pgmlink {
       neighborhood_accessor_->visit(label_image_,
                                     it);
 
-      if (true) {
+      if (it.get<1>() != DefaultValue<T>::value) {
         parent_connected_component_->add_to_connected_component(it.get<1>(), it.get<2>());
       }
     }
+    parent_connected_component_->create_conflicts();
   }
 
 
@@ -446,12 +465,34 @@ namespace pgmlink {
     AdjacencyGraph::ConnectedComponentMap& connected_component_map =
       adjacency_graph_->get(node_connected_component());
     AdjacencyGraph::LabelMap& label_map = adjacency_graph_->get(node_label());
-    AdjacencyGraph::ConflictMap& conflict_map = adjacency_graph_->get(node_conflicts());
     AdjacencyGraph::Region region = label_map(key);
     if (region == lemon::INVALID) {
       region = adjacency_graph_->add_region(key);
     }
     connected_component_map.set(region, component);
+  }
+
+  template <typename T, typename U>
+  void ParentConnectedComponentGraph<T, U>::create_conflicts() {
+    AdjacencyGraph::ConnectedComponentMap& connected_component_map =
+      adjacency_graph_->get(node_connected_component());
+    AdjacencyGraph::LabelMap& label_map = adjacency_graph_->get(node_label());
+    AdjacencyGraph::ConflictMap& conflict_map = adjacency_graph_->get(node_conflicts());
+    AdjacencyGraph::NodeIt bitit(*adjacency_graph_);
+    for (AdjacencyGraph::NodeIt it(*adjacency_graph_);
+         it != lemon::INVALID;
+         ++it) {
+      label_type label = label_map[it];
+      label_type component = connected_component_map[it];
+      if (label != component) {
+        AdjacencyGraph::Region region = label_map(component);
+        if (!adjacency_graph_->valid(region)) {
+          region = adjacency_graph_->add_region(component);
+        }
+        conflict_map.get_value(region).insert(it);
+        conflict_map.get_value(it).insert(region);
+      }
+    }
   }
 
 

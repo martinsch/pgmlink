@@ -162,17 +162,20 @@ namespace pgmlink {
   RegionMergingGraph::RegionMergingGraph() :
     adjacency_graph_(new AdjacencyGraph),
     maximum_merges_per_connected_component_(1u),
-    maximum_merges_per_patch_(1u) {
+    maximum_merges_per_patch_(1u),
+    starting_label_(0) {
     adjacency_graph_->add(node_merged_n_times());
   }
 
 
   RegionMergingGraph::RegionMergingGraph(AdjacencyGraphPtr adjacency_graph,
                                          unsigned maximum_merges_per_connected_component,
-                                         unsigned maximum_merges_per_patch) :
+                                         unsigned maximum_merges_per_patch,
+                                         label_type starting_label) :
     adjacency_graph_(adjacency_graph),
     maximum_merges_per_connected_component_(maximum_merges_per_connected_component),
-    maximum_merges_per_patch_(maximum_merges_per_patch) {
+    maximum_merges_per_patch_(maximum_merges_per_patch),
+    starting_label_(starting_label) {
     adjacency_graph_->add(node_merged_n_times());
     // .add(connected_component_merged_n_times());
   }
@@ -180,21 +183,51 @@ namespace pgmlink {
 
   void RegionMergingGraph::merge() {
     std::map<label_type, unsigned> number_of_merges_per_connected_component;
-    RegionGraph::ConnectedComponentMap& component_map_ = adjacency_graph_->get(node_connected_component());
-    do {
-      bool break_condition = true;
-      for (RegionGraph::ConnectedComponentMap::ValueIt component_it = component_map_.beginValue();
-           component_it != component_map_.endValue();
+    std::map<label_type, std::map<AdjacencyGraph::Region, int> > number_of_iterations_without_merge_global;
+    AdjacencyGraph::ConnectedComponentMap& component_map = adjacency_graph_->get(node_connected_component());
+    AdjacencyGraph::NeighborMap& neighbor_map = adjacency_graph_->get(node_neighbors());
+    for (RegionGraph::ConnectedComponentMap::ValueIt component_it = component_map.beginValue();
+           component_it != component_map.endValue();
            ++component_it) {
-        unsigned& number_of_mergers =
+      unsigned& number_of_mergers =
           number_of_merges_per_connected_component[*component_it];
+      bool break_condition_component = true;
+      do {
+        std::map<AdjacencyGraph::Region, int>& number_of_iterations_without_merge =
+          number_of_iterations_without_merge_global[*component_it];
+        std::map<AdjacencyGraph::Region, int>::iterator next_region_to_merge =
+          number_of_iterations_without_merge.begin();
+        for (std::map<AdjacencyGraph::Region, int>::iterator region_it =
+               number_of_iterations_without_merge.begin();
+             region_it != number_of_iterations_without_merge.end();
+             ++region_it) {
+          if (region_it->second < next_region_to_merge->second) {
+            next_region_to_merge = region_it;
+            
+          }
+          region_it->second -= 1;
+        }
+        int minimum = 1;
+        std::set<AdjacencyGraph::Region>::iterator neighbor_to_merge;
+        for (std::set<AdjacencyGraph::Region>::iterator neighbor_it =
+               neighbor_map[next_region_to_merge->first].begin();
+             neighbor_it != neighbor_map[next_region_to_merge->first].end();
+             ++neighbor_it) {
+          if (minimum > number_of_iterations_without_merge[*neighbor_it]) {
+            minimum = number_of_iterations_without_merge[*neighbor_it];
+            neighbor_to_merge = neighbor_it;
+          }
+        }
+        adjacency_graph_->merge_regions(next_region_to_merge->first, *neighbor_to_merge);
+        next_region_to_merge->second = 0;
+        number_of_iterations_without_merge[*neighbor_to_merge] = 0;
         number_of_mergers += 1;
         if (number_of_mergers < maximum_merges_per_connected_component_) {
-          break_condition = false;
+          break_condition_component = false;
         }
-      }
-      if (break_condition) break;
-    } while(true);
+        if (break_condition_component) break;
+      } while(true);
+    }
   }
 
 
