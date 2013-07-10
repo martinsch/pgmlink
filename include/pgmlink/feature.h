@@ -7,13 +7,16 @@
 #ifndef FEATURE_H
 #define FEATURE_H
 
-#include <stdexcept>
-#include "pgmlink/traxels.h"
 #include <cmath>
+#include <stdexcept>
+
+#include "pgmlink/traxels.h"
+#include "pgmlink/pgmlink_export.h"
+
 
 namespace pgmlink {
 
-  class GeometryDivision2 {
+  class PGMLINK_EXPORT GeometryDivision2 {
     /**
      * Division feature based on geometric properties of a ancestor-child-child configuration.
      *
@@ -40,7 +43,7 @@ namespace pgmlink {
     bool distance_dependence_, angle_constraint_; 
   };
 
-  class KasterDivision2 {
+  class PGMLINK_EXPORT KasterDivision2 {
   public:
   KasterDivision2(double weight, double div_cost) : w_(weight), div_cost_(div_cost) {};
     double operator()(const Traxel& ancestor,
@@ -51,7 +54,7 @@ namespace pgmlink {
     double div_cost_;
   };
 
-  class NegLnCellness {
+  class PGMLINK_EXPORT NegLnCellness {
   public:
   NegLnCellness(double weight) : w_(weight) {}
     double operator()( const Traxel& ) const;
@@ -59,7 +62,7 @@ namespace pgmlink {
     double w_;
   };
 
-  class NegLnOneMinusCellness {
+  class PGMLINK_EXPORT NegLnOneMinusCellness {
   public:
   NegLnOneMinusCellness(double weight) : w_(weight) {}
     double operator()( const Traxel& ) const;
@@ -70,7 +73,7 @@ namespace pgmlink {
   /**
      @brief Zero near temporal border, else 1.
   */
-  class BorderAwareConstant {
+  class PGMLINK_EXPORT BorderAwareConstant {
   public:
   BorderAwareConstant( double weight,
 		       int at,
@@ -101,7 +104,7 @@ namespace pgmlink {
   /**
      @brief Primitive fixed value feature.
   */
-  class ConstantFeature {
+  class PGMLINK_EXPORT ConstantFeature {
   public:
   ConstantFeature( double value = 0. ) : value(value) {}
    
@@ -116,12 +119,12 @@ namespace pgmlink {
     double value;
   };
     
-  class SquaredDistance {
+  class PGMLINK_EXPORT SquaredDistance {
   public:
     double operator()(const Traxel& from, const Traxel& to) const;
   };
 
-  class KasterDivision {
+  class PGMLINK_EXPORT KasterDivision {
   public:
   KasterDivision(double division_cost) : div_cost_(division_cost) {};
 
@@ -132,7 +135,7 @@ namespace pgmlink {
     double div_cost_;
   };
 
-  class GeometryDivision {
+  class PGMLINK_EXPORT GeometryDivision {
   public:
     double operator()(const Traxel& ancestor,
 		      const Traxel& child1,
@@ -142,7 +145,7 @@ namespace pgmlink {
   ////
   //// Cellness based mlinder-type energies
   ////
-  class CellnessDivision {
+  class PGMLINK_EXPORT CellnessDivision {
   public:
     CellnessDivision( double diffCellness = 1461, double absCellness = 190 );
     
@@ -156,7 +159,7 @@ namespace pgmlink {
     double param_abs_c;
   };
   
-  class CellnessMove {
+  class PGMLINK_EXPORT CellnessMove {
   public:
     CellnessMove( double diffCellness = 1140 );
     
@@ -168,7 +171,7 @@ namespace pgmlink {
     double param_diff_c;
   };
 
-  class CellnessDisappearance {
+  class PGMLINK_EXPORT CellnessDisappearance {
   public:
     CellnessDisappearance( double disappWeight = 1000 );
     
@@ -179,7 +182,7 @@ namespace pgmlink {
     double param_abs_c;
   };
 
-  class CellnessAppearance {
+  class PGMLINK_EXPORT CellnessAppearance {
   public:
     CellnessAppearance( double appWeight = 1000 );
 

@@ -13,11 +13,12 @@
 #include <boost/shared_ptr.hpp>
 
 #include "pgmlink/event.h"
+#include "pgmlink/pgmlink_export.h"
 #include "pgmlink/traxels.h"
 #include "pgmlink/field_of_view.h"
 
 namespace pgmlink {
-  class ChaingraphTracking {
+  class PGMLINK_EXPORT ChaingraphTracking {
   public:
     ChaingraphTracking(const std::string& random_forest_filename = "none",
 	      double appearance = 500, 

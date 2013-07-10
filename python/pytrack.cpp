@@ -56,6 +56,6 @@ void export_track() {
     class_<Event>("Event")
 	.def_readonly("type", &Event::type)
 	.def_readonly("traxel_ids", &Event::traxel_ids)
-	.def_readonly("energy", &Event::energy)
+	.add_property("energy", &Event::energy)
     ;
 }

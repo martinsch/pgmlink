@@ -15,9 +15,11 @@
 #include <boost/shared_ptr.hpp>
 #include <lemon/list_graph.h>
 #include <lemon/maps.h>
+
 #include "pgmlink/event.h"
 #include "pgmlink/graph.h"
 #include "pgmlink/log.h"
+#include "pgmlink/pgmlink_export.h"
 #include "pgmlink/traxels.h"
 
 namespace pgmlink {
@@ -90,7 +92,7 @@ namespace pgmlink {
 
 
 
-  class HypothesesGraph : public PropertyGraph<lemon::ListDigraph> {
+  class PGMLINK_EXPORT HypothesesGraph : public PropertyGraph<lemon::ListDigraph> {
   public:
     typedef property_map<node_timestep, HypothesesGraph::base_graph>::type node_timestep_map;
 
@@ -120,14 +122,14 @@ namespace pgmlink {
     std::set<node_timestep_map::Value> timesteps_;      
   };
 
-  HypothesesGraph& prune_inactive(HypothesesGraph&);
-  boost::shared_ptr<std::vector< std::vector<Event> > > events(const HypothesesGraph&);
-  boost::shared_ptr<std::vector< std::map<unsigned int, bool> > > state_of_nodes(const HypothesesGraph&);
+  PGMLINK_EXPORT HypothesesGraph& prune_inactive(HypothesesGraph&);
+  PGMLINK_EXPORT boost::shared_ptr<std::vector< std::vector<Event> > > events(const HypothesesGraph&);
+  PGMLINK_EXPORT boost::shared_ptr<std::vector< std::map<unsigned int, bool> > > state_of_nodes(const HypothesesGraph&);
 
   // lemon graph format (lgf) serialization
-  void write_lgf( const HypothesesGraph&, std::ostream& os=std::cout,
+  PGMLINK_EXPORT void write_lgf( const HypothesesGraph&, std::ostream& os=std::cout,
 		  bool with_n_traxel=false );
-  void read_lgf( HypothesesGraph&, std::istream& is=std::cin,
+  PGMLINK_EXPORT void read_lgf( HypothesesGraph&, std::istream& is=std::cin,
 		 bool with_n_traxel=false);
 
 
@@ -135,7 +137,7 @@ namespace pgmlink {
   ////
   //// HypothesesBuilder
   ////
-  class HypothesesBuilder {
+  class PGMLINK_EXPORT HypothesesBuilder {
   public:
     virtual HypothesesGraph* build() const;
 
@@ -151,7 +153,7 @@ namespace pgmlink {
   ////
   //// SingleTimestepTraxel_HypothesesBuilder
   ////
-  class SingleTimestepTraxel_HypothesesBuilder : public HypothesesBuilder {
+  class PGMLINK_EXPORT SingleTimestepTraxel_HypothesesBuilder : public HypothesesBuilder {
   public:
     struct Options {
 	Options(unsigned int mnn = 6, double dt = 50) : max_nearest_neighbors(mnn),

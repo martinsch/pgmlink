@@ -11,10 +11,12 @@
 #include <ANN/ANN.h>
 #include <boost/shared_ptr.hpp>
 
+#include "pgmlink/pgmlink_export.h"
+
 namespace pgmlink {
     class Traxel;
 
-    class NearestNeighborSearch {
+    class PGMLINK_EXPORT NearestNeighborSearch {
 	public:
 	    template <typename InputIt>
 	    NearestNeighborSearch( InputIt traxel_begin,

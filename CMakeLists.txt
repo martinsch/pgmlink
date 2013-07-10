@@ -49,16 +49,29 @@ find_package( Cplex REQUIRED )
 find_package( VIGRA REQUIRED )
 find_package( Lemon REQUIRED )
 find_package( Boost REQUIRED COMPONENTS serialization )
-# find hdf5 for OSX
-find_package( HDF5 REQUIRED COMPONENTS HL)
 message(STATUS "  found: ${Boost_LIBRARIES}")
+
+if(WIN32)
+  # FindHDF5 is broken on Windows
+  # it wrongly discovers the dlls instead of the lib files
+  # see: www.cmake.org/Bug/bug_relationship_graph.php?bug_id=14111
+  # therefore we set the variable manually
+  find_library( HDF5_IMPORT_LIB hdf5dll )
+  find_library( HDF5_HL_IMPORT_LIB hdf5_hldll )
+  set( HDF5_LIBRARIES ${HDF5_IMPORT_LIB} ${HDF5_HL_IMPORT_LIB} )
+  message(STATUS "HDF5: autodiscovery is broken on WIN32; using global search paths")
+  message(STATUS "HDF5: found ${HDF5_LIBRARIES}")
+else()
+  find_package( HDF5 REQUIRED COMPONENTS C HL)
+endif()
+
 
 include_directories(${PROJECT_SOURCE_DIR}/include/ ${ANN_INCLUDE_DIR} ${CPLEX_INCLUDE_DIRS} ${VIGRA_INCLUDE_DIR} ${LEMON_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
 
 # CPLEX switch to be compatible with STL
 ADD_DEFINITIONS(-DIL_STD)
 
-if(MSVC)
+if(WIN32)
   add_definitions(-DBOOST_ALL_DYN_LINK)
 endif()
 
@@ -73,7 +86,6 @@ message(STATUS "  Cplex: ${CPLEX_INCLUDE_DIR}")
 message(STATUS "  VIGRA: ${VIGRA_INCLUDE_DIR}")
 message(STATUS "  Lemon: ${LEMON_INCLUDE_DIR}")
 message(STATUS "  Boost: ${Boost_INCLUDE_DIRS}")
-message(STATUS "  HDF5:  ${HDF5_INCLUDE_DIRS}")
 
 # hide these variables to have a cleaner interface
 mark_as_advanced( Boost_DIR )
@@ -107,14 +119,24 @@ logging_level_to_define(LOGGING_LEVEL LOG_DEFINE)
 add_definitions(-D FILELOG_MAX_LEVEL=${LOG_DEFINE})
 
 # libpgmlink
+include( GenerateExportHeader )
+add_compiler_export_flags() # enable dynamic symbol export/import for shared libs
+
 file(GLOB LIB_SOURCES src/*.cpp)
 add_library(pgmlink SHARED ${LIB_SOURCES})
-# link with python for OSX
-target_link_libraries(pgmlink ${ANN_LIBRARIES} ${Boost_LIBRARIES}  ${CPLEX_LIBRARIES} ${VIGRA_IMPEX_LIBRARY} ${LEMON_LIBRARIES} ${HDF5_LIBRARIES})
+
+generate_export_header( pgmlink ) # generates pgmlink_export.h
+file( MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/pgmlink )
+file( RENAME ${CMAKE_CURRENT_BINARY_DIR}/pgmlink_export.h  ${CMAKE_CURRENT_BINARY_DIR}/include/pgmlink/pgmlink_export.h )
+include_directories( ${CMAKE_CURRENT_BINARY_DIR}/include )
+
+target_link_libraries(pgmlink ${ANN_LIBRARIES} ${Boost_LIBRARIES}  ${CPLEX_LIBRARIES} ${VIGRA_IMPEX_LIBRARY} ${LEMON_LIBRARIES} ${HDF5_LIBRARIES} )
 
 # Install target pgmlink
 install(TARGETS pgmlink
-        DESTINATION lib)
+	ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION lib
+        RUNTIME DESTINATION bin)
 
 # API documentation with Doxygen
 find_package(Doxygen)
