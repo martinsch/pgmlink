@@ -121,7 +121,12 @@ add_definitions(-D FILELOG_MAX_LEVEL=${LOG_DEFINE})
 
 # libpgmlink
 include( GenerateExportHeader )
-add_compiler_export_flags() # enable dynamic symbol export/import for shared libs
+## only activate symbol export on Windows
+if(NOT WIN32)
+  set(USE_COMPILER_HIDDEN_VISIBILITY OFF)
+endif()
+
+add_compiler_export_flags() # enable dynamic symbol export/import for shared libs (on Windows)
 
 file(GLOB LIB_SOURCES src/*.cpp)
 add_library(pgmlink SHARED ${LIB_SOURCES})
