@@ -89,6 +89,7 @@ message(STATUS "  Boost: ${Boost_INCLUDE_DIRS}")
 
 # hide these variables to have a cleaner interface
 mark_as_advanced( Boost_DIR )
+mark_as_advanced( HDF5_DIR ) # set by FindHDF5
 
 # build options
 
