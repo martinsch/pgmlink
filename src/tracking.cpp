@@ -558,7 +558,8 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 			with_divisions_,
 			disappearance_cost_fn,
 			appearance_cost_fn,
-			transition_parameter_
+			transition_parameter_,
+			with_constraints_
 			);
 
 	cout << "-> formulate ConservationTracking model" << endl;
@@ -576,33 +577,33 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 	cout << "-> pruning inactive hypotheses" << endl;
 	prune_inactive(*graph);
 
-        cout << "-> constructing unresolved events" << endl;
-        boost::shared_ptr<std::vector< std::vector<Event> > > ev = events(*graph);
-        
+    cout << "-> constructing unresolved events" << endl;
+    boost::shared_ptr<std::vector< std::vector<Event> > > ev = events(*graph);
 
-        if (with_merger_resolution_ && all_true(ev->begin(), ev->end(), has_data<Event>)) {
-          cout << "-> resolving mergers" << endl;
-          MergerResolver m(graph);
-          // FeatureExtractorMCOMsFromKMeans extractor;
-          FeatureExtractorMCOMsFromGMM extractor(number_of_dimensions_);
-          DistanceFromCOMs distance;
-          FeatureHandlerFromTraxels handler(extractor, distance);
-          m.resolve_mergers(handler);
-        
-          HypothesesGraph g_res;
-          resolve_graph(*graph, g_res, transition, ep_gap_, with_tracklets_);
-          prune_inactive(*graph);
 
-          cout << "-> constructing resolved events" << endl;
-          boost::shared_ptr<std::vector< std::vector<Event> > > multi_frame_moves = multi_frame_move_events(*graph);
+    if (with_merger_resolution_ && all_true(ev->begin(), ev->end(), has_data<Event>)) {
+      cout << "-> resolving mergers" << endl;
+      MergerResolver m(graph);
+      // FeatureExtractorMCOMsFromKMeans extractor;
+      FeatureExtractorMCOMsFromGMM extractor(number_of_dimensions_);
+      DistanceFromCOMs distance;
+      FeatureHandlerFromTraxels handler(extractor, distance);
+      m.resolve_mergers(handler);
 
-          cout << "-> merging unresolved and resolved events" << endl;
-          return *merge_event_vectors(*ev, *multi_frame_moves);
-        }
+      HypothesesGraph g_res;
+      resolve_graph(*graph, g_res, transition, ep_gap_, with_tracklets_);
+      prune_inactive(*graph);
 
-        else {
-          return *ev;
-        }
+      cout << "-> constructing resolved events" << endl;
+      boost::shared_ptr<std::vector< std::vector<Event> > > multi_frame_moves = multi_frame_move_events(*graph);
+
+      cout << "-> merging unresolved and resolved events" << endl;
+      return *merge_event_vectors(*ev, *multi_frame_moves);
+    }
+
+    else {
+      return *ev;
+    }
 
         
 

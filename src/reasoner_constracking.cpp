@@ -68,7 +68,9 @@ void ConservationTracking::formulate(const HypothesesGraph& hypotheses) {
     optimizer_ = new cplex_optimizer(*model, param);
 
     LOG(logDEBUG) << "ConservationTracking::formulate: add_constraints";
-    add_constraints(*graph);
+    if (with_constraints_) {
+        add_constraints(*graph);
+    }
 
     LOG(logINFO) << "number_of_transition_nodes_ = " << number_of_transition_nodes_;
     LOG(logINFO) << "number_of_appearance_nodes_ = " << number_of_appearance_nodes_;
