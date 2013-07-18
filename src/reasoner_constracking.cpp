@@ -578,7 +578,7 @@ void ConservationTracking::add_constraints(const HypothesesGraph& g) {
                     constraint_name.clear();
                     constraint_name << "outgoing: 0 <= App_i[" << nu << "] + Y_ij[" << mu << "] <= 1; ";
                     constraint_name << "g.id(n) = " << g.id(n) << ", g.id(a) = " << g.id(a);
-                    constraint_name << ++counter;
+                    constraint_name << ", cid = " << ++counter;
                     optimizer_->addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(),
                             0, 1, constraint_name.str().c_str());
                     LOG(logDEBUG3) << "ConservationTracking::add_constraints:"
@@ -621,7 +621,7 @@ void ConservationTracking::add_constraints(const HypothesesGraph& g) {
             constraint_name << "couple transitions: ";
             constraint_name << " sum(Y_ij) = D_i + App_i added for Traxel " << traxel_names << ", "
                     << "n = " << app_node_map_[n];
-            constraint_name << ++counter;
+            constraint_name << ", cid = " << ++counter;
             optimizer_->addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0, 0,
                     constraint_name.str().c_str());
             LOG(logDEBUG3) << "ConservationTracking::add_constraints:"
@@ -648,7 +648,7 @@ void ConservationTracking::add_constraints(const HypothesesGraph& g) {
             constraint_name << "couple division and detection: ";
             constraint_name << " D_i=1 => App_i =1 added for Traxel " << traxel_names << ", " << "n = "
                     << app_node_map_[n] << ", d = " << div_node_map_[n];
-            constraint_name << ++counter;
+            constraint_name << ", cid = " << ++counter;
             optimizer_->addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), -1, 0,
                     constraint_name.str().c_str());
             LOG(logDEBUG3) << "ConservationTracking::add_constraints:"
@@ -677,7 +677,7 @@ void ConservationTracking::add_constraints(const HypothesesGraph& g) {
                     constraint_name << " D_i=1 => Y_i[nu]=0 added for Traxel " << traxel_names << ", "
                             << "d = " << div_node_map_[n] << ", y = " << arc_map_[a] << ", nu = "
                             << nu;
-                    constraint_name << ++counter;
+                    constraint_name << ", cid = " << ++counter;
 
                     optimizer_->addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(),
                             0, 1, constraint_name.str().c_str());
@@ -697,7 +697,7 @@ void ConservationTracking::add_constraints(const HypothesesGraph& g) {
             constraint_name << "couple division and transitions: ";
             constraint_name  << " D_i = 1 => sum_k(Y_ik) = 2 added for Traxel " << traxel_names << ", "
                     << "d = " << div_node_map_[n];
-            constraint_name << ++counter;
+            constraint_name << ", cid = " << ++counter;
             optimizer_->addConstraint(cplex_idxs2.begin(), cplex_idxs2.end(), coeffs2.begin(),
                     -int(max_number_objects_), 0, constraint_name.str().c_str());
             LOG(logDEBUG3) << "ConservationTracking::add_constraints:"
@@ -734,7 +734,7 @@ void ConservationTracking::add_constraints(const HypothesesGraph& g) {
             constraint_name << "incoming transitions: ";
             constraint_name << " sum_k(Y_kj) = Dis_j added for Traxel " << traxel_names << ", " << "n = "
                     << dis_node_map_[n];
-            constraint_name << ++counter;
+            constraint_name << ", cid = " << ++counter;
             optimizer_->addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0, 0,
                     constraint_name.str().c_str());
             LOG(logDEBUG3) << "ConservationTracking::add_constraints:"
@@ -765,7 +765,7 @@ void ConservationTracking::add_constraints(const HypothesesGraph& g) {
                 constraint_name << "disappearance/appearance coupling: ";
                 constraint_name << " A_i[nu] = 1 => V_i[nu] = 1 v V_i[0] = 1 added for Traxel "
                         << traxel_names << ", " << "n = " << app_node_map_[n];
-                constraint_name << ++counter;
+                constraint_name << ", cid = " << ++counter;
                 optimizer_->addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), -1,
                         0, constraint_name.str().c_str());
                 LOG(logDEBUG3) << "ConservationTracking::add_constraints:"
@@ -792,7 +792,7 @@ void ConservationTracking::add_constraints(const HypothesesGraph& g) {
                 constraint_name << "disappearance/appearance coupling: ";
                 constraint_name << " V_i[nu] = 1 => A_i[nu] = 1 v A_i[0] = 1 added for Traxel "
                         << traxel_names << ", " << "n = " << app_node_map_[n];
-                constraint_name << ++counter;
+                constraint_name << ", cid = " << ++counter;
                 optimizer_->addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), -1,
                         0, constraint_name.str().c_str());
                 LOG(logDEBUG3) << "ConservationTracking::add_constraints:"
@@ -820,7 +820,7 @@ void ConservationTracking::add_constraints(const HypothesesGraph& g) {
             constraint_name.clear();
             constraint_name << "disappearance/appearance coupling: ";
             constraint_name << " A_i[0] + V_i[0] = 0 added for Traxel " << traxel_names;
-            constraint_name << ++counter;
+            constraint_name << ", cid = " << ++counter;
             optimizer_->addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0, 0,
                     constraint_name.str().c_str());
             LOG(logDEBUG3) << "ConservationTracking::add_constraints:"
@@ -838,7 +838,7 @@ void ConservationTracking::add_constraints(const HypothesesGraph& g) {
             constraint_name << "disappearance/appearance coupling: ";
             constraint_name << " V_i[0] => 1 added for Traxel " << traxel_names << ", " << "n = "
                     << dis_node_map_[n];
-            constraint_name << ++counter;
+            constraint_name << ", cid = " << ++counter;
             optimizer_->addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 1,
                     max_number_objects_, constraint_name.str().c_str());
             LOG(logDEBUG3) << "ConservationTracking::add_constraints:"
@@ -857,7 +857,7 @@ void ConservationTracking::add_constraints(const HypothesesGraph& g) {
             constraint_name << "disappearance/appearance coupling: ";
             constraint_name << " A_i[0] => 1 added for Traxel " << traxel_names << ", " << "n = "
                     << app_node_map_[n];
-            constraint_name << ++counter;
+            constraint_name << ", cid = " << ++counter;
             optimizer_->addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 1,
                     max_number_objects_, constraint_name.str().c_str());
             LOG(logDEBUG3) << "ConservationTracking::add_constraints:"
