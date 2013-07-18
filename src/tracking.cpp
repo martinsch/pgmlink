@@ -591,7 +591,7 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
       m.resolve_mergers(handler);
 
       HypothesesGraph g_res;
-      resolve_graph(*graph, g_res, transition, ep_gap_, with_tracklets_);
+      resolve_graph(*graph, g_res, transition, ep_gap_, with_tracklets_, transition_parameter_, with_constraints_);
       prune_inactive(*graph);
 
       cout << "-> constructing resolved events" << endl;
