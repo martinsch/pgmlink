@@ -517,7 +517,8 @@ namespace pgmlink {
   }
 
 
-  void resolve_graph(HypothesesGraph& src, HypothesesGraph& dest, boost::function<double(const double)> transition, double ep_gap, bool with_tracklets) {
+  void resolve_graph(HypothesesGraph& src, HypothesesGraph& dest, boost::function<double(const double)> transition, double ep_gap, bool with_tracklets, 
+         const double transition_parameter, const bool with_constraints) {
     if (!dest.has_property(node_traxel())) {
       dest.add(node_traxel());
     }
@@ -564,16 +565,18 @@ namespace pgmlink {
                              1, //max_number_objects_,
                              detection, //detection,
                              division, // division
-                             transition, // transition übergeben
+                             transition, // transition
                              0, // forbidden_cost_,
-                             ep_gap, // ep_gap_, übergeben
-                             with_tracklets, // with_tracklets_, übergeben
-                             false, // with_divisions_,
+                             ep_gap, // ep_gap_
+                             with_tracklets, // with_tracklets_
+                             false, // with_divisions_
                              disappearance_cost, // disappearance_cost_
                              appearance_cost, // appearance_cost
-                             false // with_misdetections_allowed
-//                             false, // with appearance
-//                             false // with disappearance
+                             false, // with_misdetections_allowed
+                             false, // with appearance
+                             false, // with disappearance
+                             transition_parameter,
+                             with_constraints
                              );
 
     /*
