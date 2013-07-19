@@ -576,6 +576,10 @@ void ConservationTracking::add_constraints(const HypothesesGraph& g) {
 
     LOG(logDEBUG) << "ConservationTracking::add_constraints: transitions";
     for (HypothesesGraph::NodeIt n(g); n != lemon::INVALID; ++n) {
+    	if (!with_misdetections_allowed_) { // in case of merger_resolving
+    		//TODO: remove
+    		assert(tracklet_map[n].size()==1 && "in merger resolving, tracklets must all have length 1!");
+    	}
         std::stringstream traxel_names_ss;
         for (std::vector<Traxel>::const_iterator trax_it = tracklet_map[n].begin();
                 trax_it != tracklet_map[n].end(); ++trax_it) {
