@@ -1044,7 +1044,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Merger3 ) {
 	std::cout << "Initialize Conservation tracking" << std::endl;
 	std::cout << std::endl;
 
-   FieldOfView fov(0, 0, 0, 0, 4, 1000, 1000, 1); // tlow, xlow, ylow, zlow, tup, xup, yup, zup
+    FieldOfView fov(0, 0, 0, 0, 4, 1000, 1000, 1); // tlow, xlow, ylow, zlow, tup, xup, yup, zup
 
 	ConsTracking tracking = ConsTracking(
 			  2, // max_number_objects
@@ -1065,7 +1065,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Merger3 ) {
 			  2, //n_dim
 			  5, //transition_parameter
 			  0, //border_width for app/disapp costs
-           fov
+              fov
 	  	      );
 
 	std::cout << "Run Conservation tracking" << std::endl;
