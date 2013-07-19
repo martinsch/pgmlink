@@ -579,7 +579,7 @@ void ConservationTracking::add_constraints(const HypothesesGraph& g) {
         std::stringstream traxel_names_ss;
         for (std::vector<Traxel>::const_iterator trax_it = tracklet_map[n].begin();
                 trax_it != tracklet_map[n].end(); ++trax_it) {
-            traxel_names_ss << trax_it->Id << " ";
+            traxel_names_ss << trax_it->Id << "." << trax_it->Timestep << " ";
         }
         std::string traxel_names = traxel_names_ss.str();
 
