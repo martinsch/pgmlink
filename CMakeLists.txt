@@ -135,9 +135,17 @@ endif()
 file(GLOB LIB_SOURCES src/*.cpp)
 add_library(pgmlink SHARED ${LIB_SOURCES})
 
-generate_export_header( pgmlink ) # generates pgmlink_export.h
 file( MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/pgmlink )
-file( RENAME ${CMAKE_CURRENT_BINARY_DIR}/pgmlink_export.h  ${CMAKE_CURRENT_BINARY_DIR}/include/pgmlink/pgmlink_export.h )
+if(WIN32)
+  generate_export_header( pgmlink ) # generates pgmlink_export.h
+  file( RENAME ${CMAKE_CURRENT_BINARY_DIR}/pgmlink_export.h  ${CMAKE_CURRENT_BINARY_DIR}/include/pgmlink/pgmlink_export.h )
+else(WIN32)
+  configure_file(${CMAKE_SOURCE_DIR}/include/pgmlink/pgmlink_export.h.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/include/pgmlink/pgmlink_export.h
+    COPYONLY)
+endif(WIN32)
+
+
 include_directories( ${CMAKE_CURRENT_BINARY_DIR}/include )
 
 target_link_libraries(pgmlink ${ANN_LIBRARIES} ${Boost_LIBRARIES}  ${CPLEX_LIBRARIES} ${VIGRA_IMPEX_LIBRARY} ${LEMON_LIBRARIES} ${HDF5_LIBRARIES} )

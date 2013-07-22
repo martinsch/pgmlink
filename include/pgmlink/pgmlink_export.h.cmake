@@ -1,0 +1,7 @@
+#ifndef PGMLINK_EXPORT_H
+#define PGMLINK_EXPORT_H
+
+#define PGMLINK_EXPORT
+#define PGMLINK_NO_EXPORT
+
+#endif PGMLINK_EXPORT_H
