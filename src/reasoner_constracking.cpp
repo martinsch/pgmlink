@@ -400,14 +400,17 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
 
         if (app_node_map_.count(n) > 0) {
             vi.push_back(app_node_map_[n]);
-            if (node_begin_time == g.earliest_timestep()) {
+            if (node_begin_time <= g.earliest_timestep()) {  // "<" holds if there are only tracklets in the first frame
                 // pay no appearance costs in the first timestep
                 cost.push_back(0.);
+                LOG(logDEBUG4) << "Costs 1: 0, n = " << g.id(n);
             } else {
                 if (with_tracklets_) {
                     cost.push_back(appearance_cost_(tracklet_map[n].front()));
+                    LOG(logDEBUG4) << "Costs 2: " << appearance_cost_(tracklet_map[n].front()) << ", n = " << tracklet_map[n].front().Id;
                 } else {
                     cost.push_back(appearance_cost_(traxel_map[n]));
+                    LOG(logDEBUG4) << "Costs 3: " << appearance_cost_(traxel_map[n]) << ", n = " << traxel_map[n].Id;
                 }
             }
             ++num_vars;
@@ -418,26 +421,34 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
             if (singleNodeTrack) {
                 // single node tracks only have a disappearance node but not an appearance node
                 // also consider tracklets here which can reach over multiple time steps
-                if (node_end_time != g.latest_timestep()) {
+                if (node_end_time < g.latest_timestep()) { // "<" holds if there are only tracklets in the last frame
                     if (with_tracklets_) {
                         c += disappearance_cost_(tracklet_map[n].back());
+                        LOG(logDEBUG4) << "Costs 4: " << disappearance_cost_(tracklet_map[n].back()) << ", n = " <<  tracklet_map[n].front().Id;
                     } else {
                         c += disappearance_cost_(traxel_map[n]);
+                        LOG(logDEBUG4) << "Costs 5: " << disappearance_cost_(traxel_map[n]) << ", n = " <<traxel_map[n].Id;
                     }
                 }
-                if (node_begin_time != g.earliest_timestep()) {
+                if (node_begin_time > g.earliest_timestep()) {
                     // single node tracks do not have an appearance node, hence handle appearance here
                     if (with_tracklets_) {
                         c += appearance_cost_(tracklet_map[n].front());
+                        LOG(logDEBUG4) << "Costs 6: " << appearance_cost_(tracklet_map[n].front()) << ", n = " << tracklet_map[n].front().Id;
                     } else {
                         c += appearance_cost_(traxel_map[n]);
+                        LOG(logDEBUG4) << "Costs 7: " << appearance_cost_(traxel_map[n]) << ", n = " << traxel_map[n].Id;
                     }
                 }
-            } else if (node_end_time != g.latest_timestep()) {
+            } else if (node_end_time < g.latest_timestep()) { // "<" holds if there are only tracklets in the last frame
                 if (with_tracklets_) {
                     c += disappearance_cost_(tracklet_map[n].back());
+                    LOG(logDEBUG4) << "Costs 8: " <<  disappearance_cost_(tracklet_map[n].back()) << ", n = " << tracklet_map[n].front().Id;
+                    LOG(logDEBUG4) << "node_end_time = " << node_end_time;
+                    LOG(logDEBUG4) << "g.latest_timestep()= " << g.latest_timestep();
                 } else {
                     c += disappearance_cost_(traxel_map[n]);
+                    LOG(logDEBUG4) << "Costs 9: " <<   disappearance_cost_(traxel_map[n]) << ", n = " << traxel_map[n].Id;
                 }
             }
             cost.push_back(c);
@@ -576,10 +587,10 @@ void ConservationTracking::add_constraints(const HypothesesGraph& g) {
 
     LOG(logDEBUG) << "ConservationTracking::add_constraints: transitions";
     for (HypothesesGraph::NodeIt n(g); n != lemon::INVALID; ++n) {
-    	if (!with_misdetections_allowed_) { // in case of merger_resolving
-    		//TODO: remove
-    		assert(tracklet_map[n].size()==1 && "in merger resolving, tracklets must all have length 1!");
-    	}
+//    	if (!with_misdetections_allowed_) { // in case of merger_resolving
+//    		//TODO: remove
+//    		assert(tracklet_map[n].size()==1 && "in merger resolving, tracklets must all have length 1!");
+//    	}
         std::stringstream traxel_names_ss;
         for (std::vector<Traxel>::const_iterator trax_it = tracklet_map[n].begin();
                 trax_it != tracklet_map[n].end(); ++trax_it) {
