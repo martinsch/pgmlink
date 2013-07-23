@@ -535,35 +535,58 @@ namespace pgmlink {
                                     std::map<HypothesesGraph::Node, HypothesesGraph::Node>& ncr,
                                     std::map<HypothesesGraph::Arc, HypothesesGraph::Arc>& acr
                                     ) {
+	 LOG(logDEBUG) << "copy_hypotheses_graph_subset(): entered";
     typedef typename property_map<NodePropertyTag, HypothesesGraph::base_graph>::type NodeFilter;
     typedef typename property_map<ArcPropertyTag, HypothesesGraph::base_graph>::type ArcFilter;
     property_map<node_timestep, HypothesesGraph::base_graph>::type& time_map = src.get(node_timestep());
     NodeFilter& node_filter_map = src.get(NodePropertyTag());
     ArcFilter& arc_filter_map = src.get(ArcPropertyTag());
 
+    LOG(logDEBUG3) << "copy_hypotheses_graph_subset(): looping through nodes";
     for (typename NodeFilter::TrueIt nodeIt(node_filter_map); nodeIt != lemon::INVALID; ++nodeIt) {
       HypothesesGraph::Node node = dest.add_node(time_map[nodeIt]);
       nr[nodeIt] = node;
       ncr[node] = nodeIt;
     }
 
+    LOG(logDEBUG3) << "copy_hypotheses_graph_subset(): looping through arcs";
+    property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = src.get(node_traxel());
+    LOG(logDEBUG3) << "trueNum = " << arc_filter_map.trueNum() << ", falseNum = " << arc_filter_map.falseNum();
+    for (HypothesesGraph::ArcIt arcIt(src); arcIt != lemon::INVALID; ++arcIt) {
+    	LOG(logDEBUG3) << "arc (" << traxel_map[src.source(arcIt)].Id << "," << traxel_map[src.target(arcIt)].Id << ")";
+    	LOG(logDEBUG3) << " = " << arc_filter_map[arcIt];
+    }
+
     for (typename ArcFilter::TrueIt arcIt(arc_filter_map); arcIt != lemon::INVALID; ++arcIt) {
+    	LOG(logDEBUG4) << "1";
       HypothesesGraph::Node from = src.source(arcIt);
+      LOG(logDEBUG4) << "2";
       HypothesesGraph::Node to = src.target(arcIt);
+      LOG(logDEBUG4) << "3";
       if (nr.count(from) == 0) {
+    	  LOG(logDEBUG4) << "4";
         HypothesesGraph::Node node = dest.add_node(time_map[from]);
+        LOG(logDEBUG4) << "5";
         nr[from] = node;
+        LOG(logDEBUG4) << "6";
         ncr[node] = from;
       }
+      LOG(logDEBUG4) << "7";
       if (nr.count(to) == 0) {
+    	  LOG(logDEBUG4) << "8";
         HypothesesGraph::Node node = dest.add_node(time_map[to]);
+        LOG(logDEBUG4) << "9";
         nr[to] = node;
+        LOG(logDEBUG4) << "10";
         ncr[node] = to;
       }
       HypothesesGraph::Arc arc = dest.addArc(nr[from], nr[to]);
+      LOG(logDEBUG4) << "11";
       ar[arcIt] = arc;
+      LOG(logDEBUG4) << "12";
       acr[arc] = arcIt;
     }
+    LOG(logDEBUG) << "copy_hypotheses_graph_subset(): done";
   }
 
   

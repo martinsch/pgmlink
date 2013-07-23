@@ -558,6 +558,9 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 			with_divisions_,
 			disappearance_cost_fn,
 			appearance_cost_fn,
+			true, // with_misdetections_allowed
+			true, // with_appearance
+			true, // with_disappearance
 			transition_parameter_,
 			with_constraints_
 			);
