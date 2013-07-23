@@ -118,13 +118,20 @@ namespace pgmlink {
 		}
       }
 
+      property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g.get(node_traxel());
       // prune inactive nodes
       for(vector<HypothesesGraph::Node>::const_iterator it = nodes_to_prune.begin(); it!= nodes_to_prune.end(); ++it) {
-	LOG(logDEBUG3) << "prune_inactive: pruned node: " << g.id(*it);
+	LOG(logDEBUG3) << "prune_inactive: prune node: " << g.id(*it) << ", Traxel = " << traxel_map[*it];
+	for(HypothesesGraph::OutArcIt arcit(g,*it); arcit != lemon::INVALID; ++arcit) {
+		assert(active_arcs[arcit] == false && "arc may not be active");
+	}
+	for(HypothesesGraph::InArcIt arcit(g,*it); arcit != lemon::INVALID; ++arcit) {
+			assert(active_arcs[arcit] == false && "arc may not be active");
+		}
 	g.erase(*it);
 	assert(!g.valid(*it));
       } 
-
+     LOG (logDEBUG) << "prune_inactive(): done";
       return g;
   }
 

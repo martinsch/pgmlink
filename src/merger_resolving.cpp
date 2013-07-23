@@ -235,6 +235,8 @@ namespace pgmlink {
     property_map<arc_active, HypothesesGraph::base_graph>::type& arc_active_map = g.get(arc_active());
     property_map<arc_resolution_candidate, HypothesesGraph::base_graph>::type& arc_resolution_map = g.get(arc_resolution_candidate());
 
+    property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g.get(node_traxel());
+
     std::vector<int> arc_ids;
     // add incoming arcs
     for (it = sources.begin(); it != sources.end(); ++it) {
@@ -245,7 +247,8 @@ namespace pgmlink {
       arc_distances.set(arc, dist);
       arc_active_map.set(arc, true);
       arc_resolution_map.set(arc, true);
-      // LOG?
+      LOG(logDEBUG4) << "FeatureHandlerBase::add_arcs_for_replacement_node: add incoming arc (" << traxel_map[g.source(arc)].Id <<
+			  "," << traxel_map[g.target(arc)].Id << ") = " << arc_resolution_map[arc] << " and active = " << arc_active_map[arc];
     }
 //    for(it = sources.begin(); it != sources.end(); ++it) {
 //    	HypothesesGraph::Node from = g.source(*it);
@@ -264,7 +267,8 @@ namespace pgmlink {
       arc_active_map.set(arc, true);
       arc_resolution_map.set(arc, true);
       arc_ids.push_back(g.id(arc));
-      // LOG?
+      LOG(logDEBUG4) << "FeatureHandlerBase::add_arcs_for_replacement_node: add outgoing arc (" << traxel_map[g.source(arc)].Id <<
+    		  "," << traxel_map[g.target(arc)].Id << ") = " << arc_resolution_map[arc] << " and active = " << arc_active_map[arc];
     }
     LOG(logDEBUG) << "FeatureHandlerBase::add_arcs_for_replacement_node: checking states of arcs";
 //    arc_active_map = g.get(arc_active());
@@ -343,67 +347,91 @@ namespace pgmlink {
   }
 
 
-  ////
-  //// MergerResolver
-  ////
-  void MergerResolver::add_arcs_for_replacement_node(HypothesesGraph::Node node,
-						     Traxel trax,
-						     std::vector<HypothesesGraph::base_graph::Arc> src,
-						     std::vector<HypothesesGraph::base_graph::Arc> dest,
-						     DistanceBase& distance) {
-    // add Arcs for new node that is a replacement node for merger node
-    // get the property_maps needed for adding Arcs
-    std::vector<HypothesesGraph::base_graph::Arc>::iterator it;
-    property_map<arc_distance, HypothesesGraph::base_graph>::type& arc_distances = g_->get(arc_distance());
-    property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g_->get(node_traxel());
-    property_map<arc_active, HypothesesGraph::base_graph>::type& arc_active_map = g_->get(arc_active());
-
-    // std::vector<int> arc_ids;
-    // add incoming arcs
-    for(it = src.begin(); it != src.end(); ++it) {
-      HypothesesGraph::Node from = g_->source(*it);
-      Traxel from_tr = traxel_map[from];
-      double dist = distance(from_tr, trax);
-      HypothesesGraph::Arc arc = g_->addArc(from, node);
-      // add distance and activate arcs
-      arc_distances.set(arc, dist);
-      arc_active_map.set(arc, true);
-      // arc_ids.push_back(g_->id(arc));
-      LOG(logDEBUG3) << "MergerResolver::add_arcs_for_replacement_node(): added incoming arc: (" << from_tr.Id << "," << trax.Id << "), dist=" << dist << ", state=" << arc_active_map[arc];
-    }
-
-    // add outgoing arcs
-    for(it = dest.begin(); it != dest.end(); ++it) {
-      HypothesesGraph::Node to = g_->target(*it);
-      Traxel to_tr = traxel_map[to];
-      double dist = distance(trax, to_tr);
-      HypothesesGraph::Arc arc = g_->addArc(node, to);
-      // add distance and activate arcs
-      arc_distances.set(arc, dist);
-      arc_active_map.set(arc, true);
-      // arc_ids.push_back(g_->id(arc));
-      LOG(logDEBUG3) << "MergerResolver::add_arcs_for_replacement_node(): added outgoing arc " << g_->id(arc)  << " (" << trax.Id << "," << to_tr.Id << "), dist=" << dist << ", state=" << arc_active_map[arc];
-    }
-
-    // LOG(logDEBUG1) << "MergerResolver::add_arcs_for_replacement_node: checking states of arcs";
-    /* for(std::vector<int>::const_iterator arc_it = arc_ids.begin(); arc_it != arc_ids.end(); ++it) {
-      HypothesesGraph::Arc arc = g_->arcFromId(*arc_it);
-      assert(arc_active_map[arc]);
-      } */
-  }
+//  ////
+//  //// MergerResolver
+//  ////
+//  void MergerResolver::add_arcs_for_replacement_node(HypothesesGraph::Node node,
+//						     Traxel trax,
+//						     std::vector<HypothesesGraph::base_graph::Arc> src,
+//						     std::vector<HypothesesGraph::base_graph::Arc> dest,
+//						     DistanceBase& distance) {
+//    // add Arcs for new node that is a replacement node for merger node
+//    // get the property_maps needed for adding Arcs
+//    std::vector<HypothesesGraph::base_graph::Arc>::iterator it;
+//    property_map<arc_distance, HypothesesGraph::base_graph>::type& arc_distances = g_->get(arc_distance());
+//    property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g_->get(node_traxel());
+//    property_map<arc_active, HypothesesGraph::base_graph>::type& arc_active_map = g_->get(arc_active());
+//
+//    // std::vector<int> arc_ids;
+//    // add incoming arcs
+//    for(it = src.begin(); it != src.end(); ++it) {
+//      HypothesesGraph::Node from = g_->source(*it);
+//      Traxel from_tr = traxel_map[from];
+//      double dist = distance(from_tr, trax);
+//      HypothesesGraph::Arc arc = g_->addArc(from, node);
+//      // add distance and activate arcs
+//      arc_distances.set(arc, dist);
+//      arc_active_map.set(arc, true);
+//      // arc_ids.push_back(g_->id(arc));
+//      LOG(logDEBUG3) << "MergerResolver::add_arcs_for_replacement_node(): added incoming arc: (" << from_tr.Id << "," << trax.Id << "), dist=" << dist << ", state=" << arc_active_map[arc];
+//    }
+//
+//    // add outgoing arcs
+//    for(it = dest.begin(); it != dest.end(); ++it) {
+//      HypothesesGraph::Node to = g_->target(*it);
+//      Traxel to_tr = traxel_map[to];
+//      double dist = distance(trax, to_tr);
+//      HypothesesGraph::Arc arc = g_->addArc(node, to);
+//      // add distance and activate arcs
+//      arc_distances.set(arc, dist);
+//      arc_active_map.set(arc, true);
+//      // arc_ids.push_back(g_->id(arc));
+//      LOG(logDEBUG3) << "MergerResolver::add_arcs_for_replacement_node(): added outgoing arc " << g_->id(arc)  << " (" << trax.Id << "," << to_tr.Id << "), dist=" << dist << ", state=" << arc_active_map[arc];
+//    }
+//
+//    // LOG(logDEBUG1) << "MergerResolver::add_arcs_for_replacement_node: checking states of arcs";
+//    /* for(std::vector<int>::const_iterator arc_it = arc_ids.begin(); arc_it != arc_ids.end(); ++it) {
+//      HypothesesGraph::Arc arc = g_->arcFromId(*arc_it);
+//      assert(arc_active_map[arc]);
+//      } */
+//  }
 
   void MergerResolver::deactivate_arcs(std::vector<HypothesesGraph::base_graph::Arc> arcs) {
     // deactivate Arcs provided by arcs
     // useful to deactivate Arcs of merger Node
-    std::vector<HypothesesGraph::base_graph::Arc>::iterator it = arcs.begin();
+
     property_map<arc_active, HypothesesGraph::base_graph>::type& arc_active_map = g_->get(arc_active());
-    for (; it != arcs.end(); ++it) {
+    for (std::vector<HypothesesGraph::base_graph::Arc>::iterator it = arcs.begin(); it != arcs.end(); ++it) {
       //      if (!g_->valid(g_->source(*it)) || !g_->valid(g_->target(*it))) {
       LOG(logDEBUG3) << "MergerResolver::deactivate_arcs(): setting arc " << g_->id(*it)  << " (" << g_->get(node_traxel())[g_->source((*it))].Id << "," << g_->get(node_traxel())[g_->target((*it))].Id << ") property arc_active to false";
 	arc_active_map.set(*it, false);
 	//      }
-        g_->erase(*it);
+
     }
+    LOG(logDEBUG3) << "deactivate_arcs(): looping through arcs before erase";
+	property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g_->get(node_traxel());
+	property_map<arc_resolution_candidate, HypothesesGraph::base_graph>::type& arc_filter_map = g_->get(arc_resolution_candidate());
+	LOG(logDEBUG3) << "trueNum = " << arc_filter_map.trueNum() << ", falseNum = " << arc_filter_map.falseNum();
+	for (HypothesesGraph::ArcIt arcIt(*g_); arcIt != lemon::INVALID; ++arcIt) {
+		LOG(logDEBUG3) << "arc (" << traxel_map[g_->source(arcIt)].Id << "," << traxel_map[g_->target(arcIt)].Id << ")";
+		LOG(logDEBUG3) << " = " << arc_filter_map[arcIt];
+	}
+    std::sort(arcs.begin(), arcs.end());
+    std::reverse(arcs.begin(), arcs.end());
+    for (std::vector<HypothesesGraph::base_graph::Arc>::iterator it = arcs.begin(); it != arcs.end(); ++it) {
+    	g_->erase(*it);
+    }
+    LOG(logDEBUG3) << "deactivate_arcs(): looping through arcs";
+
+	LOG(logDEBUG3) << "trueNum = " << arc_filter_map.trueNum() << ", falseNum = " << arc_filter_map.falseNum();
+	for (HypothesesGraph::ArcIt arcIt(*g_); arcIt != lemon::INVALID; ++arcIt) {
+		LOG(logDEBUG3) << "arc (" << traxel_map[g_->source(arcIt)].Id << "," << traxel_map[g_->target(arcIt)].Id << ")";
+		LOG(logDEBUG3) << " = " << arc_filter_map[arcIt];
+	}
+//	for (HypothesesGraph::ArcIt arcIt(*g_); arcIt != lemon::INVALID; ++arcIt) {
+//		LOG(logINFO) << "FIXME: setting all arc filter map entries to true";
+//		arc_filter_map.set(*it, true);
+//	}
   }
 
   void MergerResolver::deactivate_nodes(std::vector<HypothesesGraph::Node> nodes) {
@@ -452,6 +480,15 @@ namespace pgmlink {
     collect_arcs(HypothesesGraph::base_graph::InArcIt(*g_, node), sources);
     collect_arcs(HypothesesGraph::base_graph::OutArcIt(*g_, node), targets);
 
+    property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g_->get(node_traxel());
+    for(std::vector<HypothesesGraph::base_graph::Arc>::const_iterator arc = sources.begin(); arc!=sources.end(); ++arc) {
+    	LOG(logDEBUG4) <<  " MergerResolver::refine_node: sources arc (" << traxel_map[g_->source(*arc)]<<
+      		  "," << traxel_map[g_->target(*arc)] << ")";
+    }
+    for(std::vector<HypothesesGraph::base_graph::Arc>::const_iterator arc = targets.begin(); arc!=targets.end(); ++arc) {
+		LOG(logDEBUG4) <<  " MergerResolver::refine_node: targets arc (" << traxel_map[g_->source(*arc)]<<
+			  "," << traxel_map[g_->target(*arc)] << ")";
+	}
     // instead of calling everything with traxels:
     // write functor for extracting and setting features:
     // FeatureHandlerBase ft_handler_(*g, node, nMerger, max_id, sources, targets, vector<unsigned int>& new_ids);
@@ -512,13 +549,30 @@ namespace pgmlink {
     }
     // maybe keep merger nodes active for event extraction
     deactivate_nodes(nodes_to_deactivate);
+    LOG(logDEBUG3) << "resolve_mergers() 1: looping through arcs";
+	property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g_->get(node_traxel());
+	property_map<arc_resolution_candidate, HypothesesGraph::base_graph>::type& arc_filter_map = g_->get(arc_resolution_candidate());
+	LOG(logDEBUG3) << "trueNum = " << arc_filter_map.trueNum() << ", falseNum = " << arc_filter_map.falseNum();
+	for (HypothesesGraph::ArcIt arcIt(*g_); arcIt != lemon::INVALID; ++arcIt) {
+		LOG(logDEBUG3) << "arc (" << traxel_map[g_->source(arcIt)].Id << "," << traxel_map[g_->target(arcIt)].Id << ")";
+		LOG(logDEBUG3) << " = " << arc_filter_map[arcIt];
+	}
     prune_inactive(*g_);
+    LOG(logDEBUG3) << "resolve_mergers() 2: looping through arcs";
+
+	LOG(logDEBUG3) << "trueNum = " << arc_filter_map.trueNum() << ", falseNum = " << arc_filter_map.falseNum();
+	for (HypothesesGraph::ArcIt arcIt(*g_); arcIt != lemon::INVALID; ++arcIt) {
+		LOG(logDEBUG3) << "arc (" << traxel_map[g_->source(arcIt)].Id << "," << traxel_map[g_->target(arcIt)].Id << ")";
+		LOG(logDEBUG3) << " = " << arc_filter_map[arcIt];
+	}
+    LOG(logDEBUG) << "resolve_mergers() done";
     return g_;
   }
 
 
   void resolve_graph(HypothesesGraph& src, HypothesesGraph& dest, boost::function<double(const double)> transition, double ep_gap, bool with_tracklets, 
          const double transition_parameter, const bool with_constraints) {
+	  LOG(logDEBUG) << "resolve_graph() entered";
     if (!dest.has_property(node_traxel())) {
       dest.add(node_traxel());
     }
@@ -560,6 +614,7 @@ namespace pgmlink {
     boost::function<double(const Traxel&)> appearance_cost = ConstantFeature(0.0);
     boost::function<double(const Traxel&)> disappearance_cost = ConstantFeature(0.0);
 
+    LOG(logDEBUG) << "resolve_graph(): calling conservation tracking";
 
     ConservationTracking pgm(
                              1, //max_number_objects_,
@@ -578,6 +633,7 @@ namespace pgmlink {
                              transition_parameter,
                              with_constraints
                              );
+
 
     /*
       false, //with_appearance_,

@@ -1096,49 +1096,192 @@ using namespace boost;
 //	BOOST_CHECK_GE(num_events, 3);
 //}
 
-namespace{
-void constructTraxel(Traxel& n, size_t id, size_t timestep, double pDiv, std::vector<int> center,
-		std::vector<int> shift, std::vector<double> pDet) {
-	feature_array com(feature_array::difference_type(3));
-	feature_array com_corrected(feature_array::difference_type(3));
-	feature_array divProb(feature_array::difference_type(1));
-	feature_array detProb(feature_array::difference_type(pDet.size()));
-	feature_array count(feature_array::difference_type(1));
-	feature_array coordinates(feature_array::difference_type(2*3));
-	n.Id = id; n.Timestep = timestep;
-	divProb[0] = pDiv;
-	for(size_t i = 0; i<com.size(); ++i) {
-		com[i] = center[i];
-		com_corrected[i] = center[i] + shift[i];
-	}
-	for(size_t i = 0; i<pDet.size(); ++i) {
-		detProb[i] = pDet[i];
-	}
-	n.features["com"] = com;
-	n.features["divProb"] = divProb;
-	n.features["detProb"] = detProb;
-	n.features["com_corrected"] = com_corrected;
-	coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
-	coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
-	n.features["coordinates"] = coordinates;
-}
+//namespace{
+//void constructTraxel(Traxel& n, size_t id, size_t timestep, double pDiv, std::vector<int> center,
+//		std::vector<int> shift, std::vector<double> pDet) {
+//	feature_array com(feature_array::difference_type(3));
+//	feature_array com_corrected(feature_array::difference_type(3));
+//	feature_array divProb(feature_array::difference_type(1));
+//	feature_array detProb(feature_array::difference_type(pDet.size()));
+//	feature_array count(feature_array::difference_type(1));
+//	feature_array coordinates(feature_array::difference_type(2*3));
+//	n.Id = id; n.Timestep = timestep;
+//	divProb[0] = pDiv;
+//	for(size_t i = 0; i<com.size(); ++i) {
+//		com[i] = center[i];
+//		com_corrected[i] = center[i] + shift[i];
+//	}
+//	for(size_t i = 0; i<pDet.size(); ++i) {
+//		detProb[i] = pDet[i];
+//	}
+//	n.features["com"] = com;
+//	n.features["divProb"] = divProb;
+//	n.features["detProb"] = detProb;
+//	n.features["com_corrected"] = com_corrected;
+//	coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
+//	coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
+//	n.features["coordinates"] = coordinates;
+//}
+//
+//template <class T>
+//void pushBackMultiple(std::vector<T>& vec, const T v1, const T v2) {
+//	vec.push_back(v1);
+//	vec.push_back(v2);
+//}
+//
+//template <class T>
+//void pushBackMultiple(std::vector<T>& vec, const T v1, const T v2, const T v3) {
+//	vec.push_back(v1);
+//	vec.push_back(v2);
+//	vec.push_back(v3);
+//}
+//
+//}
+//
+//BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_TranslationVector ) {
+//
+//	std::cout << "Constructing HypothesesGraph" << std::endl;
+//	std::cout << std::endl;
+//
+//	typedef HypothesesGraph::ArcIt ArcIt2;
+//	typedef HypothesesGraph::Arc Arc;
+//	typedef HypothesesGraph::NodeIt NodeIt;
+//	typedef HypothesesGraph::Node Node;
+//	using lemon::INVALID;
+//
+//	std::cout << "Adding Traxels to TraxelStore" << std::endl;
+//	std::cout << std::endl;
+//
+//	//  t=1      2       3
+//	//  1 -------1 ----- 1
+//	//    |
+//	//     ----- 1 ----- 1
+//	//    |
+//	//  1<
+//	//    |
+//	//	   ------1 ----- 1
+//	TraxelStore ts;
+//	Traxel n11, n12, n21, n22, n23, n31, n32, n33;
+//	std::vector<int> center;
+//	std::vector<int> shift;
+//	std::vector<double> pDet;
+//
+//	center.clear(); shift.clear(); pDet.clear();
+//	pushBackMultiple(center, 100, 100, 0);
+//	pushBackMultiple(shift, 0,0,0);
+//	pushBackMultiple(pDet, 0.,1.);
+//	constructTraxel(n11,11,1,0.00,center,shift,pDet);
+//	add(ts,n11);
+//
+//	center.clear(); shift.clear(); pDet.clear();
+//	pushBackMultiple(center, 200, 200, 0);
+//	pushBackMultiple(shift, 0,0,0);
+//	pushBackMultiple(pDet, 0.,1.);
+//	constructTraxel(n12,12,1,0.00,center,shift,pDet);
+//	add(ts,n12);
+//
+//	center.clear(); shift.clear(); pDet.clear();
+//	pushBackMultiple(center, 100, 100, 0);
+//	pushBackMultiple(shift, -100,-100,0);
+//	pushBackMultiple(pDet, 0.5,0.5);
+//	constructTraxel(n21,21,2,0.00,center,shift,pDet);
+//	add(ts,n21);
+//
+//	center.clear(); shift.clear(); pDet.clear();
+//	pushBackMultiple(center, 200, 200, 0);
+//	pushBackMultiple(shift, -100,-100,0);
+//	pushBackMultiple(pDet, 0.5,0.5);
+//	constructTraxel(n22,22,2,0.00,center,shift,pDet);
+//	add(ts,n22);
+//
+//	center.clear(); shift.clear(); pDet.clear();
+//	pushBackMultiple(center, 300, 300, 0);
+//	pushBackMultiple(shift, -100,-100,0);
+//	pushBackMultiple(pDet, 0.5,0.5);
+//	constructTraxel(n23,23,2,0.00,center,shift,pDet);
+//	add(ts,n23);
+//
+//	center.clear(); shift.clear(); pDet.clear();
+//	pushBackMultiple(center, 100, 100, 0);
+//	pushBackMultiple(shift, 0,0,0);
+//	pushBackMultiple(pDet, 0.,1.);
+//	constructTraxel(n31,31,3,0.00,center,shift,pDet);
+//	add(ts,n31);
+//
+//	center.clear(); shift.clear(); pDet.clear();
+//	pushBackMultiple(center, 200, 200, 0);
+//	pushBackMultiple(shift, 0,0,0);
+//	pushBackMultiple(pDet, 0.,1.);
+//	constructTraxel(n32,32,3,0.00,center,shift,pDet);
+//	add(ts,n32);
+//
+//	center.clear(); shift.clear(); pDet.clear();
+//	pushBackMultiple(center, 300, 300, 0);
+//	pushBackMultiple(shift, 0,0,0);
+//	pushBackMultiple(pDet, 0.,1.);
+//	constructTraxel(n33,33,3,0.00,center,shift,pDet);
+//	add(ts,n33);
+//
+//
+//	std::cout << "Initialize Conservation tracking" << std::endl;
+//	std::cout << std::endl;
+//
+//    FieldOfView fov(0, 0, 0, 0, 3, 1000, 1000, 1); // tlow, xlow, ylow, zlow, tup, xup, yup, zup
+//
+//	ConsTracking tracking = ConsTracking(
+//			  1, // max_number_objects
+//		      301, // max_neighbor_distance
+//			  0.5, // division_threshold
+//			  "none", // random_forest_filename
+//	  	      false, // detection_by_volume
+//	  	      0, // forbidden_cost
+//	  	      0.05, // ep_gap
+//	  	      double(1.1), // avg_obj_size
+//			  true, // with_tracklets
+//			  10.0, //division_weight
+//			  10.0, //transition_weight
+//			  false, //with_divisions
+//			  1500., // disappearance_cost,
+//			  1500., // appearance_cost
+//			  true, //with_merger_resolution
+//			  2, //n_dim
+//			  5, //transition_parameter
+//			  0, //border_width for app/disapp costs
+//              fov
+//	  	      );
+//
+//	// TODO: Do tracklets work with com_corrected???????
+//
+//	std::cout << "Run Conservation tracking" << std::endl;
+//	std::cout << std::endl;
+//	std::vector< std::vector<Event> > events = tracking(ts);
+//
+////	size_t t = 1;
+////	size_t apps = 0;
+////	size_t disapps = 0;
+////	size_t num_events = 0;
+////	for (std::vector< std::vector<Event> >::const_iterator it_t = events.begin(); it_t != events.end(); ++it_t) {
+////		for (std::vector<Event>::const_iterator it = (*it_t).begin(); it!=(*it_t).end(); ++it) {
+////			Event e = *it;
+////			if (e.type == Event::Appearance) {
+////				++apps;
+////			}
+////			if (e.type == Event::Disappearance) {
+////				++disapps;
+////			}
+////			cout << e << endl;
+////			++num_events;
+////		}
+////		++t;
+////	}
+////
+////	BOOST_CHECK_EQUAL(apps, 0);
+////	BOOST_CHECK_EQUAL(disapps, 0);
+////	BOOST_CHECK_GE(num_events, 3);
+//}
 
-template <class T>
-void pushBackMultiple(std::vector<T>& vec, const T v1, const T v2) {
-	vec.push_back(v1);
-	vec.push_back(v2);
-}
 
-template <class T>
-void pushBackMultiple(std::vector<T>& vec, const T v1, const T v2, const T v3) {
-	vec.push_back(v1);
-	vec.push_back(v2);
-	vec.push_back(v3);
-}
-
-}
-
-BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_TranslationVector ) {
+BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Merger3 ) {
 
 	std::cout << "Constructing HypothesesGraph" << std::endl;
 	std::cout << std::endl;
@@ -1153,94 +1296,70 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_TranslationVector ) {
 	std::cout << std::endl;
 
 	//  t=1      2       3
-	//  1 -------1 ----- 1
+	//  1
 	//    |
-	//     ----- 1 ----- 1
+	//      ---- 2 ---- 2
 	//    |
-	//  1<
-	//    |
-	//	   ------1 ----- 1
+	//  1
 	TraxelStore ts;
-	Traxel n11, n12, n21, n22, n23, n31, n32, n33;
-	std::vector<int> center;
-	std::vector<int> shift;
-	std::vector<double> pDet;
+	Traxel n11, n12, n21, n31;
+	feature_array com(feature_array::difference_type(3));
+	feature_array divProb(feature_array::difference_type(1));
+	feature_array detProb(feature_array::difference_type(3));
+	feature_array count(feature_array::difference_type(1));
+	feature_array coordinates(feature_array::difference_type(2*3));
 
-	center.clear(); shift.clear(); pDet.clear();
-	pushBackMultiple(center, 100, 100, 0);
-	pushBackMultiple(shift, 0,0,0);
-	pushBackMultiple(pDet, 0.,1.);
-	constructTraxel(n11,11,1,0.00,center,shift,pDet);
+	n11.Id = 11; n11.Timestep = 1; com[0] = 0; com[1] = 0; com[2] = 0; divProb[0] = 0.01;
+	detProb[0] = 0.01; detProb[1] = 0.98; detProb[2] = 0.01;
+	n11.features["com"] = com; n11.features["divProb"] = divProb; n11.features["detProb"] = detProb;
+	coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
+	coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
+	n11.features["coordinates"] = coordinates;
 	add(ts,n11);
 
-	center.clear(); shift.clear(); pDet.clear();
-	pushBackMultiple(center, 200, 200, 0);
-	pushBackMultiple(shift, 0,0,0);
-	pushBackMultiple(pDet, 0.,1.);
-	constructTraxel(n12,12,1,0.00,center,shift,pDet);
+	n12.Id = 12; n12.Timestep = 1; com[0] = 2; com[1] = 2; com[2] = 0; divProb[0] = 0.01;
+	detProb[0] = 0.01; detProb[1] = 0.98; detProb[2] = 0.01;
+	n12.features["com"] = com; n12.features["divProb"] = divProb; n12.features["detProb"] = detProb;
+	coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
+	coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
+	n12.features["coordinates"] = coordinates;
 	add(ts,n12);
 
-	center.clear(); shift.clear(); pDet.clear();
-	pushBackMultiple(center, 100, 100, 0);
-	pushBackMultiple(shift, -100,-100,0);
-	pushBackMultiple(pDet, 0.5,0.5);
-	constructTraxel(n21,21,2,0.00,center,shift,pDet);
+	n21.Id = 21; n21.Timestep = 2; com[0] = 1; com[1] = 1; com[2] = 0; divProb[0] = 0.01;
+	detProb[0] = 0.01; detProb[1] = 0.01; detProb[2] = 0.98;
+	n21.features["com"] = com; n21.features["divProb"] = divProb; n21.features["detProb"] = detProb;
+	coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
+	coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
+	n21.features["coordinates"] = coordinates;
 	add(ts,n21);
 
-	center.clear(); shift.clear(); pDet.clear();
-	pushBackMultiple(center, 200, 200, 0);
-	pushBackMultiple(shift, -100,-100,0);
-	pushBackMultiple(pDet, 0.5,0.5);
-	constructTraxel(n22,22,2,0.00,center,shift,pDet);
-	add(ts,n22);
-
-	center.clear(); shift.clear(); pDet.clear();
-	pushBackMultiple(center, 300, 300, 0);
-	pushBackMultiple(shift, -100,-100,0);
-	pushBackMultiple(pDet, 0.5,0.5);
-	constructTraxel(n23,23,2,0.00,center,shift,pDet);
-	add(ts,n23);
-
-	center.clear(); shift.clear(); pDet.clear();
-	pushBackMultiple(center, 100, 100, 0);
-	pushBackMultiple(shift, 0,0,0);
-	pushBackMultiple(pDet, 0.,1.);
-	constructTraxel(n31,31,3,0.00,center,shift,pDet);
+	n31.Id = 31; n31.Timestep = 3; com[0] = 1; com[1] = 1; com[2] = 0; divProb[0] = 0.01;
+	detProb[0] = 0.01; detProb[1] = 0.01; detProb[2] = 0.98;
+	n31.features["com"] = com; n31.features["divProb"] = divProb; n31.features["detProb"] = detProb;
+	coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
+	coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
+	n31.features["coordinates"] = coordinates;
 	add(ts,n31);
-
-	center.clear(); shift.clear(); pDet.clear();
-	pushBackMultiple(center, 200, 200, 0);
-	pushBackMultiple(shift, 0,0,0);
-	pushBackMultiple(pDet, 0.,1.);
-	constructTraxel(n32,32,3,0.00,center,shift,pDet);
-	add(ts,n32);
-
-	center.clear(); shift.clear(); pDet.clear();
-	pushBackMultiple(center, 300, 300, 0);
-	pushBackMultiple(shift, 0,0,0);
-	pushBackMultiple(pDet, 0.,1.);
-	constructTraxel(n33,33,3,0.00,center,shift,pDet);
-	add(ts,n33);
 
 
 	std::cout << "Initialize Conservation tracking" << std::endl;
 	std::cout << std::endl;
 
-    FieldOfView fov(0, 0, 0, 0, 3, 1000, 1000, 1); // tlow, xlow, ylow, zlow, tup, xup, yup, zup
+    FieldOfView fov(0, 0, 0, 0, 4, 1000, 1000, 1); // tlow, xlow, ylow, zlow, tup, xup, yup, zup
 
 	ConsTracking tracking = ConsTracking(
-			  1, // max_number_objects
-		      301, // max_neighbor_distance
-			  0.5, // division_threshold
+			  2, // max_number_objects
+		      99999, // max_neighbor_distance
+			  0.1, // division_threshold
 			  "none", // random_forest_filename
 	  	      false, // detection_by_volume
 	  	      0, // forbidden_cost
-	  	      0.05, // ep_gap
+	  	      0.0, // ep_gap
 	  	      double(1.1), // avg_obj_size
 			  true, // with_tracklets
 			  10.0, //division_weight
 			  10.0, //transition_weight
-			  false, //with_divisions
+			  true, //with_divisions
 			  1500., // disappearance_cost,
 			  1500., // appearance_cost
 			  true, //with_merger_resolution
@@ -1250,32 +1369,44 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_TranslationVector ) {
               fov
 	  	      );
 
-	// TODO: Do tracklets work with com_corrected???????
-
 	std::cout << "Run Conservation tracking" << std::endl;
 	std::cout << std::endl;
 	std::vector< std::vector<Event> > events = tracking(ts);
 
-//	size_t t = 1;
-//	size_t apps = 0;
-//	size_t disapps = 0;
-//	size_t num_events = 0;
-//	for (std::vector< std::vector<Event> >::const_iterator it_t = events.begin(); it_t != events.end(); ++it_t) {
-//		for (std::vector<Event>::const_iterator it = (*it_t).begin(); it!=(*it_t).end(); ++it) {
-//			Event e = *it;
-//			if (e.type == Event::Appearance) {
-//				++apps;
-//			}
-//			if (e.type == Event::Disappearance) {
-//				++disapps;
-//			}
-//			cout << e << endl;
-//			++num_events;
-//		}
-//		++t;
-//	}
-//
-//	BOOST_CHECK_EQUAL(apps, 0);
-//	BOOST_CHECK_EQUAL(disapps, 0);
-//	BOOST_CHECK_GE(num_events, 3);
+	size_t t = 1;
+	size_t apps = 0;
+	size_t disapps = 0;
+	size_t moves = 0;
+	size_t mergers = 0;
+	size_t multis = 0;
+	size_t num_events = 0;
+	for (std::vector< std::vector<Event> >::const_iterator it_t = events.begin(); it_t != events.end(); ++it_t) {
+		for (std::vector<Event>::const_iterator it = (*it_t).begin(); it!=(*it_t).end(); ++it) {
+			Event e = *it;
+			if (e.type == Event::Appearance) {
+				++apps;
+			}
+			if (e.type == Event::Disappearance) {
+				++disapps;
+			}
+			if (e.type == Event::MultiFrameMove) {
+				++multis;
+			}
+			if (e.type == Event::Merger) {
+				++mergers;
+			}
+			if (e.type == Event::Move) {
+				++moves;
+			}
+			cout << e << endl;
+			++num_events;
+		}
+		++t;
+	}
+
+	BOOST_CHECK_EQUAL(apps, 0);
+	BOOST_CHECK_EQUAL(disapps, 0);
+	BOOST_CHECK_EQUAL(moves, 3);
+	BOOST_CHECK_EQUAL(mergers, 2);
+	BOOST_CHECK_EQUAL(multis, 2);
 }
