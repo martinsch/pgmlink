@@ -1407,6 +1407,6 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Merger3 ) {
 	BOOST_CHECK_EQUAL(apps, 0);
 	BOOST_CHECK_EQUAL(disapps, 0);
 	BOOST_CHECK_EQUAL(moves, 3);
-	BOOST_CHECK_EQUAL(mergers, 2);
-	BOOST_CHECK_EQUAL(multis, 2);
+	BOOST_CHECK_EQUAL(mergers, 1);
+	BOOST_CHECK_EQUAL(multis, 0);
 }
