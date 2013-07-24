@@ -357,7 +357,6 @@ namespace pgmlink {
     // int nMergers);
 
     // Add arcs to nodes created to replace merger node.
-    // tested
     void add_arcs_for_replacement_node(HypothesesGraph::Node node,
 				       Traxel trax,
 				       std::vector<HypothesesGraph::base_graph::Arc> src,
@@ -365,19 +364,15 @@ namespace pgmlink {
 				       DistanceBase& distance);
 
     // Deactivate arcs of merger node.
-    // tested
     void deactivate_arcs(std::vector<HypothesesGraph::base_graph::Arc> arcs);
 
     // Deactivate all resolved merger nodes
-    // tested
     void deactivate_nodes(std::vector<HypothesesGraph::Node> nodes);
 
     // Get maximum id for given timestep
-    // tested
     unsigned int get_max_id(int ts);
 
     // Split merger node into appropiately many new nodes.
-    // tested
     void refine_node(HypothesesGraph::Node,
 		     std::size_t,
 		     FeatureHandlerBase& handler);
@@ -540,25 +535,19 @@ namespace pgmlink {
                                     std::map<HypothesesGraph::Arc, HypothesesGraph::Arc>& acr
                                     ) {
 	 LOG(logDEBUG) << "copy_hypotheses_graph_subset(): entered";
+	 property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = src.get(node_traxel());
+
     typedef typename property_map<NodePropertyTag, HypothesesGraph::base_graph>::type NodeFilter;
     typedef typename property_map<ArcPropertyTag, HypothesesGraph::base_graph>::type ArcFilter;
     property_map<node_timestep, HypothesesGraph::base_graph>::type& time_map = src.get(node_timestep());
     NodeFilter& node_filter_map = src.get(NodePropertyTag());
     ArcFilter& arc_filter_map = src.get(ArcPropertyTag());
 
-    LOG(logDEBUG3) << "copy_hypotheses_graph_subset(): looping through nodes";
+
     for (typename NodeFilter::TrueIt nodeIt(node_filter_map); nodeIt != lemon::INVALID; ++nodeIt) {
       HypothesesGraph::Node node = dest.add_node(time_map[nodeIt]);
       nr[nodeIt] = node;
       ncr[node] = nodeIt;
-    }
-
-    LOG(logDEBUG3) << "copy_hypotheses_graph_subset(): looping through arcs";
-    property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = src.get(node_traxel());
-    LOG(logDEBUG3) << "trueNum = " << arc_filter_map.trueNum() << ", falseNum = " << arc_filter_map.falseNum();
-    for (HypothesesGraph::ArcIt arcIt(src); arcIt != lemon::INVALID; ++arcIt) {
-    	LOG(logDEBUG3) << "arc (" << traxel_map[src.source(arcIt)].Id << "," << traxel_map[src.target(arcIt)].Id << ")";
-    	LOG(logDEBUG3) << " = " << arc_filter_map[arcIt];
     }
 
     for (typename ArcFilter::TrueIt arcIt(arc_filter_map); arcIt != lemon::INVALID; ++arcIt) {
@@ -643,30 +632,17 @@ namespace pgmlink {
                   HypothesesGraph::NodeMap<HypothesesGraph::Node>& ncr,
                   HypothesesGraph::ArcMap<HypothesesGraph::Arc>& acr
                   ) {
-                  /* typename SubHypothesesGraph<NodePropertyTag, ArcPropertyTag>::type::NodeMap<HypothesesGraph::Node> nr&,
-                  typename SubHypothesesGraph<NodePropertyTag, ArcPropertyTag>::type::ArcMap<HypothesesGraph::Arc> ar&,
-                  HypothesesGraph::NodeMap<typename SubHypothesesGraph<NodePropertyTag, ArcPropertyTag>::type::Node> ncr&,
-                  HypothesesGraph::ArcMap<typename SubHypothesesGraph<NodePropertyTag, ArcPropertyTag>::type::Arc> acr& 
-                  ) { */
     typedef typename property_map<NodePropertyTag, HypothesesGraph::base_graph>::type NodeFilter;
     typedef typename property_map<ArcPropertyTag, HypothesesGraph::base_graph>::type ArcFilter;
 
     typedef lemon::SubDigraph<HypothesesGraph::base_graph, NodeFilter, ArcFilter> CopyGraph;
     typedef HypothesesGraph::base_graph GRAPH;
-
     
     NodeFilter& node_filter_map = src.get(NodePropertyTag());
     ArcFilter& arc_filter_map = src.get(ArcPropertyTag());
     CopyGraph sub(src, node_filter_map, arc_filter_map);
 
-
     lemon::digraphCopy<CopyGraph, HypothesesGraph::base_graph>(sub,dest).nodeRef(nr).nodeCrossRef(ncr).arcRef(ar).arcCrossRef(acr).run();
-    /* HypothesesGraph::base_graph::NodeMap<CopyGraph::Node> node_cross_reference(dest);
-    copy.nodeCrossRef(node_cross_reference);
-    copy.arcCrossRef(arc_cross_reference);
-    copy.run();
-    HypothesesGraph::base_graph::ArcMap<CopyGraph::Arc> arc_cross_reference(dest); */
-    
   }
 
 
