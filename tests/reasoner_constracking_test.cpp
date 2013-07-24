@@ -1349,13 +1349,13 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Merger3 ) {
 
 	ConsTracking tracking = ConsTracking(
 			  2, // max_number_objects
-		      99999, // max_neighbor_distance
+                          99999, // max_neighbor_distance
 			  0.1, // division_threshold
 			  "none", // random_forest_filename
-	  	      false, // detection_by_volume
-	  	      0, // forbidden_cost
-	  	      0.0, // ep_gap
-	  	      double(1.1), // avg_obj_size
+                          false, // detection_by_volume
+                          0, // forbidden_cost
+                          0.0, // ep_gap
+                          double(1.1), // avg_obj_size
 			  true, // with_tracklets
 			  10.0, //division_weight
 			  10.0, //transition_weight
@@ -1366,7 +1366,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Merger3 ) {
 			  2, //n_dim
 			  5, //transition_parameter
 			  0, //border_width for app/disapp costs
-              fov
+                          fov
 	  	      );
 
 	std::cout << "Run Conservation tracking" << std::endl;
