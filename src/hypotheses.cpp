@@ -575,7 +575,7 @@ namespace pgmlink {
 			std::map<HypothesesGraph::Node, std::vector<HypothesesGraph::Node> >::const_iterator traxel_to_it = node_link_map.find(traxel_node);
 
 			if (traxel_to_it == node_link_map.end()) {
-				LOG(logDEBUG) << "There is no incoming arc for traxel_node " << traxel_graph.id(traxel_node);
+				LOG(logDEBUG3) << "There is no incoming arc for traxel_node " << traxel_graph.id(traxel_node);
 			} else {
 				for(std::vector<HypothesesGraph::Node>::const_iterator tracklet_from_it = (*traxel_to_it).second.begin();
 						tracklet_from_it != (*traxel_to_it).second.end(); ++tracklet_from_it) {
@@ -635,7 +635,7 @@ void addNodeToTracklet(const HypothesesGraph& traxel_graph, HypothesesGraph& tra
 	std::vector<int> arc_ids = tracklet_arc_id_map[tracklet_node];
 	arc_ids.push_back(arc_id);
 	tracklet_arc_id_map.set(tracklet_node, arc_ids);
-	LOG(logDEBUG) << "addNodeToTracklet: added arc_id " << arc_id;
+	LOG(logDEBUG4) << "addNodeToTracklet: added arc_id " << arc_id;
 }
 
 void addNodeToGraph(const HypothesesGraph& traxel_graph, HypothesesGraph& tracklet_graph,
@@ -649,7 +649,7 @@ void addNodeToGraph(const HypothesesGraph& traxel_graph, HypothesesGraph& trackl
 	tracklet.push_back(tr);
 	size_t timestep = tr.Timestep;
 	HypothesesGraph::Node tracklet_node = tracklet_graph.add_node(timestep);
-	LOG(logDEBUG) << "added tracklet node " << tracklet_graph.id(tracklet_node);
+	LOG(logDEBUG4) << "added tracklet node " << tracklet_graph.id(tracklet_node);
 	tracklet_map.set(tracklet_node, tracklet);
 	traxel2tracklet[traxel_node] = tracklet_node;
 	std::vector<double> arc_dists;
@@ -666,12 +666,12 @@ void addArcsToGraph(const HypothesesGraph& traxel_graph, HypothesesGraph& trackl
 
 	for(std::vector<HypothesesGraph::Arc>::const_iterator a = incoming_arcs.begin(); a!=incoming_arcs.end(); ++a) {
 		HypothesesGraph::Arc arc = *a;
-		LOG(logDEBUG) << "traxel arc source " << traxel_graph.id(traxel_graph.source(arc));
-		LOG(logDEBUG) << "traxel arc target " << traxel_graph.id(traxel_graph.target(arc));
+		LOG(logDEBUG4) << "traxel arc source " << traxel_graph.id(traxel_graph.source(arc));
+		LOG(logDEBUG4) << "traxel arc target " << traxel_graph.id(traxel_graph.target(arc));
 		HypothesesGraph::Node from = traxel2tracklet[traxel_graph.source(arc)];
 		HypothesesGraph::Node to = traxel2tracklet[traxel_graph.target(arc)];
-		LOG(logDEBUG) << "tracklet node from " << tracklet_graph.id(traxel2tracklet[traxel_graph.source(arc)]);
-		LOG(logDEBUG) << "tracklet node to " << tracklet_graph.id(traxel2tracklet[traxel_graph.target(arc)]);
+		LOG(logDEBUG4) << "tracklet node from " << tracklet_graph.id(traxel2tracklet[traxel_graph.source(arc)]);
+		LOG(logDEBUG4) << "tracklet node to " << tracklet_graph.id(traxel2tracklet[traxel_graph.target(arc)]);
 		assert(from != to);
 		HypothesesGraph::Arc tracklet_arc = tracklet_graph.addArc(from, to);
 		tracklet_arc_distances.set(tracklet_arc,traxel_arc_distances[arc]);
@@ -698,12 +698,12 @@ void addArcsToGraph(const HypothesesGraph& traxel_graph, HypothesesGraph& trackl
 
 	for(int t = traxel_graph.earliest_timestep(); t <= traxel_graph.latest_timestep(); ++t) {
 	for(node_timestep_map_t::ItemIt traxel_node(node_timestep_map, t); traxel_node!=lemon::INVALID; ++traxel_node) {
-		LOG(logDEBUG) << "traxel_node = " << traxel_graph.id(traxel_node);
+		LOG(logDEBUG4) << "traxel_node = " << traxel_graph.id(traxel_node);
 		vector<HypothesesGraph::Arc> incoming_arcs = getIncomingArcs(traxel_graph, traxel_node);
 		if(incoming_arcs.size() != 1) {
 			addNodeToGraph(traxel_graph, tracklet_graph, traxel_node, traxel_node_to_tracklet_node, tracklet_node_to_traxel_nodes);
 			addArcsToGraph(traxel_graph, tracklet_graph, incoming_arcs, traxel_node_to_tracklet_node);
-			LOG(logDEBUG) << "traxel2tracklet.size(): " << traxel_node_to_tracklet_node.size();
+			LOG(logDEBUG4) << "traxel2tracklet.size(): " << traxel_node_to_tracklet_node.size();
 			continue;
 		}
 
@@ -712,7 +712,7 @@ void addArcsToGraph(const HypothesesGraph& traxel_graph, HypothesesGraph& trackl
 			addNodeToGraph(traxel_graph, tracklet_graph, traxel_node, traxel_node_to_tracklet_node, tracklet_node_to_traxel_nodes);
 			assert(incoming_arcs.size() == 1);
 			addArcsToGraph(traxel_graph, tracklet_graph, incoming_arcs, traxel_node_to_tracklet_node);
-			LOG(logDEBUG) << "traxel2tracklet.size(): " << traxel_node_to_tracklet_node.size();
+			LOG(logDEBUG4) << "traxel2tracklet.size(): " << traxel_node_to_tracklet_node.size();
 			continue;
 		}
 
