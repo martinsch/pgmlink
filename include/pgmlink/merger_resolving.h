@@ -521,8 +521,12 @@ namespace pgmlink {
   void MergerResolver::collect_arcs(ArcIterator arcIt,
 				    std::vector<HypothesesGraph::base_graph::Arc>& res) {
     assert(res.size() == 0);
+    // check if arc is active
+    property_map<arc_active, HypothesesGraph::base_graph>::type& arc_active_map = g_->get(arc_active());
     for (; arcIt != lemon::INVALID; ++arcIt) {
-      res.push_back(arcIt);
+      if (arc_active_map[arcIt]) {
+        res.push_back(arcIt);
+      }
     }
   }
 
@@ -558,33 +562,26 @@ namespace pgmlink {
     }
 
     for (typename ArcFilter::TrueIt arcIt(arc_filter_map); arcIt != lemon::INVALID; ++arcIt) {
-    	LOG(logDEBUG4) << "1";
       HypothesesGraph::Node from = src.source(arcIt);
-      LOG(logDEBUG4) << "2";
       HypothesesGraph::Node to = src.target(arcIt);
-      LOG(logDEBUG4) << "3";
       if (nr.count(from) == 0) {
-    	  LOG(logDEBUG4) << "4";
         HypothesesGraph::Node node = dest.add_node(time_map[from]);
-        LOG(logDEBUG4) << "5";
         nr[from] = node;
-        LOG(logDEBUG4) << "6";
         ncr[node] = from;
+        LOG(logDEBUG3) << "copy_hypotheses_graph_subset(): copied node: " << traxel_map[from];
       }
-      LOG(logDEBUG4) << "7";
       if (nr.count(to) == 0) {
-    	  LOG(logDEBUG4) << "8";
         HypothesesGraph::Node node = dest.add_node(time_map[to]);
-        LOG(logDEBUG4) << "9";
         nr[to] = node;
-        LOG(logDEBUG4) << "10";
         ncr[node] = to;
+        LOG(logDEBUG3) << "copy_hypotheses_graph_subset(): copied node: " << traxel_map[to];
       }
       HypothesesGraph::Arc arc = dest.addArc(nr[from], nr[to]);
-      LOG(logDEBUG4) << "11";
       ar[arcIt] = arc;
-      LOG(logDEBUG4) << "12";
       acr[arc] = arcIt;
+      LOG(logDEBUG3) << "copy_hypotheses_graph_subset(): copied arc " << src.id(arcIt) << ": ("
+                     << traxel_map[src.source(arcIt)] << ','
+                     << traxel_map[src.target(arcIt)] << ')';
     }
     LOG(logDEBUG) << "copy_hypotheses_graph_subset(): done";
   }

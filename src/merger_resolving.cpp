@@ -401,17 +401,19 @@ namespace pgmlink {
     // useful to deactivate Arcs of merger Node
 
     property_map<arc_active, HypothesesGraph::base_graph>::type& arc_active_map = g_->get(arc_active());
+    property_map<arc_resolution_candidate, HypothesesGraph::base_graph>::type& arc_resolution_map = g_->get(arc_resolution_candidate());
     for (std::vector<HypothesesGraph::base_graph::Arc>::iterator it = arcs.begin(); it != arcs.end(); ++it) {
       //      if (!g_->valid(g_->source(*it)) || !g_->valid(g_->target(*it))) {
       LOG(logDEBUG3) << "MergerResolver::deactivate_arcs(): setting arc " << g_->id(*it)  << " (" << g_->get(node_traxel())[g_->source((*it))].Id << "," << g_->get(node_traxel())[g_->target((*it))].Id << ") property arc_active to false";
-	arc_active_map.set(*it, false);
+      arc_active_map.set(*it, false);
+      arc_resolution_map.set(*it, false);
 	//      }
 
     }
-    LOG(logDEBUG3) << "deactivate_arcs(): looping through arcs before erase";
+    // LOG(logDEBUG3) << "deactivate_arcs(): looping through arcs before erase";
 	property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g_->get(node_traxel());
 	property_map<arc_resolution_candidate, HypothesesGraph::base_graph>::type& arc_filter_map = g_->get(arc_resolution_candidate());
-	LOG(logDEBUG3) << "trueNum = " << arc_filter_map.trueNum() << ", falseNum = " << arc_filter_map.falseNum();
+	/*LOG(logDEBUG3) << "trueNum = " << arc_filter_map.trueNum() << ", falseNum = " << arc_filter_map.falseNum();
 	for (HypothesesGraph::ArcIt arcIt(*g_); arcIt != lemon::INVALID; ++arcIt) {
 		LOG(logDEBUG3) << "arc (" << traxel_map[g_->source(arcIt)].Id << "," << traxel_map[g_->target(arcIt)].Id << ")";
 		LOG(logDEBUG3) << " = " << arc_filter_map[arcIt];
@@ -420,7 +422,7 @@ namespace pgmlink {
     std::reverse(arcs.begin(), arcs.end());
     for (std::vector<HypothesesGraph::base_graph::Arc>::iterator it = arcs.begin(); it != arcs.end(); ++it) {
     	g_->erase(*it);
-    }
+    } */
     LOG(logDEBUG3) << "deactivate_arcs(): looping through arcs";
 
 	LOG(logDEBUG3) << "trueNum = " << arc_filter_map.trueNum() << ", falseNum = " << arc_filter_map.falseNum();
@@ -439,9 +441,11 @@ namespace pgmlink {
     // needed to set all resolved merger nodes inactive
     std::vector<HypothesesGraph::Node>::iterator it = nodes.begin();
     property_map<node_active2, HypothesesGraph::base_graph>::type& node_active_map = g_->get(node_active2());
+    property_map<node_resolution_candidate, HypothesesGraph::base_graph>::type& node_resolution_map = g_->get(node_resolution_candidate());
     for (; it != nodes.end(); ++it) {
       LOG(logDEBUG3) << "MergerResolver::deactivate_nodes(): setting Node " << g_->id(*it) << " property node_active2 to 0";
       node_active_map.set(*it, 0);
+      node_resolution_map.set(*it, 0);
     }
   }
 
@@ -557,7 +561,7 @@ namespace pgmlink {
 		LOG(logDEBUG3) << "arc (" << traxel_map[g_->source(arcIt)].Id << "," << traxel_map[g_->target(arcIt)].Id << ")";
 		LOG(logDEBUG3) << " = " << arc_filter_map[arcIt];
 	}
-    prune_inactive(*g_);
+        // prune_inactive(*g_);
     LOG(logDEBUG3) << "resolve_mergers() 2: looping through arcs";
 
 	LOG(logDEBUG3) << "trueNum = " << arc_filter_map.trueNum() << ", falseNum = " << arc_filter_map.falseNum();
