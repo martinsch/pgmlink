@@ -77,11 +77,11 @@ namespace pgmlink {
     public:
       NNTracking(double divDist = 30,
     		  double movDist = 10,
-    		  std::vector<std::string> features = 0,
+                 std::vector<std::string> features = std::vector<std::string>(0),
     		  double divisionThreshold = 0.5,
     		  bool splitterHandling = true,
     		  bool mergerHandling = true,
-    		  std::vector<int> maxTraxelIdAt = 0)
+                 std::vector<int> maxTraxelIdAt = std::vector<int>(0))
         : divDist_(divDist), movDist_(movDist), distanceFeatures_(features),
           divisionThreshold_(divisionThreshold), splitterHandling_(splitterHandling),
           mergerHandling_(mergerHandling), maxTraxelIdAt_(maxTraxelIdAt){}
@@ -105,11 +105,11 @@ namespace pgmlink {
   class NNTrackletsTracking {
       public:
 	  NNTrackletsTracking(double maxDist = 30,
-      		  std::vector<std::string> features = 0,
+                              std::vector<std::string> features = std::vector<std::string>(0),
       		  double divisionThreshold = 0.5,
       		  bool splitterHandling = true,
       		  bool mergerHandling = true,
-      		  std::vector<int> maxTraxelIdAt = 0)
+                              std::vector<int> maxTraxelIdAt = std::vector<int>(0))
           : maxDist_(maxDist), distanceFeatures_(features),
             divisionThreshold_(divisionThreshold), splitterHandling_(splitterHandling),
             mergerHandling_(mergerHandling), maxTraxelIdAt_(maxTraxelIdAt){}
