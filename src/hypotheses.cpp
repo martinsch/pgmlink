@@ -927,7 +927,7 @@ namespace {
 		assert(it->Timestep == to_timestep);
 	}
 
-	NearestNeighborSearch nns(traxels_at.first, traxels_at.second);
+	NearestNeighborSearch nns(traxels_at.first, traxels_at.second, reverse);
 
 
 	// establish transition edges between a current node and appropriate nodes in next timestep
@@ -950,7 +950,7 @@ namespace {
 		// search
 		map<unsigned int, double> nearest_neighbors = nns.knn_in_range(
 				traxelmap[curr_node], options_.distance_threshold,
-				max_nn);
+				max_nn, reverse);
 
 		//// connect current node with k nearest neighbor nodes
 		for (map<unsigned int, double>::const_iterator neighbor =

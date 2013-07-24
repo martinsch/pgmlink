@@ -249,14 +249,14 @@ void ConservationTracking::add_appearance_nodes(const HypothesesGraph& g) {
 			g.get(node_tracklet());
     size_t count = 0;
     for (HypothesesGraph::NodeIt n(g); n != lemon::INVALID; ++n) {
-        bool hasOutarcs = false;
-        for (HypothesesGraph::OutArcIt a(g, n); a != lemon::INVALID; ++a) {
-            hasOutarcs = true;
-            break;
-        }
-        if (!hasOutarcs) {
-            continue;
-        }
+//        bool hasOutarcs = false;
+//        for (HypothesesGraph::OutArcIt a(g, n); a != lemon::INVALID; ++a) {
+//            hasOutarcs = true;
+//            break;
+//        }
+//        if (!hasOutarcs) {
+//            continue;
+//        }
         pgm_->Model()->addVariable(max_number_objects_ + 1);
         app_node_map_[n] = pgm_->Model()->numberOfVariables() - 1;
         assert(pgm_->Model()->numberOfLabels(app_node_map_[n]) == max_number_objects_ + 1);
@@ -276,23 +276,23 @@ void ConservationTracking::add_disappearance_nodes(const HypothesesGraph& g) {
 			g.get(node_tracklet());
     size_t count = 0;
     for (HypothesesGraph::NodeIt n(g); n != lemon::INVALID; ++n) {
-        bool hasInarcs = false;
-        for (HypothesesGraph::InArcIt a(g, n); a != lemon::INVALID; ++a) {
-            hasInarcs = true;
-            break;
-        }
-        if (!hasInarcs) {
-            bool hasOutarcs = false;
-            for (HypothesesGraph::OutArcIt a(g, n); a != lemon::INVALID; ++a) {
-                hasOutarcs = true;
-                break;
-            }
-            if (hasOutarcs) {
-                continue;
-            }
-            // else: add the disappearance variable, otherwise single nodes/tracklets without
-            // incoming and outgoing arcs won't be treated as variables
-        }
+//        bool hasInarcs = false;
+//        for (HypothesesGraph::InArcIt a(g, n); a != lemon::INVALID; ++a) {
+//            hasInarcs = true;
+//            break;
+//        }
+//        if (!hasInarcs) {
+//            bool hasOutarcs = false;
+//            for (HypothesesGraph::OutArcIt a(g, n); a != lemon::INVALID; ++a) {
+//                hasOutarcs = true;
+//                break;
+//            }
+//            if (hasOutarcs) {
+//                continue;
+//            }
+//            // else: add the disappearance variable, otherwise single nodes/tracklets without
+//            // incoming and outgoing arcs won't be treated as variables
+//        }
         pgm_->Model()->addVariable(max_number_objects_ + 1);
         dis_node_map_[n] = pgm_->Model()->numberOfVariables() - 1;
         assert(pgm_->Model()->numberOfLabels(dis_node_map_[n]) == max_number_objects_ + 1);
@@ -377,16 +377,16 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
         vector<size_t> vi;
         vector<double> cost;
 
-        bool hasOutarcs = false;
-        for (HypothesesGraph::OutArcIt a(g, n); a != lemon::INVALID; ++a) {
-            hasOutarcs = true;
-            break;
-        }
-        bool hasInarcs = false;
-        for (HypothesesGraph::InArcIt a(g, n); a != lemon::INVALID; ++a) {
-            hasInarcs = true;
-            break;
-        }
+//        bool hasOutarcs = false;
+//        for (HypothesesGraph::OutArcIt a(g, n); a != lemon::INVALID; ++a) {
+//            hasOutarcs = true;
+//            break;
+//        }
+//        bool hasInarcs = false;
+//        for (HypothesesGraph::InArcIt a(g, n); a != lemon::INVALID; ++a) {
+//            hasInarcs = true;
+//            break;
+//        }
         int node_begin_time = -1;
         int node_end_time = -1;
         if (with_tracklets_) {
@@ -396,7 +396,7 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
             node_begin_time = traxel_map[n].Timestep;
             node_end_time = traxel_map[n].Timestep;
         }
-        bool singleNodeTrack = !hasInarcs && !hasOutarcs;
+//        bool singleNodeTrack = !hasInarcs && !hasOutarcs;
 
         if (app_node_map_.count(n) > 0) {
             vi.push_back(app_node_map_[n]);
@@ -418,29 +418,30 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
         if (dis_node_map_.count(n) > 0) {
             vi.push_back(dis_node_map_[n]);
             double c = 0;
-            if (singleNodeTrack) {
-                // single node tracks only have a disappearance node but not an appearance node
-                // also consider tracklets here which can reach over multiple time steps
-                if (node_end_time < g.latest_timestep()) { // "<" holds if there are only tracklets in the last frame
-                    if (with_tracklets_) {
-                        c += disappearance_cost_(tracklet_map[n].back());
-                        LOG(logDEBUG4) << "Costs 4: " << disappearance_cost_(tracklet_map[n].back()) << ", n = " <<  tracklet_map[n].front().Id;
-                    } else {
-                        c += disappearance_cost_(traxel_map[n]);
-                        LOG(logDEBUG4) << "Costs 5: " << disappearance_cost_(traxel_map[n]) << ", n = " <<traxel_map[n].Id;
-                    }
-                }
-                if (node_begin_time > g.earliest_timestep()) {
-                    // single node tracks do not have an appearance node, hence handle appearance here
-                    if (with_tracklets_) {
-                        c += appearance_cost_(tracklet_map[n].front());
-                        LOG(logDEBUG4) << "Costs 6: " << appearance_cost_(tracklet_map[n].front()) << ", n = " << tracklet_map[n].front().Id;
-                    } else {
-                        c += appearance_cost_(traxel_map[n]);
-                        LOG(logDEBUG4) << "Costs 7: " << appearance_cost_(traxel_map[n]) << ", n = " << traxel_map[n].Id;
-                    }
-                }
-            } else if (node_end_time < g.latest_timestep()) { // "<" holds if there are only tracklets in the last frame
+//            if (singleNodeTrack) {
+//                // single node tracks only have a disappearance node but not an appearance node
+//                // also consider tracklets here which can reach over multiple time steps
+//                if (node_end_time < g.latest_timestep()) { // "<" holds if there are only tracklets in the last frame
+//                    if (with_tracklets_) {
+//                        c += disappearance_cost_(tracklet_map[n].back());
+//                        LOG(logDEBUG4) << "Costs 4: " << disappearance_cost_(tracklet_map[n].back()) << ", n = " <<  tracklet_map[n].front().Id;
+//                    } else {
+//                        c += disappearance_cost_(traxel_map[n]);
+//                        LOG(logDEBUG4) << "Costs 5: " << disappearance_cost_(traxel_map[n]) << ", n = " <<traxel_map[n].Id;
+//                    }
+//                }
+//                if (node_begin_time > g.earliest_timestep()) {
+//                    // single node tracks do not have an appearance node, hence handle appearance here
+//                    if (with_tracklets_) {
+//                        c += appearance_cost_(tracklet_map[n].front());
+//                        LOG(logDEBUG4) << "Costs 6: " << appearance_cost_(tracklet_map[n].front()) << ", n = " << tracklet_map[n].front().Id;
+//                    } else {
+//                        c += appearance_cost_(traxel_map[n]);
+//                        LOG(logDEBUG4) << "Costs 7: " << appearance_cost_(traxel_map[n]) << ", n = " << traxel_map[n].Id;
+//                    }
+//                }
+//            } else
+            if (node_end_time < g.latest_timestep()) { // "<" holds if there are only tracklets in the last frame
                 if (with_tracklets_) {
                     c += disappearance_cost_(tracklet_map[n].back());
                     LOG(logDEBUG4) << "Costs 8: " <<  disappearance_cost_(tracklet_map[n].back()) << ", n = " << tracklet_map[n].front().Id;

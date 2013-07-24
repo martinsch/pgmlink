@@ -18,22 +18,23 @@ namespace pgmlink {
 	public:
 	    template <typename InputIt>
 	    NearestNeighborSearch( InputIt traxel_begin,
-				   InputIt traxel_end);
+				   InputIt traxel_end,
+				   const bool reverse = false);
 	    ~NearestNeighborSearch();
 	
 	     /**
 	      * Returns (traxel id, distance*distance) map.
 	      */
-	    std::map<unsigned int, double> knn_in_range( const Traxel& query, double radius, unsigned int knn );
-	    unsigned int count_in_range( const Traxel& query, double radius );
+	    std::map<unsigned int, double> knn_in_range( const Traxel& query, double radius, unsigned int knn, const bool reverse = false );
+	    unsigned int count_in_range( const Traxel& query, double radius, const bool reverse = false );
 
 	private:
 	    /**
 	     * Ctor helper: define points and association between traxels and points
 	     */
 	    template <typename InputIt>
-	    void define_point_set( InputIt traxel_begin, InputIt traxel_end );
-	    ANNpoint point_from_traxel( const Traxel& traxel );
+	    void define_point_set( InputIt traxel_begin, InputIt traxel_end, const bool reverse = false );
+	    ANNpoint point_from_traxel( const Traxel& traxel, const bool reverse = false );
 
 	    std::map<unsigned int, unsigned int> point_idx2traxel_id_;
 	
@@ -61,12 +62,12 @@ using namespace boost;
 namespace pgmlink {
 
 template <typename InputIt>
-NearestNeighborSearch::NearestNeighborSearch(InputIt traxel_begin, InputIt traxel_end) : 
+NearestNeighborSearch::NearestNeighborSearch(InputIt traxel_begin, InputIt traxel_end, const bool reverse) :
   dim_(3), points_(NULL) {
   size_t size(distance(traxel_begin, traxel_end));
 
   if(size > 0) {
-    this->define_point_set( traxel_begin, traxel_end );
+    this->define_point_set( traxel_begin, traxel_end, reverse );
     try {
 	kd_tree_ = boost::shared_ptr<ANNkd_tree>( new ANNkd_tree( points_, size, dim_ ) );
     } catch(...) {
@@ -86,7 +87,7 @@ NearestNeighborSearch::~NearestNeighborSearch() {
 
 
 
-map<unsigned int, double> NearestNeighborSearch::knn_in_range( const Traxel& query, double radius, unsigned int knn ) {
+map<unsigned int, double> NearestNeighborSearch::knn_in_range( const Traxel& query, double radius, unsigned int knn, const bool reverse ) {
     if( radius < 0 ) {
 	throw "knn_in_range: radius has to be non-negative.";
     }
@@ -100,7 +101,7 @@ map<unsigned int, double> NearestNeighborSearch::knn_in_range( const Traxel& que
 
     // allocate
     ANNpoint query_point( NULL );
-    query_point = this->point_from_traxel(query);
+    query_point = this->point_from_traxel(query, reverse);
     if( query_point == NULL ) {
 	throw "query point allocation failure";
     }
@@ -141,7 +142,7 @@ map<unsigned int, double> NearestNeighborSearch::knn_in_range( const Traxel& que
 
 
 
-unsigned int NearestNeighborSearch::count_in_range( const Traxel& query, double radius ) {
+unsigned int NearestNeighborSearch::count_in_range( const Traxel& query, double radius, const bool reverse ) {
     if( radius < 0 ) {
 	throw "count_in_range: radius has to be non-negative.";
     }
@@ -153,7 +154,7 @@ unsigned int NearestNeighborSearch::count_in_range( const Traxel& query, double 
 
     // allocate
     ANNpoint query_point( NULL );
-    query_point = this->point_from_traxel(query);
+    query_point = this->point_from_traxel(query, reverse);
     if( query_point == NULL ) {
 	throw "query point allocation failure";
     }
@@ -184,7 +185,7 @@ unsigned int NearestNeighborSearch::count_in_range( const Traxel& query, double 
 
 
 template <typename InputIt>
-void NearestNeighborSearch::define_point_set( InputIt traxel_begin, InputIt traxel_end ) {
+void NearestNeighborSearch::define_point_set( InputIt traxel_begin, InputIt traxel_end, const bool reverse ) {
     // allocate memory for kd-tree nodes
     size_t traxel_number = distance(traxel_begin, traxel_end);
     points_ = annAllocPts( traxel_number, dim_ );
@@ -199,9 +200,15 @@ void NearestNeighborSearch::define_point_set( InputIt traxel_begin, InputIt trax
 	for( InputIt traxel = traxel_begin; traxel != traxel_end; ++traxel, ++i) {
 	  ANNpoint point = points_[i];
 	  assert(dim_ == 3);
-	  point[0] = traxel->X();
-	  point[1] = traxel->Y();
-	  point[2] = traxel->Z();
+	  if (!reverse) {
+		  point[0] = traxel->X_corr();
+		  point[1] = traxel->Y_corr();
+		  point[2] = traxel->Z_corr();
+	  } else {
+		  point[0] = traxel->X();
+		  point[1] = traxel->Y();
+		  point[2] = traxel->Z();
+	  }
 
 	  // save point <-> traxel association
 	  point_idx2traxel_id_[i] = traxel->Id;
@@ -216,13 +223,19 @@ void NearestNeighborSearch::define_point_set( InputIt traxel_begin, InputIt trax
 
 
 
-ANNpoint NearestNeighborSearch::point_from_traxel( const Traxel& traxel ) {
+ANNpoint NearestNeighborSearch::point_from_traxel( const Traxel& traxel, const bool reverse ) {
     assert(dim_ == 3);
     ANNpoint point = annAllocPt( dim_ );
 
-    point[0] = traxel.X();
-    point[1] = traxel.Y();
-    point[2] = traxel.Z();
+    if (reverse) {
+    	point[0] = traxel.X_corr();
+		point[1] = traxel.Y_corr();
+		point[2] = traxel.Z_corr();
+    } else {
+    	point[0] = traxel.X();
+		point[1] = traxel.Y();
+		point[2] = traxel.Z();
+    }
 
     return point;
 }
