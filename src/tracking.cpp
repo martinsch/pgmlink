@@ -368,21 +368,21 @@ std::vector<double> computeDetProb(double vol, vector<double> means, vector<doub
 	return result;
 }
 
-double dot(double x1,double y1,double z1, double x2,double y2,double z2) {
-      return x1*x2 + y1*y2 + z1*z2;
-}
-
-double norm(double x,double y,double z) {
-      return sqrt(dot(x,y,z, x,y,z));
-}
-
-double getCorrectedDistance(Traxel from, Traxel to) {
-	FeatureMap::const_iterator it = from.features.find("com_corrected");
-	if (it == from.features.end()) {
-		throw runtime_error("getCorrectedDistance(): com_corrected feature not found in traxel");
-	}
-	return norm(it->second[0]-to.X(),it->second[1]-to.Y(),it->second[2]-to.Z());
-}
+//double dot(double x1,double y1,double z1, double x2,double y2,double z2) {
+//      return x1*x2 + y1*y2 + z1*z2;
+//}
+//
+//double norm(double x,double y,double z) {
+//      return sqrt(dot(x,y,z, x,y,z));
+//}
+//
+//double getCorrectedDistance(Traxel from, Traxel to) {
+//	FeatureMap::const_iterator it = from.features.find("com_corrected");
+//	if (it == from.features.end()) {
+//		throw runtime_error("getCorrectedDistance(): com_corrected feature not found in traxel");
+//	}
+//	return norm(it->second[0]-to.X(),it->second[1]-to.Y(),it->second[2]-to.Z());
+//}
 }
 
 ////
@@ -535,7 +535,7 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 		Traxel to_tr = traxel_map[to];
 
 		if (with_optical_correction) {
-			arc_distances.set(a, getCorrectedDistance(from_tr,to_tr));
+			arc_distances.set(a, from_tr.distance_to_corr(to_tr));
 		} else {
 			arc_distances.set(a, from_tr.distance_to(to_tr));
 		}
