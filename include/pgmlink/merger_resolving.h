@@ -413,7 +413,7 @@ namespace pgmlink {
   //// transfer graph to graph containing only subset of nodes based on tags
   ////
   template <typename NodePropertyTag, typename ArcPropertyTag>
-  void copy_hypotheses_graph_subset(const HypothesesGraph& src,
+  void copy_hypotheses_graph_subset(HypothesesGraph& src,
                                     HypothesesGraph& dest,
                                     std::map<HypothesesGraph::Node, HypothesesGraph::Node>& nr,
                                     std::map<HypothesesGraph::Arc, HypothesesGraph::Arc>& ar,
@@ -452,6 +452,23 @@ namespace pgmlink {
   void gmm_priors_and_centers(const feature_array& data, feature_array& priors, feature_array& centers, int k_max, int n, double weight);
 
   void gmm_priors_and_centers_arma(const arma::mat& data, feature_array& priors, feature_array& centers, int k_max, int ndim, double regularization_weight);
+
+
+  ////
+  //// duplicate division nodes in subset graph
+  ////
+  void duplicate_division_nodes(HypothesesGraph& graph,
+                                std::map<HypothesesGraph::Node, HypothesesGraph::Node>& division_splits,
+                                std::map<HypothesesGraph::Arc, HypothesesGraph::Arc>& arc_cross_reference);
+
+
+  ////
+  //// merge previously split divisions after inference
+  ////
+  void merge_split_divisions(const HypothesesGraph& graph,
+                             std::map<HypothesesGraph::Node, HypothesesGraph::Node>& division_splits,
+                             std::map<HypothesesGraph::Arc, HypothesesGraph::Arc>& arc_cross_reference);
+
 
 
   ////
@@ -527,27 +544,41 @@ namespace pgmlink {
 
   
   template <typename NodePropertyTag, typename ArcPropertyTag>
-  void copy_hypotheses_graph_subset(const HypothesesGraph& src,
+  void copy_hypotheses_graph_subset(HypothesesGraph& src,
                                     HypothesesGraph& dest,
                                     std::map<HypothesesGraph::Node, HypothesesGraph::Node>& nr,
                                     std::map<HypothesesGraph::Arc, HypothesesGraph::Arc>& ar,
                                     std::map<HypothesesGraph::Node, HypothesesGraph::Node>& ncr,
                                     std::map<HypothesesGraph::Arc, HypothesesGraph::Arc>& acr
                                     ) {
-	 LOG(logDEBUG) << "copy_hypotheses_graph_subset(): entered";
-	 property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = src.get(node_traxel());
+    LOG(logDEBUG) << "copy_hypotheses_graph_subset(): entered";
+    property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = src.get(node_traxel());
+
+    src.add(division_active());
+    dest.add(division_active()).add(node_originated_from());
 
     typedef typename property_map<NodePropertyTag, HypothesesGraph::base_graph>::type NodeFilter;
     typedef typename property_map<ArcPropertyTag, HypothesesGraph::base_graph>::type ArcFilter;
+    typedef property_map<division_active, HypothesesGraph::base_graph>::type DivisionMap;
+    typedef property_map<node_originated_from, HypothesesGraph::base_graph>::type OriginMap;
+    
     property_map<node_timestep, HypothesesGraph::base_graph>::type& time_map = src.get(node_timestep());
     NodeFilter& node_filter_map = src.get(NodePropertyTag());
     ArcFilter& arc_filter_map = src.get(ArcPropertyTag());
+    DivisionMap& division_map_src = src.get(division_active());
+    DivisionMap& division_map_dest = dest.get(division_active());
+    OriginMap& origin_map_src = src.get(node_originated_from());
+    OriginMap& origin_map_dest = dest.get(node_originated_from());
 
 
     for (typename NodeFilter::TrueIt nodeIt(node_filter_map); nodeIt != lemon::INVALID; ++nodeIt) {
       HypothesesGraph::Node node = dest.add_node(time_map[nodeIt]);
       nr[nodeIt] = node;
       ncr[node] = nodeIt;
+      if (division_map_src[nodeIt]) {
+        division_map_dest.set(node, true);
+      }
+      origin_map_dest.set(node, origin_map_src[nodeIt]);
     }
 
     for (typename ArcFilter::TrueIt arcIt(arc_filter_map); arcIt != lemon::INVALID; ++arcIt) {
@@ -557,12 +588,20 @@ namespace pgmlink {
         HypothesesGraph::Node node = dest.add_node(time_map[from]);
         nr[from] = node;
         ncr[node] = from;
+        if (division_map_src[from]) {
+          division_map_dest.set(node, true);
+        }
+        origin_map_dest.set(node, origin_map_src[from]);
         LOG(logDEBUG3) << "copy_hypotheses_graph_subset(): copied node: " << traxel_map[from];
       }
       if (nr.count(to) == 0) {
         HypothesesGraph::Node node = dest.add_node(time_map[to]);
         nr[to] = node;
         ncr[node] = to;
+        if (division_map_src[to]) {
+          division_map_dest.set(node, true);
+        }
+        origin_map_dest.set(node, origin_map_src[to]);
         LOG(logDEBUG3) << "copy_hypotheses_graph_subset(): copied node: " << traxel_map[to];
       }
       HypothesesGraph::Arc arc = dest.addArc(nr[from], nr[to]);

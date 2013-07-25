@@ -458,11 +458,18 @@ namespace pgmlink {
       dest.add(node_originated_from());
     }
 
+    src.add(division_active()).add(arc_active()).add(node_active2());
+    dest.add(division_active()).add(arc_active()).add(node_active2());
+    
+
     std::map<HypothesesGraph::Node, HypothesesGraph::Node> nr;
     std::map<HypothesesGraph::Arc, HypothesesGraph::Arc> ar;
     std::map<HypothesesGraph::Node, HypothesesGraph::Node> ncr;
     std::map<HypothesesGraph::Arc, HypothesesGraph::Arc> acr;
+    std::map<HypothesesGraph::Node, HypothesesGraph::Node> division_splits;
+    std::map<HypothesesGraph::Arc, HypothesesGraph::Arc> arc_cross_reference_divisions;
     copy_hypotheses_graph_subset<node_resolution_candidate, arc_resolution_candidate>(src, dest, nr, ar, ncr, acr);
+    duplicate_division_nodes(dest, division_splits, arc_cross_reference_divisions);
     std::vector<double> prob;
     prob.push_back(0.0);
     prob.push_back(1.0);
@@ -498,6 +505,8 @@ namespace pgmlink {
     pgm.formulate(dest);
     pgm.infer();
     pgm.conclude(dest);
+
+    merge_split_divisions(dest, division_splits, arc_cross_reference_divisions);
 
     translate_property_bool_map<arc_active, HypothesesGraph::Arc>(dest, src, acr);
   }
@@ -543,6 +552,114 @@ namespace pgmlink {
       for (std::vector<arma::vec>::iterator it = means.begin(); it != means.end(); ++it) {
         std::copy(it->begin(), it->end(), centers.begin() + ((idx+k-1)*(idx+k))/2*ndim);
       }
+    }
+  }
+
+
+  ////
+  //// duplicate division nodes in subset graph
+  ////
+  void duplicate_division_nodes(HypothesesGraph& graph,
+                                std::map<HypothesesGraph::Node, HypothesesGraph::Node>& division_splits,
+                                std::map<HypothesesGraph::Arc, HypothesesGraph::Arc>& arc_cross_reference) {
+    LOG(logDEBUG1) << "duplicate_division_nodes(): enter";
+    typedef property_map<division_active, HypothesesGraph::base_graph>::type DivisionMap;
+    typedef property_map<node_traxel, HypothesesGraph::base_graph>::type TraxelMap;
+    typedef property_map<arc_active, HypothesesGraph::base_graph>::type ArcMap;
+    typedef property_map<arc_distance, HypothesesGraph::base_graph>::type DistanceMap;
+    typedef property_map<node_active2, HypothesesGraph::base_graph>::type NodeMap;
+    typedef property_map<node_originated_from, HypothesesGraph::base_graph>::type OriginMap;
+
+    DivisionMap& division_map = graph.get(division_active());
+    TraxelMap& traxel_map = graph.get(node_traxel());
+    ArcMap& arc_map = graph.get(arc_active());
+    DistanceMap& distance_map = graph.get(arc_distance());
+    NodeMap& node_map = graph.get(node_active2());
+    OriginMap& origin_map = graph.get(node_originated_from());
+
+    for (DivisionMap::TrueIt division_it(division_map);
+         division_it != lemon::INVALID;
+         ++division_it) {
+      LOG(logDEBUG2) << "duplicate_division_nodes(): looping over division node: "
+                     << "with " << lemon::countOutArcs(graph, division_it) << " outgoing arcs";
+         
+      if (lemon::countOutArcs(graph, division_it) < 4) {
+        continue;
+      }
+
+      
+      const Traxel& trax = traxel_map[division_it];
+      const HypothesesGraph::Node& node = graph.add_node(trax.Timestep);
+      traxel_map.set(node, trax);
+      node_map.set(node, 1);
+      /* for (HypothesesGraph::InArcIt arc_it(graph, node); arc_it != lemon::INVALID; ++arc_it) {
+        const HypothesesGraph::Arc& arc = graph.addArc(graph.source(arc_it), node);
+        arc_map.set(arc, true);
+        distance_map.set(arc, distance_map[arc_it]);
+        arc_cross_reference[arc] = arc_it;
+        } */
+
+      unsigned switch_node_id = 0u;
+      for (HypothesesGraph::OutArcIt arc_it(graph, division_it); arc_it != lemon::INVALID; ++arc_it) {
+        const HypothesesGraph::Node& target = graph.target(arc_it);
+        if (origin_map[target].size() > 0) {
+          LOG(logDEBUG3) << "duplicate_division_nodes(): originated from merger " << origin_map[target][0];
+        }
+        if (origin_map[target].size() > 0 &&
+            (switch_node_id == 0 ||
+             switch_node_id == origin_map[target][0])
+            ) {
+          LOG(logDEBUG3) << "duplicate_division_nodes(): copying outgoing arcs";
+          const HypothesesGraph::Arc& arc = graph.addArc(node, target);
+          arc_map.set(arc, true);
+          distance_map.set(arc, distance_map[arc_it]);
+          arc_cross_reference[arc] = arc_it;
+          switch_node_id = origin_map[target][0];
+        }
+      }
+
+      division_splits[division_it] = node;
+    }
+  }
+
+
+  ////
+  //// merge previously split divisions after inference
+  ////
+  void merge_split_divisions(const HypothesesGraph& graph,
+                             std::map<HypothesesGraph::Node, HypothesesGraph::Node>& division_splits,
+                             std::map<HypothesesGraph::Arc, HypothesesGraph::Arc>& arc_cross_reference) {
+    LOG(logDEBUG1) << "merge_splut_divisions(): enter";
+
+    typedef property_map<arc_active, HypothesesGraph::base_graph>::type ArcMap;
+    typedef property_map<node_active2, HypothesesGraph::base_graph>::type NodeMap;
+    typedef property_map<division_active, HypothesesGraph::base_graph>::type DivisionMap;
+
+    DivisionMap& division_map = graph.get(division_active());
+    ArcMap& arc_map = graph.get(arc_active());
+    NodeMap& node_map = graph.get(node_active2());
+
+    for (std::map<HypothesesGraph::Node, HypothesesGraph::Node>::const_iterator node_it = division_splits.begin();
+         node_it != division_splits.end();
+         ++node_it) {
+      
+      /* for (HypothesesGraph::InArcIt arc_it(graph, node_it->second); arc_it != lemon::INVALID; ++arc_it) {
+        if (arc_map[arc_it]) {
+          arc_map.set(arc_cross_reference[arc_it], true);
+          arc_map.set(arc_it, false);
+        }
+        } */
+
+      
+      for (HypothesesGraph::OutArcIt arc_it(graph, node_it->second); arc_it != lemon::INVALID; ++arc_it) {
+        if (arc_map[arc_it]) {
+          arc_map.set(arc_cross_reference[arc_it], true);
+          arc_map.set(arc_it, false);
+        }
+      }
+      
+      division_map.set(node_it->first, true);
+      node_map.set(node_it->second, false);
     }
   }
 
