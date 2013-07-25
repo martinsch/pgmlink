@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <iostream>
+#include <set>
 
 #include <boost/test/unit_test.hpp>
 #include <boost/test/floating_point_comparison.hpp>
@@ -1624,7 +1625,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_MergerResolvingDivision ) {
 	detProb[0] = 0.0; detProb[1] = 0.0; detProb[2] = 1.;
 	n21.features["com"] = com; n21.features["divProb"] = divProb; n21.features["detProb"] = detProb;
 	coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
-	coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
+	coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 0;
 	n21.features["coordinates"] = coordinates;
 	add(ts,n21);
 
@@ -1632,7 +1633,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_MergerResolvingDivision ) {
 	detProb[0] = 0.0; detProb[1] = 0.0; detProb[2] = 1.;
 	n22.features["com"] = com; n22.features["divProb"] = divProb; n22.features["detProb"] = detProb;
 	coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
-	coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
+	coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 0;
 	n22.features["coordinates"] = coordinates;
 	add(ts,n22);
 
@@ -1676,8 +1677,14 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_MergerResolvingDivision ) {
 			} else if (e.type == Event::Move && e.traxel_ids[0] == 13) {
 				BOOST_CHECK_EQUAL(e.traxel_ids[1], 22);
 			} else if (e.type == Event::Division && e.traxel_ids[0] == 12) {
-				BOOST_CHECK_EQUAL(e.traxel_ids[1], 21);
-				BOOST_CHECK_EQUAL(e.traxel_ids[1], 22);
+                                set<unsigned> division_set(e.traxel_ids.begin()+1, e.traxel_ids.end());
+                                set<unsigned> comparison_set;
+                                comparison_set.insert(21);
+                                comparison_set.insert(22);
+                                BOOST_CHECK_EQUAL_COLLECTIONS(division_set.begin(),
+                                                             division_set.end(),
+                                                             comparison_set.begin(),
+                                                             comparison_set.end());
 			} else {
 				cout << "unexpected event: " << e;
 				BOOST_CHECK(false);
