@@ -29,7 +29,7 @@ using namespace boost;
 
 BOOST_AUTO_TEST_CASE( MergerResolver_subgraph ) {
   HypothesesGraph g1, g2;
-  g1.add(node_active()).add(arc_active()).add(node_active2()).add(node_traxel());
+  g1.add(node_active()).add(arc_active()).add(node_active2()).add(node_traxel()).add(node_originated_from());
   HypothesesGraph::Node n1 = g1.add_node(1);
   HypothesesGraph::Node n2 = g1.add_node(2);
   HypothesesGraph::Node n3 = g1.add_node(2);
