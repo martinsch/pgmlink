@@ -5,11 +5,26 @@
 #include <boost/python/suite/indexing/map_indexing_suite.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include <boost/python.hpp>
+#include <Python.h>
 
 
 using namespace std;
 using namespace pgmlink;
 using namespace boost::python;
+
+vector<vector<Event> > pythonChaingraphTracking(ChaingraphTracking& tr, TraxelStore& ts) {
+	vector<vector<Event> > result = std::vector<std::vector<Event> >(0);
+	// release the GIL
+	Py_BEGIN_ALLOW_THREADS
+	try {
+		result = tr(ts);
+	} catch (std::exception& e) {
+		Py_BLOCK_THREADS
+		throw;
+	}
+	Py_END_ALLOW_THREADS
+	return result;
+}
 
 void export_track() {
     class_<vector<Event> >("EventVector")
@@ -36,7 +51,7 @@ void export_track() {
 									  "use_random_forest", "opportunity_cost", "forbidden_cost", "with_constraints",
 									  "fixed_detections", "mean_div_dist", "min_angle", "ep_gap", "n_neighbors"
 									  )))
-      .def("__call__", &ChaingraphTracking::operator())
+      .def("__call__", &pythonChaingraphTracking)
       .def("detections", &ChaingraphTracking::detections)
       .def("set_with_divisions", &ChaingraphTracking::set_with_divisions)
       .def("set_cplex_timeout", &ChaingraphTracking::set_cplex_timeout)
