@@ -413,7 +413,7 @@ namespace pgmlink {
   //// transfer graph to graph containing only subset of nodes based on tags
   ////
   template <typename NodePropertyTag, typename ArcPropertyTag>
-  void copy_hypotheses_graph_subset(HypothesesGraph& src,
+  void copy_hypotheses_graph_subset(const HypothesesGraph& src,
                                     HypothesesGraph& dest,
                                     std::map<HypothesesGraph::Node, HypothesesGraph::Node>& nr,
                                     std::map<HypothesesGraph::Arc, HypothesesGraph::Arc>& ar,
@@ -544,7 +544,7 @@ namespace pgmlink {
 
   
   template <typename NodePropertyTag, typename ArcPropertyTag>
-  void copy_hypotheses_graph_subset(HypothesesGraph& src,
+  void copy_hypotheses_graph_subset(const HypothesesGraph& src,
                                     HypothesesGraph& dest,
                                     std::map<HypothesesGraph::Node, HypothesesGraph::Node>& nr,
                                     std::map<HypothesesGraph::Arc, HypothesesGraph::Arc>& ar,
@@ -554,19 +554,15 @@ namespace pgmlink {
     LOG(logDEBUG) << "copy_hypotheses_graph_subset(): entered";
     property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = src.get(node_traxel());
 
-    src.add(division_active());
-    dest.add(division_active()).add(node_originated_from());
+    dest.add(node_originated_from());
 
     typedef typename property_map<NodePropertyTag, HypothesesGraph::base_graph>::type NodeFilter;
     typedef typename property_map<ArcPropertyTag, HypothesesGraph::base_graph>::type ArcFilter;
-    typedef property_map<division_active, HypothesesGraph::base_graph>::type DivisionMap;
     typedef property_map<node_originated_from, HypothesesGraph::base_graph>::type OriginMap;
     
     property_map<node_timestep, HypothesesGraph::base_graph>::type& time_map = src.get(node_timestep());
     NodeFilter& node_filter_map = src.get(NodePropertyTag());
     ArcFilter& arc_filter_map = src.get(ArcPropertyTag());
-    DivisionMap& division_map_src = src.get(division_active());
-    DivisionMap& division_map_dest = dest.get(division_active());
     OriginMap& origin_map_src = src.get(node_originated_from());
     OriginMap& origin_map_dest = dest.get(node_originated_from());
 
@@ -575,9 +571,6 @@ namespace pgmlink {
       HypothesesGraph::Node node = dest.add_node(time_map[nodeIt]);
       nr[nodeIt] = node;
       ncr[node] = nodeIt;
-      if (division_map_src[nodeIt]) {
-        division_map_dest.set(node, true);
-      }
       origin_map_dest.set(node, origin_map_src[nodeIt]);
     }
 
@@ -588,9 +581,6 @@ namespace pgmlink {
         HypothesesGraph::Node node = dest.add_node(time_map[from]);
         nr[from] = node;
         ncr[node] = from;
-        if (division_map_src[from]) {
-          division_map_dest.set(node, true);
-        }
         origin_map_dest.set(node, origin_map_src[from]);
         LOG(logDEBUG3) << "copy_hypotheses_graph_subset(): copied node: " << traxel_map[from];
       }
@@ -598,9 +588,6 @@ namespace pgmlink {
         HypothesesGraph::Node node = dest.add_node(time_map[to]);
         nr[to] = node;
         ncr[node] = to;
-        if (division_map_src[to]) {
-          division_map_dest.set(node, true);
-        }
         origin_map_dest.set(node, origin_map_src[to]);
         LOG(logDEBUG3) << "copy_hypotheses_graph_subset(): copied node: " << traxel_map[to];
       }
@@ -648,6 +635,8 @@ namespace pgmlink {
     // for(bool b : {false, true});
 
     // C++11 !!!
+
+    LOG(logDEBUG) << "translate_property_bool_map(): entering";
     
     bool const bools[] = {false, true};
     typedef typename property_map<PropertyTag, HypothesesGraph::base_graph>::type IterableMap;

@@ -469,7 +469,7 @@ namespace pgmlink {
     std::map<HypothesesGraph::Node, HypothesesGraph::Node> division_splits;
     std::map<HypothesesGraph::Arc, HypothesesGraph::Arc> arc_cross_reference_divisions;
     copy_hypotheses_graph_subset<node_resolution_candidate, arc_resolution_candidate>(src, dest, nr, ar, ncr, acr);
-    duplicate_division_nodes(dest, division_splits, arc_cross_reference_divisions);
+
     std::vector<double> prob;
     prob.push_back(0.0);
     prob.push_back(1.0);
@@ -479,6 +479,10 @@ namespace pgmlink {
     translate_property_value_map<node_traxel, HypothesesGraph::Node>(src, dest, nr);
     translate_property_value_map<arc_distance, HypothesesGraph::Arc>(src, dest, ar);
     translate_property_value_map<node_originated_from, HypothesesGraph::Node>(src, dest, nr);
+    translate_property_bool_map<division_active, HypothesesGraph::Node>(src, dest, nr);
+
+    duplicate_division_nodes(dest, division_splits, arc_cross_reference_divisions);
+
     boost::function<double(const Traxel&)> appearance_cost = ConstantFeature(0.0);
     boost::function<double(const Traxel&)> disappearance_cost = ConstantFeature(0.0);
 
@@ -562,7 +566,15 @@ namespace pgmlink {
   void duplicate_division_nodes(HypothesesGraph& graph,
                                 std::map<HypothesesGraph::Node, HypothesesGraph::Node>& division_splits,
                                 std::map<HypothesesGraph::Arc, HypothesesGraph::Arc>& arc_cross_reference) {
-    LOG(logDEBUG1) << "duplicate_division_nodes(): enter";
+
+    // When each of the children of a division merge
+    // with a nearby cell there will be an infeasibility
+    // in the ILP because of mass not being conserved.
+    // Duplicate all division cells and their outgoing arcs
+    // Requires cleanup (see merge_split_divisions) after
+    // inference.
+
+    LOG(logDEBUG) << "duplicate_division_nodes(): enter";
     typedef property_map<division_active, HypothesesGraph::base_graph>::type DivisionMap;
     typedef property_map<node_traxel, HypothesesGraph::base_graph>::type TraxelMap;
     typedef property_map<arc_active, HypothesesGraph::base_graph>::type ArcMap;
@@ -592,13 +604,19 @@ namespace pgmlink {
       const HypothesesGraph::Node& node = graph.add_node(trax.Timestep);
       traxel_map.set(node, trax);
       node_map.set(node, 1);
-      /* for (HypothesesGraph::InArcIt arc_it(graph, node); arc_it != lemon::INVALID; ++arc_it) {
-        const HypothesesGraph::Arc& arc = graph.addArc(graph.source(arc_it), node);
-        arc_map.set(arc, true);
-        distance_map.set(arc, distance_map[arc_it]);
-        arc_cross_reference[arc] = arc_it;
-        } */
 
+      // Do not duplicate incoming arcs:
+      // Incoming arcs are not affected by
+      // mass conservation problem when division
+      // goes into mergers.
+
+
+      // Clone outgoing arcs only when both
+      // children are part of different mergers(1).
+      // This require the number of outgoing arcs
+      // to be four. The variable switch_node_id is
+      // used to make sure the correct arcs are copied
+      // to the new node (according to (1)).
       unsigned switch_node_id = 0u;
       for (HypothesesGraph::OutArcIt arc_it(graph, division_it); arc_it != lemon::INVALID; ++arc_it) {
         const HypothesesGraph::Node& target = graph.target(arc_it);
@@ -618,6 +636,7 @@ namespace pgmlink {
         }
       }
 
+      // Remember both original node and appropriate clone
       division_splits[division_it] = node;
     }
   }
@@ -643,23 +662,26 @@ namespace pgmlink {
          node_it != division_splits.end();
          ++node_it) {
       
-      /* for (HypothesesGraph::InArcIt arc_it(graph, node_it->second); arc_it != lemon::INVALID; ++arc_it) {
-        if (arc_map[arc_it]) {
-          arc_map.set(arc_cross_reference[arc_it], true);
-          arc_map.set(arc_it, false);
-        }
-        } */
+      // Do not handle incoming arcs:
+      // Incoming arcs are not affected by
+      // mass conservation problem when division
+      // goes into mergers.
 
-      
+
+      // Unify original node and its clone (see
+      // duplicate_division_nodes for explanation
+      // of the need t clone)
       for (HypothesesGraph::OutArcIt arc_it(graph, node_it->second); arc_it != lemon::INVALID; ++arc_it) {
         if (arc_map[arc_it]) {
           arc_map.set(arc_cross_reference[arc_it], true);
           arc_map.set(arc_it, false);
         }
       }
-      
+
+      // Reset original node to division state
       division_map.set(node_it->first, true);
-      node_map.set(node_it->second, false);
+      // Set clone inactive
+      node_map.set(node_it->second, 0);
     }
   }
 
