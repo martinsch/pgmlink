@@ -441,7 +441,21 @@ namespace pgmlink {
 
   void resolve_graph(HypothesesGraph& src, HypothesesGraph& dest, boost::function<double(const double)> transition, double ep_gap, bool with_tracklets, 
          const double transition_parameter, const bool with_constraints) {
-	  LOG(logDEBUG) << "resolve_graph() entered";
+
+    // Optimize the graph built by the class MergerResolver.
+    // Up to here everything is only graph (nodes, arcs) based
+    // in this function this generality is lost by
+    // introducing the traxel and division property
+    // In general this should not matter as keys
+    // not present in a lemon::IterableBool/ValueMap
+    // will be default constructed.
+    // Nonetheless an approach that is free of using
+    // those properties unless you explicitly say so
+    // is desirable.
+
+    LOG(logDEBUG) << "resolve_graph() entered";
+
+    // add properties
     if (!dest.has_property(node_traxel())) {
       dest.add(node_traxel());
     }
@@ -462,14 +476,18 @@ namespace pgmlink {
     dest.add(division_active()).add(arc_active()).add(node_active2());
     
 
+    // Storing references in nr and ar, cross references in
+    // ncr and acr.
     std::map<HypothesesGraph::Node, HypothesesGraph::Node> nr;
     std::map<HypothesesGraph::Arc, HypothesesGraph::Arc> ar;
     std::map<HypothesesGraph::Node, HypothesesGraph::Node> ncr;
     std::map<HypothesesGraph::Arc, HypothesesGraph::Arc> acr;
-    std::map<HypothesesGraph::Node, HypothesesGraph::Node> division_splits;
-    std::map<HypothesesGraph::Arc, HypothesesGraph::Arc> arc_cross_reference_divisions;
     copy_hypotheses_graph_subset<node_resolution_candidate, arc_resolution_candidate>(src, dest, nr, ar, ncr, acr);
 
+
+    // Setup parameters for conservation tracking
+    // to run as a global (== not greedy) nearest neighbor
+    // on the subgraph
     std::vector<double> prob;
     prob.push_back(0.0);
     prob.push_back(1.0);
@@ -481,6 +499,13 @@ namespace pgmlink {
     translate_property_value_map<node_originated_from, HypothesesGraph::Node>(src, dest, nr);
     translate_property_bool_map<division_active, HypothesesGraph::Node>(src, dest, nr);
 
+    // Storing original division nodes and their clones (pairwise)
+    std::map<HypothesesGraph::Node, HypothesesGraph::Node> division_splits;
+
+    // Store a mapping from outgoing arcs from the clone to
+    // outgoing arcs of the original division node
+    std::map<HypothesesGraph::Arc, HypothesesGraph::Arc> arc_cross_reference_divisions;
+
     duplicate_division_nodes(dest, division_splits, arc_cross_reference_divisions);
 
     boost::function<double(const Traxel&)> appearance_cost = ConstantFeature(0.0);
@@ -488,6 +513,8 @@ namespace pgmlink {
 
     LOG(logDEBUG) << "resolve_graph(): calling conservation tracking";
 
+    // Construct conservation tracking and
+    // do inference.
     ConservationTracking pgm(
                              1, //max_number_objects_,
                              detection, //detection,
@@ -510,8 +537,10 @@ namespace pgmlink {
     pgm.infer();
     pgm.conclude(dest);
 
+    // Remap results from clones to original nodes.
     merge_split_divisions(dest, division_splits, arc_cross_reference_divisions);
 
+    // Remap active maps from subgraph to original hypotheses graph.
     translate_property_bool_map<arc_active, HypothesesGraph::Arc>(dest, src, acr);
   }
 
