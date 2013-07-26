@@ -339,8 +339,8 @@ namespace pgmlink {
 
 
   void MergerResolver::deactivate_arcs(std::vector<HypothesesGraph::base_graph::Arc> arcs) {
-    // deactivate Arcs provided by arcs
-    // useful to deactivate Arcs of merger Node
+    // Deactivate Arcs provided by arcs.
+    // Useful to deactivate arcs of merger node.
 
     property_map<arc_active, HypothesesGraph::base_graph>::type& arc_active_map = g_->get(arc_active());
     property_map<arc_resolution_candidate, HypothesesGraph::base_graph>::type& arc_resolution_map = g_->get(arc_resolution_candidate());
@@ -352,8 +352,8 @@ namespace pgmlink {
   }
 
   void MergerResolver::deactivate_nodes(std::vector<HypothesesGraph::Node> nodes) {
-    // deactivate Nodes provided by nodes
-    // needed to set all resolved merger nodes inactive
+    // Deactivate Nodes provided by nodes.
+    // Needed to set all resolved merger nodes inactive.
     std::vector<HypothesesGraph::Node>::iterator it = nodes.begin();
     property_map<node_active2, HypothesesGraph::base_graph>::type& node_active_map = g_->get(node_active2());
     property_map<node_resolution_candidate, HypothesesGraph::base_graph>::type& node_resolution_map = g_->get(node_resolution_candidate());
