@@ -18,7 +18,7 @@ vector<vector<Event> > pythonChaingraphTracking(ChaingraphTracking& tr, TraxelSt
 	Py_BEGIN_ALLOW_THREADS
 	try {
 		result = tr(ts);
-	} catch (std::runtime_error& e) {
+	} catch (std::exception& e) {
 		Py_BLOCK_THREADS
 		throw;
 	}
