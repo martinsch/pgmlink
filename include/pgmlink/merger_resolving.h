@@ -234,7 +234,6 @@ namespace pgmlink {
     // int nMergers);
 
     // Add arcs to nodes created to replace merger node.
-    // tested
     void add_arcs_for_replacement_node(HypothesesGraph::Node node,
 				       Traxel trax,
 				       std::vector<HypothesesGraph::base_graph::Arc> src,
@@ -242,19 +241,15 @@ namespace pgmlink {
 				       DistanceBase& distance);
 
     // Deactivate arcs of merger node.
-    // tested
     void deactivate_arcs(std::vector<HypothesesGraph::base_graph::Arc> arcs);
 
     // Deactivate all resolved merger nodes
-    // tested
     void deactivate_nodes(std::vector<HypothesesGraph::Node> nodes);
 
     // Get maximum id for given timestep
-    // tested
     unsigned int get_max_id(int ts);
 
     // Split merger node into appropiately many new nodes.
-    // tested
     void refine_node(HypothesesGraph::Node,
 		     std::size_t,
 		     FeatureHandlerBase& handler);
@@ -286,7 +281,8 @@ namespace pgmlink {
   ////
   //// given a graph, do retracking
   ////
-  void resolve_graph(HypothesesGraph& src, HypothesesGraph& dest, boost::function<double(const double)> transition, double ep_gap, bool with_tracklets);
+  void resolve_graph(HypothesesGraph& src, HypothesesGraph& dest, boost::function<double(const double)> transition, double ep_gap, bool with_tracklets,
+          const double transition_parameter=5, const bool with_constraints=true);
   // void resolve_graph(HypothesesGraph& src, HypothesesGraph& dest);
 
   
@@ -336,6 +332,23 @@ namespace pgmlink {
 
 
   ////
+  //// duplicate division nodes in subset graph
+  ////
+  void duplicate_division_nodes(HypothesesGraph& graph,
+                                std::map<HypothesesGraph::Node, HypothesesGraph::Node>& division_splits,
+                                std::map<HypothesesGraph::Arc, HypothesesGraph::Arc>& arc_cross_reference);
+
+
+  ////
+  //// merge previously split divisions after inference
+  ////
+  void merge_split_divisions(const HypothesesGraph& graph,
+                             std::map<HypothesesGraph::Node, HypothesesGraph::Node>& division_splits,
+                             std::map<HypothesesGraph::Arc, HypothesesGraph::Arc>& arc_cross_reference);
+
+
+
+  ////
   //// IMPLEMENTATIONS ////
   ////
 
@@ -345,8 +358,12 @@ namespace pgmlink {
   void MergerResolver::collect_arcs(ArcIterator arcIt,
 				    std::vector<HypothesesGraph::base_graph::Arc>& res) {
     assert(res.size() == 0);
+    // check if arc is active
+    property_map<arc_active, HypothesesGraph::base_graph>::type& arc_active_map = g_->get(arc_active());
     for (; arcIt != lemon::INVALID; ++arcIt) {
-      res.push_back(arcIt);
+      if (arc_active_map[arcIt]) {
+        res.push_back(arcIt);
+      }
     }
   }
 
@@ -359,16 +376,27 @@ namespace pgmlink {
                                     std::map<HypothesesGraph::Node, HypothesesGraph::Node>& ncr,
                                     std::map<HypothesesGraph::Arc, HypothesesGraph::Arc>& acr
                                     ) {
+    LOG(logDEBUG) << "copy_hypotheses_graph_subset(): entered";
+    property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = src.get(node_traxel());
+
+    dest.add(node_originated_from());
+
     typedef typename property_map<NodePropertyTag, HypothesesGraph::base_graph>::type NodeFilter;
     typedef typename property_map<ArcPropertyTag, HypothesesGraph::base_graph>::type ArcFilter;
+    typedef property_map<node_originated_from, HypothesesGraph::base_graph>::type OriginMap;
+    
     property_map<node_timestep, HypothesesGraph::base_graph>::type& time_map = src.get(node_timestep());
     NodeFilter& node_filter_map = src.get(NodePropertyTag());
     ArcFilter& arc_filter_map = src.get(ArcPropertyTag());
+    OriginMap& origin_map_src = src.get(node_originated_from());
+    OriginMap& origin_map_dest = dest.get(node_originated_from());
+
 
     for (typename NodeFilter::TrueIt nodeIt(node_filter_map); nodeIt != lemon::INVALID; ++nodeIt) {
       HypothesesGraph::Node node = dest.add_node(time_map[nodeIt]);
       nr[nodeIt] = node;
       ncr[node] = nodeIt;
+      origin_map_dest.set(node, origin_map_src[nodeIt]);
     }
 
     for (typename ArcFilter::TrueIt arcIt(arc_filter_map); arcIt != lemon::INVALID; ++arcIt) {
@@ -378,16 +406,24 @@ namespace pgmlink {
         HypothesesGraph::Node node = dest.add_node(time_map[from]);
         nr[from] = node;
         ncr[node] = from;
+        origin_map_dest.set(node, origin_map_src[from]);
+        LOG(logDEBUG3) << "copy_hypotheses_graph_subset(): copied node: " << traxel_map[from];
       }
       if (nr.count(to) == 0) {
         HypothesesGraph::Node node = dest.add_node(time_map[to]);
         nr[to] = node;
         ncr[node] = to;
+        origin_map_dest.set(node, origin_map_src[to]);
+        LOG(logDEBUG3) << "copy_hypotheses_graph_subset(): copied node: " << traxel_map[to];
       }
       HypothesesGraph::Arc arc = dest.addArc(nr[from], nr[to]);
       ar[arcIt] = arc;
       acr[arc] = arcIt;
+      LOG(logDEBUG3) << "copy_hypotheses_graph_subset(): copied arc " << src.id(arcIt) << ": ("
+                     << traxel_map[src.source(arcIt)] << ','
+                     << traxel_map[src.target(arcIt)] << ')';
     }
+    LOG(logDEBUG) << "copy_hypotheses_graph_subset(): done";
   }
 
   
@@ -424,6 +460,8 @@ namespace pgmlink {
     // for(bool b : {false, true});
 
     // C++11 !!!
+
+    LOG(logDEBUG) << "translate_property_bool_map(): entering";
     
     bool const bools[] = {false, true};
     typedef typename property_map<PropertyTag, HypothesesGraph::base_graph>::type IterableMap;
@@ -447,30 +485,17 @@ namespace pgmlink {
                   HypothesesGraph::NodeMap<HypothesesGraph::Node>& ncr,
                   HypothesesGraph::ArcMap<HypothesesGraph::Arc>& acr
                   ) {
-                  /* typename SubHypothesesGraph<NodePropertyTag, ArcPropertyTag>::type::NodeMap<HypothesesGraph::Node> nr&,
-                  typename SubHypothesesGraph<NodePropertyTag, ArcPropertyTag>::type::ArcMap<HypothesesGraph::Arc> ar&,
-                  HypothesesGraph::NodeMap<typename SubHypothesesGraph<NodePropertyTag, ArcPropertyTag>::type::Node> ncr&,
-                  HypothesesGraph::ArcMap<typename SubHypothesesGraph<NodePropertyTag, ArcPropertyTag>::type::Arc> acr& 
-                  ) { */
     typedef typename property_map<NodePropertyTag, HypothesesGraph::base_graph>::type NodeFilter;
     typedef typename property_map<ArcPropertyTag, HypothesesGraph::base_graph>::type ArcFilter;
 
     typedef lemon::SubDigraph<HypothesesGraph::base_graph, NodeFilter, ArcFilter> CopyGraph;
     typedef HypothesesGraph::base_graph GRAPH;
-
     
     NodeFilter& node_filter_map = src.get(NodePropertyTag());
     ArcFilter& arc_filter_map = src.get(ArcPropertyTag());
     CopyGraph sub(src, node_filter_map, arc_filter_map);
 
-
     lemon::digraphCopy<CopyGraph, HypothesesGraph::base_graph>(sub,dest).nodeRef(nr).nodeCrossRef(ncr).arcRef(ar).arcCrossRef(acr).run();
-    /* HypothesesGraph::base_graph::NodeMap<CopyGraph::Node> node_cross_reference(dest);
-    copy.nodeCrossRef(node_cross_reference);
-    copy.arcCrossRef(arc_cross_reference);
-    copy.run();
-    HypothesesGraph::base_graph::ArcMap<CopyGraph::Arc> arc_cross_reference(dest); */
-    
   }
 
 
