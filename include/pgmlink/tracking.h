@@ -81,7 +81,8 @@ namespace pgmlink {
                  double divisionThreshold = 0.5,
                  bool splitterHandling = true,
                  bool mergerHandling = true,
-                 std::vector<int> maxTraxelIdAt = std::vector<int>())
+                 std::vector<int> maxTraxelIdAt = std::vector<int>(0))
+
         : divDist_(divDist), movDist_(movDist), distanceFeatures_(features),
           divisionThreshold_(divisionThreshold), splitterHandling_(splitterHandling),
           mergerHandling_(mergerHandling), maxTraxelIdAt_(maxTraxelIdAt){}
@@ -150,7 +151,8 @@ namespace pgmlink {
 		  int n_dim = 3,
 		  double transition_parameter = 5.,
 		  double border_width = 0,
-		  FieldOfView fov = FieldOfView()
+		  FieldOfView fov = FieldOfView(),
+		  bool with_constraints = true
   	      )
         : max_number_objects_(max_number_objects),
         	max_dist_(max_neighbor_distance), division_threshold_(division_threshold),
@@ -169,7 +171,8 @@ namespace pgmlink {
 		number_of_dimensions_(n_dim),
 		transition_parameter_(transition_parameter),
 		border_width_(border_width),
-		fov_(fov){}
+		fov_(fov),
+		with_constraints_(with_constraints){}
       std::vector< std::vector<Event> > operator()(TraxelStore&);
 
       /**
@@ -198,6 +201,7 @@ namespace pgmlink {
       double transition_parameter_;
       double border_width_;
       FieldOfView fov_;
+      bool with_constraints_;
     };
 }
 

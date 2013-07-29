@@ -368,21 +368,21 @@ std::vector<double> computeDetProb(double vol, vector<double> means, vector<doub
 	return result;
 }
 
-double dot(double x1,double y1,double z1, double x2,double y2,double z2) {
-      return x1*x2 + y1*y2 + z1*z2;
-}
-
-double norm(double x,double y,double z) {
-      return sqrt(dot(x,y,z, x,y,z));
-}
-
-double getCorrectedDistance(Traxel from, Traxel to) {
-	FeatureMap::const_iterator it = from.features.find("com_corrected");
-	if (it == from.features.end()) {
-		throw runtime_error("getCorrectedDistance(): com_corrected feature not found in traxel");
-	}
-	return norm(it->second[0]-to.X(),it->second[1]-to.Y(),it->second[2]-to.Z());
-}
+//double dot(double x1,double y1,double z1, double x2,double y2,double z2) {
+//      return x1*x2 + y1*y2 + z1*z2;
+//}
+//
+//double norm(double x,double y,double z) {
+//      return sqrt(dot(x,y,z, x,y,z));
+//}
+//
+//double getCorrectedDistance(Traxel from, Traxel to) {
+//	FeatureMap::const_iterator it = from.features.find("com_corrected");
+//	if (it == from.features.end()) {
+//		throw runtime_error("getCorrectedDistance(): com_corrected feature not found in traxel");
+//	}
+//	return norm(it->second[0]-to.X(),it->second[1]-to.Y(),it->second[2]-to.Z());
+//}
 }
 
 ////
@@ -535,7 +535,7 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 		Traxel to_tr = traxel_map[to];
 
 		if (with_optical_correction) {
-			arc_distances.set(a, getCorrectedDistance(from_tr,to_tr));
+			arc_distances.set(a, from_tr.distance_to_corr(to_tr));
 		} else {
 			arc_distances.set(a, from_tr.distance_to(to_tr));
 		}
@@ -558,7 +558,11 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 			with_divisions_,
 			disappearance_cost_fn,
 			appearance_cost_fn,
-			transition_parameter_
+			true, // with_misdetections_allowed
+			true, // with_appearance
+			true, // with_disappearance
+			transition_parameter_,
+			with_constraints_
 			);
 
 	cout << "-> formulate ConservationTracking model" << endl;
@@ -576,33 +580,33 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 	cout << "-> pruning inactive hypotheses" << endl;
 	prune_inactive(*graph);
 
-        cout << "-> constructing unresolved events" << endl;
-        boost::shared_ptr<std::vector< std::vector<Event> > > ev = events(*graph);
-        
+    cout << "-> constructing unresolved events" << endl;
+    boost::shared_ptr<std::vector< std::vector<Event> > > ev = events(*graph);
 
-        if (with_merger_resolution_ && all_true(ev->begin(), ev->end(), has_data<Event>)) {
-          cout << "-> resolving mergers" << endl;
-          MergerResolver m(graph);
-          // FeatureExtractorMCOMsFromKMeans extractor;
-          FeatureExtractorMCOMsFromGMM extractor(number_of_dimensions_);
-          DistanceFromCOMs distance;
-          FeatureHandlerFromTraxels handler(extractor, distance);
-          m.resolve_mergers(handler);
-        
-          HypothesesGraph g_res;
-          resolve_graph(*graph, g_res, transition, ep_gap_, with_tracklets_);
-          prune_inactive(*graph);
 
-          cout << "-> constructing resolved events" << endl;
-          boost::shared_ptr<std::vector< std::vector<Event> > > multi_frame_moves = multi_frame_move_events(*graph);
+    if (with_merger_resolution_ && all_true(ev->begin(), ev->end(), has_data<Event>)) {
+      cout << "-> resolving mergers" << endl;
+      MergerResolver m(graph);
+      // FeatureExtractorMCOMsFromKMeans extractor;
+      FeatureExtractorMCOMsFromGMM extractor(number_of_dimensions_);
+      DistanceFromCOMs distance;
+      FeatureHandlerFromTraxels handler(extractor, distance);
+      m.resolve_mergers(handler);
 
-          cout << "-> merging unresolved and resolved events" << endl;
-          return *merge_event_vectors(*ev, *multi_frame_moves);
-        }
+      HypothesesGraph g_res;
+      resolve_graph(*graph, g_res, transition, ep_gap_, with_tracklets_, transition_parameter_, with_constraints_);
+      prune_inactive(*graph);
 
-        else {
-          return *ev;
-        }
+      cout << "-> constructing resolved events" << endl;
+      boost::shared_ptr<std::vector< std::vector<Event> > > multi_frame_moves = multi_frame_move_events(*graph);
+
+      cout << "-> merging unresolved and resolved events" << endl;
+      return *merge_event_vectors(*ev, *multi_frame_moves);
+    }
+
+    else {
+      return *ev;
+    }
 
         
 

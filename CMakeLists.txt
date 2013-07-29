@@ -53,7 +53,7 @@ find_package( Boost REQUIRED COMPONENTS serialization )
 find_package( HDF5 REQUIRED COMPONENTS HL)
 message(STATUS "  found: ${Boost_LIBRARIES}")
 
-include_directories(${PROJECT_SOURCE_DIR}/include/ ${ANN_INCLUDE_DIR} ${CPLEX_INCLUDE_DIRS} ${VIGRA_INCLUDE_DIR} ${LEMON_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
+include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/include/ ${ANN_INCLUDE_DIR} ${CPLEX_INCLUDE_DIRS} ${VIGRA_INCLUDE_DIR} ${LEMON_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
 
 # CPLEX switch to be compatible with STL
 ADD_DEFINITIONS(-DIL_STD)
