@@ -456,7 +456,6 @@ namespace pgmlink {
     typedef typename property_map<ArcPropertyTag, HypothesesGraph::base_graph>::type ArcFilter;
 
     typedef lemon::SubDigraph<HypothesesGraph::base_graph, NodeFilter, ArcFilter> CopyGraph;
-    typedef HypothesesGraph::base_graph GRAPH;
 
     
     NodeFilter& node_filter_map = src.get(NodePropertyTag());
