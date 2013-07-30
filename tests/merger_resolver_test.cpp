@@ -28,6 +28,49 @@ using namespace std;
 using namespace boost;
 
 
+BOOST_AUTO_TEST_CASE( MergerResolver_no_mergers ) {
+  HypothesesGraph src;
+  HypothesesGraph dest;
+
+  src.add(node_active())
+    .add(arc_active())
+    .add(node_active2())
+    .add(node_traxel())
+    .add(node_originated_from())
+    .add(node_resolution_candidate())
+    .add(arc_resolution_candidate())
+    .add(arc_distance());
+
+  MergerResolver m(&src);
+  FeatureExtractorMCOMsFromGMM extractor(2);
+  DistanceFromCOMs distance;
+  FeatureHandlerFromTraxels handler(extractor, distance);
+  m.resolve_mergers(handler);
+
+
+  HypothesesGraph::Node n1 = src.add_node(1);
+  HypothesesGraph::Node n2 = src.add_node(2);
+
+  HypothesesGraph::Arc arc = src.addArc(n1, n2);
+
+  resolve_graph(src,
+                dest,
+                NegLnTransition(1), // weight 1
+                0.05, // ep gap
+                true, // with_tracklets
+                100, // transition_parameter
+                true // with_constraint
+                );
+
+  int n_arcs = lemon::countArcs(dest);
+  int n_node = lemon::countNodes(dest);
+
+  BOOST_CHECK_EQUAL(n_arcs, 0);
+  BOOST_CHECK_EQUAL(n_node, 0);
+
+}
+
+
 BOOST_AUTO_TEST_CASE( MergerResolver_subgraph ) {
   HypothesesGraph g1, g2;
   g1.add(node_active()).add(arc_active()).add(node_active2()).add(node_traxel()).add(node_originated_from());
