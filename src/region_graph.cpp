@@ -25,13 +25,13 @@ namespace pgmlink {
   ////
   RegionGraph::RegionGraph() :
     maximum_label_(0u) {
-    add(node_neighbors())
-      .add(arc_dissimilarity())
-      .add(node_label())
-      .add(node_contains())
-      .add(node_conflicts())
-      .add(node_level())
-      .add(node_connected_component());
+    add(node_neighbors());
+    add(arc_dissimilarity());
+    add(node_label());
+    add(node_contains());
+    add(node_conflicts());
+    add(node_level());
+    add(node_connected_component());
   }
 
 
