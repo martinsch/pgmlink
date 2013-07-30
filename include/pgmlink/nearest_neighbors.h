@@ -201,13 +201,17 @@ void NearestNeighborSearch::define_point_set( InputIt traxel_begin, InputIt trax
 	  ANNpoint point = points_[i];
 	  assert(dim_ == 3);
 	  if (!reverse) {
-		  point[0] = traxel->X_corr();
-		  point[1] = traxel->Y_corr();
-		  point[2] = traxel->Z_corr();
-	  } else {
 		  point[0] = traxel->X();
 		  point[1] = traxel->Y();
 		  point[2] = traxel->Z();
+		  LOG(logDEBUG4) << "NearestNeighborSearch::define_point_set (!reverse): " << *traxel <<
+		                  " point = " << point[0] << "," << point[1] << "," << point[2];
+	  } else {
+		  point[0] = traxel->X_corr();
+		  point[1] = traxel->Y_corr();
+		  point[2] = traxel->Z_corr();
+		  LOG(logDEBUG4) << "NearestNeighborSearch::define_point_set: " << *traxel <<
+		                            " point = " << point[0] << "," << point[1] << "," << point[2];
 	  }
 
 	  // save point <-> traxel association
@@ -228,13 +232,17 @@ ANNpoint NearestNeighborSearch::point_from_traxel( const Traxel& traxel, const b
     ANNpoint point = annAllocPt( dim_ );
 
     if (reverse) {
-    	point[0] = traxel.X_corr();
-		point[1] = traxel.Y_corr();
-		point[2] = traxel.Z_corr();
-    } else {
     	point[0] = traxel.X();
 		point[1] = traxel.Y();
 		point[2] = traxel.Z();
+		LOG(logDEBUG4) << "NearestNeighborSearch::point_from_traxel (reverse): " << traxel <<
+		        " point = " << point[0] << "," << point[1] << "," << point[2];
+    } else {
+    	point[0] = traxel.X_corr();
+		point[1] = traxel.Y_corr();
+		point[2] = traxel.Z_corr();
+		LOG(logDEBUG4) << "NearestNeighborSearch::point_from_traxel: " << traxel <<
+		                " point = " << point[0] << "," << point[1] << "," << point[2];
     }
 
     return point;
