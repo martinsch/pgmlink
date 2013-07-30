@@ -439,8 +439,13 @@ namespace pgmlink {
   }
 
 
-  void resolve_graph(HypothesesGraph& src, HypothesesGraph& dest, boost::function<double(const double)> transition, double ep_gap, bool with_tracklets, 
-         const double transition_parameter, const bool with_constraints) {
+  void resolve_graph(HypothesesGraph& src,
+                     HypothesesGraph& dest,
+                     boost::function<double(const double)> transition,
+                     double ep_gap,
+                     bool with_tracklets, 
+                     const double transition_parameter,
+                     const bool with_constraints) {
 
     // Optimize the graph built by the class MergerResolver.
     // Up to here everything is only graph (nodes, arcs) based
@@ -483,6 +488,11 @@ namespace pgmlink {
     std::map<HypothesesGraph::Node, HypothesesGraph::Node> ncr;
     std::map<HypothesesGraph::Arc, HypothesesGraph::Arc> acr;
     copy_hypotheses_graph_subset<node_resolution_candidate, arc_resolution_candidate>(src, dest, nr, ar, ncr, acr);
+
+    // if resulting graph is empty, nothing to be done here; return
+    if (lemon::countNodes(dest) == 0) {
+      return;
+    }
 
 
     // Setup parameters for conservation tracking
