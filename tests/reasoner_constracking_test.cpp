@@ -1692,3 +1692,159 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_MergerResolvingDivision ) {
 	}
 
 }
+
+
+
+
+BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_TranslationVector2 ) {
+
+	std::cout << "Constructing HypothesesGraph" << std::endl;
+	std::cout << std::endl;
+
+	typedef HypothesesGraph::ArcIt ArcIt2;
+	typedef HypothesesGraph::Arc Arc;
+	typedef HypothesesGraph::NodeIt NodeIt;
+	typedef HypothesesGraph::Node Node;
+	using lemon::INVALID;
+
+	std::cout << "Adding Traxels to TraxelStore" << std::endl;
+	std::cout << std::endl;
+
+	TraxelStore ts;
+	Traxel n11, n12;
+	Traxel n21, n22;
+	Traxel n31, n32;
+	Traxel n41, n42;
+	std::vector<int> center;
+	std::vector<int> shift;
+	std::vector<double> pDet;
+
+	center.clear(); shift.clear(); pDet.clear();
+	pushBackMultiple(center, 90, 267, 0);
+	pushBackMultiple(shift, -7,3,0);
+	pushBackMultiple(pDet, 0.,1.);
+	constructTraxel(n11,11,1,0.00,center,shift,pDet);
+	add(ts,n11);
+
+	center.clear(); shift.clear(); pDet.clear();
+	pushBackMultiple(center, 113, 312, 0);
+	pushBackMultiple(shift, -7,3,0);
+	pushBackMultiple(pDet, 0.,1.);
+	constructTraxel(n12,12,1,0.00,center,shift,pDet);
+	add(ts,n12);
+
+	center.clear(); shift.clear(); pDet.clear();
+	pushBackMultiple(center, 83, 270, 0);
+	pushBackMultiple(shift, 7,-3,0);
+	pushBackMultiple(pDet, 0.,1.);
+	constructTraxel(n21,21,2,0.00,center,shift,pDet);
+	add(ts,n21);
+
+	center.clear(); shift.clear(); pDet.clear();
+	pushBackMultiple(center, 106, 315, 0);
+	pushBackMultiple(shift, 7,-3,0);
+	pushBackMultiple(pDet, 0.,1.);
+	constructTraxel(n22,22,2,0.00,center,shift,pDet);
+	add(ts,n22);
+
+	center.clear(); shift.clear(); pDet.clear();
+	pushBackMultiple(center, 90, 267, 0);
+	pushBackMultiple(shift, 27,46,0);
+	pushBackMultiple(pDet, 0.,1.);
+	constructTraxel(n31,31,3,0.00,center,shift,pDet);
+	add(ts,n31);
+
+	center.clear(); shift.clear(); pDet.clear();
+	pushBackMultiple(center, 113, 312, 0);
+	pushBackMultiple(shift, 27,46,0);
+	pushBackMultiple(pDet, 0.,1.);
+	constructTraxel(n32,32,3,0.00,center,shift,pDet);
+	add(ts,n32);
+
+	center.clear(); shift.clear(); pDet.clear();
+	pushBackMultiple(center, 117, 313, 0);
+	pushBackMultiple(shift, 0,0,0);
+	pushBackMultiple(pDet, 0.,1.);
+	constructTraxel(n41,41,4,0.00,center,shift,pDet);
+	add(ts,n41);
+
+	center.clear(); shift.clear(); pDet.clear();
+	pushBackMultiple(center, 140, 358, 0);
+	pushBackMultiple(shift, 0,0,0);
+	pushBackMultiple(pDet, 0.,1.);
+	constructTraxel(n42,42,4,0.00,center,shift,pDet);
+	add(ts,n42);
+
+	std::cout << "Initialize Conservation tracking" << std::endl;
+	std::cout << std::endl;
+
+    FieldOfView fov(0, 0, 0, 0, 3, 1000, 1000, 1); // tlow, xlow, ylow, zlow, tup, xup, yup, zup
+
+	ConsTracking tracking = ConsTracking(
+			  1, // max_number_objects
+		      301, // max_neighbor_distance
+			  0.5, // division_threshold
+			  "none", // random_forest_filename
+	  	      false, // detection_by_volume
+	  	      0, // forbidden_cost
+	  	      0.05, // ep_gap
+	  	      double(1.1), // avg_obj_size
+			  true, // with_tracklets
+			  10.0, //division_weight
+			  10.0, //transition_weight
+			  false, //with_divisions
+			  10., // disappearance_cost,
+			  10., // appearance_cost
+			  false, //with_merger_resolution
+			  2, //n_dim
+			  5, //transition_parameter
+			  0, //border_width for app/disapp costs
+              fov
+	  	      );
+
+	std::cout << "Run Conservation tracking" << std::endl;
+	std::cout << std::endl;
+	std::vector< std::vector<Event> > events = tracking(ts);
+
+
+	size_t t = 0;
+	BOOST_CHECK_EQUAL(events[t].size(), 2);
+	for (std::vector<Event>::const_iterator it = events[t].begin(); it!=events[t].end(); ++it) {
+			Event e = *it;
+			if (e.type == Event::Move && e.traxel_ids[0] == 11) {
+				BOOST_CHECK_EQUAL(e.traxel_ids[1], 21);
+			} else if (e.type == Event::Move && e.traxel_ids[0] == 12) {
+				BOOST_CHECK_EQUAL(e.traxel_ids[1], 22);
+			} else {
+				cout << "unexpected event: " << e;
+				BOOST_CHECK(false);
+			}
+	}
+	t=1;
+	BOOST_CHECK_EQUAL(events[t].size(), 2);
+	for (std::vector<Event>::const_iterator it = events[t].begin(); it!=events[t].end(); ++it) {
+			Event e = *it;
+			if (e.type == Event::Move && e.traxel_ids[0] == 21) {
+				BOOST_CHECK_EQUAL(e.traxel_ids[1], 31);
+			} else if (e.type == Event::Move && e.traxel_ids[0] == 22) {
+				BOOST_CHECK_EQUAL(e.traxel_ids[1], 32);
+			} else {
+				cout << "unexpected event: " << e;
+				BOOST_CHECK(false);
+			}
+	}
+	t=2;
+	BOOST_CHECK_EQUAL(events[t].size(), 2);
+	for (std::vector<Event>::const_iterator it = events[t].begin(); it!=events[t].end(); ++it) {
+			Event e = *it;
+			if (e.type == Event::Move && e.traxel_ids[0] == 31) {
+				BOOST_CHECK_EQUAL(e.traxel_ids[1], 41);
+			} else if (e.type == Event::Move && e.traxel_ids[0] == 32) {
+				BOOST_CHECK_EQUAL(e.traxel_ids[1], 42);
+			} else {
+				cout << "unexpected event: " << e;
+				BOOST_CHECK(false);
+			}
+	}
+
+}
