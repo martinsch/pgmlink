@@ -115,7 +115,7 @@ namespace pgmlink {
     c2[0] = ub_[1]; c2[1] = lb_[2]; c2[2] = lb_[3];
     c3[0] = ub_[1]; c3[1] = ub_[2]; c3[2] = lb_[3];
     c4[0] = lb_[1]; c4[1] = ub_[2]; c4[2] = lb_[3];
-    
+
     c5[0] = lb_[1]; c5[1] = lb_[2]; c5[2] = ub_[3];
     c6[0] = ub_[1]; c6[1] = lb_[2]; c6[2] = ub_[3];
     //c7[0] = ub_[1]; c7[1] = ub_[2]; c7[2] = ub_[3]; // unused
@@ -133,7 +133,7 @@ namespace pgmlink {
     return *min_element(ds, ds+6);
   }
   
-  double FieldOfView::relative_spatial_margin( double /*t*/, double x, double y, double z ) const {
+  double FieldOfView::spatial_distance_to_border( double /*t*/, double x, double y, double z, bool relative ) const {
 	  //distance to 6 cuboid planes, in the 2D case where Z=0,
 	  //we take the planes with Z upper bound set to 1.0
 	  //and return the distances to the 4 corresponding planes
@@ -159,16 +159,25 @@ namespace pgmlink {
 	// distances to the six faces of the cube
 	double ds[6];
 	double q[3] = {x, y, z};
-	ds[0] = abs_distance(c1, c2, c5, q) / ((ub_[2] - lb_[2]) / 2); //normalize relative to radius of range
-	ds[1] = abs_distance(c2, c3, c6, q) / ((ub_[1] - lb_[1]) / 2);
-	ds[2] = abs_distance(c4, c3, c8, q) / ((ub_[2] - lb_[2]) / 2);
-	ds[3] = abs_distance(c1, c4, c5, q) / ((ub_[1] - lb_[1]) / 2);
-	ds[4] = abs_distance(c1, c2, c4, q) / ((zub - lb_[3]) / 2);
-	ds[5] = abs_distance(c5, c6, c8, q) / ((zub - lb_[3]) / 2);
+	ds[0] = abs_distance(c1, c2, c5, q);
+	ds[1] = abs_distance(c2, c3, c6, q);
+	ds[2] = abs_distance(c4, c3, c8, q);
+	ds[3] = abs_distance(c1, c4, c5, q);
+	ds[4] = abs_distance(c1, c2, c4, q);
+	ds[5] = abs_distance(c5, c6, c8, q);
 
+	if (relative) {
+		//normalize relative to radius of range
+		ds[0] /= ((ub_[2] - lb_[2])); // / 2);
+		ds[1] /= ((ub_[1] - lb_[1]));// / 2);
+		ds[2] /= ((ub_[2] - lb_[2])); // / 2);
+		ds[3] /= ((ub_[1] - lb_[1])); // / 2);
+		ds[4] /= ((zub - lb_[3])); // / 2);
+		ds[5] /= ((zub - lb_[3])); // / 2);
+	}
 	return *min_element(ds, ds+vlen);
-
   }
+
 
   double FieldOfView::temporal_margin( double t, double /*x*/, double /*y*/, double /*z*/ ) const {
     return min(abs(t - lb_[0]), abs(t - ub_[0]));
