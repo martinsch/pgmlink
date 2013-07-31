@@ -378,10 +378,9 @@ double NegLnConstant::operator ()(size_t state) const {
   //// SpatialBorderAwareWeight
   ////
  double SpatialBorderAwareWeight::operator()( const Traxel& tr ) const {
-	LOG(logDEBUG4) << "SpatialBorderAwareWeight(): margin" << margin_;
-   double t = tr.Timestep;
+	double t = tr.Timestep;
 	double x = tr.X(), y = tr.Y(), z = tr.Z();
-	double distance_to_border = fov_.relative_spatial_margin(t,x,y,z);
+	double distance_to_border = fov_.spatial_distance_to_border(t,x,y,z,relative_);
 	LOG(logDEBUG4) << "SpatialBorderAwareWeight(): distance to border = " << distance_to_border;
 	if( distance_to_border < margin_) {
 	  double linear_cost = (distance_to_border / margin_) * cost_; //normalize distance within the border to range (0,1)

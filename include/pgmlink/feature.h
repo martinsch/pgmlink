@@ -136,14 +136,19 @@ private:
 
   class SpatialBorderAwareWeight {
     public:
-	  SpatialBorderAwareWeight( double cost, double margin, FieldOfView& fov) :
-		  cost_(cost), margin_(margin), fov_(fov) {}
+	  SpatialBorderAwareWeight( double cost, double margin, bool relative, FieldOfView& fov) :
+		  cost_(cost), margin_(margin), relative_(relative), fov_(fov) {
+		  if (relative && margin > 0.5) {
+			  throw std::runtime_error("The relative margin may not exceed 0.5.");
+		  }
+	  }
 
       double operator()( const Traxel& tr ) const;
 
     private:
       double cost_;
       double margin_;
+      bool relative_;
       FieldOfView fov_;
     };
 
