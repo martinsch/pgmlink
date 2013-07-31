@@ -99,7 +99,7 @@ namespace pgmlink {
   }
 
   double Traxel::distance_to_corr(const Traxel& other) const {
-      return norm(other.X_corr()-X(), other.Y_corr()-Y(), other.Z_corr()-Z());
+      return norm(other.X()-X_corr(), other.Y()-Y_corr(), other.Z()-Z_corr());
     }
 
   double Traxel::angle(const Traxel& leg1, const Traxel& leg2) const {
