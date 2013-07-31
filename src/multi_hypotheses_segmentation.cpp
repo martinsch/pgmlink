@@ -25,12 +25,12 @@ namespace pgmlink {
                                  ClusteringPtr clusterer) :
     n_clusters_(n_clusters),
     clusterer_(clusterer) {
-    LOG(logDEBUG4) << "MultiSegmenter::MultiSegmenter()";
+    LOG(logDEBUG) << "MultiSegmenter::MultiSegmenter()";
   }
 
 
   vigra::MultiArray<2, label_type> MultiSegmenter::operator()(uint offset) {
-    LOG(logDEBUG2) << "MultiSegmenter::operator()(uint offset)";
+    LOG(logDEBUG) << "MultiSegmenter::operator()(uint offset)";
     const arma::mat& data_arma_ = clusterer_->get_data_arma();
     unsigned n_samples = data_arma_.n_cols;
     unsigned n_layers = n_clusters_.size();
@@ -51,7 +51,7 @@ namespace pgmlink {
 
 
   label_type MultiSegmenter::assign(const arma::vec& sample) {
-    LOG(logDEBUG2) << "MultiSegmenter::assign(const arma::vec& sample)";
+    LOG(logDEBUG) << "MultiSegmenter::assign(const arma::vec& sample)";
     return clusterer_->get_cluster_assignment(sample);
   }
 
@@ -63,14 +63,14 @@ namespace pgmlink {
                                                ClusteringBuilderPtr clustering_builder) :
     n_clusters_(n_clusters),
     clustering_builder_(clustering_builder) {
-    LOG(logDEBUG4) << "MultiSegmenterBuilder::MultiSegmenterBuilder("
+    LOG(logDEBUG) << "MultiSegmenterBuilder::MultiSegmenterBuilder("
                   << "const std::vector<unsigned>& n_clusters,\n"
                   << "ClusteringBuilderPtr clustering_builder)";
   }
 
 
   MultiSegmenterPtr MultiSegmenterBuilder::build(const feature_array& data) {
-    LOG(logDEBUG2) << "MultiSegmenterBuidler::build(const feature_array& data)";
+    LOG(logDEBUG) << "MultiSegmenterBuidler::build(const feature_array& data)";
     return MultiSegmenterPtr(new MultiSegmenter(n_clusters_,
                                                 clustering_builder_->build(data)
                                                 )
@@ -84,14 +84,14 @@ namespace pgmlink {
   MultiSegmentContainer::MultiSegmentContainer(vigra::MultiArrayView<2, label_type> assignments,
                                                const feature_array& coordinates) :
     assignments_(assignments), coordinates_(coordinates) {
-    LOG(logDEBUG4) << "MultiSegmentContainer::MultiSegmentContainer(\n"
+    LOG(logDEBUG) << "MultiSegmentContainer::MultiSegmentContainer(\n"
                    << "vigra::MultiArrayView<2, label_type> assignments,\n"
                    << "const feature_array& coordinates)";
   }
 
 
   int MultiSegmentContainer::to_images(vigra::MultiArrayView<4, label_type> dest) {
-    LOG(logDEBUG2) << "MultiSegmentContainer::to_images(vigra::MultiArrayView<4, label_type> dest)";
+    LOG(logDEBUG) << "MultiSegmentContainer::to_images(vigra::MultiArrayView<4, label_type> dest)";
     if (coordinates_.size()/3 != static_cast<unsigned>(assignments_.shape()[0])) {
       // number of samples in coordinates differ from number of samples
       // in assignments
@@ -134,7 +134,7 @@ namespace pgmlink {
     n_clusters_(n_clusters),
     clustering_builder_(clustering_builder),
     starting_index_(starting_index) {
-    LOG(logDEBUG4) << "ConnectedComponentsToMultiSegments::\n"
+    LOG(logDEBUG) << "ConnectedComponentsToMultiSegments::\n"
                    << "ConnectedComponentsToMultiSegments(\n"
                    << "const std::vector<feature_array >& components_coordinates,\n"
                    << "const std::vector<unsigned>& n_clusters,\n"
@@ -144,7 +144,7 @@ namespace pgmlink {
 
 
   AssignmentListPtr ConnectedComponentsToMultiSegments::get_assignments() {
-    LOG(logDEBUG2) << "ConnectedComponentsToMultiSegments::get_assignments()";
+    LOG(logDEBUG) << "ConnectedComponentsToMultiSegments::get_assignments()";
     if (assignments_) {
       return assignments_;
     } else {
@@ -165,7 +165,7 @@ namespace pgmlink {
 
 
   void ConnectedComponentsToMultiSegments::to_images(vigra::MultiArray<4, unsigned>& dest) {
-    LOG(logDEBUG2) << "ConnectedComponentsToMultiSegments::to_images(vigra::MultiArray<4, unsigned>& dest)";
+    LOG(logDEBUG) << "ConnectedComponentsToMultiSegments::to_images(vigra::MultiArray<4, unsigned>& dest)";
     get_assignments();
     assert(components_coordinates_.size() == assignments_->size());
     std::vector<feature_array >::const_iterator cc_it = components_coordinates_.begin();
@@ -185,7 +185,7 @@ namespace pgmlink {
     maximum_merges_per_connected_component_(1u),
     maximum_merges_per_patch_(1u),
     starting_label_(0) {
-    LOG(logDEBUG4) << "RegionMergingGraph::RegionMergingGraph()";
+    LOG(logDEBUG) << "RegionMergingGraph::RegionMergingGraph()";
     adjacency_graph_->add(node_merged_n_times());
   }
 
@@ -198,7 +198,7 @@ namespace pgmlink {
     maximum_merges_per_connected_component_(maximum_merges_per_connected_component),
     maximum_merges_per_patch_(maximum_merges_per_patch),
     starting_label_(starting_label) {
-    LOG(logDEBUG4) << "RegionMergingGraph::RegionMergingGraph(\n"
+    LOG(logDEBUG) << "RegionMergingGraph::RegionMergingGraph(\n"
                    << "AdjacencyGraphPtr adjacency_graph,\n"
                    << "unsigned maximum_merges_per_connected_component,\n"
                    << "unsigned maximum_merges_per_patch,\n"
@@ -209,7 +209,7 @@ namespace pgmlink {
 
 
   void RegionMergingGraph::merge() {
-    LOG(logDEBUG2) << "void RegionMergingGraph::merge()";
+    LOG(logDEBUG) << "void RegionMergingGraph::merge()";
 
     // get meta data containers for merging ready:
     // for each connected component the number of merges must not be larger than
