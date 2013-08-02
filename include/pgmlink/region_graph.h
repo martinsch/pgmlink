@@ -148,7 +148,7 @@ namespace pgmlink {
   struct node_connected_component {};
   template <typename Graph>
   struct property_map<node_connected_component, Graph> {
-    typedef lemon::CrossRefMap<Graph, typename Graph::Node, label_type> type;
+    typedef lemon::IterableValueMap<Graph, typename Graph::Node, label_type> type;
     static const std::string name;
   };
 
