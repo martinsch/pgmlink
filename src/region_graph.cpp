@@ -14,6 +14,7 @@
 
 //pgmlink
 #include <pgmlink/region_graph.h>
+#include <pgmlink/log.h>
 
 
 namespace ba = boost::adaptors;
@@ -92,6 +93,7 @@ namespace pgmlink {
 
   
   RegionGraph::Region RegionGraph::merge_regions(Region r1, Region r2) {
+    LOG(logDEBUG) << "RegionGraph::merge_regions(Region r1, Region r2)";
     if (!valid(r1) || !valid(r2)) {
       return lemon::INVALID;
     }
@@ -118,7 +120,6 @@ namespace pgmlink {
     connected_component_map.set(new_region, connected_component_map[r1]);
     
 
-    
     return new_region;
   }
 

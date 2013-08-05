@@ -298,6 +298,8 @@ namespace pgmlink {
         LOG(logDEBUG3) << "RegionMergingGraph::merge() -- neighbor_to_merge: " << label_map[*neighbor_to_merge];
 
         // merge least merged region and least merged neighbor
+        // use of new_region neccessary because iterator neighbor_to_merge will be invalidaded
+        RegionGraph::Region neighbor = *neighbor_to_merge;
         adjacency_graph_->merge_regions(next_region_to_merge->first, *neighbor_to_merge);
 
         
@@ -308,12 +310,22 @@ namespace pgmlink {
              ++region_it) {
           // decrease (= increase absolute value) of count of
           // iterations without merge for that region
-          region_it->second -= 1;
+          LOG(logDEBUG4) << "RegionMergingGraph::merge() -- modifying counts: " << label_map[region_it->first];
+          if (region_it->first == neighbor || region_it->first == next_region_to_merge->first) {
+            LOG(logDEBUG4) << "RegionMergingGraph::merge() -- resetting count for region " << label_map[region_it->first];
+            region_it->second = 0;
+          } else {
+            LOG(logDEBUG4) << "RegionMergingGraph::merge() -- decreasing count for region " << label_map[region_it->first];
+            region_it->second -= 1;
+          }
         }
 
         // reset counter for regions involved in merge
+        /* LOG(logDEBUG4) << "ReigonMergingGraph::merge() -- resetting count for region " << label_map[next_region_to_merge->first];
         next_region_to_merge->second = 0;
+        LOG(logDEBUG4) << "ReigonMergingGraph::merge() -- resetting count for region "; // << label_map[*neighbor_to_merge];
         number_of_iterations_without_merge[*neighbor_to_merge] = 0;
+        */
         number_of_merges += 1;
 
         // stop merging after connected component has reached maximum
