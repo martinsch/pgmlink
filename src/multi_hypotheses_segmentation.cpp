@@ -242,7 +242,6 @@ namespace pgmlink {
       *component_it;
       unsigned& number_of_merges =
           number_of_merges_per_connected_component[*component_it];
-      bool break_condition_component = true;
       std::map<AdjacencyGraph::Region, int>& number_of_iterations_without_merge =
           number_of_iterations_without_merge_global[*component_it];
       
@@ -257,6 +256,7 @@ namespace pgmlink {
 
       // find region inside connected component that has been merged the least
       do {
+        bool break_condition_component = true;
         LOG(logDEBUG2) << "RegionMergingGraph::merge() -- merging regions until criteria are fulfilled for connected component "
                        << *component_it;
         std::map<AdjacencyGraph::Region, int>::iterator next_region_to_merge =
@@ -267,12 +267,13 @@ namespace pgmlink {
              ++region_it) {
           if (region_it->second < next_region_to_merge->second) {
             next_region_to_merge = region_it;
-            
+            LOG(logDEBUG4) << "RegionMergingGraph::merge() -- updating merge candidate";
           }
-          LOG(logDEBUG4) << "RegionMergingGraph::merge() -- current merging candidate: " << label_map[next_region_to_merge->first];
-          // decrease (= increase absolute value) of count of
-          // iterations without merge for that region
-          region_it->second -= 1;
+          // region_it->second -= 1;
+          LOG(logDEBUG4) << "RegionMergingGraph::merge() -- current merging candidate: " << label_map[next_region_to_merge->first]
+                         << "; loop at region " << label_map[region_it->first]
+                         << " (" << region_it->second << ")";
+          
         }
         LOG(logDEBUG3) << "RegionMergingGraph::merge() -- next_region_to_merge: " << label_map[next_region_to_merge->first];
         std::set<AdjacencyGraph::Region>::iterator neighbor_to_merge =
@@ -287,22 +288,38 @@ namespace pgmlink {
           if (minimum > number_of_iterations_without_merge[*neighbor_it]) {
             minimum = number_of_iterations_without_merge[*neighbor_it];
             neighbor_to_merge = neighbor_it;
+            LOG(logDEBUG4) << "RegionMergingGraph::merge() -- updating neighbor merge candidate";
           }
-          number_of_iterations_without_merge[*neighbor_it] -= 1;
-          LOG(logDEBUG4) << "RegionMergingGraph::merge() -- current neighbor merge candidate: " << label_map[*neighbor_to_merge];
+          // number_of_iterations_without_merge[*neighbor_it] -= 1;
+          LOG(logDEBUG4) << "RegionMergingGraph::merge() -- current neighbor merge candidate: " << label_map[*neighbor_to_merge]
+                         << "; loop at region " << label_map[*neighbor_it]
+                         << " (" << number_of_iterations_without_merge[*neighbor_it] << ")";
         }
         LOG(logDEBUG3) << "RegionMergingGraph::merge() -- neighbor_to_merge: " << label_map[*neighbor_to_merge];
 
         // merge least merged region and least merged neighbor
         adjacency_graph_->merge_regions(next_region_to_merge->first, *neighbor_to_merge);
 
-        // reset counter 
+        
+        // decrease count of iterations without merge for all reigons
+        for (std::map<AdjacencyGraph::Region, int>::iterator region_it =
+               number_of_iterations_without_merge.begin();
+             region_it != number_of_iterations_without_merge.end();
+             ++region_it) {
+          // decrease (= increase absolute value) of count of
+          // iterations without merge for that region
+          region_it->second -= 1;
+        }
+
+        // reset counter for regions involved in merge
         next_region_to_merge->second = 0;
         number_of_iterations_without_merge[*neighbor_to_merge] = 0;
         number_of_merges += 1;
 
         // stop merging after connected component has reached maximum
         if (number_of_merges < maximum_merges_per_connected_component_) {
+          LOG(logDEBUG3) << "RegionMergingGraph::merge () --  break condition net met yet for comopnent "
+                         <<  *component_it;
           break_condition_component = false;
         }
         if (break_condition_component) {
