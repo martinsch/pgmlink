@@ -51,6 +51,9 @@ namespace pgmlink {
   template <typename T, typename U>
   class ParentConnectedComponentBase;
 
+  template <typename T, typename U>
+  class ParentConnectedComponentFactory;
+
   template <int N, typename T>
   class AdjacencyListBuilder;
 
@@ -60,8 +63,14 @@ namespace pgmlink {
   template <int N, typename T>
   class NeighborhoodVisitorBase;
 
+  template <int N, typename T>
+  class NeighborhoodVisitorFactory;
+
   template <typename T, typename U>
   class PixelActorBase;
+
+  template <typename T, typename U>
+  class PixelActorFactory;
 
   typedef boost::shared_ptr<MultiSegmenter> MultiSegmenterPtr;
 
