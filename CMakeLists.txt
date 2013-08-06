@@ -48,7 +48,7 @@ find_package( ANN REQUIRED )
 find_package( Cplex REQUIRED )
 find_package( VIGRA REQUIRED )
 find_package( Lemon REQUIRED )
-find_package( Boost REQUIRED COMPONENTS serialization )
+find_package( Boost REQUIRED COMPONENTS serialization filesystem)
 # find hdf5 for OSX
 find_package( HDF5 REQUIRED COMPONENTS HL)
 message(STATUS "  found: ${Boost_LIBRARIES}")

@@ -14,26 +14,30 @@
 
 
 namespace pgmlink {
-class ImageSelectorBase;
+  class ImageSelectorBase;
+  
+  typedef boost::shared_ptr<ImageSelectorBase> ImageSelectorPtr;
 
-typedef boost::shared_ptr<ImageSelectorBase> ImageSelectorPtr;
+  typedef std::vector<std::string> FilenameList;
+
+  typedef boost::shared_ptr<FilenameList > FilenameListPtr;
 
   ////
   //// ImageSelectorBase
   ////
   class ImageSelectorBase {
   public:
-    virtual boost::shared_ptr<std::vector<std::string> > select(std::string directory) = 0;
-    virtual ~ImageSelectorBase();
+    virtual FilenameListPtr select(std::string directory) = 0;
+    virtual ~ImageSelectorBase() {};
   };
 
 
   ////
   //// ImageSelectorAll
   ////
-  class ImageSelectorAll {
+  class ImageSelectorAll : public ImageSelectorBase{
   public:
-    virtual boost::shared_ptr<std::vector<std::string> > select(std::string directory);
+    virtual FilenameListPtr select(std::string directory);
     virtual ~ImageSelectorAll();
   };
 
@@ -41,11 +45,11 @@ typedef boost::shared_ptr<ImageSelectorBase> ImageSelectorPtr;
   ////
   //// ImageSelectorType
   ////
-  class ImageSelectorType {
+  class ImageSelectorType : public ImageSelectorBase{
   public:
-    virtual boost::shared_ptr<std::vector<std::string> > select(std::string directory);
+    virtual FilenameListPtr select(std::string directory);
     ImageSelectorType(std::string type);
-    virtual ~ImageSelectorType;
+    virtual ~ImageSelectorType();
   private:
     std::string type_;
   };
