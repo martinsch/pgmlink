@@ -22,7 +22,7 @@ namespace pgmlink {
   }
 
   
-  FilenameListPtr ImageSelectorAll::select(std::string directory) {
+  FilenameListPtr ImageSelectorAll::select(const std::string& directory) {
     FilenameListPtr filenames(new FilenameList);
     fs::path directory_path(directory);
     if (!fs::exists(directory_path)) {
@@ -42,7 +42,7 @@ namespace pgmlink {
   ////
   //// ImageSelectorType
   ////
-  ImageSelectorType::ImageSelectorType(std::string type) :
+  ImageSelectorType::ImageSelectorType(const std::string& type) :
     type_(type) {
     
   }
@@ -53,7 +53,7 @@ namespace pgmlink {
   }
 
 
-  FilenameListPtr ImageSelectorType::select(std::string directory) {
+  FilenameListPtr ImageSelectorType::select(const std::string& directory) {
     FilenameListPtr filenames(new FilenameList);
     fs::path directory_path(directory);
     fs::path valid_extension(type_);
