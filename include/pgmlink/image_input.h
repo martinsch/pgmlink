@@ -4,6 +4,7 @@
 // stl
 #include <string>
 #include <vector>
+#include <map>
 
 // vigra
 #include <vigra/multi_array.hxx> // vigra::MultiArray
@@ -31,10 +32,34 @@ namespace pgmlink {
     typedef boost::shared_ptr<ImageRetrieverBase<T, N> > type;
   };
 
+  template <typename T, int N>
   class ImageWriterBase;
 
-  typedef boost::shared_ptr<ImageWriterBase> ImageWriterPtr;
+  template <typename T, int N>
+  struct ImageWriterPtr {
+    typedef boost::shared_ptr<ImageWriterBase<T, N> > type;
+  };
   
+
+
+
+
+  ////
+  //// ImageOptions
+  ////
+  class ImageOptions {
+  public:
+    inline void set(const std::string& key,
+                    const std::string& value) {
+      options[key] = value;
+    }
+    inline std::string get(const std::string& key) {
+      return options[key];
+    }
+  private:
+    std::map<std::string, std::string> options;
+  };
+
 
 
   ////
@@ -77,8 +102,11 @@ namespace pgmlink {
   class ImageRetrieverBase {
   public:
     virtual vigra::MultiArrayView<N, T> retrieve() = 0;
-    virtual void set_current_image(const std::string& image) = 0;
+    ImageRetrieverBase() {}
+    ImageRetrieverBase(const ImageOptions& options) :
+      options_(options) {}
     virtual ~ImageRetrieverBase() {}
+    ImageOptions options_;
   };
 
 
@@ -89,11 +117,8 @@ namespace pgmlink {
   class VigraReader : public ImageRetrieverBase<T, N> {
   public:
     virtual vigra::MultiArrayView<N, T> retrieve();
-    virtual void set_current_image(const std::string& image);
-    VigraReader(const std::string& filename);
+    VigraReader(const ImageOptions& options);
     virtual ~VigraReader();
-  private:
-    std::string filename_;
   };
 
 
@@ -104,24 +129,23 @@ namespace pgmlink {
   class HDF5Reader : public ImageRetrieverBase<T, N> {
   public:
     virtual vigra::MultiArrayView<N, T> retrieve();
-    virtual void set_current_image(const std::string& image);
-    HDF5Reader(const std::string& filename,
-               const std::string& path);
+    HDF5Reader(const ImageOptions& options);
     virtual ~HDF5Reader();
-  private:
-    std::string filename_;
-    std::string path_;
   };
 
 
   ////
   //// ImageWriterBase
   ////
+  template <typename T, int N>
   class ImageWriterBase {
   public:
-    virtual void write() = 0;
-    virtual void set_current_image(const std::string& filename) = 0;
+    virtual void write(const vigra::MultiArrayView<N, T> image) = 0;
+    ImageWriterBase() {}
+    ImageWriterBase(const ImageOptions& options) :
+      options_(options) {}
     ~ImageWriterBase() {}
+    ImageOptions options_;
   };
 
 
@@ -129,16 +153,11 @@ namespace pgmlink {
   //// VigraWriter
   ////
   template <typename T, int N>
-  class VigraWriter : public ImageWriterBase {
+  class VigraWriter : public ImageWriterBase<T, N> {
   public:
-    virtual void write();
-    virtual void set_current_image(const std::string& filename);
-    VigraWriter(vigra::MultiArrayView<N, T> image,
-                const std::string& filename);
+    virtual void write(const vigra::MultiArrayView<N, T> image);
+    VigraWriter(const ImageOptions& options);
     virtual ~VigraWriter();
-  private:
-    vigra::MultiArrayView<N, T> image_;
-    std::string filename_;
   };
 
 
@@ -146,18 +165,11 @@ namespace pgmlink {
   //// HDF5Writer
   ////
   template <typename T, int N>
-  class HDF5Writer : public ImageWriterBase {
+  class HDF5Writer : public ImageWriterBase<T, N> {
   public:
-    virtual void write();
-    virtual void set_current_image(const std::string& filename) = 0;
-    HDF5Writer(vigra::MultiArrayView<N, T> image,
-               const std::string& filename,
-               const std::string& path);
+    virtual void write(const vigra::MultiArrayView<N, T> image);
+    HDF5Writer(const ImageOptions& options);
     virtual ~HDF5Writer();
-  private:
-    vigra::MultiArrayView<N, T> image_;
-    std::string filename_;
-    std::string path_;
   };
     
 
@@ -169,7 +181,7 @@ namespace pgmlink {
   ////
   template <typename T, int N>
   vigra::MultiArrayView<N, T> VigraReader<T, N>::retrieve() {
-    vigra::ImageImportInfo info(filename_.c_str());
+    vigra::ImageImportInfo info(ImageRetrieverBase<T, N>::options_.get("filename").c_str());
     vigra::MultiArray<N, T> image(info.shape());
     vigra::importImage(info, destImage(image));
     return vigra::MultiArrayView<N, T>(image);
@@ -177,14 +189,8 @@ namespace pgmlink {
 
 
   template <typename T, int N>
-  void VigraReader<T, N>::set_current_image(const std::string& image) {
-    filename_ = image;
-  }
-
-
-  template <typename T, int N>
-  VigraReader<T, N>::VigraReader(const std::string& filename) :
-    filename_(filename) {
+  VigraReader<T, N>::VigraReader(const ImageOptions& options) :
+    ImageRetrieverBase<T, N>(options) {
     // nothing to be done here
   }
 
@@ -199,23 +205,15 @@ namespace pgmlink {
   //// VigraWriter
   ////
   template <typename T, int N>
-  void VigraWriter<T, N>::write() {
-    vigra::ImageExportInfo info(filename_.c_str());
-    vigra::exportImage(image_, info);
+  void VigraWriter<T, N>::write(vigra::MultiArrayView<N, T> image) {
+    vigra::ImageExportInfo info(ImageWriterBase<T, N>::options_.get("filename").c_str());
+    vigra::exportImage(vigra::srcImageRange(image), info);
   }
 
 
   template <typename T, int N>
-  void VigraWriter<T, N>::set_current_image(const std::string& filename) {
-    filename_ = filename;
-  }
-
-
-  template <typename T, int N>
-  VigraWriter<T, N>::VigraWriter(vigra::MultiArrayView<N, T> image,
-                                 const std::string& filename) :
-    image_(image),
-    filename_(filename) {
+  VigraWriter<T, N>::VigraWriter(const ImageOptions& options) :
+    ImageWriterBase<T, N>(options) {
     // nothing to be done here
   }
 

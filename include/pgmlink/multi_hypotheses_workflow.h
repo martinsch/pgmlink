@@ -44,14 +44,14 @@ namespace pgmlink {
     MultiSegmentBuilder(
                         ImageSelectorPtr image_selector,
                         typename ImageRetrieverPtr<T, N>::type image_retriever,
-                        ImageWriterPtr image_writer,
+                        typename ImageWriterPtr<T, N>::type image_writer,
                         ClusteringBuilderPtr clustering_builder,
                         unsigned clusters_per_connected_component
                         );
   private:
     ImageSelectorPtr image_selector_;
     typename ImageRetrieverPtr<T, N>::type image_retriever_;
-    ImageWriterPtr image_writer_;
+    typename ImageWriterPtr<T, N>::type image_writer_;
     ClusteringBuilderPtr clustering_builder_;
     std::vector<unsigned> clusters_per_connected_component_;
   };
@@ -137,7 +137,7 @@ namespace pgmlink {
   MultiSegmentBuilder<T, N>::MultiSegmentBuilder(
                                                  ImageSelectorPtr image_selector,
                                                  typename ImageRetrieverPtr<T, N>::type image_retriever,
-                                                 ImageWriterPtr image_writer,
+                                                 typename ImageWriterPtr<T, N>::type image_writer,
                                                  ClusteringBuilderPtr clustering_builder,
                                                  unsigned clusters_per_connected_component
                                                  ) :
