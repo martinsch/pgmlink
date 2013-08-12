@@ -14,6 +14,9 @@
 // boost
 #include <boost/shared_ptr.hpp>
 
+// pgmlink
+#include <pgmlink/log.h>
+
 
 namespace pgmlink {
   class ImageSelectorBase;
@@ -101,7 +104,7 @@ namespace pgmlink {
   template <typename T, int N>
   class ImageRetrieverBase {
   public:
-    virtual vigra::MultiArrayView<N, T> retrieve() = 0;
+    virtual vigra::MultiArray<N, T> retrieve() = 0;
     ImageRetrieverBase() {}
     ImageRetrieverBase(const ImageOptions& options) :
       options_(options) {}
@@ -116,7 +119,7 @@ namespace pgmlink {
   template <typename T, int N>
   class VigraReader : public ImageRetrieverBase<T, N> {
   public:
-    virtual vigra::MultiArrayView<N, T> retrieve();
+    virtual vigra::MultiArray<N, T> retrieve();
     VigraReader(const ImageOptions& options);
     virtual ~VigraReader();
   };
@@ -128,7 +131,7 @@ namespace pgmlink {
   template <typename T, int N>
   class HDF5Reader : public ImageRetrieverBase<T, N> {
   public:
-    virtual vigra::MultiArrayView<N, T> retrieve();
+    virtual vigra::MultiArray<N, T> retrieve();
     HDF5Reader(const ImageOptions& options);
     virtual ~HDF5Reader();
   };
@@ -180,11 +183,14 @@ namespace pgmlink {
   //// VigraReader
   ////
   template <typename T, int N>
-  vigra::MultiArrayView<N, T> VigraReader<T, N>::retrieve() {
+  vigra::MultiArray<N, T> VigraReader<T, N>::retrieve() {
+    LOG(logDEBUG1) << "VigraReader<T, " << N << ">::retrieve() -- reading "
+                   << ImageRetrieverBase<T, N>::options_.get("filename");
     vigra::ImageImportInfo info(ImageRetrieverBase<T, N>::options_.get("filename").c_str());
     vigra::MultiArray<N, T> image(info.shape());
     vigra::importImage(info, destImage(image));
-    return vigra::MultiArrayView<N, T>(image);
+    return image;
+    // return vigra::MultiArrayView<N, T>(image);
   }
 
 
