@@ -66,20 +66,19 @@ namespace pgmlink {
   ////
   //// MultiHypothesesGraphVectorBuilder
   ////
-  /* template <typename T, int N>
+  template <typename T, int N>
   class MultiHypothesesGraphVectorBuilder {
   public:
     boost::shared_ptr<std::vector<boost::shared_ptr<RegionGraph> > > build(const std::string& raw_directory,
                                                                            const std::string& label_directory);
     MultiHypothesesGraphVectorBuilder(
                                       ImageSelectorPtr image_selector,
-                                      typename ImageRetrieverPtr<T, N>::type image_writer,
+                                      typename ImageRetrieverPtr<T, N>::type image_retriever
                                       );
   private:
-    ClusteringBuilderPtr clustering_builder_;
     ImageSelectorPtr image_selector_;
     typename ImageRetrieverPtr<T, N>::type image_retriever_;
-  }; */
+  };
                                 
     
   
@@ -147,7 +146,10 @@ namespace pgmlink {
                                         
       std::string output_path = output_directory + "/" +
         boost::filesystem::path(*filename).filename().string();
-      
+
+      // make sure cluster regions have index at least greater than the
+      // largest original region index
+      starting_index = regions + 1;
       ConnectedComponentsToMultiSegments
         connected_components_to_multi_segments(
                                                components_coordinates,
@@ -191,29 +193,50 @@ namespace pgmlink {
   ////
   //// MultiHypothesesGraphVectorBuilder
   ////
-  /* template <typename T, int N>
+  template <typename T, int N>
   boost::shared_ptr<std::vector<boost::shared_ptr<RegionGraph> > >
   MultiHypothesesGraphVectorBuilder<T, N>::build(const std::string& raw_directory,
                                                  const std::string& label_directory) {
-    boost::shared_ptr<std::vector<boost::shared_ptr<RegionGraph> > > graphs;
+    LOG(logDEBUG) << "MultiHypothesesGraphVectorBuilder<T, " << N << ">::build()";
+    boost::shared_ptr<std::vector<boost::shared_ptr<RegionGraph> > >
+      graphs(new std::vector<boost::shared_ptr<RegionGraph> >);
     FilenameListPtr filenames = image_selector_->select(label_directory);
-    std::sort(filenames.begin(), filenames.end());
-    for (FilenameList::iterator filename = filenames->beign();
+    FilenameListPtr filenames_raw = image_selector_->select(raw_directory);
+    std::sort(filenames->begin(), filenames->end());
+    std::sort(filenames_raw->begin(), filenames_raw->end());
+    FilenameList::iterator filename_raw = filenames_raw->begin();
+    for (FilenameList::iterator filename = filenames->begin();
          filename != filenames->end();
-         ++filename) {
+         ++filename, ++filename_raw) {
       image_retriever_->options_.set("filename", *filename);
       vigra::MultiArray<N, T> input_image = image_retriever_->retrieve();
+      image_retriever_->options_.set("filename", *filename_raw);
+      vigra::MultiArray<N, T> label_image = image_retriever_->retrieve();
       AdjacencyGraphPtr graph(new AdjacencyGraph);
-      ListInserterPtr<T, T>::type inserter(new ListInserterGraph<T, T>(graph));
-      PixelActorPtr<T, T>::type actor(new PixelActorFindNeighbors<T>(inserter));
-      NeighborhoodVisitorPtr<N, T>::type visitor(new NeighborhodVisitorAdjacentPlusOne<N, T>(actor));
-      ParentConnectedComponentPtr<T, T>::type connected_component(new ParentConnectedComponentGraph<T, T>(graph));
-      AdjacencyListBuilder<N, T> builder();
+      typename ListInserterPtr<T, T>::type inserter(new ListInserterGraph<T, T>(graph));
+      typename PixelActorPtr<T, T>::type actor(new PixelActorFindNeighbors<T>(inserter));
+      typename NeighborhoodVisitorPtr<N, T>::type visitor(new NeighborhoodVisitorAdjacentPlusOne<N, T>(actor));
+      typename ParentConnectedComponentPtr<T, T>::type connected_component(new ParentConnectedComponentGraph<T, T>(graph));
+      AdjacencyListBuilder<N, T> builder(input_image,
+                                         label_image,
+                                         visitor,
+                                         connected_component);
       builder.create_adjacency_list();
       graphs->push_back(graph);
     }
     return graphs;
-  } */
+  }
+
+
+  template <typename T, int N>
+  MultiHypothesesGraphVectorBuilder<T, N>::MultiHypothesesGraphVectorBuilder(ImageSelectorPtr image_selector,
+                                                                             typename ImageRetrieverPtr<T, N>::type image_retriever
+                                                                             ) :
+    image_selector_(image_selector),
+    image_retriever_(image_retriever) {
+    // nothing to be done here
+  }
 }
 
 #endif /* MULTI_HYPOTHESES_WORKFLOW_H */
+
