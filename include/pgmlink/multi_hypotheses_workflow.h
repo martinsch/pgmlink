@@ -46,7 +46,8 @@ namespace pgmlink {
     typedef typename Iterator::value_type Handle;
     typedef vigra::TinyVector<long, N> CoordType;
     void create_hypotheses(const std::string& input_directory,
-                           const std::string& output_directory);
+                           const std::string& output_directory,
+                           const std::string& label_directory);
     MultiSegmentBuilder(
                         ImageSelectorPtr image_selector,
                         typename ImageRetrieverPtr<T, N>::type image_retriever,
@@ -73,11 +74,15 @@ namespace pgmlink {
                                                                            const std::string& label_directory);
     MultiHypothesesGraphVectorBuilder(
                                       ImageSelectorPtr image_selector,
-                                      typename ImageRetrieverPtr<T, N>::type image_retriever
+                                      typename ImageRetrieverPtr<T, N>::type image_retriever,
+                                      unsigned maximum_merges_per_connected_component,
+                                      unsigned maximum_merges_per_patch
                                       );
   private:
     ImageSelectorPtr image_selector_;
     typename ImageRetrieverPtr<T, N>::type image_retriever_;
+    unsigned maximum_merges_per_connected_component_;
+    unsigned maximum_merges_per_patch_;
   };
                                 
     
@@ -92,7 +97,8 @@ namespace pgmlink {
   template <typename T, int N>
   void MultiSegmentBuilder<T, N>::create_hypotheses(
                                               const std::string& input_directory,
-                                              const std::string& output_directory
+                                              const std::string& output_directory,
+                                              const std::string& label_directory
                                               ) {
     LOG(logDEBUG) << "MultiSegmenterBuilder<T, " << N << ">::create_hypotheses()";
     unsigned starting_index = 1;
@@ -167,6 +173,12 @@ namespace pgmlink {
                                                
       image_writer_->options_.set("filename", output_path);
       image_writer_->write(output_image.bindAt(3, 0).bindAt(2, 0));
+
+
+      std::string label_image_path = label_directory + "/" +
+        boost::filesystem::path(*filename).filename().string();
+      image_writer_->options_.set("filename", label_image_path);
+      image_writer_->write(label_image);
     }
 
   }
@@ -222,18 +234,29 @@ namespace pgmlink {
                                          visitor,
                                          connected_component);
       builder.create_adjacency_list();
+      RegionMergingGraph merging_policy(graph,
+                                        maximum_merges_per_connected_component_,
+                                        maximum_merges_per_patch_,
+                                        *vigra::argMax(label_image.begin(), label_image.end())
+                                        );
+      merging_policy.merge();
       graphs->push_back(graph);
     }
+    
     return graphs;
   }
 
 
   template <typename T, int N>
   MultiHypothesesGraphVectorBuilder<T, N>::MultiHypothesesGraphVectorBuilder(ImageSelectorPtr image_selector,
-                                                                             typename ImageRetrieverPtr<T, N>::type image_retriever
+                                                                             typename ImageRetrieverPtr<T, N>::type image_retriever,
+                                                                             unsigned maximum_merges_per_connected_component,
+                                                                             unsigned maximum_merges_per_patch
                                                                              ) :
     image_selector_(image_selector),
-    image_retriever_(image_retriever) {
+    image_retriever_(image_retriever),
+    maximum_merges_per_connected_component_(maximum_merges_per_connected_component),
+    maximum_merges_per_patch_(maximum_merges_per_patch) {
     // nothing to be done here
   }
 }

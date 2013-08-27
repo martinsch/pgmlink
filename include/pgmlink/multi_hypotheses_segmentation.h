@@ -72,6 +72,14 @@ namespace pgmlink {
   template <typename T, typename U>
   class PixelActorFactory;
 
+  class RegionMergingPolicyBase;
+
+  typedef boost::shared_ptr<RegionMergingPolicyBase> ReginMergingPolicyPtr;
+
+  class RegionMergingPolicyFactoryBase;
+
+  typedef boost::shared_ptr<RegionMergingPolicyFactoryBase> RegionMergingPolicyFactoryPtr;
+
   typedef boost::shared_ptr<MultiSegmenter> MultiSegmenterPtr;
 
   typedef boost::shared_ptr<std::vector<vigra::MultiArray<2, label_type> > > AssignmentListPtr;
@@ -400,6 +408,34 @@ namespace pgmlink {
     ~RegionMergingGraph() {}
     virtual void merge();
   };
+
+
+  ////
+  //// RegionMergingPolicyFactoryBase
+  ////
+  /* class RegionMergingPolicyFactoryBase {
+  public:
+    virtual ~RegionMergingPolicyFactoryBase() {}
+    virtual RegionMergingPolicyPtr build(AdjacencyGraphPtr graph) = 0;
+    }; */
+
+
+  ////
+  ////RegionMergingGraphFactory
+  ////
+  /* class RegionMergingGraphFactory : public RegionMergingPolicyFactoryBase {
+  public:
+    RegionMergingGraphFactory(unsigned maximum_merges_per_connected_component,
+                              unsigned maximum_merges_per_patch,
+                              label_type starting_label);
+    virtual ~RegionMergingGraphFactory() {}
+    virtual RegionMergingPolicyPtr build(AdjacencyGraphPtr graph);
+  private:
+    RegionMergingGraphFactory();
+    unsigned maximum_merges_per_connected_component_;
+    unsigned maximum_merges_per_patch_;
+    label_type starting_label_;
+    }; */
   
 
   /* IMPLEMENTATIONS */
