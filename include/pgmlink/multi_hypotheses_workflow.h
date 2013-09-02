@@ -23,6 +23,9 @@
 #include <pgmlink/multi_hypotheses_segmentation.h>
 #include <pgmlink/image_input.h>
 #include <pgmlink/clustering.h>
+#include <pgmlink/hypotheses.h>
+#include <pgmlink/traxels.h>
+
 
 
 namespace va = vigra::acc;
@@ -34,7 +37,7 @@ namespace pgmlink {
 
   template <typename T, int N>
   class MultiHypothesesGraphVectorBuilder;
-  
+
 
   ////
   //// MultiSegmentBuilder
@@ -70,6 +73,8 @@ namespace pgmlink {
   template <typename T, int N>
   class MultiHypothesesGraphVectorBuilder {
   public:
+    typedef typename vigra::CoupledIteratorType<N, T, T>::type CoupledIterator;
+    typedef typename CoupledIterator::value_type Handle;
     boost::shared_ptr<std::vector<boost::shared_ptr<RegionGraph> > > build(const std::string& raw_directory,
                                                                            const std::string& label_directory);
     MultiHypothesesGraphVectorBuilder(
@@ -234,15 +239,68 @@ namespace pgmlink {
                                          visitor,
                                          connected_component);
       builder.create_adjacency_list();
+      va::AccumulatorChainArray<Handle,
+                                       va::Select<va::DataArg<1>, va::LabelArg<2>,
+                                                  va::Mean, va::Variance, va::Coord<va::Mean>,
+                                                  va::Count
+                                                  >
+                                       >
+        accumulator_connected_components, accumulator_split_regions, accumulator;
+      CoupledIterator start = vigra::createCoupledIterator(label_image, label_image);
+      CoupledIterator end = start.getEndIterator();
+      accumulator_connected_components.ignoreLabel(0);
+      // va::activate<va::Coord<va::Mean> >(accumulator_connected_components);
+      // va::activate<va::Count>(accumulator_connected_components);
+      va::extractFeatures(start, end, accumulator_connected_components);
+      start = vigra::createCoupledIterator(input_image, input_image);
+      end = start.getEndIterator();
+      accumulator_split_regions.ignoreLabel(0);
+      // va::activate<va::Coord<va::Mean> >(accumulator_split_regions);
+      // va::activate<va::Count>(accumulator_split_regions);
+      va::extractFeatures(start, end, accumulator_split_regions);
+
+      accumulator.setMaxRegionLabel(accumulator_split_regions.maxRegionLabel());
+      accumulator += accumulator_connected_components;
+      accumulator += accumulator_split_regions;
+
+      graph->add(node_traxel());
+      RegionGraph::TraxelMap& traxel_map = graph->get(node_traxel());
+      RegionGraph::LabelMap& label_map = graph->get(node_label());
+      for (int i = 1; i < accumulator.maxRegionLabel(); ++i) {
+        std::cout << i << " -- " << va::get<va::Count>(accumulator, i) << " - "
+                  << va::get<va::Coord<va::Mean> >(accumulator, i)[0] << ','
+                  << va::get<va::Coord<va::Mean> >(accumulator, i)[1] << '\n';
+        Traxel trax(i);
+        trax.features["com"] =
+          feature_array(va::get<va::Coord<va::Mean> >(accumulator, i).begin(),
+                        va::get<va::Coord<va::Mean> >(accumulator, i).end()
+                        );
+        trax.features["size"] =
+          feature_array(1, va::get<va::Count>(accumulator, i));
+        const RegionGraph::Node& node = label_map(i);
+        // traxel_map.set(node, trax);
+      }
+      
       RegionMergingGraph merging_policy(graph,
                                         maximum_merges_per_connected_component_,
                                         maximum_merges_per_patch_,
                                         *vigra::argMax(label_image.begin(), label_image.end())
                                         );
       merging_policy.merge();
+      RegionGraph::LabelMap::ValueIt value_iterator = label_map.beginValue();
+      for (; value_iterator != label_map.endValue(); ++value_iterator) {
+        if (*value_iterator <= accumulator.maxRegionLabel()) {
+          continue;
+        }
+        const RegionGraph::Node& node = label_map(*value_iterator);
+        traxel_map.set(node, Traxel(*value_iterator));
+      }
+
       graphs->push_back(graph);
     }
-    
+
+
+
     return graphs;
   }
 

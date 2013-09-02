@@ -17,6 +17,7 @@
 
 // pgmlink
 #include <pgmlink/graph.h>
+#include <pgmlink/hypotheses.h> // node_traxel
 
 
 namespace pgmlink {
@@ -200,6 +201,7 @@ namespace pgmlink {
     typedef property_map<node_level, base_graph>::type LevelMap;
     typedef property_map<node_connected_component, base_graph>::type ConnectedComponentMap;
     typedef property_map<node_merged_n_times, base_graph>::type NumberMergesMap;
+    typedef property_map<node_traxel, base_graph>::type TraxelMap;
   private:
     label_type maximum_label_;
     void union_neighbors(const Region& r1,
