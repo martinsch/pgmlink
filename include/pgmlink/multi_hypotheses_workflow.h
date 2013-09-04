@@ -27,6 +27,7 @@
 #include <pgmlink/clustering.h>
 #include <pgmlink/hypotheses.h>
 #include <pgmlink/traxels.h>
+#include <pgmlink/multi_hypotheses_graph.h>
 
 
 
@@ -39,6 +40,8 @@ namespace pgmlink {
 
   template <typename T, int N>
   class MultiHypothesesGraphVectorBuilder;
+
+  
 
 
   ////
@@ -77,7 +80,7 @@ namespace pgmlink {
   public:
     typedef typename vigra::CoupledIteratorType<N, T, T>::type CoupledIterator;
     typedef typename CoupledIterator::value_type Handle;
-    boost::shared_ptr<std::vector<boost::shared_ptr<RegionGraph> > > build(const std::string& raw_directory,
+    RegionGraphVector build(const std::string& raw_directory,
                                                                            const std::string& label_directory);
     MultiHypothesesGraphVectorBuilder(
                                       ImageSelectorPtr image_selector,
@@ -213,11 +216,11 @@ namespace pgmlink {
   //// MultiHypothesesGraphVectorBuilder
   ////
   template <typename T, int N>
-  boost::shared_ptr<std::vector<boost::shared_ptr<RegionGraph> > >
+  RegionGraphVector
   MultiHypothesesGraphVectorBuilder<T, N>::build(const std::string& raw_directory,
                                                  const std::string& label_directory) {
     LOG(logDEBUG) << "MultiHypothesesGraphVectorBuilder<T, " << N << ">::build()";
-    boost::shared_ptr<std::vector<boost::shared_ptr<RegionGraph> > >
+    RegionGraphVector
       graphs(new std::vector<boost::shared_ptr<RegionGraph> >);
     FilenameListPtr filenames = image_selector_->select(label_directory);
     FilenameListPtr filenames_raw = image_selector_->select(raw_directory);
