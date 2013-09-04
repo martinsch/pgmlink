@@ -112,7 +112,7 @@ namespace pgmlink {
     union_neighbors(r1, r2, new_region);
     labels_map.set(new_region, maximum_label_);
     level_map.set(new_region,
-                  std::min(level_map[r1], level_map[r2]));
+                  std::max(level_map[r1], level_map[r2])+1);
     std::set<Region>& contains_new = contains_map.get_value(new_region);
     contains_new.insert(r1);
     contains_new.insert(r2);
@@ -156,6 +156,8 @@ namespace pgmlink {
 
 
   RegionGraph::Region RegionGraph::add_region(label_type label) {
+    LOG(logDEBUG1) << "RegionGraph::add_region() -- called with label="
+                   << label;
     Region region = addNode();
     get(node_label()).set(region, label);
     get(node_level()).set(region, 0u);

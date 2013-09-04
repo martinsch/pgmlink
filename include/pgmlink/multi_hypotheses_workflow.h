@@ -4,7 +4,8 @@
 // stl
 #include <vector>
 #include <string>
-#include <algorithm> // std::copy
+#include <algorithm> // std::copy, transform
+#include <functional> //std::plus
 #include <iterator> // std::back_inserter
 
 // vigra
@@ -12,6 +13,7 @@
 #include <vigra/accumulator.hxx> // feature accumulators
 #include <vigra/labelimage.hxx> // connected components
 #include <vigra/algorithm.hxx> // argMax
+#include <vigra/accumulator.hxx> // feature accumulators
 
 // boost
 #include <boost/shared_ptr.hpp>
@@ -160,7 +162,7 @@ namespace pgmlink {
 
       // make sure cluster regions have index at least greater than the
       // largest original region index
-      starting_index = regions + 1;
+      starting_index = regions;
       ConnectedComponentsToMultiSegments
         connected_components_to_multi_segments(
                                                components_coordinates,
@@ -266,10 +268,12 @@ namespace pgmlink {
       graph->add(node_traxel());
       RegionGraph::TraxelMap& traxel_map = graph->get(node_traxel());
       RegionGraph::LabelMap& label_map = graph->get(node_label());
+      RegionGraph::LevelMap& level_map = graph->get(node_level());
+      RegionGraph::ContainingMap& containing_map = graph->get(node_contains());
       for (int i = 1; i < accumulator.maxRegionLabel(); ++i) {
-        std::cout << i << " -- " << va::get<va::Count>(accumulator, i) << " - "
+        /* std::cout << i << " -- " << va::get<va::Count>(accumulator, i) << " - "
                   << va::get<va::Coord<va::Mean> >(accumulator, i)[0] << ','
-                  << va::get<va::Coord<va::Mean> >(accumulator, i)[1] << '\n';
+                  << va::get<va::Coord<va::Mean> >(accumulator, i)[1] << '\n'; */
         Traxel trax(i);
         trax.features["com"] =
           feature_array(va::get<va::Coord<va::Mean> >(accumulator, i).begin(),
@@ -278,7 +282,7 @@ namespace pgmlink {
         trax.features["size"] =
           feature_array(1, va::get<va::Count>(accumulator, i));
         const RegionGraph::Node& node = label_map(i);
-        // traxel_map.set(node, trax);
+        traxel_map.set(node, trax);
       }
       
       RegionMergingGraph merging_policy(graph,
@@ -289,12 +293,40 @@ namespace pgmlink {
       merging_policy.merge();
       RegionGraph::LabelMap::ValueIt value_iterator = label_map.beginValue();
       for (; value_iterator != label_map.endValue(); ++value_iterator) {
-        if (*value_iterator <= accumulator.maxRegionLabel()) {
+        if (*value_iterator < accumulator.maxRegionLabel()) {
           continue;
         }
         const RegionGraph::Node& node = label_map(*value_iterator);
-        traxel_map.set(node, Traxel(*value_iterator));
+        const std::set<RegionGraph::Node>& children = containing_map[node];
+        feature_array com(N, 0);
+        feature_array size(1, 0);
+        for (std::set<RegionGraph::Node>::const_iterator children_it = children.begin();
+             children_it != children.end();
+             ++children_it) {
+          if (level_map[*children_it] > 0) {
+            Traxel child_trax = traxel_map[*children_it];
+            size[0] += child_trax.features["size"][0];
+            const feature_array& child_com = child_trax.features["com"];
+            std::transform(child_com.begin(), child_com.end(),
+                           com.begin(), com.begin(),
+                           std::plus<feature_type>()
+                           );
+          }
+        }
+        std::transform(com.begin(), com.end(), com.begin(),
+                       std::bind2nd(std::divides<feature_type>(),
+                                    size[0]
+                                    )
+                       );
+        Traxel trax(*value_iterator);
+        trax.features["size"] = size;
+        trax.features["com"] = com;
+        LOG(logDEBUG3) << "MultiHypothesesGraphVectorBuilder<T, N>::build() -- merged region size: " << size[0];
+        
+        
+        traxel_map.set(node, trax);
       }
+
 
       graphs->push_back(graph);
     }

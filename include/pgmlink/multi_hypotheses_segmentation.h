@@ -513,6 +513,7 @@ namespace pgmlink {
     AdjacencyGraph::Region region = label_map(key);
     if (region == lemon::INVALID) {
       region = adjacency_graph_->add_region(key);
+      LOG(logDEBUG2) << "ParentConnectedComponentGraph<T, U>::add_to_connected_component -- added label " << key;
     }
     connected_component_map.set(region, component);
   }
