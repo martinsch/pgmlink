@@ -170,4 +170,21 @@ namespace pgmlink {
     return maximum_label_;
   }
 
+  
+  RegionGraph::NodeVectorPtr RegionGraph::get_nodes_in_component(unsigned component_label) {
+    NodeVectorPtr nodes(new NodeVector);
+    ConnectedComponentMap& component_map = get(node_connected_component());
+    for (ConnectedComponentMap::ItemIt node_it(component_map, component_label);
+         node_it != lemon::INVALID;
+         ++node_it) {
+      nodes->push_back(node_it);
+    }
+    return nodes;
+  }
+
+  
+  RegionGraph::NodeVectorPtr RegionGraph::get_connected_components() {
+    return get_nodes_in_component(0u);
+  }
+
 }

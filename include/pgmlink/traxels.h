@@ -11,6 +11,7 @@
 #include <string>
 #include <iostream>
 #include <ostream>
+#include <vector>
 
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/ordered_index.hpp>
@@ -19,6 +20,7 @@
 #include <boost/multi_index/composite_key.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/map.hpp>
+#include <boost/shared_ptr.hpp>
 
 namespace pgmlink {
 //
@@ -28,6 +30,13 @@ typedef float feature_type;
 typedef std::vector<feature_type> feature_array;
 typedef std::map<std::string,feature_array> FeatureMap;
 
+
+//
+// Traxel forward declaration for vector and vector ptr
+//
+class Traxel;
+typedef std::vector<Traxel> TraxelVector;
+typedef boost::shared_ptr<TraxelVector> TraxelVectorPtr;
 
 
 //

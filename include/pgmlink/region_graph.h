@@ -202,6 +202,8 @@ namespace pgmlink {
     typedef property_map<node_connected_component, base_graph>::type ConnectedComponentMap;
     typedef property_map<node_merged_n_times, base_graph>::type NumberMergesMap;
     typedef property_map<node_traxel, base_graph>::type TraxelMap;
+    typedef std::vector<base_graph::Node> NodeVector;
+    typedef boost::shared_ptr<NodeVector> NodeVectorPtr;
   private:
     label_type maximum_label_;
     void union_neighbors(const Region& r1,
@@ -216,6 +218,8 @@ namespace pgmlink {
     Region merge_regions(label_type label1, label_type label2);
     Region add_region(label_type label);
     int get_maximum_label();
+    NodeVectorPtr get_nodes_in_component(unsigned component_label);
+    NodeVectorPtr get_connected_components();
   };
 
   

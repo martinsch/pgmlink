@@ -15,14 +15,15 @@
 #include <pgmlink/graph.h>
 #include <pgmlink/hypotheses.h>
 #include <pgmlink/traxels.h>
+#include <pgmlink/region_graph.h>
 
 
 namespace pgmlink {
-  class TagNode;
+  /*class TagNode;
   
   class EventNode;
 
-  class ObjectNode;
+  class ObjectNode; */
 
   class Tag;
 
@@ -34,11 +35,13 @@ namespace pgmlink {
 
   class MultiHypothesesGraphBuilder;
 
+  typedef std::vector<boost::shared_ptr<RegionGraph> > RegionGraphVector;
+
   typedef boost::shared_ptr<std::vector<boost::shared_ptr<RegionGraph> > >
-  RegionGraphVector;
+  RegionGraphVectorPtr;
 
 
-  class TagNode : public lemon::ListGraph::Node {
+  /* class TagNode : public lemon::ListGraph::Node {
   public:
     static const std::string tag;
   };
@@ -62,17 +65,15 @@ namespace pgmlink {
     feature_array distances_;
   };
 
-  const std::string EventNode::tag = "event";
-
 
   class ObjectNode : public TagNode {
 
   };
 
-  const std::string ObjectNode::tag = "object";
+  const std::string ObjectNode::tag = "object"; */
   
 
-  class Tag {
+  /* class Tag {
   public:
     virtual std::string tag() {return ""} const;
     virtual ~Tag();
@@ -98,11 +99,12 @@ namespace pgmlink {
     TaggedArc(Tag* tag) :
       tag(tag->tag()) {}
     const std::string tag;
-  };
+    }; */
 
 
   class MultiHypothesesGraph : public PropertyGraph<lemon::ListGraph> {
   public:
+    MultiHypothesesGraph();
     unsigned maximum_timestep();
   private:
     unsigned maximum_timestep_;
@@ -132,8 +134,9 @@ namespace pgmlink {
     MultiHypothesesGraphBuilder(const Options& options = Options()) :
       options_(options) {}
     boost::shared_ptr<MultiHypothesesGraph>
-    build(RegionGraphVector graph);
+    build(RegionGraphVectorPtr graphs);
   private:
+    TraxelVectorPtr extract_traxels(RegionGraphPtr graph);
     Options options_;
   };
 

@@ -80,7 +80,7 @@ namespace pgmlink {
   public:
     typedef typename vigra::CoupledIteratorType<N, T, T>::type CoupledIterator;
     typedef typename CoupledIterator::value_type Handle;
-    RegionGraphVector build(const std::string& raw_directory,
+    RegionGraphVectorPtr build(const std::string& raw_directory,
                                                                            const std::string& label_directory);
     MultiHypothesesGraphVectorBuilder(
                                       ImageSelectorPtr image_selector,
@@ -216,11 +216,11 @@ namespace pgmlink {
   //// MultiHypothesesGraphVectorBuilder
   ////
   template <typename T, int N>
-  RegionGraphVector
+  RegionGraphVectorPtr
   MultiHypothesesGraphVectorBuilder<T, N>::build(const std::string& raw_directory,
                                                  const std::string& label_directory) {
     LOG(logDEBUG) << "MultiHypothesesGraphVectorBuilder<T, " << N << ">::build()";
-    RegionGraphVector
+    RegionGraphVectorPtr
       graphs(new std::vector<boost::shared_ptr<RegionGraph> >);
     FilenameListPtr filenames = image_selector_->select(label_directory);
     FilenameListPtr filenames_raw = image_selector_->select(raw_directory);
