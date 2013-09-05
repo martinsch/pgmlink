@@ -18,7 +18,7 @@
 using namespace pgmlink;
 using namespace boost::python;
 
-typedef typename property_map<node_traxel, typename HypothesesGraph::base_graph>::type node_traxel_m;
+typedef property_map<node_traxel, typename HypothesesGraph::base_graph>::type node_traxel_m;
 
 
 node_traxel_m& addNodeTraxelMap(HypothesesGraph* g) {

@@ -8,12 +8,14 @@
 #define FIELD_OF_VIEW_H
 
 #include <vector>
+#include "pgmlink/pgmlink_export.h"
+
 
 
 namespace pgmlink {
 
   /** Field of view in 3d+t space as a rectangular cuboid. */
-  class FieldOfView {
+  class PGMLINK_EXPORT FieldOfView {
   public:
     FieldOfView() : lb_(4, 0), ub_(4, 0) {}
     FieldOfView(double lt,
