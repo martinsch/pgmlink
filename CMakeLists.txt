@@ -75,6 +75,9 @@ ADD_DEFINITIONS(-DIL_STD)
 
 if(WIN32)
   add_definitions(-DBOOST_ALL_DYN_LINK)
+  if("${Boost_LIBRARIES}" MATCHES "boost_serialization\\.lib")
+    ADD_DEFINITIONS(-DBOOST_AUTO_LINK_NOMANGLE)
+  endif()
 endif()
 
 ## vigra defines
