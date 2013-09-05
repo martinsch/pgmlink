@@ -8,12 +8,14 @@
 #define FIELD_OF_VIEW_H
 
 #include <vector>
+#include "pgmlink/pgmlink_export.h"
+
 
 
 namespace pgmlink {
 
   /** Field of view in 3d+t space as a rectangular cuboid. */
-  class FieldOfView {
+  class PGMLINK_EXPORT FieldOfView {
   public:
     FieldOfView() : lb_(4, 0), ub_(4, 0) {}
     FieldOfView(double lt,
@@ -50,7 +52,7 @@ namespace pgmlink {
    * The point can be inside or outside the field of view.
    */
   double spatial_margin( double t, double x, double y, double z ) const;
-  double relative_spatial_margin( double t, double x, double y, double z ) const;
+  double spatial_distance_to_border( double t, double x, double y, double z, bool relative ) const;
   
   /** Shortest distance to the temporal boundary of the field of view. */
   double temporal_margin( double t, double x, double y, double z ) const;

@@ -17,7 +17,7 @@
 namespace opengm {
 /// \cond HIDDEN_SYMBOLS
 namespace detail_graphical_model {
-  template<size_t FUNCTION_INDEX, class FUNCTION_TYPE, class T, class FUNCTION_TYPE_LIST, class SPACE, bool EDITABLE>
+  template<size_t FUNCTION_INDEX, class FUNCTION_TYPE, class T, class FUNCTION_TYPE_LIST, class SPACE>
   struct WeightAccessor;
   template<size_t FUNCTION_TYPE_INDEX, class FUNCTION_TYPE, class LLM>
   struct InnerFunctionAccessor;
@@ -30,36 +30,35 @@ namespace detail_graphical_model {
 template<
    class T,
    class FUNCTION_TYPE_LIST = meta::TypeList<FunctionDecoratorWeighted<ExplicitFunction<T> >, meta::ListEnd>, 
-   class SPACE = opengm::DiscreteSpace<size_t, size_t>, 
-   bool EDITABLE = false
+   class SPACE = opengm::DiscreteSpace<size_t, size_t>
 >
 class LoglinearModel 
-  : public GraphicalModel<T, Adder, FUNCTION_TYPE_LIST, SPACE, EDITABLE> 
+  : public GraphicalModel<T, Adder, FUNCTION_TYPE_LIST, SPACE> 
 {
 public:
-    typedef LoglinearModel<T, FUNCTION_TYPE_LIST, SPACE, EDITABLE> GraphicalModelType;
-    typedef typename GraphicalModel<T, Adder, FUNCTION_TYPE_LIST, SPACE, EDITABLE>::SpaceType SpaceType;
-    typedef typename GraphicalModel<T, Adder, FUNCTION_TYPE_LIST, SPACE, EDITABLE>::IndexType IndexType;
-    typedef typename GraphicalModel<T, Adder, FUNCTION_TYPE_LIST, SPACE, EDITABLE>::LabelType LabelType;
-    typedef typename GraphicalModel<T, Adder, FUNCTION_TYPE_LIST, SPACE, EDITABLE>::ValueType ValueType;
+    typedef LoglinearModel<T, FUNCTION_TYPE_LIST, SPACE> GraphicalModelType;
+    typedef typename GraphicalModel<T, Adder, FUNCTION_TYPE_LIST, SPACE>::SpaceType SpaceType;
+    typedef typename GraphicalModel<T, Adder, FUNCTION_TYPE_LIST, SPACE>::IndexType IndexType;
+    typedef typename GraphicalModel<T, Adder, FUNCTION_TYPE_LIST, SPACE>::LabelType LabelType;
+    typedef typename GraphicalModel<T, Adder, FUNCTION_TYPE_LIST, SPACE>::ValueType ValueType;
        
-    typedef typename GraphicalModel<T, Adder, FUNCTION_TYPE_LIST, SPACE, EDITABLE>::FunctionTypeList FunctionTypeList;
+    typedef typename GraphicalModel<T, Adder, FUNCTION_TYPE_LIST, SPACE>::FunctionTypeList FunctionTypeList;
        
-    typedef typename GraphicalModel<T, Adder, FUNCTION_TYPE_LIST, SPACE, EDITABLE>::FunctionIdentifier FunctionIdentifier;
-    typedef typename GraphicalModel<T, Adder, FUNCTION_TYPE_LIST, SPACE, EDITABLE>::IndependentFactorType IndependentFactorType; 
-    typedef typename GraphicalModel<T, Adder, FUNCTION_TYPE_LIST, SPACE, EDITABLE>::FactorType FactorType;
-    typedef typename GraphicalModel<T, Adder, FUNCTION_TYPE_LIST, SPACE, EDITABLE>::OperatorType OperatorType;
+    typedef typename GraphicalModel<T, Adder, FUNCTION_TYPE_LIST, SPACE>::FunctionIdentifier FunctionIdentifier;
+    typedef typename GraphicalModel<T, Adder, FUNCTION_TYPE_LIST, SPACE>::IndependentFactorType IndependentFactorType; 
+    typedef typename GraphicalModel<T, Adder, FUNCTION_TYPE_LIST, SPACE>::FactorType FactorType;
+    typedef typename GraphicalModel<T, Adder, FUNCTION_TYPE_LIST, SPACE>::OperatorType OperatorType;
 
     LoglinearModel( IndexType numberOfWeights = 0, ValueType val = 1 ) : weights_(numberOfWeights, val) {}
-    template<class FUNCTION_TYPE_LIST_OTHER, bool IS_EDITABLE>
-    LoglinearModel(const LoglinearModel<T, FUNCTION_TYPE_LIST_OTHER, SPACE, IS_EDITABLE>& m,
+    template<class FUNCTION_TYPE_LIST_OTHER>
+    LoglinearModel(const LoglinearModel<T, FUNCTION_TYPE_LIST_OTHER, SPACE>& m,
 		   IndexType numberOfWeights = 0,
 		   ValueType val = 1)
-      : GraphicalModel<T, Adder, FUNCTION_TYPE_LIST, SPACE, EDITABLE>::GraphicalModel(m), weights_(numberOfWeights, val) {}
+      : GraphicalModel<T, Adder, FUNCTION_TYPE_LIST, SPACE>::GraphicalModel(m), weights_(numberOfWeights, val) {}
     LoglinearModel(const SpaceType& s,
 		   IndexType numberOfWeights = 0,
 		   ValueType val = 1)
-      : GraphicalModel<T, Adder, FUNCTION_TYPE_LIST, SPACE, EDITABLE>::GraphicalModel(s), weights_(numberOfWeights, val) {}
+      : GraphicalModel<T, Adder, FUNCTION_TYPE_LIST, SPACE>::GraphicalModel(s), weights_(numberOfWeights, val) {}
 
     template<class FEATURE_FUNCTION>
       FunctionIdentifier
@@ -78,7 +77,7 @@ private:
     std::map<FunctionIdentifier, IndexType> feature_ids_; // map function id to weight index
 
 
-    template<size_t FUNCTION_INDEX, class FUNCTION_TYPE, class t, class function_type_list, class space, bool editable>
+    template<size_t FUNCTION_INDEX, class FUNCTION_TYPE, class t, class function_type_list, class space>
     friend struct detail_graphical_model::WeightAccessor;
 
     template<size_t FUNCTION_TYPE_INDEX, class FUNCTION_TYPE, class LLM>
@@ -91,21 +90,21 @@ namespace detail_graphical_model {
 //// Accessing weights via TMP recursion
 ////
 
-template<size_t FUNCTION_INDEX, class FUNCTION_TYPE, class T, class FUNCTION_TYPE_LIST, class SPACE, bool EDITABLE>
+template<size_t FUNCTION_INDEX, class FUNCTION_TYPE, class T, class FUNCTION_TYPE_LIST, class SPACE>
 struct WeightAccessor {
-  typedef LoglinearModel<T, FUNCTION_TYPE_LIST, SPACE, EDITABLE> model_t;
+  typedef LoglinearModel<T, FUNCTION_TYPE_LIST, SPACE> model_t;
   void get( const model_t* m, std::vector<T>& out ) const {
     w_next_.get(m, out);
   };
   void set( model_t* m, std::vector<T>& in ) {
     w_next_.set(m, in);
   };
-  WeightAccessor<FUNCTION_INDEX-1, typename meta::TypeAtTypeList<FUNCTION_TYPE_LIST, FUNCTION_INDEX-1>::type, T, FUNCTION_TYPE_LIST, SPACE, EDITABLE> w_next_;
+  WeightAccessor<FUNCTION_INDEX-1, typename meta::TypeAtTypeList<FUNCTION_TYPE_LIST, FUNCTION_INDEX-1>::type, T, FUNCTION_TYPE_LIST, SPACE> w_next_;
 };
 
-template<size_t FUNCTION_INDEX, class FUNCTION_TYPE, class T, class FUNCTION_TYPE_LIST, class SPACE, bool EDITABLE>
-struct WeightAccessor<FUNCTION_INDEX, opengm::FunctionDecoratorWeighted<FUNCTION_TYPE>, T, FUNCTION_TYPE_LIST, SPACE, EDITABLE> {
-  typedef LoglinearModel<T, FUNCTION_TYPE_LIST, SPACE, EDITABLE> model_t;
+template<size_t FUNCTION_INDEX, class FUNCTION_TYPE, class T, class FUNCTION_TYPE_LIST, class SPACE>
+struct WeightAccessor<FUNCTION_INDEX, opengm::FunctionDecoratorWeighted<FUNCTION_TYPE>, T, FUNCTION_TYPE_LIST, SPACE> {
+  typedef LoglinearModel<T, FUNCTION_TYPE_LIST, SPACE> model_t;
   void get( const model_t* m, std::vector<T>& out ) const {
     typename model_t::FunctionIdentifier fid(0, FUNCTION_INDEX);
     for(size_t i=0; i<m->template functions<FUNCTION_INDEX>().size(); ++i){
@@ -126,12 +125,12 @@ struct WeightAccessor<FUNCTION_INDEX, opengm::FunctionDecoratorWeighted<FUNCTION
     }
     w_next_.set(m, in);
   };
-  WeightAccessor<FUNCTION_INDEX-1, typename meta::TypeAtTypeList<FUNCTION_TYPE_LIST, FUNCTION_INDEX-1>::type, T, FUNCTION_TYPE_LIST, SPACE, EDITABLE> w_next_;
+  WeightAccessor<FUNCTION_INDEX-1, typename meta::TypeAtTypeList<FUNCTION_TYPE_LIST, FUNCTION_INDEX-1>::type, T, FUNCTION_TYPE_LIST, SPACE> w_next_;
 };
 
-template<class FUNCTION_TYPE, class T, class FUNCTION_TYPE_LIST, class SPACE, bool EDITABLE>
-struct WeightAccessor<0, FUNCTION_TYPE, T, FUNCTION_TYPE_LIST, SPACE, EDITABLE> {
-  typedef LoglinearModel<T, FUNCTION_TYPE_LIST, SPACE, EDITABLE> model_t;
+template<class FUNCTION_TYPE, class T, class FUNCTION_TYPE_LIST, class SPACE>
+struct WeightAccessor<0, FUNCTION_TYPE, T, FUNCTION_TYPE_LIST, SPACE> {
+  typedef LoglinearModel<T, FUNCTION_TYPE_LIST, SPACE> model_t;
   void get( const model_t* m, std::vector<T>& out ) const {
     assert(out.size() == m->numberOfWeights() );
   };
@@ -139,9 +138,9 @@ struct WeightAccessor<0, FUNCTION_TYPE, T, FUNCTION_TYPE_LIST, SPACE, EDITABLE> 
   };
 };
 
-template<class FUNCTION_TYPE, class T, class FUNCTION_TYPE_LIST, class SPACE, bool EDITABLE>
-struct WeightAccessor<0, opengm::FunctionDecoratorWeighted<FUNCTION_TYPE>, T, FUNCTION_TYPE_LIST, SPACE, EDITABLE> {
-  typedef LoglinearModel<T, FUNCTION_TYPE_LIST, SPACE, EDITABLE> model_t;
+template<class FUNCTION_TYPE, class T, class FUNCTION_TYPE_LIST, class SPACE>
+struct WeightAccessor<0, opengm::FunctionDecoratorWeighted<FUNCTION_TYPE>, T, FUNCTION_TYPE_LIST, SPACE> {
+  typedef LoglinearModel<T, FUNCTION_TYPE_LIST, SPACE> model_t;
   void get( const model_t* m, std::vector<T>& out ) const {
     typename model_t::FunctionIdentifier fid(0, 0);
     for(size_t i=0; i<m->template functions<0>().size(); ++i){
@@ -236,15 +235,15 @@ struct InnerFunctionAccessor<0, opengm::FunctionDecoratorWeighted<FUNCTION_TYPE>
 /// \endcond
 
 
-template<class T, class FUNCTION_TYPE_LIST, class SPACE, bool EDITABLE>
+template<class T, class FUNCTION_TYPE_LIST, class SPACE>
 template<class FEATURE_FUNCTION>
-typename LoglinearModel<T, FUNCTION_TYPE_LIST, SPACE, EDITABLE>::FunctionIdentifier
-LoglinearModel<T, FUNCTION_TYPE_LIST, SPACE, EDITABLE>::addFeature(FunctionDecoratorWeighted<FEATURE_FUNCTION> f, IndexType weightIndex) {
+typename LoglinearModel<T, FUNCTION_TYPE_LIST, SPACE>::FunctionIdentifier
+LoglinearModel<T, FUNCTION_TYPE_LIST, SPACE>::addFeature(FunctionDecoratorWeighted<FEATURE_FUNCTION> f, IndexType weightIndex) {
   if( !(weightIndex < this->numberOfWeights()) ) {
     throw std::invalid_argument("LoglinearModel::addFeatureWithRefReturn(): weightIndex out of range");
   }
 
-  typedef typename LoglinearModel<T, FUNCTION_TYPE_LIST, SPACE, EDITABLE>::FunctionIdentifier FidType;
+  typedef typename LoglinearModel<T, FUNCTION_TYPE_LIST, SPACE>::FunctionIdentifier FidType;
   f.weight( weights_[weightIndex] );
   FidType fid = this->addFunction(f);
   if(feature_ids_.empty()) {
@@ -255,9 +254,9 @@ LoglinearModel<T, FUNCTION_TYPE_LIST, SPACE, EDITABLE>::addFeature(FunctionDecor
   return fid;
 }
 
-template<class T, class FUNCTION_TYPE_LIST, class SPACE, bool EDITABLE>
+template<class T, class FUNCTION_TYPE_LIST, class SPACE>
 void
-LoglinearModel<T, FUNCTION_TYPE_LIST, SPACE, EDITABLE>::setWeights( std::vector<ValueType> in ) 
+LoglinearModel<T, FUNCTION_TYPE_LIST, SPACE>::setWeights( std::vector<ValueType> in ) 
 {
   if( in.size() != this->numberOfWeights() ) {
     throw std::invalid_argument("LoglinearModel::setWeights(): vector size not equal to number of weights");
@@ -265,33 +264,33 @@ LoglinearModel<T, FUNCTION_TYPE_LIST, SPACE, EDITABLE>::setWeights( std::vector<
   weights_ = in;
 
   // update feature functions with new weight values
-  typedef LoglinearModel<T, FUNCTION_TYPE_LIST, SPACE, EDITABLE> model_t;
+  typedef LoglinearModel<T, FUNCTION_TYPE_LIST, SPACE> model_t;
   detail_graphical_model::WeightAccessor<model_t::NrOfFunctionTypes - 1,
 					 typename meta::TypeAtTypeList<FUNCTION_TYPE_LIST, model_t::NrOfFunctionTypes -1>::type,
-					 T, FUNCTION_TYPE_LIST, SPACE, EDITABLE> w;
+					 T, FUNCTION_TYPE_LIST, SPACE> w;
   w.set(this, in);
 }
 
-template<class T, class FUNCTION_TYPE_LIST, class SPACE, bool EDITABLE>
+template<class T, class FUNCTION_TYPE_LIST, class SPACE>
 void
-LoglinearModel<T, FUNCTION_TYPE_LIST, SPACE, EDITABLE>::getWeights( std::vector<ValueType>& out ) const
+LoglinearModel<T, FUNCTION_TYPE_LIST, SPACE>::getWeights( std::vector<ValueType>& out ) const
 {
   out.clear();
   out = weights_;
 
   // consistency check
-  typedef LoglinearModel<T, FUNCTION_TYPE_LIST, SPACE, EDITABLE> model_t;
+  typedef LoglinearModel<T, FUNCTION_TYPE_LIST, SPACE> model_t;
   detail_graphical_model::WeightAccessor<model_t::NrOfFunctionTypes - 1,
 					 typename meta::TypeAtTypeList<FUNCTION_TYPE_LIST, model_t::NrOfFunctionTypes -1>::type,
-					 T, FUNCTION_TYPE_LIST, SPACE, EDITABLE> w;
+					 T, FUNCTION_TYPE_LIST, SPACE> w;
   std::vector<ValueType> check( this->numberOfWeights() );
   w.get(this, check);
   assert(mismatch(out.begin(), out.end(), check.begin()).first == out.end());
 }
 
-template<class T, class FUNCTION_TYPE_LIST, class SPACE, bool EDITABLE>
+template<class T, class FUNCTION_TYPE_LIST, class SPACE>
 void 
-LoglinearModel<T, FUNCTION_TYPE_LIST, SPACE, EDITABLE>::weightedFeatureSums( const std::vector<LabelType>& labelIndices, std::vector<ValueType>& out ) const
+LoglinearModel<T, FUNCTION_TYPE_LIST, SPACE>::weightedFeatureSums( const std::vector<LabelType>& labelIndices, std::vector<ValueType>& out ) const
 {
   assert(labelIndices.size() == this->numberOfVariables());
   out.resize(this->numberOfWeights());
@@ -314,7 +313,7 @@ LoglinearModel<T, FUNCTION_TYPE_LIST, SPACE, EDITABLE>::weightedFeatureSums( con
          factor_state[i] = labelIndices[factor.variableIndex(i)];
       }
       // retrieve factor value at state
-      typedef LoglinearModel<T, FUNCTION_TYPE_LIST, SPACE, EDITABLE> model_t;
+      typedef LoglinearModel<T, FUNCTION_TYPE_LIST, SPACE> model_t;
       detail_graphical_model::InnerFunctionAccessor<model_t::NrOfFunctionTypes - 1,
        						    typename meta::TypeAtTypeList<FunctionTypeList, model_t::NrOfFunctionTypes -1>::type,
        						    model_t> a;

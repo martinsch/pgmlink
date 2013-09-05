@@ -22,6 +22,8 @@
 #include <boost/serialization/map.hpp>
 #include <boost/shared_ptr.hpp>
 
+#include "pgmlink/pgmlink_export.h"
+
 namespace pgmlink {
 //
 // feature data structures
@@ -42,7 +44,7 @@ typedef boost::shared_ptr<TraxelVector> TraxelVectorPtr;
 //
 // retrieve spatial coordinates from features
 //
-class Locator {
+class PGMLINK_EXPORT Locator {
  public:
  Locator( std::string fn,
 	  double x_scale = 1.0,
@@ -70,7 +72,7 @@ class Locator {
     void serialize( Archive&, const unsigned int /*version*/ );
 };
 
-class ComLocator : public Locator {
+class PGMLINK_EXPORT ComLocator : public Locator {
  public:
  ComLocator() : Locator("com") {};
   virtual ComLocator* clone() { return new ComLocator(*this); };
@@ -85,7 +87,7 @@ class ComLocator : public Locator {
     void serialize( Archive&, const unsigned int /*version*/ );
 };
 
-class ComCorrLocator : public Locator {
+class PGMLINK_EXPORT ComCorrLocator : public Locator {
  public:
  ComCorrLocator() : Locator("com_corrected") {};
   virtual ComCorrLocator* clone() { return new ComCorrLocator(*this); };
@@ -100,7 +102,7 @@ class ComCorrLocator : public Locator {
     void serialize( Archive&, const unsigned int /*version*/ );
 };
 
-class IntmaxposLocator : public Locator {
+class PGMLINK_EXPORT IntmaxposLocator : public Locator {
  public:
  IntmaxposLocator() : Locator("intmaxpos") {};
   virtual IntmaxposLocator* clone() { return new IntmaxposLocator(*this); };
@@ -120,7 +122,7 @@ class IntmaxposLocator : public Locator {
 //
 // Traxel datatype
 //
- class Traxel {
+ class PGMLINK_EXPORT Traxel {
  public:
    // construction / assignment
    //takes ownership of locator pointer
@@ -165,8 +167,8 @@ class IntmaxposLocator : public Locator {
  };
 
  // compare by (time,id) (Traxels can be used as keys (for instance in a std::map) )
- bool operator<(const Traxel& t1, const Traxel& t2);
- bool operator>(const Traxel& t1, const Traxel& t2);
+ PGMLINK_EXPORT bool operator<(const Traxel& t1, const Traxel& t2);
+ PGMLINK_EXPORT bool operator>(const Traxel& t1, const Traxel& t2);
 
 
 
@@ -184,10 +186,10 @@ class IntmaxposLocator : public Locator {
  using namespace boost::multi_index;
 
  //tags
- struct by_timestep {};
- struct by_timeid {};
+ struct PGMLINK_EXPORT by_timestep {};
+ struct PGMLINK_EXPORT by_timeid {};
 
- typedef multi_index_container<
+ typedef PGMLINK_EXPORT multi_index_container<
    Traxel,
      indexed_by<
        ordered_non_unique<tag<by_timestep>, member<Traxel,int,&Traxel::Timestep> >,
@@ -202,9 +204,9 @@ class IntmaxposLocator : public Locator {
      >
    > 
    TraxelStore;
- typedef TraxelStore::index<by_timestep>::type
+ typedef PGMLINK_EXPORT TraxelStore::index<by_timestep>::type
    TraxelStoreByTimestep;
- typedef TraxelStore::index<by_timeid>::type
+ typedef PGMLINK_EXPORT TraxelStore::index<by_timeid>::type
    TraxelStoreByTimeid;
 
  //
@@ -214,20 +216,20 @@ class IntmaxposLocator : public Locator {
   * Tight bounding box surrounding the Traxels in store.
   * @return lt lx ly lz ut ux uy uz 
   */
- std::vector<double> bounding_box(const TraxelStore&);
+ PGMLINK_EXPORT std::vector<double> bounding_box(const TraxelStore&);
 
  // timesteps
- std::set<TraxelStoreByTimestep::key_type>
+ PGMLINK_EXPORT std::set<TraxelStoreByTimestep::key_type>
    timesteps(const TraxelStore&);
 
- TraxelStoreByTimestep::key_type
+ PGMLINK_EXPORT TraxelStoreByTimestep::key_type
    earliest_timestep(const TraxelStore&);
 
- TraxelStoreByTimestep::key_type
+ PGMLINK_EXPORT TraxelStoreByTimestep::key_type
    latest_timestep(const TraxelStore&);
 
  // io
- TraxelStore& add(TraxelStore&, const Traxel&);
+ PGMLINK_EXPORT TraxelStore& add(TraxelStore&, const Traxel&);
 
  template<typename InputIt>
    TraxelStore& add(TraxelStore&, InputIt begin, InputIt end);
@@ -240,7 +242,7 @@ class IntmaxposLocator : public Locator {
   * @return the number of Traxels in the field of view
   */
  class FieldOfView;
- size_t filter_by_fov( const TraxelStore& in, TraxelStore& out, const FieldOfView& );
+ PGMLINK_EXPORT size_t filter_by_fov( const TraxelStore& in, TraxelStore& out, const FieldOfView& );
 
 
 

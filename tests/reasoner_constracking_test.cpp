@@ -1166,14 +1166,14 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_TranslationVector_Traxels ) 
 
 	center.clear(); shift.clear(); pDet.clear();
 	pushBackMultiple(center, 100, 100, 0);
-	pushBackMultiple(shift, 0,0,0);
+	pushBackMultiple(shift, 100,100,0);
 	pushBackMultiple(pDet, 0.,1.);
 	constructTraxel(n11,11,1,0.00,center,shift,pDet);
 	add(ts,n11);
 
 	center.clear(); shift.clear(); pDet.clear();
 	pushBackMultiple(center, 200, 200, 0);
-	pushBackMultiple(shift, 0,0,0);
+	pushBackMultiple(shift, 100,100,0);
 	pushBackMultiple(pDet, 0.,1.);
 	constructTraxel(n12,12,1,0.00,center,shift,pDet);
 	add(ts,n12);
@@ -1200,22 +1200,22 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_TranslationVector_Traxels ) 
 	add(ts,n23);
 
 	center.clear(); shift.clear(); pDet.clear();
-	pushBackMultiple(center, 100, 100, 0);
-	pushBackMultiple(shift, 0,0,0);
+	pushBackMultiple(center, 0, 0, 0);
+	pushBackMultiple(shift, 100,100,0);
 	pushBackMultiple(pDet, 0.,1.);
 	constructTraxel(n31,31,3,0.00,center,shift,pDet);
 	add(ts,n31);
 
 	center.clear(); shift.clear(); pDet.clear();
-	pushBackMultiple(center, 200, 200, 0);
-	pushBackMultiple(shift, 0,0,0);
+	pushBackMultiple(center, 100, 100, 0);
+	pushBackMultiple(shift, -100,-100,0);
 	pushBackMultiple(pDet, 0.,1.);
 	constructTraxel(n32,32,3,0.00,center,shift,pDet);
 	add(ts,n32);
 
 	center.clear(); shift.clear(); pDet.clear();
-	pushBackMultiple(center, 300, 300, 0);
-	pushBackMultiple(shift, 0,0,0);
+	pushBackMultiple(center, 200, 200, 0);
+	pushBackMultiple(shift, 100,100,0);
 	pushBackMultiple(pDet, 0.,1.);
 	constructTraxel(n33,33,3,0.00,center,shift,pDet);
 	add(ts,n33);
@@ -1315,14 +1315,14 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_TranslationVector_Tracklets 
 
 	center.clear(); shift.clear(); pDet.clear();
 	pushBackMultiple(center, 100, 100, 0);
-	pushBackMultiple(shift, 0,0,0);
+	pushBackMultiple(shift, 100,100,0);
 	pushBackMultiple(pDet, 0.,1.);
 	constructTraxel(n11,11,1,0.00,center,shift,pDet);
 	add(ts,n11);
 
 	center.clear(); shift.clear(); pDet.clear();
 	pushBackMultiple(center, 200, 200, 0);
-	pushBackMultiple(shift, 0,0,0);
+	pushBackMultiple(shift, 100,100,0);
 	pushBackMultiple(pDet, 0.,1.);
 	constructTraxel(n12,12,1,0.00,center,shift,pDet);
 	add(ts,n12);
@@ -1349,22 +1349,22 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_TranslationVector_Tracklets 
 	add(ts,n23);
 
 	center.clear(); shift.clear(); pDet.clear();
-	pushBackMultiple(center, 100, 100, 0);
-	pushBackMultiple(shift, 0,0,0);
+	pushBackMultiple(center, 0, 0, 0);
+	pushBackMultiple(shift, 200,200,0);
 	pushBackMultiple(pDet, 0.,1.);
 	constructTraxel(n31,31,3,0.00,center,shift,pDet);
 	add(ts,n31);
 
 	center.clear(); shift.clear(); pDet.clear();
-	pushBackMultiple(center, 200, 200, 0);
-	pushBackMultiple(shift, 0,0,0);
+	pushBackMultiple(center, 100, 100, 0);
+	pushBackMultiple(shift, -100,-100,0);
 	pushBackMultiple(pDet, 0.,1.);
 	constructTraxel(n32,32,3,0.00,center,shift,pDet);
 	add(ts,n32);
 
 	center.clear(); shift.clear(); pDet.clear();
 	pushBackMultiple(center, 300, 300, 0);
-	pushBackMultiple(shift, 0,0,0);
+	pushBackMultiple(shift, -200,-200,0);
 	pushBackMultiple(pDet, 0.,1.);
 	constructTraxel(n33,33,3,0.00,center,shift,pDet);
 	add(ts,n33);
