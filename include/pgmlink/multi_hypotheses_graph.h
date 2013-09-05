@@ -119,16 +119,16 @@ namespace pgmlink {
               bool forward_backward=false,
               bool consider_divisions=true,
               double division_threshold=0.5) :
-        max_nearest_neighbors_(max_nearest_neighbors),
-        distance_threshold_(distance_threshold),
-        forward_backward_(forward_backward),
-        consider_divisions_(consider_divisions),
-        division_threshold_(division_threshold) {}
-      unsigned max_nearest_neighbors_;
-      feature_type distance_threshold_;
-      bool forward_backward_;
-      bool consider_divisions_;
-      double division_threshold_;
+        max_nearest_neighbors(max_nearest_neighbors),
+        distance_threshold(distance_threshold),
+        forward_backward(forward_backward),
+        consider_divisions(consider_divisions),
+        division_threshold(division_threshold) {}
+      unsigned max_nearest_neighbors;
+      feature_type distance_threshold;
+      bool forward_backward;
+      bool consider_divisions;
+      double division_threshold;
     };
         
     MultiHypothesesGraphBuilder(const Options& options = Options()) :

@@ -61,9 +61,19 @@ namespace pgmlink {
       // find connected components in range (kNN)
       traxels_at_t = traxels_at_t_plus_one;
       // traxels_at_t_plus_one = extract_traxels(*time_plus_one_iterator);
-      /*NearestNeighborSearch nearest_neighbor_search(traxels_at_t->begin(),
+      NearestNeighborSearch nearest_neighbor_search(traxels_at_t->begin(),
                                                     traxels_at_t->end()
-                                                    );*/
+                                                    );
+      for (TraxelVector::iterator traxel_it = traxels_at_t_plus_one->begin();
+           traxel_it != traxels_at_t_plus_one->end();
+           ++traxel_it) {
+        map<unsigned, double> nearest_neighbors =
+          nearest_neighbor_search.knn_in_range(*traxel_it,
+                                               options_.distance_threshold,
+                                               options_.max_nearest_neighbors,
+                                               options_.forward_backward
+                                               );
+      }
       // connect regions from those ccs using
       // appropriate event nodes and connection arcs
       // create conflict arcs for event nodes
