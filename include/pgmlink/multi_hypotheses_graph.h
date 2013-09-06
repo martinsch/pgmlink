@@ -104,6 +104,8 @@ namespace pgmlink {
 
   class MultiHypothesesGraph : public PropertyGraph<lemon::ListGraph> {
   public:
+    enum EventType {Object, Move, Division, Appearance, Disappearance};
+    enum ArcType {Connection, Conflict};
     MultiHypothesesGraph();
     unsigned maximum_timestep();
   private:
@@ -136,7 +138,19 @@ namespace pgmlink {
     boost::shared_ptr<MultiHypothesesGraph>
     build(RegionGraphVectorPtr graphs);
   private:
-    TraxelVectorPtr extract_traxels(RegionGraphPtr graph);
+    TraxelVectorPtr extract_traxels(RegionGraphPtr graph,
+                                    unsigned cc_label);
+    TraxelVectorPtr reduce_to_nearest_neighbors(TraxelVectorPtr traxels,
+                                                std::map<unsigned, double>& neighbors);
+    void create_events_for_component(const Traxel& trax,
+                                     TraxelVectorPtr traxels,
+                                     RegionGraphPtr graph);
+    void add_move_events(const Traxel& trax,
+                         std::map<unsigned, double> neighbors);
+    void add_division_events(const Traxel& trax,
+                             std::map<unsigned, double> neighbors);
+    void add_appearance_events(const Traxel& trax);
+    void add_disappearance_events(const Traxel& trax);
     Options options_;
   };
 
