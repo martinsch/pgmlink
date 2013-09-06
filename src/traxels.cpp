@@ -115,6 +115,9 @@ namespace pgmlink {
     return t2 < t1;
   }
 
+  bool operator==(const Traxel& t1, const Traxel& t2) {
+    return !(t2 < t1) && !(t1 < t2);
+  }
 
 
   //
