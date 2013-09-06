@@ -169,6 +169,7 @@ class PGMLINK_EXPORT IntmaxposLocator : public Locator {
  // compare by (time,id) (Traxels can be used as keys (for instance in a std::map) )
  PGMLINK_EXPORT bool operator<(const Traxel& t1, const Traxel& t2);
  PGMLINK_EXPORT bool operator>(const Traxel& t1, const Traxel& t2);
+ PGMLINK_EXPORT bool operator==(const Traxel& t1, const Traxel& t2);
 
 
 
