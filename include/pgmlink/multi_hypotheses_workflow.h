@@ -227,9 +227,9 @@ namespace pgmlink {
     std::sort(filenames->begin(), filenames->end());
     std::sort(filenames_raw->begin(), filenames_raw->end());
     FilenameList::iterator filename_raw = filenames_raw->begin();
-    for (FilenameList::iterator filename = filenames->begin();
+    for (FilenameList::iterator filename = filenames->begin(), unsigned timestep = 0;
          filename != filenames->end();
-         ++filename, ++filename_raw) {
+         ++filename, ++filename_raw, ++timestep) {
       image_retriever_->options_.set("filename", *filename);
       vigra::MultiArray<N, T> input_image = image_retriever_->retrieve();
       image_retriever_->options_.set("filename", *filename_raw);
@@ -277,7 +277,7 @@ namespace pgmlink {
         /* std::cout << i << " -- " << va::get<va::Count>(accumulator, i) << " - "
                   << va::get<va::Coord<va::Mean> >(accumulator, i)[0] << ','
                   << va::get<va::Coord<va::Mean> >(accumulator, i)[1] << '\n'; */
-        Traxel trax(i);
+        Traxel trax(i, timestep);
         trax.features["com"] =
           feature_array(va::get<va::Coord<va::Mean> >(accumulator, i).begin(),
                         va::get<va::Coord<va::Mean> >(accumulator, i).end()
@@ -321,7 +321,7 @@ namespace pgmlink {
                                     size[0]
                                     )
                        );
-        Traxel trax(*value_iterator);
+        Traxel trax(*value_iterator, timestep);
         trax.features["size"] = size;
         trax.features["com"] = com;
         LOG(logDEBUG3) << "MultiHypothesesGraphVectorBuilder<T, N>::build() -- merged region size: " << size[0];

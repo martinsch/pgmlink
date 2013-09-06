@@ -5,6 +5,8 @@
 #include <pgmlink/multi_hypotheses_graph.h>
 #include <pgmlink/traxels.h>
 #include <pgmlink/nearest_neighbors.h>
+#include <pgmlink/hypotheses.h> // for tags
+#include <pgmlink/region_graph.h> // more tags and RegionGraph
 
 
 namespace pgmlink {
@@ -38,8 +40,8 @@ namespace pgmlink {
 //// MultiHypothesesGraph
 ////
 MultiHypothesesGraph::MultiHypothesesGraph() {
-  // for now: nothing to be done here
-  // will change
+  add(node_timestep());
+  add(node_traxel());
 }
 
 
@@ -51,9 +53,17 @@ unsigned MultiHypothesesGraph::maximum_timestep() {
 ////
 //// MultiHypothesesGraphBuilder
 ////
-boost::shared_ptr<MultiHypothesesGraph>
+MultiHypothesesGraphBuilder::MultiHypothesesGraphBuilder(const Options& options) :
+    options_(options),
+    reference_map_(),
+    cross_reference_map_() {
+  // nothing to be done here
+}
+
+
+MultiHypothesesGraphPtr
 MultiHypothesesGraphBuilder::build(RegionGraphVectorPtr graphs) {
-  boost::shared_ptr<MultiHypothesesGraph> graph(new MultiHypothesesGraph);
+  MultiHypothesesGraphPtr graph(new MultiHypothesesGraph);
   // for adjacent timesteps do:
   RegionGraphVector::iterator time_iterator = graphs->begin();
   RegionGraphVector::iterator time_plus_one_iterator = ++graphs->begin();
@@ -80,7 +90,8 @@ MultiHypothesesGraphBuilder::build(RegionGraphVectorPtr graphs) {
       create_events_for_component(*traxel_it,
                                   reduce_to_nearest_neighbors(traxels_at_t_plus_one,
                                                               nearest_neighbors),
-                                  *time_iterator);
+                                  *time_iterator,
+                                  graph);
     }
     // connect regions from those ccs using
     // appropriate event nodes and connection arcs
@@ -122,10 +133,11 @@ reduce_to_nearest_neighbors(TraxelVectorPtr traxels,
 
 void MultiHypothesesGraphBuilder::create_events_for_component(const Traxel& trax,
                                                               TraxelVectorPtr nearest_neighbors,
-                                                              RegionGraphPtr graph) {
+                                                              RegionGraphPtr single_timestep_graph,
+                                                              MultiHypothesesGraphPtr graph) {
   TraxelVector single_component_all_regions;
   TraxelVector regions_in_component =
-      *extract_traxels(graph, trax.Id);
+      *extract_traxels(single_timestep_graph, trax.Id);
   single_component_all_regions.push_back(trax);
   single_component_all_regions.insert(single_component_all_regions.end(),
                                       regions_in_component.begin(),
@@ -143,13 +155,38 @@ void MultiHypothesesGraphBuilder::create_events_for_component(const Traxel& trax
                                              options_.max_nearest_neighbors,
                                              options_.forward_backward
                                              );
-    add_move_events(*region, nearest_neighbors_map);
-    add_division_events(*region, nearest_neighbors_map);
-    add_appearance_events(*region);
-    add_disappearance_events(*region);
+    add_move_events(*region, nearest_neighbors_map, graph);
+    add_division_events(*region, nearest_neighbors_map, graph);
+    add_appearance_events(*region, graph);
+    add_disappearance_events(*region, graph);
   }
 }
 
+
+void MultiHypothesesGraphBuilder::add_move_events(const Traxel& trax,
+                                                  std::map<unsigned, double>& neighbors,
+                                                  MultiHypothesesGraphPtr graph) {
+  
+}
+
+
+void MultiHypothesesGraphBuilder::add_division_events(const Traxel& trax,
+                                                      std::map<unsigned, double>& neighbors,
+                                                      MultiHypothesesGraphPtr graph) {
+
+}
+
+
+void MultiHypothesesGraphBuilder::add_appearance_events(const Traxel& trax,
+                                                        MultiHypothesesGraphPtr graph) {
+
+}
+
+
+void MultiHypothesesGraphBuilder::add_disappearance_events(const Traxel& trax,
+                                                           MultiHypothesesGraphPtr graph) {
+
+}
   
 }
 
