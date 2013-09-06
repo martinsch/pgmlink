@@ -40,7 +40,6 @@ namespace pgmlink {
 //// MultiHypothesesGraph
 ////
 MultiHypothesesGraph::MultiHypothesesGraph() {
-  add(node_timestep());
   add(node_traxel());
 }
 

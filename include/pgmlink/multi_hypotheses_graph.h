@@ -106,7 +106,7 @@ typedef boost::shared_ptr<MultiHypothesesGraph> MultiHypothesesGraphPtr;
    }; */
 
 
-class MultiHypothesesGraph : public PropertyGraph<lemon::ListGraph> {
+class MultiHypothesesGraph : public HypothesesGraph {
  public:
   enum EventType {Object, Move, Division, Appearance, Disappearance};
   enum ArcType {Connection, Conflict};
@@ -158,6 +158,9 @@ class MultiHypothesesGraphBuilder {
                              MultiHypothesesGraphPtr graph);
   void add_disappearance_events(const Traxel& trax,
                                 MultiHypothesesGraphPtr graph);
+
+  void transfer_nodes(RegionGraphPtr region_graph,
+                      MultiHypothesesGraphPtr multi_hypotheses_graph);
     
   Options options_;
   std::map<RegionGraph::Node, MultiHypothesesGraph::Node> reference_map_;

@@ -24,6 +24,7 @@
 #include <pgmlink/traxels.h>
 #include <pgmlink/region_graph.h>
 #include <pgmlink/graph.h>
+#include <pgmlink/hypotheses.h>
 
 
 namespace pgmlink {
