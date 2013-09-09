@@ -140,6 +140,10 @@ class MultiHypothesesGraphBuilder {
   MultiHypothesesGraphBuilder(const Options& options = Options());
   MultiHypothesesGraphPtr build(RegionGraphVectorPtr graphs);
  private:
+  void add_nodes(RegionGraphPtr source_graph,
+                 MultiHypothesesGraphPtr dest_graph,
+                 label_type label,
+                 int timestep);
   TraxelVectorPtr extract_traxels(RegionGraphPtr graph,
                                   unsigned cc_label);
   TraxelVectorPtr reduce_to_nearest_neighbors(TraxelVectorPtr traxels,

@@ -68,8 +68,11 @@ MultiHypothesesGraphBuilder::build(RegionGraphVectorPtr graphs) {
   RegionGraphVector::iterator time_plus_one_iterator = ++graphs->begin();
   TraxelVectorPtr traxels_at_t, traxels_at_t_plus_one;
   traxels_at_t_plus_one = extract_traxels(*time_iterator, 0u);
-  for (; time_plus_one_iterator != graphs->end();
-       ++time_iterator, ++time_plus_one_iterator) {
+  add_nodes(*time_iterator, graph, 0u, 0);
+  for (int timestep = 0;
+       time_plus_one_iterator != graphs->end();
+       ++time_iterator, ++time_plus_one_iterator, ++timestep) {
+    add_nodes(*time_plus_one_iterator, graph, 0u, timestep);
     // find connected components in range (kNN)
     traxels_at_t = traxels_at_t_plus_one;
     traxels_at_t_plus_one = extract_traxels(*time_plus_one_iterator, 0u);
@@ -85,12 +88,18 @@ MultiHypothesesGraphBuilder::build(RegionGraphVectorPtr graphs) {
                                                options_.max_nearest_neighbors,
                                                options_.forward_backward
                                                );
+      TraxelVectorPtr nearest_neighbors_traxels = reduce_to_nearest_neighbors(traxels_at_t_plus_one,
+                                                                              nearest_neighbors);
+
+      // Create arcs from connected components in the nearest neighbor range.
+      // Store information about the connected components in property maps
       
-      create_events_for_component(*traxel_it,
+      
+      /*create_events_for_component(*traxel_it,
                                   reduce_to_nearest_neighbors(traxels_at_t_plus_one,
                                                               nearest_neighbors),
                                   *time_iterator,
-                                  graph);
+                                  graph); */
     }
     // connect regions from those ccs using
     // appropriate event nodes and connection arcs
@@ -98,6 +107,28 @@ MultiHypothesesGraphBuilder::build(RegionGraphVectorPtr graphs) {
   }
   
   return graph;
+}
+
+
+void MultiHypothesesGraphBuilder::add_nodes(RegionGraphPtr source_graph,
+                                            MultiHypothesesGraphPtr dest_graph,
+                                            label_type label,
+                                            int timestep) {
+  RegionGraph::ConnectedComponentMap& component_map = source_graph->get(node_connected_component());
+  RegionGraph::LabelMap& label_map = source_graph->get(node_label());
+  RegionGraph::TraxelMap& traxel_map = source_graph->get(node_traxel());
+  for (RegionGraph::ConnectedComponentMap::ItemIt source_it(component_map, label);
+       source_it != lemon::INVALID;
+       ++source_it) {
+    const MultiHypothesesGraph::Node& node = dest_graph->add_node(timestep);
+    reference_map_[source_it] = node;
+    cross_reference_map_[node] = source_it;
+    // add_conflict_graph_to_component(); to be done!
+    // need to add a list of traxels (property map!) that contains information about:
+    // -conflicts for each region
+    // -level of each region
+    // -features (already present in traxels)
+  }
 }
 
 
