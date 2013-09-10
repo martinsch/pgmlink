@@ -227,7 +227,8 @@ namespace pgmlink {
     std::sort(filenames->begin(), filenames->end());
     std::sort(filenames_raw->begin(), filenames_raw->end());
     FilenameList::iterator filename_raw = filenames_raw->begin();
-    for (FilenameList::iterator filename = filenames->begin(), unsigned timestep = 0;
+    unsigned timestep = 0;
+    for (FilenameList::iterator filename = filenames->begin();
          filename != filenames->end();
          ++filename, ++filename_raw, ++timestep) {
       image_retriever_->options_.set("filename", *filename);
