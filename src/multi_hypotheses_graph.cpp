@@ -145,7 +145,6 @@ void MultiHypothesesGraphBuilder::add_nodes(RegionGraphPtr source_graph,
          region != lemon::INVALID;
          ++region) {
       trax = traxel_map[region];
-      LOG(logDEBUG1) << trax;
       const std::set<RegionGraph::Node>& conflicts = conflict_map[region];
       conflict_labels = source_graph->convert_nodes_to_property<node_label>(conflicts.begin(), conflicts.end());
       trax.features["conflicts"].assign(conflict_labels->begin(), conflict_labels->end());
