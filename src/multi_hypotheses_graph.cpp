@@ -192,8 +192,11 @@ reduce_to_nearest_neighbors(TraxelVectorPtr traxels,
   for (std::map<unsigned, double>::iterator neighbor = neighbors.begin();
        neighbor != neighbors.end();
        ++neighbor) {
-    nearest_traxels->push_back(
-        *std::find(traxels->begin(), traxels->end(), Traxel(neighbor->first)));
+    TraxelVector::iterator find_res =
+        std::find(traxels->begin(), traxels->end(), Traxel(neighbor->first));
+    if (find_res != traxels->end()) {
+      nearest_traxels->push_back(*find_res);
+    }
   }
   return nearest_traxels;
 }
