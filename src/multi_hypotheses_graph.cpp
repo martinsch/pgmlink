@@ -141,10 +141,11 @@ void MultiHypothesesGraphBuilder::add_nodes(RegionGraphPtr source_graph,
     std::vector<Traxel>& contained_regions_traxel = contained_regions_map.get_value(node);
     contained_regions_traxel.push_back(trax);
     float max_level = 0;
-    for (RegionGraph::ConnectedComponentMap::ItemIt region(component_map, component_map[source_it]);
+    for (RegionGraph::ConnectedComponentMap::ItemIt region(component_map, trax.Id);
          region != lemon::INVALID;
          ++region) {
       trax = traxel_map[region];
+      LOG(logDEBUG1) << trax;
       const std::set<RegionGraph::Node>& conflicts = conflict_map[region];
       conflict_labels = source_graph->convert_nodes_to_property<node_label>(conflicts.begin(), conflicts.end());
       trax.features["conflicts"].assign(conflict_labels->begin(), conflict_labels->end());
