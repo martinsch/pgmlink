@@ -42,6 +42,19 @@ RegionGraphVectorPtr;
 
 typedef boost::shared_ptr<MultiHypothesesGraph> MultiHypothesesGraphPtr;
 
+////
+//// node_regions_in_component
+////
+struct node_regions_in_component{};
+
+template <typename Graph>
+struct property_map<node_regions_in_component, Graph> {
+  typedef IterableEditableValueMap<Graph, typename Graph::Node, std::vector<Traxel> > type;
+  static const std::string name;
+};
+
+template <typename Graph>
+const std::string property_map<node_regions_in_component, Graph>::name = "node_regions_in_component";
 
 
 
@@ -110,6 +123,7 @@ class MultiHypothesesGraph : public HypothesesGraph {
  public:
   enum EventType {Object, Move, Division, Appearance, Disappearance};
   enum ArcType {Connection, Conflict};
+  typedef property_map<node_regions_in_component, base_graph>::type ContainedRegionsMap;
   MultiHypothesesGraph();
   unsigned maximum_timestep();
  private:

@@ -1,5 +1,7 @@
 // stl
 #include <algorithm>
+#include <set>
+#include <vector>
 
 // pgmlink
 #include <pgmlink/multi_hypotheses_graph.h>
@@ -41,6 +43,7 @@ namespace pgmlink {
 ////
 MultiHypothesesGraph::MultiHypothesesGraph() {
   add(node_traxel());
+  add(node_regions_in_component());
 }
 
 
@@ -117,12 +120,48 @@ void MultiHypothesesGraphBuilder::add_nodes(RegionGraphPtr source_graph,
   RegionGraph::ConnectedComponentMap& component_map = source_graph->get(node_connected_component());
   RegionGraph::LabelMap& label_map = source_graph->get(node_label());
   RegionGraph::TraxelMap& traxel_map = source_graph->get(node_traxel());
+  RegionGraph::ConflictMap& conflict_map = source_graph->get(node_conflicts());
+  RegionGraph::LevelMap& level_map = source_graph->get(node_level());
+  MultiHypothesesGraph::ContainedRegionsMap& contained_regions_map = dest_graph->get(node_regions_in_component());
   for (RegionGraph::ConnectedComponentMap::ItemIt source_it(component_map, label);
        source_it != lemon::INVALID;
        ++source_it) {
     const MultiHypothesesGraph::Node& node = dest_graph->add_node(timestep);
     reference_map_[source_it] = node;
     cross_reference_map_[node] = source_it;
+    
+    
+    Traxel trax = traxel_map[source_it];
+    const std::set<RegionGraph::Node>& cc_conflicts = conflict_map[source_it];
+    boost::shared_ptr<std::vector<label_type> > conflict_labels =
+        source_graph->convert_nodes_to_property<node_label>(cc_conflicts.begin(), cc_conflicts.end());
+    trax.features["conflicts"].assign(conflict_labels->begin(), conflict_labels->end());
+    trax.features["root"].assign(1, 1.);
+    trax.features["level"].assign(1, 0.);
+    std::vector<Traxel>& contained_regions_traxel = contained_regions_map.get_value(node);
+    contained_regions_traxel.push_back(trax);
+    float max_level = 0;
+    for (RegionGraph::ConnectedComponentMap::ItemIt region(component_map, component_map[source_it]);
+         region != lemon::INVALID;
+         ++region) {
+      trax = traxel_map[region];
+      const std::set<RegionGraph::Node>& conflicts = conflict_map[region];
+      conflict_labels = source_graph->convert_nodes_to_property<node_label>(conflicts.begin(), conflicts.end());
+      trax.features["conflicts"].assign(conflict_labels->begin(), conflict_labels->end());
+      trax.features["root"].assign(1, 0.);
+      float level = level_map[region];
+      max_level = std::max(max_level, level);
+      trax.features["level"].assign(1, level);
+      contained_regions_traxel.push_back(trax);
+    }
+
+    for (std::vector<Traxel>::iterator trax_it = contained_regions_traxel.begin()+1;
+         trax_it != contained_regions_traxel.end();
+         ++trax_it) {
+      float& level = trax_it->features["level"][0];
+      level = max_level - level + 1.; 
+    }
+
     // add_conflict_graph_to_component(); to be done!
     // need to add a list of traxels (property map!) that contains information about:
     // -conflicts for each region

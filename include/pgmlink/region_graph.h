@@ -220,7 +220,23 @@ namespace pgmlink {
     int get_maximum_label();
     NodeVectorPtr get_nodes_in_component(unsigned component_label);
     NodeVectorPtr get_connected_components();
+    template <typename PropertyTag, typename Iterator>
+    boost::shared_ptr<std::vector<typename property_map<PropertyTag, RegionGraph::base_graph>::type::Value> >
+    convert_nodes_to_property(Iterator start, Iterator end);
   };
+
+
+template<typename PropertyTag, typename Iterator>
+boost::shared_ptr<std::vector<typename property_map<PropertyTag, RegionGraph::base_graph>::type::Value> >
+RegionGraph::convert_nodes_to_property(Iterator start, Iterator end) {
+  boost::shared_ptr<std::vector<typename property_map<PropertyTag, RegionGraph::base_graph>::type::Value> >
+      properties(new std::vector<typename property_map<PropertyTag, RegionGraph::base_graph>::type::Value>);
+  typename property_map<PropertyTag, RegionGraph::base_graph>::type& map = get(PropertyTag());
+  for (; start != end; ++start) {
+    properties->push_back(map[*start]);
+  }
+  return properties;
+}
 
   
   template <typename InputIterator, typename OutputIterator, typename UnaryPredicate>
@@ -244,7 +260,7 @@ namespace pgmlink {
     IsContainedFunctor();
   public:
     IsContainedFunctor(InputIterator begin,
-                         InputIterator end) :
+                       InputIterator end) :
       begin_(begin),
       end_(end) {}
     bool operator()(const ComparisonValue& compare) const {
