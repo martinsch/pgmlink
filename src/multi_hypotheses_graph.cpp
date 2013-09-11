@@ -159,10 +159,6 @@ void MultiHypothesesGraphBuilder::add_node(RegionGraphPtr source_graph,
   trax.features["conflicts"].assign(conflict_labels->begin(), conflict_labels->end());
   trax.features["root"].assign(1, 1.);
   trax.features["level"].assign(1, 0.);
-  LOG(logDEBUG1) << "MultiHypothesesGraphBuilder::add_node -- com in component " << trax
-                 << "? " << trax.features.count("com");
-  LOG(logDEBUG1) << "MultiHypothesesGraphBuilder::add_node -- com_corrected in component " << trax
-                 << "? " << trax.features.count("com_corrected");
   std::vector<Traxel>& contained_regions_traxel = contained_regions_map.get_value(node);
   contained_regions_traxel.push_back(trax);
   multi_traxel_map.set(node, trax);
@@ -195,8 +191,6 @@ void MultiHypothesesGraphBuilder::add_edges(MultiHypothesesGraphPtr graph) {
   LOG(logDEBUG) << "MultiHypothesesGraphBuilder::add_edges -- entered";
   int max_timestep = graph->latest_timestep();
   int min_timestep = graph->earliest_timestep();
-  LOG(logDEBUG1) << "MultiHypothesesGraphBuilder::add_edges -- timestep range "
-                 << min_timestep << ',' << max_timestep;
   for (int timestep = min_timestep;
        timestep < max_timestep;
        timestep += FORWARD) {
@@ -249,8 +243,6 @@ void MultiHypothesesGraphBuilder::add_edges_for_node(MultiHypothesesGraphPtr gra
        ++neighbor) {
     MultiHypothesesGraph::TraxelMap::ItemIt neighbor_node(traxel_map, Traxel(neighbor->first, timestep + direction));
     assert(neighbor_node != lemon::INVALID);
-    LOG(logDEBUG1) << "MultiHypothesesGraphBuilder::add_edges_for_node -- timestep=" << timestep
-                   << " neighbor_traxel =" << traxel_map[neighbor_node];
     assert(traxel_map[neighbor_node].Timestep == timestep + direction);
     assert(neighbor_node != node);
     if (direction == FORWARD) {
