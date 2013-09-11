@@ -71,8 +71,8 @@ MultiHypothesesGraphBuilder::build(RegionGraphVectorPtr graphs) {
   RegionGraphVector::iterator time_plus_one_iterator = ++graphs->begin();
   TraxelVectorPtr traxels_at_t, traxels_at_t_plus_one;
   traxels_at_t_plus_one = extract_traxels(*time_iterator, 0u);
-  add_nodes(*time_iterator, graph, 0u, 0);
-  for (int timestep = 0;
+  add_nodes(graphs, graph);
+  /* for (int timestep = 0;
        time_plus_one_iterator != graphs->end();
        ++time_iterator, ++time_plus_one_iterator, ++timestep) {
     add_nodes(*time_plus_one_iterator, graph, 0u, timestep);
@@ -98,76 +98,94 @@ MultiHypothesesGraphBuilder::build(RegionGraphVectorPtr graphs) {
       // Store information about the connected components in property maps
       
       
-      /*create_events_for_component(*traxel_it,
+      create_events_for_component(*traxel_it,
                                   reduce_to_nearest_neighbors(traxels_at_t_plus_one,
                                                               nearest_neighbors),
                                   *time_iterator,
-                                  graph); */
+                                  graph);
     }
     // connect regions from those ccs using
     // appropriate event nodes and connection arcs
     // create conflict arcs for event nodes
-  }
+  } */
   
   return graph;
 }
 
+void MultiHypothesesGraphBuilder::add_nodes(RegionGraphVectorPtr source_graphs,
+                                            MultiHypothesesGraphPtr dest_graph) {
+  RegionGraphVector::iterator time_iterator = source_graphs->begin();
+  for (unsigned timestep = 0; time_iterator != source_graphs->end(); ++time_iterator, ++timestep) {
+    add_nodes_at(*time_iterator, dest_graph, timestep);
+  }
+}
 
-void MultiHypothesesGraphBuilder::add_nodes(RegionGraphPtr source_graph,
-                                            MultiHypothesesGraphPtr dest_graph,
-                                            label_type label,
-                                            int timestep) {
+
+void MultiHypothesesGraphBuilder::add_nodes_at(RegionGraphPtr source_graph,
+                                               MultiHypothesesGraphPtr dest_graph,
+                                               unsigned timestep) {
+  RegionGraph::ConnectedComponentMap& component_map = source_graph->get(node_connected_component());
+  for (RegionGraph::ConnectedComponentMap::ItemIt source_it(component_map, 0u);
+       source_it != lemon::INVALID;
+       ++source_it) {
+    add_node(source_graph, dest_graph, source_it, timestep);
+  }
+}
+
+
+
+void MultiHypothesesGraphBuilder::add_node(RegionGraphPtr source_graph,
+                                           MultiHypothesesGraphPtr dest_graph,
+                                           const RegionGraph::Node& source_node,
+                                           int timestep) {
   RegionGraph::ConnectedComponentMap& component_map = source_graph->get(node_connected_component());
   RegionGraph::LabelMap& label_map = source_graph->get(node_label());
   RegionGraph::TraxelMap& traxel_map = source_graph->get(node_traxel());
   RegionGraph::ConflictMap& conflict_map = source_graph->get(node_conflicts());
   RegionGraph::LevelMap& level_map = source_graph->get(node_level());
   MultiHypothesesGraph::ContainedRegionsMap& contained_regions_map = dest_graph->get(node_regions_in_component());
-  for (RegionGraph::ConnectedComponentMap::ItemIt source_it(component_map, label);
-       source_it != lemon::INVALID;
-       ++source_it) {
-    const MultiHypothesesGraph::Node& node = dest_graph->add_node(timestep);
-    reference_map_[source_it] = node;
-    cross_reference_map_[node] = source_it;
-    
-    
-    Traxel trax = traxel_map[source_it];
-    const std::set<RegionGraph::Node>& cc_conflicts = conflict_map[source_it];
-    boost::shared_ptr<std::vector<label_type> > conflict_labels =
-        source_graph->convert_nodes_to_property<node_label>(cc_conflicts.begin(), cc_conflicts.end());
+
+  const MultiHypothesesGraph::Node& node = dest_graph->add_node(timestep);
+  /* reference_map_[source_node] = node;
+  cross_reference_map_[node] = source_node; */
+  
+  
+  Traxel trax = traxel_map[source_node];
+  const std::set<RegionGraph::Node>& cc_conflicts = conflict_map[source_node];
+  boost::shared_ptr<std::vector<label_type> > conflict_labels =
+      source_graph->convert_nodes_to_property<node_label>(cc_conflicts.begin(), cc_conflicts.end());
+  trax.features["conflicts"].assign(conflict_labels->begin(), conflict_labels->end());
+  trax.features["root"].assign(1, 1.);
+  trax.features["level"].assign(1, 0.);
+  std::vector<Traxel>& contained_regions_traxel = contained_regions_map.get_value(node);
+  contained_regions_traxel.push_back(trax);
+  float max_level = 0;
+  for (RegionGraph::ConnectedComponentMap::ItemIt region(component_map, trax.Id);
+       region != lemon::INVALID;
+       ++region) {
+    trax = traxel_map[region];
+    const std::set<RegionGraph::Node>& conflicts = conflict_map[region];
+    conflict_labels = source_graph->convert_nodes_to_property<node_label>(conflicts.begin(), conflicts.end());
     trax.features["conflicts"].assign(conflict_labels->begin(), conflict_labels->end());
-    trax.features["root"].assign(1, 1.);
-    trax.features["level"].assign(1, 0.);
-    std::vector<Traxel>& contained_regions_traxel = contained_regions_map.get_value(node);
+    trax.features["root"].assign(1, 0.);
+    float level = level_map[region];
+    max_level = std::max(max_level, level);
+    trax.features["level"].assign(1, level);
     contained_regions_traxel.push_back(trax);
-    float max_level = 0;
-    for (RegionGraph::ConnectedComponentMap::ItemIt region(component_map, trax.Id);
-         region != lemon::INVALID;
-         ++region) {
-      trax = traxel_map[region];
-      const std::set<RegionGraph::Node>& conflicts = conflict_map[region];
-      conflict_labels = source_graph->convert_nodes_to_property<node_label>(conflicts.begin(), conflicts.end());
-      trax.features["conflicts"].assign(conflict_labels->begin(), conflict_labels->end());
-      trax.features["root"].assign(1, 0.);
-      float level = level_map[region];
-      max_level = std::max(max_level, level);
-      trax.features["level"].assign(1, level);
-      contained_regions_traxel.push_back(trax);
-    }
-
-    for (std::vector<Traxel>::iterator trax_it = contained_regions_traxel.begin()+1;
-         trax_it != contained_regions_traxel.end();
-         ++trax_it) {
-      float& level = trax_it->features["level"][0];
-      level = max_level - level + 1.; 
-    }
-
-    // add_conflict_graph_to_component(); to be done!
-    // need to add a list of traxels (property map!) that contains information about:
-    // -conflicts for each region
-    // -level of each region
-    // -features (already present in traxels)
   }
+
+  for (std::vector<Traxel>::iterator trax_it = contained_regions_traxel.begin()+1;
+       trax_it != contained_regions_traxel.end();
+       ++trax_it) {
+    float& level = trax_it->features["level"][0];
+    level = max_level - level + 1.; 
+  }
+
+  // add_conflict_graph_to_component(); to be done!
+  // need to add a list of traxels (property map!) that contains information about:
+  // -conflicts for each region
+  // -level of each region
+  // -features (already present in traxels)
 }
 
 
