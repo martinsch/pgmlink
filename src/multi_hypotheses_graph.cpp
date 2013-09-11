@@ -3,6 +3,9 @@
 #include <set>
 #include <vector>
 
+// boost
+#include <boost/assert.hpp>
+
 // pgmlink
 #include <pgmlink/multi_hypotheses_graph.h>
 #include <pgmlink/traxels.h>
@@ -47,11 +50,6 @@ MultiHypothesesGraph::MultiHypothesesGraph() {
 }
 
 
-unsigned MultiHypothesesGraph::maximum_timestep() {
-  return maximum_timestep_;
-}
-
-
 ////
 //// MultiHypothesesGraphBuilder
 ////
@@ -67,11 +65,12 @@ MultiHypothesesGraphPtr
 MultiHypothesesGraphBuilder::build(RegionGraphVectorPtr graphs) {
   MultiHypothesesGraphPtr graph(new MultiHypothesesGraph);
   // for adjacent timesteps do:
-  RegionGraphVector::iterator time_iterator = graphs->begin();
-  RegionGraphVector::iterator time_plus_one_iterator = ++graphs->begin();
-  TraxelVectorPtr traxels_at_t, traxels_at_t_plus_one;
-  traxels_at_t_plus_one = extract_traxels(*time_iterator, 0u);
+  // RegionGraphVector::iterator time_iterator = graphs->begin();
+  // RegionGraphVector::iterator time_plus_one_iterator = ++graphs->begin();
+  // TraxelVectorPtr traxels_at_t, traxels_at_t_plus_one;
+  // traxels_at_t_plus_one = extract_traxels(*time_iterator, 0u);
   add_nodes(graphs, graph);
+  add_edges(graph);
   /* for (int timestep = 0;
        time_plus_one_iterator != graphs->end();
        ++time_iterator, ++time_plus_one_iterator, ++timestep) {
@@ -114,6 +113,7 @@ MultiHypothesesGraphBuilder::build(RegionGraphVectorPtr graphs) {
 
 void MultiHypothesesGraphBuilder::add_nodes(RegionGraphVectorPtr source_graphs,
                                             MultiHypothesesGraphPtr dest_graph) {
+  LOG(logDEBUG) << "MultiHypothesesGraphBuilder::add_nodes -- entered";
   RegionGraphVector::iterator time_iterator = source_graphs->begin();
   for (unsigned timestep = 0; time_iterator != source_graphs->end(); ++time_iterator, ++timestep) {
     add_nodes_at(*time_iterator, dest_graph, timestep);
@@ -124,6 +124,7 @@ void MultiHypothesesGraphBuilder::add_nodes(RegionGraphVectorPtr source_graphs,
 void MultiHypothesesGraphBuilder::add_nodes_at(RegionGraphPtr source_graph,
                                                MultiHypothesesGraphPtr dest_graph,
                                                unsigned timestep) {
+  LOG(logDEBUG) << "MultiHypothesesGraphBuilder::add_nodes_at -- entered";
   RegionGraph::ConnectedComponentMap& component_map = source_graph->get(node_connected_component());
   for (RegionGraph::ConnectedComponentMap::ItemIt source_it(component_map, 0u);
        source_it != lemon::INVALID;
@@ -138,16 +139,17 @@ void MultiHypothesesGraphBuilder::add_node(RegionGraphPtr source_graph,
                                            MultiHypothesesGraphPtr dest_graph,
                                            const RegionGraph::Node& source_node,
                                            int timestep) {
+  LOG(logDEBUG) << "MultiHypothesesGraphBuilder::add_node -- entered";
   RegionGraph::ConnectedComponentMap& component_map = source_graph->get(node_connected_component());
-  RegionGraph::LabelMap& label_map = source_graph->get(node_label());
+  // RegionGraph::LabelMap& label_map = source_graph->get(node_label());
   RegionGraph::TraxelMap& traxel_map = source_graph->get(node_traxel());
   RegionGraph::ConflictMap& conflict_map = source_graph->get(node_conflicts());
   RegionGraph::LevelMap& level_map = source_graph->get(node_level());
   MultiHypothesesGraph::ContainedRegionsMap& contained_regions_map = dest_graph->get(node_regions_in_component());
 
+  MultiHypothesesGraph::TraxelMap& multi_traxel_map = dest_graph->get(node_traxel());
+  
   const MultiHypothesesGraph::Node& node = dest_graph->add_node(timestep);
-  /* reference_map_[source_node] = node;
-  cross_reference_map_[node] = source_node; */
   
   
   Traxel trax = traxel_map[source_node];
@@ -157,8 +159,13 @@ void MultiHypothesesGraphBuilder::add_node(RegionGraphPtr source_graph,
   trax.features["conflicts"].assign(conflict_labels->begin(), conflict_labels->end());
   trax.features["root"].assign(1, 1.);
   trax.features["level"].assign(1, 0.);
+  LOG(logDEBUG1) << "MultiHypothesesGraphBuilder::add_node -- com in component " << trax
+                 << "? " << trax.features.count("com");
+  LOG(logDEBUG1) << "MultiHypothesesGraphBuilder::add_node -- com_corrected in component " << trax
+                 << "? " << trax.features.count("com_corrected");
   std::vector<Traxel>& contained_regions_traxel = contained_regions_map.get_value(node);
   contained_regions_traxel.push_back(trax);
+  multi_traxel_map.set(node, trax);
   float max_level = 0;
   for (RegionGraph::ConnectedComponentMap::ItemIt region(component_map, trax.Id);
        region != lemon::INVALID;
@@ -174,18 +181,84 @@ void MultiHypothesesGraphBuilder::add_node(RegionGraphPtr source_graph,
     contained_regions_traxel.push_back(trax);
   }
 
+  // set levels properly
   for (std::vector<Traxel>::iterator trax_it = contained_regions_traxel.begin()+1;
        trax_it != contained_regions_traxel.end();
        ++trax_it) {
     float& level = trax_it->features["level"][0];
     level = max_level - level + 1.; 
   }
+}
 
-  // add_conflict_graph_to_component(); to be done!
-  // need to add a list of traxels (property map!) that contains information about:
-  // -conflicts for each region
-  // -level of each region
-  // -features (already present in traxels)
+
+void MultiHypothesesGraphBuilder::add_edges(MultiHypothesesGraphPtr graph) {
+  LOG(logDEBUG) << "MultiHypothesesGraphBuilder::add_edges -- entered";
+  int max_timestep = graph->latest_timestep();
+  int min_timestep = graph->earliest_timestep();
+  LOG(logDEBUG1) << "MultiHypothesesGraphBuilder::add_edges -- timestep range "
+                 << min_timestep << ',' << max_timestep;
+  for (int timestep = min_timestep;
+       timestep < max_timestep;
+       timestep += FORWARD) {
+    add_edges_at(graph, timestep, FORWARD);
+  }
+  if (options_.forward_backward) {
+    for (int timestep = max_timestep;
+         timestep > min_timestep;
+         timestep += BACKWARD) {
+      add_edges_at(graph, timestep, BACKWARD);
+    }
+  }
+}
+
+
+void MultiHypothesesGraphBuilder::add_edges_at(MultiHypothesesGraphPtr graph,
+                                               int timestep,
+                                               DIRECTION direction) {
+  int next_timestep = timestep + direction;
+  LOG(logDEBUG) << "MultiHypothesesGraphBuilder::add_edges_at -- entered, timestep="
+                << timestep << " next_timestep=" << next_timestep;
+  MultiHypothesesGraph::node_timestep_map& timestep_map = graph->get(node_timestep());
+  MultiHypothesesGraph::TraxelMap& traxel_map = graph->get(node_traxel());
+  TraxelVectorPtr traxels_at_next = graph->get_properties_at<node_traxel>(next_timestep);
+  NearestNeighborSearch nearest_neighbor_search(traxels_at_next->begin(),
+                                                traxels_at_next->end());
+  for (MultiHypothesesGraph::node_timestep_map::ItemIt iterator_at(timestep_map, timestep);
+       iterator_at != lemon::INVALID;
+       ++iterator_at) {
+    std::map<unsigned, double> nearest_neighbors =
+        nearest_neighbor_search.knn_in_range(traxel_map[iterator_at],
+                                             options_.distance_threshold,
+                                             options_.max_nearest_neighbors,
+                                             direction == BACKWARD
+                                             );
+    add_edges_for_node(graph, iterator_at, nearest_neighbors, timestep, direction);
+  }
+}
+
+
+void MultiHypothesesGraphBuilder::add_edges_for_node(MultiHypothesesGraphPtr graph,
+                                                     const MultiHypothesesGraph::Node& node,
+                                                     std::map<unsigned, double>& neighbors,
+                                                     int timestep,
+                                                     DIRECTION direction) {
+  LOG(logDEBUG) << "MultiHypothesesGraphBuilder::add_edges_for_node -- entered";
+  MultiHypothesesGraph::TraxelMap& traxel_map = graph->get(node_traxel());
+  for (std::map<unsigned, double>::iterator neighbor = neighbors.begin();
+       neighbor != neighbors.end();
+       ++neighbor) {
+    MultiHypothesesGraph::TraxelMap::ItemIt neighbor_node(traxel_map, Traxel(neighbor->first, timestep + direction));
+    assert(neighbor_node != lemon::INVALID);
+    LOG(logDEBUG1) << "MultiHypothesesGraphBuilder::add_edges_for_node -- timestep=" << timestep
+                   << " neighbor_traxel =" << traxel_map[neighbor_node];
+    assert(traxel_map[neighbor_node].Timestep == timestep + direction);
+    assert(neighbor_node != node);
+    if (direction == FORWARD) {
+      graph->addArc(node, neighbor_node);
+    } else {
+      graph->addArc(neighbor_node, node);
+    }
+  }
 }
 
 

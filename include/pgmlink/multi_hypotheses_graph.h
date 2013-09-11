@@ -42,6 +42,21 @@ RegionGraphVectorPtr;
 
 typedef boost::shared_ptr<MultiHypothesesGraph> MultiHypothesesGraphPtr;
 
+template <typename PropertyTag, typename Graph>
+struct PropertyValue {
+  typedef typename property_map<PropertyTag, Graph>::type::Value type;
+};
+
+template <typename PropertyTag, typename Graph>
+struct PropertyValueVector {
+  typedef std::vector<typename PropertyValue<PropertyTag, Graph>::type> type;
+};
+
+template <typename PropertyTag, typename Graph>
+struct PropertyValueVectorPtr {
+  typedef boost::shared_ptr<typename PropertyValueVector<PropertyTag, Graph>::type> type;
+};
+
 ////
 //// node_regions_in_component
 ////
@@ -124,8 +139,16 @@ class MultiHypothesesGraph : public HypothesesGraph {
   enum EventType {Object, Move, Division, Appearance, Disappearance};
   enum ArcType {Connection, Conflict};
   typedef property_map<node_regions_in_component, base_graph>::type ContainedRegionsMap;
+  typedef property_map<node_traxel, base_graph>::type TraxelMap;
+
+
   MultiHypothesesGraph();
-  unsigned maximum_timestep();
+
+  template <typename PropertyTag>
+  typename PropertyValueVectorPtr<PropertyTag, base_graph>::type
+  get_properties_at(int timestep);
+
+  
  private:
   unsigned maximum_timestep_;
 };
@@ -133,6 +156,7 @@ class MultiHypothesesGraph : public HypothesesGraph {
 
 class MultiHypothesesGraphBuilder {
  public:
+  enum DIRECTION {FORWARD = 1, BACKWARD = -1};
   struct Options {
     Options(unsigned max_nearest_neighbors=2,
             feature_type distance_threshold=50,
@@ -163,6 +187,16 @@ class MultiHypothesesGraphBuilder {
                 MultiHypothesesGraphPtr dest_graph,
                 const RegionGraph::Node& source_node,
                 int timestep);
+
+  void add_edges(MultiHypothesesGraphPtr graph);
+  void add_edges_at(MultiHypothesesGraphPtr graph,
+                    int timestep,
+                    DIRECTION direction);
+  void add_edges_for_node(MultiHypothesesGraphPtr graph,
+                          const MultiHypothesesGraph::Node& node,
+                          std::map<unsigned, double>& neighbors,
+                          int timestep,
+                          DIRECTION direction);
   TraxelVectorPtr extract_traxels(RegionGraphPtr graph,
                                   unsigned cc_label);
   TraxelVectorPtr reduce_to_nearest_neighbors(TraxelVectorPtr traxels,
@@ -193,7 +227,24 @@ class MultiHypothesesGraphBuilder {
 
     
   
-  
+/* IMPLEMENTATIONS */
+
+
+
+template <typename PropertyTag>
+typename PropertyValueVectorPtr<PropertyTag, MultiHypothesesGraph::base_graph>::type
+MultiHypothesesGraph::get_properties_at(int timestep) {
+  typename PropertyValueVectorPtr<PropertyTag, base_graph>::type
+      properties(new typename PropertyValueVector<PropertyTag, base_graph>::type);
+  typename property_map<PropertyTag, base_graph>::type& map = get(PropertyTag());
+  node_timestep_map& time_map = get(node_timestep());
+  for (node_timestep_map::ItemIt it(time_map, timestep);
+       it != lemon::INVALID;
+       ++it) {
+    properties->push_back(map[it]);
+  }
+  return properties;
+}
   
     
 }
