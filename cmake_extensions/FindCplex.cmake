@@ -61,6 +61,8 @@ FIND_LIBRARY(CPLEX_LIBRARY
   NAMES cplex cplex${CPLEX_WIN_VERSION}
   HINTS ${CPLEX_ROOT_DIR}/cplex/lib/${CPLEX_WIN_PLATFORM} #windows
         ${WIN_ROOT_GUESS}/cplex/lib/${CPLEX_WIN_PLATFORM} #windows
+        ${CPLEX_ROOT_DIR}/cplex/lib/x86-64_debian4.0_4.1/static_pic #unix
+        ${CPLEX_ROOT_DIR}/cplex/lib/x86-64_sles10_4.1/static_pic #unix 
   PATHS ENV LIBRARY_PATH #unix
         ENV LD_LIBRARY_PATH #unix
   )
@@ -69,6 +71,8 @@ FIND_LIBRARY(CPLEX_ILOCPLEX_LIBRARY
   ilocplex
   HINTS ${CPLEX_ROOT_DIR}/cplex/lib/${CPLEX_WIN_PLATFORM} #windows
         ${WIN_ROOT_GUESS}/cplex/lib/${CPLEX_WIN_PLATFORM} #windows  
+        ${CPLEX_ROOT_DIR}/cplex/lib/x86-64_debian4.0_4.1/static_pic #unix
+        ${CPLEX_ROOT_DIR}/cplex/lib/x86-64_sles10_4.1/static_pic #unix 
   PATHS ENV LIBRARY_PATH
         ENV LD_LIBRARY_PATH
   )
@@ -77,6 +81,8 @@ FIND_LIBRARY(CPLEX_CONCERT_LIBRARY
   concert
   HINTS ${CPLEX_ROOT_DIR}/concert/lib/${CPLEX_WIN_PLATFORM} #windows
         ${WIN_ROOT_GUESS}/concert/lib/${CPLEX_WIN_PLATFORM} #windows  
+        ${CPLEX_ROOT_DIR}/concert/lib/x86-64_debian4.0_4.1/static_pic #unix 
+        ${CPLEX_ROOT_DIR}/concert/lib/x86-64_sles10_4.1/static_pic #unix 
   PATHS ENV LIBRARY_PATH
         ENV LD_LIBRARY_PATH
   )
