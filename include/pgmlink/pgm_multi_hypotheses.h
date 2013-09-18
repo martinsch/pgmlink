@@ -96,6 +96,92 @@ class Model {
   
 };
 
+
+
+class ModelBuilder {
+ public:
+  ModelBuilder(boost::function<double (const Traxel&)> appearance = ConstantFeature(1000),
+               boost::function<double (const Traxel&)> disappearance = ConstantFeature(1000),
+               boost::function<double (const Traxel&, const Traxel&)> move = SquaredDistance(),
+               double forbidden_cost = 1000000)
+      : with_detection_vars_(false),
+        with_divisions_(false),
+        appearance_(appearance),
+        disappearance_(disappearance),
+        move_(move),
+        forbidden_cost_(forbidden_cost),
+        cplex_timeout_(1e+75) {}
+
+  virtual multihypotheses::ModelBuilder* clone() const = 0;
+  virtual ~ModelBuilder() {}
+
+  // mandatory parameters
+  function<double (const Traxel&)> appearance() const { return appearance_; }
+  ModelBuilder& appearance( function<double (const Traxel&)> );
+
+  function<double (const Traxel&)> disappearance() const { return disappearance_; }
+  ModelBuilder& disappearance( function<double (const Traxel&)> );
+
+  function<double (const Traxel&, const Traxel&)> move() const { return move_; }
+  ModelBuilder& move(function<double (const Traxel&, const Traxel&)> );
+
+  double forbidden_cost() const { return forbidden_cost_; }
+  ModelBuilder& forbidden_cost( double c ) { forbidden_cost_ = c; return *this; }
+
+  // optional parameters
+  // detection vars
+  ModelBuilder& with_detection_vars( function<double (const Traxel&)> detection=ConstantFeature(10),
+                                     function<double (const Traxel&)> non_detection=ConstantFeature(200));
+  ModelBuilder& without_detection_vars();
+  bool has_detection_vars() const { return with_detection_vars_; }
+  function<double (const Traxel&)> detection() const { return detection_; }
+  function<double (const Traxel&)> non_detection() const { return non_detection_; }
+
+  // divisions
+  ModelBuilder& with_divisions( function<double (const Traxel&, const Traxel&, const Traxel&)> div = KasterDivision(10) );
+  ModelBuilder& without_divisions();
+  bool has_divisisions() const { return with_divisions_; }
+  function<double (const Traxel&, const Traxel&, const Traxel&)> division() const { return division_; }
+
+  // build
+  virtual boost::shared_ptr<multihypotheses::Model> build( const MultiHypothesesGraph& ) const = 0;
+
+  // refinement
+  void add_hard_constraints( const Model&, const MultiHypothesesGraph&, OpengmLPCplex& );
+
+  // cplex parameters
+  void set_cplex_timeout( double seconds );
+
+
+ protected:
+  void add_detection_vars( const MultiHypothesesGraph&, Model& ) const;
+  void add_assignment_vars( const MultiHypothesesGraph&, Model& ) const;
+
+  vector<OpengmModel::IndexType> vars_for_outgoing_factor( const MultiHypothesesGraph&,
+                                                           const Model&,
+                                                           const MultiHypothesesGraph::Node&) const;
+  vector<OpengmModel::IndexType> vars_for_incoming_factor( const MultiHypothesesGraph&,
+                                                           const Model&,
+                                                           const MultiHypothesesGraph::Node&) const;
+
+ private:
+  static void couple( const multihypotheses::Model&, const Traxel&, const Model::TraxelArc&, OpengmLPCplex& );
+
+  bool with_detection_vars_;
+  bool with_divisions_;
+
+  function<double (const Traxel&)> detection_;
+  function<double (const Traxel&)> non_detection_;
+  function<double (const Traxel&)> appearance_;
+  function<double (const Traxel&)> disappearance_;
+  function<double (const Traxel&, const Traxel&)> move_;
+  function<double (const Traxel&, const Traxel&, const Traxel&)> division_;
+  double forbidden_cost_;
+  double cplex_timeout_;
+  
+};
+
+
 } /* namespace multihypotheses */
 } /* namespace pgm */
 } /* namespace pgmlink */
