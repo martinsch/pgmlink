@@ -177,9 +177,13 @@ void ModelBuilder::add_hard_constraints(const Model& m, const MultiHypothesesGra
       couple_incoming(m, traxels_src, traxels, cplex);
     }
 
-    LOG(logDEBUG1) << "MultiHypotheses::add_hard_constraints: coupling conflicts";
-
-    LOG(logDEBUG1) << "MultiHypotheses::add_hard_constraints: coupling count";
+    if (has_detection_vars()) {
+      LOG(logDEBUG1) << "MultiHypotheses::add_hard_constraints: coupling conflicts";
+      couple_count(m, traxels, cplex);
+      
+      LOG(logDEBUG1) << "MultiHypotheses::add_hard_constraints: coupling count";
+      couple_conflicts(m, traxels, cplex);
+    }
   }
 }
 
@@ -242,14 +246,47 @@ void ModelBuilder::couple_outgoing_assignments(const Model& m, const std::vector
 
 
 void ModelBuilder::couple_incoming_assignments(const Model& m, const std::vector<Traxel>& source, const std::vector<Traxel>& dest, OpengmLPCplex& cplex) {
-  for (std::vector<Traxel>::const_iterator s = source.begin(); s != source.end(); ++s) {
+  for (std::vector<Traxel>::const_iterator d = dest.begin(); d != dest.end(); ++d) {
     std::vector<size_t> cplex_idxs;
-    for (std::vector<Traxel>::const_iterator d = dest.begin(); d != dest.end(); ++d) {
+    for (std::vector<Traxel>::const_iterator s = source.begin(); s != source.end(); ++s) {
       cplex_idxs.push_back(cplex_id(m.var_of_arc(Model::TraxelArc(*s, *d))));
     }
     if (cplex_idxs.size() > 0) {
       std::vector<int> coeffs(cplex_idxs.size(), 1);
       // 0 <= 1*transition + ... + 1*transition <= 1
+      cplex.addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0, 1);
+    }
+  }
+}
+
+
+void ModelBuilder::couple_count( const Model& m, const std::vector<Traxel>& traxels, OpengmLPCplex& cplex) {
+  std::vector<size_t> cplex_idxs;
+  for (std::vector<Traxel>::const_iterator t = traxels.begin(); t != traxels.end(); ++t) {
+    cplex_idxs.push_back(cplex_id(m.var_of_trax(*t)));
+  }
+  if (cplex_idxs.size() > 0) {
+    std::vector<int> coeffs(cplex_idxs.size(), 1);
+    // 0 <= 1*detection + ... + 1*detection <= max_count_
+    cplex.addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0, max_count_);
+  }
+}
+
+
+void ModelBuilder::couple_conflicts( const Model& m, const std::vector<Traxel>& traxels, OpengmLPCplex& cplex) {
+  for (std::vector<Traxel>::const_iterator t = traxels.begin(); t != traxels.end(); ++t) {
+    std::vector<size_t> cplex_idxs;
+    FeatureMap::const_iterator feature = t->features.find("conflicts");
+    if (feature == t->features.end()) {
+      throw std::runtime_error("MultiHypotheses: couple_conflicts - Feature conflicts not found in traxel!");
+    }
+    cplex_idxs.push_back(cplex_id(m.var_of_trax(*t)));
+    for (feature_array::const_iterator conflict = feature->second.begin(); conflict != feature->second.end(); ++conflict) {
+      cplex_idxs.push_back(cplex_id(m.var_of_trax(*std::find(traxels.begin(), traxels.end(), Traxel(*conflict, t->Timestep)))));
+    }
+    if (cplex_idxs.size() > 1) {
+      std::vector<int> coeffs(cplex_idxs.size(), 1);
+      // 0 <= 1*detection + ... + 1*detection <= 1
       cplex.addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0, 1);
     }
   }

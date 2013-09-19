@@ -105,7 +105,8 @@ class ModelBuilder {
                boost::function<double (const Traxel&)> disappearance = ConstantFeature(1000),
                boost::function<double (const Traxel&, const Traxel&)> move = SquaredDistance(),
                double forbidden_cost = 1000000,
-               unsigned max_division_level=0)
+               unsigned max_division_level=0,
+               unsigned max_count=2)
       : with_detection_vars_(false),
         with_divisions_(false),
         appearance_(appearance),
@@ -113,7 +114,8 @@ class ModelBuilder {
     move_(move),
     forbidden_cost_(forbidden_cost),
     cplex_timeout_(1e+75),
-    max_division_level_(max_division_level) {}
+    max_division_level_(max_division_level),
+    max_count_(max_count) {}
 
   virtual multihypotheses::ModelBuilder* clone() const = 0;
   virtual ~ModelBuilder() {}
@@ -173,6 +175,8 @@ class ModelBuilder {
   void couple_detections_assignments( const Model&, const std::vector<Traxel>&, const std::vector<Traxel>&, OpengmLPCplex& );
   void couple_outgoing_assignments( const Model&, const std::vector<Traxel>&, const std::vector<Traxel>&, OpengmLPCplex& );
   void couple_incoming_assignments( const Model&, const std::vector<Traxel>&, const std::vector<Traxel>&, OpengmLPCplex& );
+  void couple_count( const Model&, const std::vector<Traxel>&, OpengmLPCplex& );
+  void couple_conflicts( const Model&, const std::vector<Traxel>&, OpengmLPCplex& );
 
   bool with_detection_vars_;
   bool with_divisions_;
@@ -186,6 +190,7 @@ class ModelBuilder {
   double forbidden_cost_;
   double cplex_timeout_;
   unsigned max_division_level_;
+  unsigned max_count_;
   
 };
 
