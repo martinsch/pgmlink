@@ -100,17 +100,20 @@ class Model {
 
 class ModelBuilder {
  public:
+  enum MAX_OUTGOING_ARCS {TRANSITION=1, DIVISION=2};
   ModelBuilder(boost::function<double (const Traxel&)> appearance = ConstantFeature(1000),
                boost::function<double (const Traxel&)> disappearance = ConstantFeature(1000),
                boost::function<double (const Traxel&, const Traxel&)> move = SquaredDistance(),
-               double forbidden_cost = 1000000)
+               double forbidden_cost = 1000000,
+               unsigned max_division_level=0)
       : with_detection_vars_(false),
         with_divisions_(false),
         appearance_(appearance),
         disappearance_(disappearance),
-        move_(move),
-        forbidden_cost_(forbidden_cost),
-        cplex_timeout_(1e+75) {}
+    move_(move),
+    forbidden_cost_(forbidden_cost),
+    cplex_timeout_(1e+75),
+    max_division_level_(max_division_level) {}
 
   virtual multihypotheses::ModelBuilder* clone() const = 0;
   virtual ~ModelBuilder() {}
@@ -140,7 +143,7 @@ class ModelBuilder {
   // divisions
   ModelBuilder& with_divisions( function<double (const Traxel&, const Traxel&, const Traxel&)> div = KasterDivision(10) );
   ModelBuilder& without_divisions();
-  bool has_divisisions() const { return with_divisions_; }
+  bool has_divisions() const { return with_divisions_; }
   function<double (const Traxel&, const Traxel&, const Traxel&)> division() const { return division_; }
 
   // build
@@ -165,7 +168,11 @@ class ModelBuilder {
                                                            const MultiHypothesesGraph::Node&) const;
 
  private:
-  static void couple( const multihypotheses::Model&, const Traxel&, const Model::TraxelArc&, OpengmLPCplex& );
+  void couple_outgoing( const Model&, const std::vector<Traxel>&, const std::vector<Traxel>&, OpengmLPCplex& );
+  void couple_incoming( const Model&, const std::vector<Traxel>&, const std::vector<Traxel>&, OpengmLPCplex& );
+  void couple_detections_assignments( const Model&, const std::vector<Traxel>&, const std::vector<Traxel>&, OpengmLPCplex& );
+  void couple_outgoing_assignments( const Model&, const std::vector<Traxel>&, const std::vector<Traxel>&, OpengmLPCplex& );
+  void couple_incoming_assignments( const Model&, const std::vector<Traxel>&, const std::vector<Traxel>&, OpengmLPCplex& );
 
   bool with_detection_vars_;
   bool with_divisions_;
@@ -178,6 +185,7 @@ class ModelBuilder {
   function<double (const Traxel&, const Traxel&, const Traxel&)> division_;
   double forbidden_cost_;
   double cplex_timeout_;
+  unsigned max_division_level_;
   
 };
 
