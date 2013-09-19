@@ -117,7 +117,7 @@ class ModelBuilder {
     max_division_level_(max_division_level),
     max_count_(max_count) {}
 
-  virtual multihypotheses::ModelBuilder* clone() const = 0;
+  virtual boost::shared_ptr<ModelBuilder> clone() const = 0;
   virtual ~ModelBuilder() {}
 
   // mandatory parameters
@@ -149,7 +149,7 @@ class ModelBuilder {
   function<double (const Traxel&, const Traxel&, const Traxel&)> division() const { return division_; }
 
   // build
-  virtual boost::shared_ptr<multihypotheses::Model> build( const MultiHypothesesGraph& ) const = 0;
+  virtual boost::shared_ptr<Model> build( const MultiHypothesesGraph& ) const = 0;
 
   // refinement
   void add_hard_constraints( const Model&, const MultiHypothesesGraph&, OpengmLPCplex& );
@@ -168,6 +168,15 @@ class ModelBuilder {
   vector<OpengmModel::IndexType> vars_for_incoming_factor( const MultiHypothesesGraph&,
                                                            const Model&,
                                                            const MultiHypothesesGraph::Node&) const;
+
+  std::vector<OpengmModel::IndexType> vars_for_outgoing_factor( const MultiHypothesesGraph&,
+                                                                const Model&,
+                                                                const MultiHypothesesGraph::Node&,
+                                                                const Traxel&) const;
+  std::vector<OpengmModel::IndexType> vars_for_incoming_factor( const MultiHypothesesGraph&,
+                                                                const Model&,
+                                                                const MultiHypothesesGraph::Node&,
+                                                                const Traxel&) const;
 
  private:
   void couple_outgoing( const Model&, const std::vector<Traxel>&, const std::vector<Traxel>&, OpengmLPCplex& );
@@ -192,6 +201,27 @@ class ModelBuilder {
   unsigned max_division_level_;
   unsigned max_count_;
   
+};
+
+
+class TrainableModelBuilder : public ModelBuilder {
+ public:
+  TrainableModelBuilder(boost::function<double (const Traxel&)> appearance = ConstantFeature(1000),
+                        boost::function<double (const Traxel&)> disappearance = ConstantFeature(1000),
+                        boost::function<double (const Traxel&, const Traxel&)> move = SquaredDistance(),
+                        double forbidden_cost = 1000000,
+                        unsigned max_division_level=0,
+                        unsigned max_count=2) :
+      ModelBuilder(appearance, disappearance, move, forbidden_cost, max_division_level, max_count) {}
+  virtual boost::shared_ptr<ModelBuilder> clone() const;
+  virtual ~TrainableModelBuilder() {}
+
+  virtual boost::shared_ptr<Model> build( const MultiHypothesesGraph& ) const;
+
+ private:
+  void add_detection_factor( const MultiHypothesesGraph&, Model&, const Traxel& ) const;
+  void add_outgoing_factor( const MultiHypothesesGraph&, Model&, const Traxel& ) const;
+  void add_incoming_factor( const MultiHypothesesGraph&, Model&, const Traxel& ) const;
 };
 
 

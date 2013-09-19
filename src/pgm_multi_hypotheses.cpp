@@ -188,6 +188,79 @@ void ModelBuilder::add_hard_constraints(const Model& m, const MultiHypothesesGra
 }
 
 
+void ModelBuilder::set_cplex_timeout( double seconds ) {
+  cplex_timeout_ = seconds;
+}
+
+
+inline void ModelBuilder::add_detection_vars( const MultiHypothesesGraph& hypotheses, Model& m ) const {
+  if(!has_detection_vars()) {
+    throw std::runtime_error("multihypotheses::ModelBuilder::add_detection_vars(): called without has_detection_vars()");
+  }
+  MultiHypothesesGraph::ContainedRegionsMap& regions = hypotheses.get(node_regions_in_component());
+  for (MultiHypothesesGraph::NodeIt n(hypotheses); n != lemon::INVALID; ++n) {
+    const std::vector<Traxel>& traxels = regions[n];
+    for (std::vector<Traxel>::const_iterator t = traxels.begin(); t != traxels.end(); ++t) {
+      m.opengm_model->addVariable(2);
+      m.trax_var_.left.insert(Model::trax_var_map::value_type(*t, m.opengm_model->numberOfVariables() - 1));
+    }
+  }
+}
+
+
+inline void ModelBuilder::add_assignment_vars( const MultiHypothesesGraph& hypotheses, Model& m ) const {
+  MultiHypothesesGraph::ContainedRegionsMap& regions = hypotheses.get(node_regions_in_component());
+  for (MultiHypothesesGraph::ArcIt a(hypotheses); a != lemon::INVALID; ++a) {
+    const std::vector<Traxel>& source = regions[hypotheses.source(a)];
+    const std::vector<Traxel>& dest = regions[hypotheses.target(a)];
+    for (std::vector<Traxel>::const_iterator s = source.begin(); s != source.end(); ++s) {
+      for (std::vector<Traxel>::const_iterator d = dest.begin(); d != dest.end(); ++d) {
+        m.opengm_model->addVariable(2);
+        m.arc_var_.left.insert(Model::arc_var_map::value_type(Model::TraxelArc(*s, *d), m.opengm_model->numberOfVariables() - 1));
+      }
+    }
+  }
+}
+
+
+std::vector<OpengmModel::IndexType> ModelBuilder::vars_for_outgoing_factor( const MultiHypothesesGraph& hypotheses,
+                                                                            const Model& m,
+                                                                            const MultiHypothesesGraph::Node& node,
+                                                                            const Traxel& trax) const {
+  std::vector<OpengmModel::IndexType> vi; // opengm variable indices; may be empty if no det vars
+  if (has_detection_vars()) {
+    vi.push_back(m.var_of_trax(trax)); // first detection var, the others will be assignment vars
+  }
+  MultiHypothesesGraph::ContainedRegionsMap& regions = hypotheses.get(node_regions_in_component());
+  for (MultiHypothesesGraph::OutArcIt a(hypotheses, node); a != lemon::INVALID; ++a) {
+    const std::vector<Traxel>& traxels = regions[hypotheses.target(a)];
+    for (std::vector<Traxel>::const_iterator t = traxels.begin(); t != traxels.end(); ++t) {
+      vi.push_back(m.var_of_arc(Model::TraxelArc(trax, *t)));
+    }
+  }
+  return vi;
+}
+
+
+std::vector<OpengmModel::IndexType> ModelBuilder::vars_for_incoming_factor( const MultiHypothesesGraph& hypotheses,
+                                                                            const Model& m,
+                                                                            const MultiHypothesesGraph::Node& node,
+                                                                            const Traxel& trax) const {
+  std::vector<OpengmModel::IndexType> vi; // opengm variable indices; may be empty if no det vars
+  if (has_detection_vars()) {
+    vi.push_back(m.var_of_trax(trax)); // first detection var, the others will be assignment vars
+  }
+  MultiHypothesesGraph::ContainedRegionsMap& regions = hypotheses.get(node_regions_in_component());
+  for (MultiHypothesesGraph::InArcIt a(hypotheses, node); a != lemon::INVALID; ++a) {
+    const std::vector<Traxel>& traxels = regions[hypotheses.source(a)];
+    for (std::vector<Traxel>::const_iterator t = traxels.begin(); t != traxels.end(); ++t) {
+      vi.push_back(m.var_of_arc(Model::TraxelArc(*t, trax)));
+    }
+  }
+  std::reverse(vi.begin(), vi.end()); // det var should be the first index to be consistent with vars_for_outgoing_factor() WHY? -> ASK BERNHARD!!
+  return vi;
+}
+
 
 void ModelBuilder::couple_outgoing(const Model& m, const std::vector<Traxel>& source, const std::vector<Traxel>& dest, OpengmLPCplex& cplex) {
   if (has_detection_vars()) {
@@ -290,6 +363,26 @@ void ModelBuilder::couple_conflicts( const Model& m, const std::vector<Traxel>& 
       cplex.addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0, 1);
     }
   }
+}
+
+
+////
+//// class TrinableChaingraphModelBuilder
+////
+/* boost::shared_ptr<ModelBuilder> TrainableModelBuilder::clone() const {
+  return boost::shared_ptr<ModelBuilder(new TrainableModelBuilder(*this))>;
+} */
+
+
+boost::shared_ptr<Model> TrainableModelBuilder::build(const MultiHypothesesGraph& hypotheses) const {
+  boost::shared_ptr<Model> model(new Model);
+  assert(model->opengm_model->numberOfWeights() == 0);
+  model->opengm_model->increaseNumberOfWeights(3);
+  model->weight_map[Model::mov_weight].push_back(0);
+  model->weight_map[Model::app_weight].push_back(1);
+  model->weight_map[Model::dis_weight].push_back(2);
+
+  return model;
 }
     
 
