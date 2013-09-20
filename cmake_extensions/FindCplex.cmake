@@ -8,7 +8,7 @@
 #  CPLEX_LIBRARIES          - library files
 
 ## config
-set(CPLEX_ROOT_DIR "" CACHE PATH "Hint the CPLEX Optimization Studio root directory (set if autodiscovery fails)")
+set(CPLEX_ROOT_DIR "" CACHE PATH "CPLEX root directory")
 
 if(WIN32)
   if(NOT CPLEX_WIN_VERSION)
@@ -42,15 +42,17 @@ set(WIN_ROOT_GUESS $ENV{CPLEX_STUDIO_DIR${CPLEX_WIN_VERSION}})
 FIND_PATH(CPLEX_INCLUDE_DIR
   ilcplex/cplex.h
   HINTS ${CPLEX_ROOT_DIR}/cplex/include
+        ${CPLEX_ROOT_DIR}/include
 	${WIN_ROOT_GUESS}/cplex/include
   PATHS ENV C_INCLUDE_PATH
         ENV C_PLUS_INCLUDE_PATH
         ENV INCLUDE_PATH
   )
 
-FIND_PATH(CPLEX_CONCERT_INCLUDE_DIR
+FIND_PATH(CONCERT_INCLUDE_DIR
   ilconcert/iloenv.h 
   HINTS ${CPLEX_ROOT_DIR}/concert/include
+        ${CPLEX_ROOT_DIR}/include
         ${WIN_ROOT_GUESS}/concert/include
   PATHS ENV C_INCLUDE_PATH
         ENV C_PLUS_INCLUDE_PATH
@@ -63,40 +65,68 @@ FIND_LIBRARY(CPLEX_LIBRARY
         ${WIN_ROOT_GUESS}/cplex/lib/${CPLEX_WIN_PLATFORM} #windows
         ${CPLEX_ROOT_DIR}/cplex/lib/x86-64_debian4.0_4.1/static_pic #unix
         ${CPLEX_ROOT_DIR}/cplex/lib/x86-64_sles10_4.1/static_pic #unix 
+        ${CPLEX_ROOT_DIR}/cplex/lib/x86-64_osx/static_pic #osx 
   PATHS ENV LIBRARY_PATH #unix
         ENV LD_LIBRARY_PATH #unix
   )
+message(STATUS "CPLEX Library: ${CPLEX_LIBRARY}")
 
-FIND_LIBRARY(CPLEX_ILOCPLEX_LIBRARY
+FIND_LIBRARY(ILOCPLEX_LIBRARY
   ilocplex
   HINTS ${CPLEX_ROOT_DIR}/cplex/lib/${CPLEX_WIN_PLATFORM} #windows
-        ${WIN_ROOT_GUESS}/cplex/lib/${CPLEX_WIN_PLATFORM} #windows  
-        ${CPLEX_ROOT_DIR}/cplex/lib/x86-64_debian4.0_4.1/static_pic #unix
+        ${WIN_ROOT_GUESS}/cplex/lib/${CPLEX_WIN_PLATFORM} #windows 
+        ${CPLEX_ROOT_DIR}/cplex/lib/x86-64_debian4.0_4.1/static_pic #unix 
         ${CPLEX_ROOT_DIR}/cplex/lib/x86-64_sles10_4.1/static_pic #unix 
+        ${CPLEX_ROOT_DIR}/cplex/lib/x86-64_osx/static_pic #osx 
   PATHS ENV LIBRARY_PATH
         ENV LD_LIBRARY_PATH
   )
+message(STATUS "ILOCPLEX Library: ${ILOCPLEX_LIBRARY}")
 
-FIND_LIBRARY(CPLEX_CONCERT_LIBRARY
+FIND_LIBRARY(CONCERT_LIBRARY
   concert
   HINTS ${CPLEX_ROOT_DIR}/concert/lib/${CPLEX_WIN_PLATFORM} #windows
-        ${WIN_ROOT_GUESS}/concert/lib/${CPLEX_WIN_PLATFORM} #windows  
+        ${WIN_ROOT_GUESS}/concert/lib/${CPLEX_WIN_PLATFORM} #windows 
         ${CPLEX_ROOT_DIR}/concert/lib/x86-64_debian4.0_4.1/static_pic #unix 
         ${CPLEX_ROOT_DIR}/concert/lib/x86-64_sles10_4.1/static_pic #unix 
+        ${CPLEX_ROOT_DIR}/concert/lib/x86-64_osx/static_pic #osx 
   PATHS ENV LIBRARY_PATH
         ENV LD_LIBRARY_PATH
   )
+message(STATUS "CONCERT Library: ${CONCERT_LIBRARY}")
 
 INCLUDE(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(CPLEX DEFAULT_MSG 
- CPLEX_LIBRARY CPLEX_INCLUDE_DIR CPLEX_ILOCPLEX_LIBRARY CPLEX_CONCERT_LIBRARY CPLEX_CONCERT_INCLUDE_DIR)
+ CPLEX_LIBRARY CPLEX_INCLUDE_DIR ILOCPLEX_LIBRARY CONCERT_LIBRARY CONCERT_INCLUDE_DIR)
+	
+if(WIN32)
+	FIND_PATH(CPLEX_BIN_DIR
+	  cplex121.dll
+          HINTS ${CPLEX_ROOT_DIR}/bin/${CPLEX_WIN_PLATFORM} #windows
+                ${WIN_ROOT_GUESS}/bin/${CPLEX_WIN_PLATFORM} #windows 
+	  PATHS "C:/ILOG/CPLEX91/bin/x86_win32"
+	  )
+else()
+	FIND_PATH(CPLEX_BIN_DIR
+	  cplex 
+          HINTS ${CPLEX_ROOT_DIR}/cplex/bin/x86-64_sles10_4.1 #unix 
+                ${CPLEX_ROOT_DIR}/cplex/bin/x86-64_debian4.0_4.1 #unix 
+                ${CPLEX_ROOT_DIR}/cplex/bin/x86-64_osx #osx 
+	  ENV LIBRARY_PATH
+          ENV LD_LIBRARY_PATH
+	  )
+endif()
+message(STATUS "CPLEX Bin Dir: ${CPLEX_BIN_DIR}")
 
 IF(CPLEX_FOUND)
-  SET(CPLEX_INCLUDE_DIRS ${CPLEX_INCLUDE_DIR} ${CPLEX_CONCERT_INCLUDE_DIR})
-  SET(CPLEX_LIBRARIES ${CPLEX_CONCERT_LIBRARY} ${CPLEX_ILOCPLEX_LIBRARY} ${CPLEX_LIBRARY} )
+  SET(CPLEX_INCLUDE_DIRS ${CPLEX_INCLUDE_DIR} ${CONCERT_INCLUDE_DIR})
+  SET(CPLEX_LIBRARIES ${CONCERT_LIBRARY} ${ILOCPLEX_LIBRARY} ${CPLEX_LIBRARY} )
+  IF(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    SET(CPLEX_LIBRARIES "${CPLEX_LIBRARIES};m;pthread")
+  ENDIF(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 ENDIF(CPLEX_FOUND)
 
-MARK_AS_ADVANCED(CPLEX_LIBRARY CPLEX_INCLUDE_DIR CPLEX_ILOCPLEX_LIBRARY CPLEX_CONCERT_INCLUDE_DIR CPLEX_CONCERT_LIBRARY)
+MARK_AS_ADVANCED(CPLEX_LIBRARY CPLEX_INCLUDE_DIR ILOCPLEX_LIBRARY CONCERT_INCLUDE_DIR CONCERT_LIBRARY CPLEX_BIN_DIR)
 
 
 
