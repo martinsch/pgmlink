@@ -219,9 +219,23 @@ class TrainableModelBuilder : public ModelBuilder {
   virtual boost::shared_ptr<Model> build( const MultiHypothesesGraph& ) const;
 
  private:
-  void add_detection_factor( const MultiHypothesesGraph&, Model&, const Traxel& ) const;
-  void add_outgoing_factor( const MultiHypothesesGraph&, Model&, const Traxel& ) const;
-  void add_incoming_factor( const MultiHypothesesGraph&, Model&, const Traxel& ) const;
+  void add_detection_factors( const MultiHypothesesGraph&, Model&, const MultiHypothesesGraph::Node& ) const;
+  void add_outgoing_factors( const MultiHypothesesGraph&, Model&, const MultiHypothesesGraph::Node& ) const;
+  void add_incoming_factors( const MultiHypothesesGraph&, Model&, const MultiHypothesesGraph::Node& ) const;
+
+  void add_detection_factor( Model&, const Traxel& ) const;
+  void add_outgoing_factor( const MultiHypothesesGraph&,
+                            Model&,
+                            const MultiHypothesesGraph::Node&,
+                            const Traxel&,
+                            const std::vector<Traxel>& ) const;
+  void add_incoming_factor( const MultiHypothesesGraph&,
+                            Model&,
+                            const MultiHypothesesGraph::Node&,
+                            const Traxel&,
+                            const std::vector<Traxel>& ) const;
+  
+
 };
 
 

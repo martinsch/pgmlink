@@ -382,8 +382,242 @@ boost::shared_ptr<Model> TrainableModelBuilder::build(const MultiHypothesesGraph
   model->weight_map[Model::app_weight].push_back(1);
   model->weight_map[Model::dis_weight].push_back(2);
 
+  if (has_divisions()) {
+    model->opengm_model->increaseNumberOfWeights(1);
+    model->weight_map[Model::div_weight].push_back(3);
+  }
+
+  if (has_detection_vars()) {
+    model->opengm_model->increaseNumberOfWeights(1);
+    model->weight_map[Model::det_weight].push_back(4);
+  }
+
+  if (has_detection_vars()) {
+    add_detection_vars( hypotheses, *model );
+  }
+  add_assignment_vars( hypotheses, *model );
+
+  if ( has_detection_vars() ) {
+    for (MultiHypothesesGraph::NodeIt n(hypotheses); n != lemon::INVALID; ++n) {
+      add_detection_factors( hypotheses, *model, n );
+    }
+  }
+
+  for (MultiHypothesesGraph::NodeIt n(hypotheses); n != lemon::INVALID; ++n) {
+    add_outgoing_factors( hypotheses, *model, n );
+    add_incoming_factors( hypotheses, *model, n );
+  }
+
   return model;
 }
+
+
+void TrainableModelBuilder::add_detection_factors( const MultiHypothesesGraph& hypotheses,
+                                                   Model& m,
+                                                   const MultiHypothesesGraph::Node& n ) const {
+  MultiHypothesesGraph::ContainedRegionsMap& regions = hypotheses.get(node_regions_in_component());
+  const std::vector<Traxel>& traxels = regions[n];
+  for (std::vector<Traxel>::const_iterator t = traxels.begin(); t != traxels.end(); ++t) {
+    add_detection_factor(m, *t);
+  }
+}
+
+
+void TrainableModelBuilder::add_outgoing_factors( const MultiHypothesesGraph& hypotheses,
+                                                  Model& m,
+                                                  const MultiHypothesesGraph::Node& n ) const {
+  MultiHypothesesGraph::ContainedRegionsMap& regions = hypotheses.get(node_regions_in_component());
+  const std::vector<Traxel>& traxels = regions[n];
+  for (std::vector<Traxel>::const_iterator t = traxels.begin(); t != traxels.end(); ++t) {
+    std::vector<Traxel> neighbors;
+    for (MultiHypothesesGraph::OutArcIt a(hypotheses, n); a != lemon::INVALID; ++a) {
+      const std::vector<Traxel>& neighbors_at = regions[hypotheses.target(a)];
+      neighbors.insert(neighbors.end(), neighbors_at.begin(), neighbors_at.end());      
+    }
+    add_outgoing_factor(hypotheses, m, n, *t, neighbors);
+  }
+
+}
+
+
+void TrainableModelBuilder::add_incoming_factors( const MultiHypothesesGraph& hypotheses,
+                                                   Model& m,
+                                                   const MultiHypothesesGraph::Node& n ) const {
+  MultiHypothesesGraph::ContainedRegionsMap& regions = hypotheses.get(node_regions_in_component());
+  const std::vector<Traxel>& traxels = regions[n];
+  for (std::vector<Traxel>::const_iterator t = traxels.begin(); t != traxels.end(); ++t) {
+    std::vector<Traxel> neighbors;
+    for (MultiHypothesesGraph::InArcIt a(hypotheses, n); a != lemon::INVALID; ++a) {
+      const std::vector<Traxel>& neighbors_at = regions[hypotheses.target(a)];
+      neighbors.insert(neighbors.end(), neighbors_at.begin(), neighbors_at.end());
+    }
+    add_incoming_factor(hypotheses, m, n, *t, neighbors);
+  }
+
+}
+
+
+void TrainableModelBuilder::add_detection_factor( Model& m,
+                                                  const Traxel& trax) const {
+  std::vector<size_t> var_indices;
+  var_indices.push_back(m.var_of_trax(trax));
+  size_t shape[] = {2};
+  size_t indicate[] = {0};
+
+  OpengmWeightedFeature<OpengmModel::ValueType>(var_indices, shape, shape+1, indicate, non_detection()(trax))
+      .add_as_feature_to( *(m.opengm_model), m.weight_map[Model::det_weight].front() );
+
+  indicate[0] = 1;
+  OpengmWeightedFeature<OpengmModel::ValueType>(var_indices, shape, shape+1, indicate, detection()(trax))
+      .add_as_feature_to( *(m.opengm_model), m.weight_map[Model::det_weight].front() );
+}
+
+
+namespace {
+std::vector<size_t> DecToBin(size_t number)
+{
+  if ( number == 0 ) return std::vector<size_t>(1,0);
+  if ( number == 1 ) return std::vector<size_t>(1,1);
+	
+  if ( number % 2 == 0 ) {
+    std::vector<size_t> ret = DecToBin(number / 2);
+    ret.push_back(0);
+    return ret;
+  }
+  else {
+    std::vector<size_t> ret = DecToBin(number / 2);
+    ret.push_back(1);
+    return ret;
+  }
+}
+
+int BinToDec(std::vector<size_t> number)
+{
+  int result = 0, pow = 1;
+  for ( int i = number.size() - 1; i >= 0; --i, pow <<= 1 )
+    result += number[i] * pow;
+  return result;
+}
+}
+
+
+void TrainableModelBuilder::add_outgoing_factor(const MultiHypothesesGraph& hypotheses,
+                                                Model& m,
+                                                const MultiHypothesesGraph::Node& node,
+                                                const Traxel& trax,
+                                                const std::vector<Traxel>& neighbors) const {
+  LOG(logDEBUG1) << "TrainableModelBuilder::add_outgoing_factor(): entered";
+  const vector<size_t> vi = vars_for_outgoing_factor(hypotheses, m, node, trax);
+  if (vi.size() == 0) {
+    // nothing to do here
+    // happens in case of no det vars and no outgoing arcs
+    return;
+  }
+
+  // collect TraxelArcs for use in feature functions
+  std::vector<Model::TraxelArc> arcs;
+  for (std::vector<Traxel>::const_iterator neighbor = neighbors.begin();
+       neighbor != neighbors.end();
+       ++neighbor) {
+    arcs.push_back(Model::TraxelArc(trax, *neighbor));
+  }
+
+  // construct factor
+  const size_t table_dim = vi.size();
+  assert(table_dim > 0);
+  const std::vector<size_t> shape(table_dim, 2);
+  std::vector<size_t> coords;
+
+  std::set<size_t> entries;
+  for (size_t i = 0; i < static_cast<size_t>(std::pow(2., static_cast<int>(table_dim))); ++i) {
+    entries.insert(entries.end(), i);
+  }
+
+  // opportunity configuration??
+
+  // disappearance configuration
+  {
+    coords = std::vector<size_t>(table_dim, 0);
+    if(has_detection_vars()) {
+      coords[0] = 1;
+    }
+    size_t check = entries.erase(BinToDec(coords));
+    assert (check == 1);
+    OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), disappearance()(trax))
+        .add_as_feature_to( *(m.opengm_model), m.weight_map[Model::dis_weight].front() );
+  }
+
+  // move configuration
+  {
+    coords = std::vector<size_t>(table_dim, 0);
+    size_t assignment_begin = 0;
+    if (has_detection_vars()) {
+      coords[0] = 1;
+      assignment_begin = 1;
+    }
+    // (1, 0, 0, ..., 1, ..., 0)
+  
+    for (size_t i = assignment_begin; i < table_dim; ++i) {
+      coords[i] = 1;
+      size_t check = entries.erase(BinToDec(coords));
+      assert(check == 1);
+      OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), move()(trax, arcs[i - assignment_begin].second) )
+          .add_as_feature_to( *(m.opengm_model), m.weight_map[Model::mov_weight].front() );
+    }
+  }
+
+
+  // division configurations
+  if (has_divisions()) {
+    coords = std::vector<size_t>(table_dim, 0);
+    size_t assignment_begin = 0;
+    if(has_detection_vars()) {
+      coords[0] = 1;
+    }
+    assignment_begin = 1;
+
+    // (1, 0, 0, ..., 1, ..., 1, ..., 0)
+    for (unsigned i = assignment_begin; i < table_dim - 1; ++i) {
+      coords[i] = 1;
+      for (unsigned j = i+1; j < table_dim; ++j) {
+        coords[j] = 1;
+        size_t check = entries.erase(BinToDec(coords));
+        assert(check == 1);
+        OpengmModel::ValueType value = division()(trax, arcs[i-assignment_begin].second, arcs[j-assignment_begin].second);
+        OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), value)
+            .add_as_feature_to( *(m.opengm_model), m.weight_map[Model::div_weight].front() );
+        coords[j] = 0;
+      }
+      coords[i] = 0;
+    }
+  }
+
+  // forbidden configurations
+  {
+    for (std::set<size_t>::iterator it = entries.begin(); it != entries.end(); ++it) {
+      coords = DecToBin(*it);
+      if (coords.size() < table_dim) {
+        coords.insert(coords.begin(), table_dim-coords.size(), 0);
+      }
+      assert (coords.size() == table_dim);
+      OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), forbidden_cost())
+          .add_to( *(m.opengm_model) );
+    }
+  }
+
+  LOG(logDEBUG1) << "TrainableModelBuilder::add_outgoing_factor(): leaving";
+}
+
+
+void TrainableModelBuilder::add_incoming_factor(const MultiHypothesesGraph& hypotheses,
+                                                Model& m,
+                                                const MultiHypothesesGraph::Node& node,
+                                                const Traxel& trax,
+                                                const std::vector<Traxel>& neighbors) const {
+  LOG(logDEBUG1) << "TrainableModelBuilder::add_incoming_factor(): entered";
+}
+
+
     
 
 } /* namespace multihypotheses */
