@@ -4,7 +4,7 @@
    @brief graphical model-based reasoner
 */
 
-#ifndef REASONER_PGM_H
+#ifndef REASONER_MULTI_HYPOTHESES_H
 #define REASONER_PGM_H
 
 #include <algorithm>
@@ -21,9 +21,9 @@
 #include "pgmlink/event.h"
 #include "pgmlink/feature.h"
 #include "pgmlink/pgm.h"
-#include "pgmlink/hypotheses.h"
+#include "pgmlink/multi_hypotheses_graph.h"
 #include "pgmlink/reasoner.h"
-#include "pgmlink/pgm_chaingraph.h"
+#include "pgmlink/pgm_multi_hypotheses.h"
 
 namespace pgmlink {
 class Traxel;
@@ -33,7 +33,7 @@ typedef opengm::LPCplex<OpengmModel, opengm::Minimizer> OpengmLPCplex;
 
 class MultiHypotheses : public Reasoner {
  public:
-  typedef pgm::multihypotheses::Model::node_var_map node_var_map;
+  typedef pgm::multihypotheses::Model::trax_var_map trax_var_map;
   typedef pgm::multihypotheses::Model::arc_var_map arc_var_map;
 
   MultiHypotheses(bool with_constraints = true,
@@ -46,8 +46,8 @@ class MultiHypotheses : public Reasoner {
         fixed_detections_(fixed_detections),
         ep_gap_(ep_gap),
         cplex_timeout_(cplex_timeout),
-        builder_(NULL)
-  { builder_ = new pgm::multihypotheses::MultiHypothesesModelBuilder(); (*builder_).with_detection_vars().with_divisions(); }
+        builder_(new pgm::multihypotheses::TrainableModelBuilder())
+  {(*builder_).with_detection_vars().with_divisions(); }
     
 
   MultiHypotheses(const pgm::multihypotheses::ModelBuilder& builder,
@@ -65,15 +65,15 @@ class MultiHypotheses : public Reasoner {
   {};
   ~MultiHypotheses();
 
-  virtual void formulate( const HypothesesGraph& );
+  virtual void formulate( const MultiHypothesesGraph& );
   virtual void infer();
-  virtual void conclude( HypothesesGraph& );
+  virtual void conclude( MultiHypothesesGraph& );
 
   double forbidden_cost() const;
   bool with_constraints() const;
   const pgm::multihypotheses::ModelBuilder& builder() { return *builder_; }
   void builder(const pgm::multihypotheses::ModelBuilder& builder) {
-    if(builder_) delete builder_; builder_ = builder.clone(); }
+    builder_ = builder.clone(); }
 
   /** Return current state of graphical model
    *
@@ -86,7 +86,7 @@ class MultiHypotheses : public Reasoner {
    *
    * The map is populated after the first call to formulate().
    */
-  const node_var_map& get_node_map() const;
+  const trax_var_map& get_trax_map() const;
 
   /** Return mapping from HypothesesGraph arcs to graphical model variable ids
    *
@@ -109,8 +109,8 @@ class MultiHypotheses : public Reasoner {
 
   double ep_gap_;
   double cplex_timeout_;
-  pgm::multihypotheses::ModelBuilder* builder_;
+  boost::shared_ptr<pgm::multihypotheses::ModelBuilder> builder_;
 };
 
 } /* namespace pgmlink */
-#endif /* REASONER_PGM_H */
+#endif /* REASONER_MULTI_HYPOTHESES_H */

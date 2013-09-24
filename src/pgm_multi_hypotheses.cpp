@@ -1,17 +1,23 @@
+// stl
 #include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <set>
 #include <stdexcept>
 #include <utility>
-#include <boost/scoped_ptr.hpp>
+
+// boost
+#include <boost/shared_ptr.hpp>
+
+// opengm
 #include <opengm/inference/lpcplex.hxx>
 #include <opengm/datastructures/marray/marray.hxx>
 
+// pgmlink
 #include "pgmlink/pgm.h"
 #include "pgmlink/log.h"
-#include "pgmlink/pgm_multi_hypotheses.h"
 #include "pgmlink/traxels.h"
+#include "pgmlink/pgm_multi_hypotheses.h"
 #include "pgmlink/multi_hypotheses_graph.h"
 
 //#include <ostream>
@@ -615,6 +621,63 @@ void TrainableModelBuilder::add_incoming_factor(const MultiHypothesesGraph& hypo
                                                 const Traxel& trax,
                                                 const std::vector<Traxel>& neighbors) const {
   LOG(logDEBUG1) << "TrainableModelBuilder::add_incoming_factor(): entered";
+  const std::vector<size_t> vi = vars_for_incoming_factor(hypotheses, m, node, trax);
+  if (vi.size() == 0) {
+    // nothing to be done here
+    // no det vars and no incoming arcs
+    return;
+  }
+
+  // construct factor
+  const size_t table_dim = vi.size();
+  const std::vector<size_t> shape(table_dim, 2);
+  std::vector<size_t> coords;
+
+  std::set<size_t> entries;
+  for (size_t i = 0; i < static_cast<size_t>(std::pow(2., static_cast<int>(table_dim))); ++i) {
+    entries.insert( entries.end(), i );
+  }
+
+  // opportunity ??
+
+  // appearance
+  coords = std::vector<size_t>(table_dim, 0);
+  if (has_detection_vars()) {
+    coords[0] = 1; // (1, 0, ..., 0)
+  }
+  size_t check = entries.erase(BinToDec(coords));
+  assert(check == 1);
+  OpengmWeightedFeature<OpengmModel::ValueType>( vi, shape.begin(), shape.end(), coords.begin(), appearance()(trax) )
+      .add_as_feature_to( *(m.opengm_model), m.weight_map[Model::app_weight].front() );
+
+  // moves
+  // (1, 0, 0, ..., 1, ..., 0)
+  coords = std::vector<size_t>(table_dim, 0);
+  size_t assignment_begin = 0;
+  if (has_detection_vars()) {
+    coords[0] = 1;
+    assignment_begin = 1;
+  }
+  for (size_t i = assignment_begin; i < table_dim; ++i) {
+    coords[i] = 1;
+    size_t check = entries.erase(BinToDec(coords));
+    assert(check == 1);
+    coords[i] = 0;
+  }
+
+  // forbidden configurations
+  for (std::set<size_t>::iterator it = entries.begin(); it != entries.end(); ++it) {
+    coords = DecToBin(*it);
+    // zero padding up to table dim
+    if(coords.size() < table_dim) {
+      coords.insert(coords.begin(), table_dim-coords.size(), 0);
+    }
+    assert(coords.size() == table_dim);
+    OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), forbidden_cost())
+        .add_to( *(m.opengm_model) );
+  }
+
+  
 }
 
 
