@@ -31,7 +31,7 @@ namespace pgm {
 typedef opengm::LPCplex<OpengmModel, opengm::Minimizer> OpengmLPCplex;
 } /* namespace pgm */
 
-class MultiHypotheses : public Reasoner {
+class MultiHypotheses { // : public Reasoner {
  public:
   typedef pgm::multihypotheses::Model::trax_var_map trax_var_map;
   typedef pgm::multihypotheses::Model::arc_var_map arc_var_map;

@@ -5,6 +5,7 @@
 #include <set>
 #include <stdexcept>
 #include <utility>
+#include <iterator>
 
 // boost
 #include <boost/shared_ptr.hpp>
@@ -172,25 +173,26 @@ void ModelBuilder::add_hard_constraints(const Model& m, const MultiHypothesesGra
   for (MultiHypothesesGraph::NodeIt n(hypotheses); n != lemon::INVALID; ++n) {
     LOG(logDEBUG1) << "MultiHypotheses::add_hard_constraints: outgoing transitions";
     const std::vector<Traxel>& traxels = regions[n];
-    for (MultiHypothesesGraph::OutArcIt a(hypotheses, n); a != lemon::INVALID; ++n) {
+    for (MultiHypothesesGraph::OutArcIt a(hypotheses, n); a != lemon::INVALID; ++a) {
       const std::vector<Traxel>& traxels_dest = regions[hypotheses.target(a)];
       couple_outgoing(m, traxels, traxels_dest, cplex);
     }
 
     LOG(logDEBUG1) << "MultiHypotheses::add_hard_constraints: incoming transitions";
-    for (MultiHypothesesGraph::InArcIt a(hypotheses, n); a != lemon::INVALID; ++n) {
+    for (MultiHypothesesGraph::InArcIt a(hypotheses, n); a != lemon::INVALID; ++a) {
       const std::vector<Traxel>& traxels_src = regions[hypotheses.source(a)];
       couple_incoming(m, traxels_src, traxels, cplex);
     }
 
     if (has_detection_vars()) {
       LOG(logDEBUG1) << "MultiHypotheses::add_hard_constraints: coupling conflicts";
-      couple_count(m, traxels, cplex);
+      couple_conflicts(m, traxels, cplex);
       
       LOG(logDEBUG1) << "MultiHypotheses::add_hard_constraints: coupling count";
-      couple_conflicts(m, traxels, cplex);
+      couple_count(m, traxels, cplex);
     }
   }
+  LOG(logDEBUG) << "MultiHypotheses::add_hard_constraints: exited";
 }
 
 
@@ -269,6 +271,7 @@ std::vector<OpengmModel::IndexType> ModelBuilder::vars_for_incoming_factor( cons
 
 
 void ModelBuilder::couple_outgoing(const Model& m, const std::vector<Traxel>& source, const std::vector<Traxel>& dest, OpengmLPCplex& cplex) {
+  LOG(logDEBUG1) << "MultiHypotheses::couple_outgoing()";
   if (has_detection_vars()) {
     couple_detections_assignments(m, source, dest, cplex);
   }
@@ -277,6 +280,7 @@ void ModelBuilder::couple_outgoing(const Model& m, const std::vector<Traxel>& so
 
 
 void ModelBuilder::couple_incoming(const Model& m, const std::vector<Traxel>& source, const std::vector<Traxel>& dest, OpengmLPCplex& cplex) {
+  LOG(logDEBUG1) << "MultiHypotheses::couple_incoming()";
   if (has_detection_vars()) {
     couple_detections_assignments(m, source, dest, cplex);
   }
@@ -285,9 +289,15 @@ void ModelBuilder::couple_incoming(const Model& m, const std::vector<Traxel>& so
 
 
 void ModelBuilder::couple_detections_assignments(const Model& m, const std::vector<Traxel>& source, const std::vector<Traxel>& dest, OpengmLPCplex& cplex) {
+  LOG(logDEBUG1) << "MultiHypotheses::couple_detection_assignments()";
+  LOG(logDEBUG2) << "MultiHypotheses::couple_detection_assignments: "
+                 << source.size() << " source(s) and "
+                 << dest.size() << " target(s)";
   for (std::vector<Traxel>::const_iterator s = source.begin(); s != source.end(); ++s) {
-    for (std::vector<Traxel>::const_iterator d = dest.begin(); d != dest.end(); ++s) {
+    for (std::vector<Traxel>::const_iterator d = dest.begin(); d != dest.end(); ++d) {
       std::vector<size_t> cplex_idxs;
+      LOG(logDEBUG4) << "MultiHypotheses::couple_detecion_assignments: "
+                     << *s << "," << *d;
       cplex_idxs.push_back(cplex_id(m.var_of_trax(*s)));
       cplex_idxs.push_back(cplex_id(m.var_of_arc(Model::TraxelArc(*s, *d))));
       std::vector<int> coeffs;
@@ -301,6 +311,7 @@ void ModelBuilder::couple_detections_assignments(const Model& m, const std::vect
 
 
 void ModelBuilder::couple_outgoing_assignments(const Model& m, const std::vector<Traxel>& source, const std::vector<Traxel>& dest, OpengmLPCplex& cplex) {
+  LOG(logDEBUG1) << "MultiHypotheses::couple_outgoing_assignments()";
   for (std::vector<Traxel>::const_iterator s = source.begin(); s != source.end(); ++s) {
     MAX_OUTGOING_ARCS max_outgoing_arcs = DIVISION;
     FeatureMap::const_iterator feature = s->features.find("level");
@@ -325,6 +336,7 @@ void ModelBuilder::couple_outgoing_assignments(const Model& m, const std::vector
 
 
 void ModelBuilder::couple_incoming_assignments(const Model& m, const std::vector<Traxel>& source, const std::vector<Traxel>& dest, OpengmLPCplex& cplex) {
+  LOG(logDEBUG1) << "MultiHypotheses::couple_incoming_assignments()";
   for (std::vector<Traxel>::const_iterator d = dest.begin(); d != dest.end(); ++d) {
     std::vector<size_t> cplex_idxs;
     for (std::vector<Traxel>::const_iterator s = source.begin(); s != source.end(); ++s) {
@@ -340,6 +352,7 @@ void ModelBuilder::couple_incoming_assignments(const Model& m, const std::vector
 
 
 void ModelBuilder::couple_count( const Model& m, const std::vector<Traxel>& traxels, OpengmLPCplex& cplex) {
+  LOG(logDEBUG1) << "MultiHypotheses::couple_count()";
   std::vector<size_t> cplex_idxs;
   for (std::vector<Traxel>::const_iterator t = traxels.begin(); t != traxels.end(); ++t) {
     cplex_idxs.push_back(cplex_id(m.var_of_trax(*t)));
@@ -353,6 +366,7 @@ void ModelBuilder::couple_count( const Model& m, const std::vector<Traxel>& trax
 
 
 void ModelBuilder::couple_conflicts( const Model& m, const std::vector<Traxel>& traxels, OpengmLPCplex& cplex) {
+  LOG(logDEBUG1) << "MultiHypotheses::couple_conflicts()";
   for (std::vector<Traxel>::const_iterator t = traxels.begin(); t != traxels.end(); ++t) {
     std::vector<size_t> cplex_idxs;
     FeatureMap::const_iterator feature = t->features.find("conflicts");
@@ -361,7 +375,10 @@ void ModelBuilder::couple_conflicts( const Model& m, const std::vector<Traxel>& 
     }
     cplex_idxs.push_back(cplex_id(m.var_of_trax(*t)));
     for (feature_array::const_iterator conflict = feature->second.begin(); conflict != feature->second.end(); ++conflict) {
-      cplex_idxs.push_back(cplex_id(m.var_of_trax(*std::find(traxels.begin(), traxels.end(), Traxel(*conflict, t->Timestep)))));
+      LOG(logDEBUG4) << "MultiHypotheses::couple_conflicts: Adding cplex ids for " << *t
+                     << " conflicting with " << *conflict;
+      assert(std::find(traxels.begin(), traxels.end(), Traxel(*conflict, t->Timestep)) != traxels.end());
+      cplex_idxs.push_back(cplex_id(m.var_of_trax(Traxel(*conflict, t->Timestep))));
     }
     if (cplex_idxs.size() > 1) {
       std::vector<int> coeffs(cplex_idxs.size(), 1);
@@ -375,9 +392,9 @@ void ModelBuilder::couple_conflicts( const Model& m, const std::vector<Traxel>& 
 ////
 //// class TrinableChaingraphModelBuilder
 ////
-/* boost::shared_ptr<ModelBuilder> TrainableModelBuilder::clone() const {
-  return boost::shared_ptr<ModelBuilder(new TrainableModelBuilder(*this))>;
-} */
+boost::shared_ptr<ModelBuilder> TrainableModelBuilder::clone() const {
+  return boost::shared_ptr<ModelBuilder>(new TrainableModelBuilder(*this));
+}
 
 
 boost::shared_ptr<Model> TrainableModelBuilder::build(const MultiHypothesesGraph& hypotheses) const {
@@ -533,11 +550,24 @@ void TrainableModelBuilder::add_outgoing_factor(const MultiHypothesesGraph& hypo
   assert(table_dim > 0);
   const std::vector<size_t> shape(table_dim, 2);
   std::vector<size_t> coords;
+  
+
+  
 
   std::set<size_t> entries;
   for (size_t i = 0; i < static_cast<size_t>(std::pow(2., static_cast<int>(table_dim))); ++i) {
     entries.insert(entries.end(), i);
   }
+
+  // #if #FILELOG_MAX_LEVEL == pgmlink::DEBUG4
+  if (FILELOG_MAX_LEVEL >= pgmlink::logDEBUG4) {
+    std::ostringstream os;
+    std::ostream_iterator<size_t> ostream_it(os, ", ");
+    std::copy(entries.begin(), entries.end(), ostream_it);
+    LOG(logDEBUG4) << "TrainableModelBuilder::add_outgoing_factor(): coords size="
+                   << entries.size() << " and contents: " << os.str();
+  }
+  // #endif /* logDEBUG4 */
 
   // opportunity configuration??
 
@@ -565,10 +595,15 @@ void TrainableModelBuilder::add_outgoing_factor(const MultiHypothesesGraph& hypo
   
     for (size_t i = assignment_begin; i < table_dim; ++i) {
       coords[i] = 1;
+      LOG(logDEBUG4) << "TrainableModelBuilder::add_outgoing_factor(): moves: "
+      << "entry to be erased: " << BinToDec(coords);
       size_t check = entries.erase(BinToDec(coords));
+      LOG(logDEBUG4) << "TrainableModelBuilder::add_outgoing_factor(): moves: "
+      << "successfully erased? " << check;
       assert(check == 1);
       OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), move()(trax, arcs[i - assignment_begin].second) )
           .add_as_feature_to( *(m.opengm_model), m.weight_map[Model::mov_weight].front() );
+      coords[i] = 0;
     }
   }
 
@@ -587,7 +622,11 @@ void TrainableModelBuilder::add_outgoing_factor(const MultiHypothesesGraph& hypo
       coords[i] = 1;
       for (unsigned j = i+1; j < table_dim; ++j) {
         coords[j] = 1;
+        LOG(logDEBUG4) << "TrainableModelBuilder::add_outgoing_factor(): divisions: "
+                       << "entry to be erased: " << BinToDec(coords);
         size_t check = entries.erase(BinToDec(coords));
+        LOG(logDEBUG4) << "TrainableModelBuilder::add_outgoing_factor(): divisions: "
+                       << "successfully erased? " << check;
         assert(check == 1);
         OpengmModel::ValueType value = division()(trax, arcs[i-assignment_begin].second, arcs[j-assignment_begin].second);
         OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), value)
