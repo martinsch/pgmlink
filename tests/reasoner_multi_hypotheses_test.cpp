@@ -169,9 +169,9 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp ) {
     std::vector<Traxel>& traxels = regions.get_value(n);
     std::cout << "Region " << traxels[0].Id << " at time " << traxels[0].Timestep << '\n';
     for (std::vector<Traxel>::iterator t = traxels.begin(); t != traxels.end(); ++t) {
-      std::cout << *t << " is active?" << t->features["active"][0];
+      std::cout << *t << " is active? " << t->features["active"][0];
       if (t->features["active"][0] > 0.) {
-        std::cout << "   decendants: ";
+        std::cout << "   descendants: ";
         std::ostream_iterator<feature_type> os_it(std::cout, ", ");
         std::copy(t->features["outgoing"].begin(),
                   t->features["outgoing"].end(),

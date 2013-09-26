@@ -56,10 +56,11 @@ void MultiHypotheses::formulate( const MultiHypothesesGraph& hypotheses ) {
   param.timeLimit_ = cplex_timeout_;
   LOG(logDEBUG) << "MultiHypotheses::formulate ep_gap = " << param.epGap_;
   pgm::OpengmLPCplex* cplex = new pgm::OpengmLPCplex(*(linking_model_->opengm_model), param);
+  LOG(logDEBUG) << "MultiHypotheses:formulate created model";
   optimizer_ = cplex;
 
   if (with_constraints_) {
-    LOG(logDEBUG) << "MultiHypotheses::formulate: add_constraints";
+    LOG(logDEBUG) << "MultiHypotheses::formulate: add hard constraints";
     builder_->add_hard_constraints( *linking_model_, hypotheses, *cplex );
   }
 }
