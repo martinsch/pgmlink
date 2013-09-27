@@ -66,7 +66,7 @@ class MultiHypotheses { // : public Reasoner {
   ~MultiHypotheses();
 
   virtual void formulate( const MultiHypothesesGraph& );
-  virtual void infer();
+  virtual double infer();
   virtual void conclude( MultiHypothesesGraph& );
 
   double forbidden_cost() const;

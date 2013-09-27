@@ -66,11 +66,12 @@ void MultiHypotheses::formulate( const MultiHypothesesGraph& hypotheses ) {
 }
 
 
-void MultiHypotheses::infer() {
+double MultiHypotheses::infer() {
   opengm::InferenceTermination status = optimizer_->infer();
   if (status != opengm::NORMAL) {
     throw std::runtime_error("GraphicalModel::infer(): optimizer terminated unnormaly");
   }
+  return optimizer_->value();
 }
 
 
@@ -155,7 +156,6 @@ void MultiHypotheses::reset() {
     optimizer_ = NULL;
   }
 }
-
 
 
 }
