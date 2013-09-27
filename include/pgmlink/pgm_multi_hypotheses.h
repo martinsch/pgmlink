@@ -182,6 +182,7 @@ class ModelBuilder {
   void couple_outgoing( const Model&, const std::vector<Traxel>&, const std::vector<Traxel>&, OpengmLPCplex& );
   void couple_incoming( const Model&, const std::vector<Traxel>&, const std::vector<Traxel>&, OpengmLPCplex& );
   void couple_detections_assignments( const Model&, const std::vector<Traxel>&, const std::vector<Traxel>&, OpengmLPCplex& );
+  void couple_detections_assignments_incoming( const Model&, const std::vector<Traxel>&, const std::vector<Traxel>&, OpengmLPCplex& );
   void couple_outgoing_assignments( const Model&, const std::vector<Traxel>&, const std::vector<Traxel>&, OpengmLPCplex& );
   void couple_incoming_assignments( const Model&, const std::vector<Traxel>&, const std::vector<Traxel>&, OpengmLPCplex& );
   void couple_count( const Model&, const std::vector<Traxel>&, OpengmLPCplex& );
