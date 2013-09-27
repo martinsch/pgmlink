@@ -130,10 +130,10 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp ) {
 
 
   ConstantFeature det(10);
-  ConstantFeature mis(10);
+  ConstantFeature mis(1000);
   ConstantFeature div(5);
-  pgm::multihypotheses::TrainableModelBuilder builder( ConstantFeature(1000), // appearance
-                                                       ConstantFeature(1000), // disappearance
+  pgm::multihypotheses::TrainableModelBuilder builder( ConstantFeature(10), // appearance
+                                                       ConstantFeature(10), // disappearance
                                                        SquaredDistance(), // move
                                                        0, // forbidden_cost
                                                        50, // max_division_level
@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp ) {
       .with_detection_vars(det, mis)
       .with_divisions(div);
 
-  MultiHypotheses reasoner(&builder);
+  MultiHypotheses reasoner(builder);
 
   std::cout << " -> workflow: formulating model" << std::endl;
   reasoner.formulate( g );
@@ -212,8 +212,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp2 ) {
 
   
   t1.push_back(Traxel(1, 0));
-  float conflict_arr11[] = {2., 3., 4., 5.};
-  (t1.end()-1)->features["conflicts"] = feature_array(conflict_arr11, conflict_arr11 + 4);
+  (t1.end()-1)->features["conflicts"] = feature_array();
   (t1.end()-1)->features["level"].push_back(0.);
   (t1.end()-1)->features["com"] = com;
 
@@ -244,8 +243,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp2 ) {
   
   t3.push_back(Traxel(2, 1));
   std::fill(com.begin(), com.end(), 2.);
-  float conflict_arr22[] = {5., 6.};
-  (t3.end()-1)->features["conflicts"] = feature_array(conflict_arr22, conflict_arr22 + 2);
+  (t3.end()-1)->features["conflicts"] = feature_array();
   (t3.end()-1)->features["level"].push_back(0);
   (t3.end()-1)->features["com"] = com;
 
@@ -261,11 +259,10 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp2 ) {
                                                        3 // max_count
                                                        );
   builder
-      // .with_detection_vars(det, mis)
-      .without_detection_vars()
+      .with_detection_vars(det, mis)
       .with_divisions(div);
 
-  MultiHypotheses reasoner(&builder);
+  MultiHypotheses reasoner(builder);
 
   std::cout << " -> workflow: formulating model" << std::endl;
   reasoner.formulate( g );
