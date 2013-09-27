@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp ) {
 
   Node n1 = g.add_node(0);
   Node n2 = g.add_node(1);
-  Node n3 = g.add_node(2);
+  Node n3 = g.add_node(1);
 
   g.addArc(n1, n2);
   g.addArc(n1, n3);
@@ -143,7 +143,10 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp ) {
       .with_detection_vars(det, mis)
       .with_divisions(div);
 
-  MultiHypotheses reasoner(builder);
+  MultiHypotheses reasoner(builder,
+                           true, // with_constraints
+                           0. // ep_gap
+                           );
 
   std::cout << " -> workflow: formulating model" << std::endl;
   reasoner.formulate( g );
@@ -176,6 +179,10 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp ) {
         std::copy(t->features["outgoing"].begin(),
                   t->features["outgoing"].end(),
                   os_it);
+        std::cout << " parent: ";
+        std::copy(t->features["parent"].begin(),
+                  t->features["parent"].end(),
+                  os_it);
       }
       std::cout << '\n';
     }
@@ -197,7 +204,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp2 ) {
 
   Node n1 = g.add_node(0);
   Node n2 = g.add_node(1);
-  Node n3 = g.add_node(2);
+  Node n3 = g.add_node(1);
 
   g.addArc(n1, n2);
   g.addArc(n1, n3);
@@ -249,7 +256,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp2 ) {
 
 
   ConstantFeature det(10);
-  ConstantFeature mis(10);
+  ConstantFeature mis(1000);
   ConstantFeature div(5);
   pgm::multihypotheses::TrainableModelBuilder builder( ConstantFeature(1000), // appearance
                                                        ConstantFeature(1000), // disappearance
@@ -262,7 +269,10 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp2 ) {
       .with_detection_vars(det, mis)
       .with_divisions(div);
 
-  MultiHypotheses reasoner(builder);
+  MultiHypotheses reasoner(builder,
+                           true, // with_constraints
+                           0. // ep_gap
+                           );
 
   std::cout << " -> workflow: formulating model" << std::endl;
   reasoner.formulate( g );
@@ -294,6 +304,10 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp2 ) {
         std::ostream_iterator<feature_type> os_it(std::cout, ", ");
         std::copy(t->features["outgoing"].begin(),
                   t->features["outgoing"].end(),
+                  os_it);
+        std::cout << " parent: ";
+        std::copy(t->features["parent"].begin(),
+                  t->features["parent"].end(),
                   os_it);
       }
       std::cout << '\n';

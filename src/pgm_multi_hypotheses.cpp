@@ -266,6 +266,7 @@ std::vector<OpengmModel::IndexType> ModelBuilder::vars_for_incoming_factor( cons
     }
   }
   std::reverse(vi.begin(), vi.end()); // det var should be the first index to be consistent with vars_for_outgoing_factor() WHY? -> ASK BERNHARD!!
+  // it seems to be the last one here
   return vi;
 }
 
@@ -282,7 +283,7 @@ void ModelBuilder::couple_outgoing(const Model& m, const std::vector<Traxel>& so
 void ModelBuilder::couple_incoming(const Model& m, const std::vector<Traxel>& source, const std::vector<Traxel>& dest, OpengmLPCplex& cplex) {
   LOG(logDEBUG1) << "MultiHypotheses::couple_incoming()";
   if (has_detection_vars()) {
-    couple_detections_assignments(m, source, dest, cplex);
+    couple_detections_assignments_incoming(m, source, dest, cplex);
   }
   couple_incoming_assignments(m, source, dest, cplex);
 }
@@ -299,6 +300,27 @@ void ModelBuilder::couple_detections_assignments(const Model& m, const std::vect
       LOG(logDEBUG4) << "MultiHypotheses::couple_detecion_assignments: "
                      << *s << "," << *d;
       cplex_idxs.push_back(cplex_id(m.var_of_trax(*s)));
+      cplex_idxs.push_back(cplex_id(m.var_of_arc(Model::TraxelArc(*s, *d))));
+      std::vector<int> coeffs;
+      coeffs.push_back(1);
+      coeffs.push_back(-1);
+      // 0 <= 1*detection - 1*transition <= 1
+      cplex.addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0, 1);
+    }
+  }
+}
+
+void ModelBuilder::couple_detections_assignments_incoming(const Model& m, const std::vector<Traxel>& source, const std::vector<Traxel>& dest, OpengmLPCplex& cplex) {
+  LOG(logDEBUG1) << "MultiHypotheses::couple_detection_assignments_incoming()";
+  LOG(logDEBUG2) << "MultiHypotheses::couple_detection_assignments_incoming: "
+                 << source.size() << " source(s) and "
+                 << dest.size() << " target(s)";
+  for (std::vector<Traxel>::const_iterator d = dest.begin(); d != dest.end(); ++d) {
+    for (std::vector<Traxel>::const_iterator s = source.begin(); s != source.end(); ++s) {
+      std::vector<size_t> cplex_idxs;
+      LOG(logDEBUG4) << "MultiHypotheses::couple_detecion_assignments_incoming: "
+                     << *s << "," << *d;
+      cplex_idxs.push_back(cplex_id(m.var_of_trax(*d)));
       cplex_idxs.push_back(cplex_id(m.var_of_arc(Model::TraxelArc(*s, *d))));
       std::vector<int> coeffs;
       coeffs.push_back(1);
@@ -583,7 +605,14 @@ void TrainableModelBuilder::add_outgoing_factor(const MultiHypothesesGraph& hypo
     }
     size_t check = entries.erase(BinToDec(coords));
     assert (check == 1);
-    OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), disappearance()(trax))
+    double weight = disappearance()(trax);
+    if (trax.Timestep == hypotheses.latest_timestep()) {
+      weight = 0.;
+    }
+    LOG(logDEBUG2) << "TrainableModelBuilder::add_outgoing_factor: disappearance cost for "
+                   << trax << ": " << weight
+                   << " " << disappearance()(trax);
+    OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), weight)
         .add_as_feature_to( *(m.opengm_model), m.weight_map[Model::dis_weight].front() );
   }
 
@@ -664,7 +693,7 @@ void TrainableModelBuilder::add_incoming_factor(const MultiHypothesesGraph& hypo
                                                 const MultiHypothesesGraph::Node& node,
                                                 const Traxel& trax,
                                                 const std::vector<Traxel>& neighbors) const {
-  LOG(logDEBUG2) << "TrainableModelBuilder::add_incoming_factor(): entered for " << trax;
+  // LOG(logDEBUG2) << "TrainableModelBuilder::add_incoming_factor(): entered for " << trax;
   // LOG(logDEBUG1) << "TrainableModelBuilder::add_incoming_factor(): entered";
   const std::vector<size_t> vi = vars_for_incoming_factor(hypotheses, m, node, trax);
   if (vi.size() == 0) {
@@ -688,11 +717,18 @@ void TrainableModelBuilder::add_incoming_factor(const MultiHypothesesGraph& hypo
   // appearance
   coords = std::vector<size_t>(table_dim, 0);
   if (has_detection_vars()) {
-    coords[0] = 1; // (1, 0, ..., 0)
+    *(coords.rbegin()) = 1;
+    //coords[0] = 1; // (1, 0, ..., 0)
   }
   size_t check = entries.erase(BinToDec(coords));
   assert(check == 1);
-  OpengmWeightedFeature<OpengmModel::ValueType>( vi, shape.begin(), shape.end(), coords.begin(), appearance()(trax) )
+  double weight = appearance()(trax);
+  if (trax.Timestep == hypotheses.earliest_timestep()) {
+    weight = 0.;
+  }
+  LOG(logDEBUG2) << "TrainableModelBuilder::add_incoming_factor: appearance cost for "
+                   << trax << ": " << weight;
+  OpengmWeightedFeature<OpengmModel::ValueType>( vi, shape.begin(), shape.end(), coords.begin(), weight )
       .add_as_feature_to( *(m.opengm_model), m.weight_map[Model::app_weight].front() );
 
   // moves

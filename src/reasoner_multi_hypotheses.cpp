@@ -115,6 +115,21 @@ void MultiHypotheses::conclude( MultiHypothesesGraph& g ) {
         }
       }
       assert(t->features["outgoing"].size() <= 2);
+
+      // add parent if any
+      for (MultiHypothesesGraph::InArcIt a(g, n); a != lemon::INVALID; ++a) {
+        const std::vector<Traxel>& neighbors = regions[g.source(a)];
+        for (std::vector<Traxel>::const_iterator neighbor = neighbors.begin();
+             neighbor != neighbors.end();
+             ++neighbor) {
+          arc_var_map::const_iterator it = linking_model_->var_of_arc().find(pgm::multihypotheses::Model::TraxelArc(*neighbor, *t));
+          assert(it != linking_model_->var_of_arc().end());
+          if (solution[it->second] == 1) {
+            t->features["parent"].push_back(neighbor->Id);
+          }
+        }
+      }
+      assert(t->features["parent"].size() <= 1);
     }
   }
 }
