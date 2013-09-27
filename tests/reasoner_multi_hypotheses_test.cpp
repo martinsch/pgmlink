@@ -143,7 +143,10 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp ) {
       .with_detection_vars(det, mis)
       .with_divisions(div);
 
-  MultiHypotheses reasoner(builder);
+  MultiHypotheses reasoner(builder,
+                           true, // with_constraints
+                           0. // ep_gap
+                           );
 
   std::cout << " -> workflow: formulating model" << std::endl;
   reasoner.formulate( g );
