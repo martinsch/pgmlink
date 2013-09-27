@@ -188,8 +188,8 @@ void ModelBuilder::add_hard_constraints(const Model& m, const MultiHypothesesGra
       LOG(logDEBUG1) << "MultiHypotheses::add_hard_constraints: coupling conflicts";
       couple_conflicts(m, traxels, cplex);
       
-      LOG(logDEBUG1) << "MultiHypotheses::add_hard_constraints: coupling count";
-      couple_count(m, traxels, cplex);
+      // LOG(logDEBUG1) << "MultiHypotheses::add_hard_constraints: coupling count";
+      // couple_count(m, traxels, cplex);
     }
   }
   LOG(logDEBUG) << "MultiHypotheses::add_hard_constraints: exited";
@@ -482,11 +482,15 @@ void TrainableModelBuilder::add_incoming_factors( const MultiHypothesesGraph& hy
 
 void TrainableModelBuilder::add_detection_factor( Model& m,
                                                   const Traxel& trax) const {
+  
   std::vector<size_t> var_indices;
   var_indices.push_back(m.var_of_trax(trax));
   size_t shape[] = {2};
   size_t indicate[] = {0};
 
+  LOG(logDEBUG2) << "TrainableModelBuilder::add_detection_factor(): entered for " << trax
+                 << " - non_detection: " << non_detection()(trax)
+                 << " detection: " << detection()(trax);
   OpengmWeightedFeature<OpengmModel::ValueType>(var_indices, shape, shape+1, indicate, non_detection()(trax))
       .add_as_feature_to( *(m.opengm_model), m.weight_map[Model::det_weight].front() );
 
@@ -529,7 +533,7 @@ void TrainableModelBuilder::add_outgoing_factor(const MultiHypothesesGraph& hypo
                                                 const MultiHypothesesGraph::Node& node,
                                                 const Traxel& trax,
                                                 const std::vector<Traxel>& neighbors) const {
-  LOG(logDEBUG1) << "TrainableModelBuilder::add_outgoing_factor(): entered";
+  LOG(logDEBUG2) << "TrainableModelBuilder::add_outgoing_factor(): entered for " << trax;
   const vector<size_t> vi = vars_for_outgoing_factor(hypotheses, m, node, trax);
   if (vi.size() == 0) {
     // nothing to do here
@@ -560,13 +564,13 @@ void TrainableModelBuilder::add_outgoing_factor(const MultiHypothesesGraph& hypo
   }
 
   // #if #FILELOG_MAX_LEVEL == pgmlink::DEBUG4
-  if (FILELOG_MAX_LEVEL >= pgmlink::logDEBUG4) {
+  /* if (FILELOG_MAX_LEVEL >= pgmlink::logDEBUG4) {
     std::ostringstream os;
     std::ostream_iterator<size_t> ostream_it(os, ", ");
     std::copy(entries.begin(), entries.end(), ostream_it);
     LOG(logDEBUG4) << "TrainableModelBuilder::add_outgoing_factor(): coords size="
                    << entries.size() << " and contents: " << os.str();
-  }
+  } */
   // #endif /* logDEBUG4 */
 
   // opportunity configuration??
@@ -595,11 +599,11 @@ void TrainableModelBuilder::add_outgoing_factor(const MultiHypothesesGraph& hypo
   
     for (size_t i = assignment_begin; i < table_dim; ++i) {
       coords[i] = 1;
-      LOG(logDEBUG4) << "TrainableModelBuilder::add_outgoing_factor(): moves: "
-      << "entry to be erased: " << BinToDec(coords);
+      // LOG(logDEBUG4) << "TrainableModelBuilder::add_outgoing_factor(): moves: "
+      // << "entry to be erased: " << BinToDec(coords);
       size_t check = entries.erase(BinToDec(coords));
-      LOG(logDEBUG4) << "TrainableModelBuilder::add_outgoing_factor(): moves: "
-      << "successfully erased? " << check;
+      // LOG(logDEBUG4) << "TrainableModelBuilder::add_outgoing_factor(): moves: "
+      // << "successfully erased? " << check;
       assert(check == 1);
       OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), move()(trax, arcs[i - assignment_begin].second) )
           .add_as_feature_to( *(m.opengm_model), m.weight_map[Model::mov_weight].front() );
@@ -614,19 +618,20 @@ void TrainableModelBuilder::add_outgoing_factor(const MultiHypothesesGraph& hypo
     size_t assignment_begin = 0;
     if(has_detection_vars()) {
       coords[0] = 1;
+      assignment_begin = 1;
     }
-    assignment_begin = 1;
+    
 
     // (1, 0, 0, ..., 1, ..., 1, ..., 0)
     for (unsigned i = assignment_begin; i < table_dim - 1; ++i) {
       coords[i] = 1;
       for (unsigned j = i+1; j < table_dim; ++j) {
         coords[j] = 1;
-        LOG(logDEBUG4) << "TrainableModelBuilder::add_outgoing_factor(): divisions: "
-                       << "entry to be erased: " << BinToDec(coords);
+        // LOG(logDEBUG4) << "TrainableModelBuilder::add_outgoing_factor(): divisions: "
+        // << "entry to be erased: " << BinToDec(coords);
         size_t check = entries.erase(BinToDec(coords));
-        LOG(logDEBUG4) << "TrainableModelBuilder::add_outgoing_factor(): divisions: "
-                       << "successfully erased? " << check;
+        // LOG(logDEBUG4) << "TrainableModelBuilder::add_outgoing_factor(): divisions: "
+        // << "successfully erased? " << check;
         assert(check == 1);
         OpengmModel::ValueType value = division()(trax, arcs[i-assignment_begin].second, arcs[j-assignment_begin].second);
         OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), value)
@@ -650,7 +655,7 @@ void TrainableModelBuilder::add_outgoing_factor(const MultiHypothesesGraph& hypo
     }
   }
 
-  LOG(logDEBUG1) << "TrainableModelBuilder::add_outgoing_factor(): leaving";
+  // LOG(logDEBUG1) << "TrainableModelBuilder::add_outgoing_factor(): leaving";
 }
 
 
@@ -659,7 +664,8 @@ void TrainableModelBuilder::add_incoming_factor(const MultiHypothesesGraph& hypo
                                                 const MultiHypothesesGraph::Node& node,
                                                 const Traxel& trax,
                                                 const std::vector<Traxel>& neighbors) const {
-  LOG(logDEBUG1) << "TrainableModelBuilder::add_incoming_factor(): entered";
+  LOG(logDEBUG2) << "TrainableModelBuilder::add_incoming_factor(): entered for " << trax;
+  // LOG(logDEBUG1) << "TrainableModelBuilder::add_incoming_factor(): entered";
   const std::vector<size_t> vi = vars_for_incoming_factor(hypotheses, m, node, trax);
   if (vi.size() == 0) {
     // nothing to be done here
