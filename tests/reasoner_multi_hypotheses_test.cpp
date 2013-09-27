@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp ) {
                                                        ConstantFeature(1000), // disappearance
                                                        SquaredDistance(), // move
                                                        1000000, // forbidden_cost
-                                                       2, // max_division_level
+                                                       50, // max_division_level
                                                        3 // max_count
                                                        );
   builder
