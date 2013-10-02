@@ -35,12 +35,17 @@ class MultiHypothesesGraph;
 
 class MultiHypothesesGraphBuilder;
 
+class MultiHypothesesTraxelStore;
+
 typedef std::vector<boost::shared_ptr<RegionGraph> > RegionGraphVector;
 
 typedef boost::shared_ptr<std::vector<boost::shared_ptr<RegionGraph> > >
 RegionGraphVectorPtr;
 
 typedef boost::shared_ptr<MultiHypothesesGraph> MultiHypothesesGraphPtr;
+
+typedef std::map<unsigned, std::map<unsigned, std::pair<Traxel, std::vector<Traxel> > > >
+TimestepRegionMap;
 
 template <typename PropertyTag, typename Graph>
 struct PropertyValue {
@@ -177,16 +182,24 @@ class MultiHypothesesGraphBuilder {
         
   MultiHypothesesGraphBuilder(const Options& options = Options());
   MultiHypothesesGraphPtr build(RegionGraphVectorPtr graphs);
+  MultiHypothesesGraphPtr build(const MultiHypothesesTraxelStore& ts);
  private:
   void add_nodes(RegionGraphVectorPtr source_graphs,
                  MultiHypothesesGraphPtr dest_graph);
+  
+  void add_nodes(const MultiHypothesesTraxelStore& ts,
+                 MultiHypothesesGraphPtr dest_graph);
+  
   void add_nodes_at(RegionGraphPtr source_graph,
                     MultiHypothesesGraphPtr dest_graph,
                     unsigned timestep);
+
   void add_node(RegionGraphPtr source_graph,
                 MultiHypothesesGraphPtr dest_graph,
                 const RegionGraph::Node& source_node,
                 int timestep);
+
+ 
 
   void add_edges(MultiHypothesesGraphPtr graph);
   void add_edges_at(MultiHypothesesGraphPtr graph,
@@ -222,7 +235,15 @@ class MultiHypothesesGraphBuilder {
   Options options_;
   std::map<RegionGraph::Node, MultiHypothesesGraph::Node> reference_map_;
   std::map<MultiHypothesesGraph::Node, RegionGraph::Node> cross_reference_map_;
-  };
+};
+
+////
+//// class MultiHypothesesTraxelStore
+////
+struct MultiHypothesesTraxelStore {
+ public:
+  TimestepRegionMap map;
+};
 
 
     
