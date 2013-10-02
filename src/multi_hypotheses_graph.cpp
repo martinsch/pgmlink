@@ -111,12 +111,41 @@ MultiHypothesesGraphBuilder::build(RegionGraphVectorPtr graphs) {
   return graph;
 }
 
+
+MultiHypothesesGraphPtr
+MultiHypothesesGraphBuilder::build(const MultiHypothesesTraxelStore& ts) {
+  MultiHypothesesGraphPtr graph(new MultiHypothesesGraph);
+  add_nodes(ts, graph);
+  add_edges(graph);
+
+  return graph;
+}
+
 void MultiHypothesesGraphBuilder::add_nodes(RegionGraphVectorPtr source_graphs,
                                             MultiHypothesesGraphPtr dest_graph) {
   LOG(logDEBUG) << "MultiHypothesesGraphBuilder::add_nodes -- entered";
   RegionGraphVector::iterator time_iterator = source_graphs->begin();
   for (unsigned timestep = 0; time_iterator != source_graphs->end(); ++time_iterator, ++timestep) {
     add_nodes_at(*time_iterator, dest_graph, timestep);
+  }
+}
+
+void MultiHypothesesGraphBuilder::add_nodes(const MultiHypothesesTraxelStore& ts,
+                                            MultiHypothesesGraphPtr dest_graph) {
+  LOG(logDEBUG) << "MultiHypothesesGraphBuilder::add_nodes -- entered";
+  MultiHypothesesGraph::ContainedRegionsMap& regions = dest_graph->get(node_regions_in_component());
+  for (TimestepRegionMap::const_iterator timestep = ts.map.begin();
+       timestep != ts.map.end();
+       ++timestep) {
+    for (std::map<unsigned, std::pair<Traxel, std::vector<Traxel> > >::const_iterator component
+             = timestep->second.begin();
+         component != timestep->second.end();
+         ++component) {
+      const MultiHypothesesGraph::Node& node = dest_graph->add_node(timestep->first);
+      std::vector<Traxel>& traxels = regions.get_value(node);
+      traxels.push_back(component->second.first);
+      traxels.insert(traxels.end(), component->second.second.begin(), component->second.second.end());
+    }
   }
 }
 
@@ -185,6 +214,9 @@ void MultiHypothesesGraphBuilder::add_node(RegionGraphPtr source_graph,
     level = max_level - level + 1.; 
   }
 }
+
+
+
 
 
 void MultiHypothesesGraphBuilder::add_edges(MultiHypothesesGraphPtr graph) {
