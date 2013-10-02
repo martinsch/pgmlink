@@ -395,22 +395,23 @@ void ModelBuilder::couple_count( const Model& m, const std::vector<Traxel>& trax
 void ModelBuilder::couple_conflicts( const Model& m, const std::vector<Traxel>& traxels, OpengmLPCplex& cplex) {
   LOG(logDEBUG1) << "MultiHypotheses::couple_conflicts()";
   for (std::vector<Traxel>::const_iterator t = traxels.begin(); t != traxels.end(); ++t) {
-    std::vector<size_t> cplex_idxs;
     FeatureMap::const_iterator feature = t->features.find("conflicts");
     if (feature == t->features.end()) {
       throw std::runtime_error("MultiHypotheses: couple_conflicts - Feature conflicts not found in traxel!");
     }
-    cplex_idxs.push_back(cplex_id(m.var_of_trax(*t)));
     for (feature_array::const_iterator conflict = feature->second.begin(); conflict != feature->second.end(); ++conflict) {
+      std::vector<size_t> cplex_idxs;
+      cplex_idxs.push_back(cplex_id(m.var_of_trax(*t)));
       LOG(logDEBUG4) << "MultiHypotheses::couple_conflicts: Adding cplex ids for " << *t
                      << " conflicting with " << *conflict;
       assert(std::find(traxels.begin(), traxels.end(), Traxel(*conflict, t->Timestep)) != traxels.end());
       cplex_idxs.push_back(cplex_id(m.var_of_trax(Traxel(*conflict, t->Timestep))));
-    }
-    if (cplex_idxs.size() > 1) {
+    
+      
       std::vector<int> coeffs(cplex_idxs.size(), 1);
-      // 0 <= 1*detection + ... + 1*detection <= 1
+      // 0 <= 1*detection + 1*detection <= 1
       cplex.addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0, 1);
+      
     }
   }
 }
