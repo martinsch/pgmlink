@@ -205,12 +205,15 @@ inline void ModelBuilder::add_detection_vars( const MultiHypothesesGraph& hypoth
   if(!has_detection_vars()) {
     throw std::runtime_error("multihypotheses::ModelBuilder::add_detection_vars(): called without has_detection_vars()");
   }
+  LOG(logDEBUG) << "ModelBuilder::add_detection_vars: entered";
   MultiHypothesesGraph::ContainedRegionsMap& regions = hypotheses.get(node_regions_in_component());
   for (MultiHypothesesGraph::NodeIt n(hypotheses); n != lemon::INVALID; ++n) {
     const std::vector<Traxel>& traxels = regions[n];
     for (std::vector<Traxel>::const_iterator t = traxels.begin(); t != traxels.end(); ++t) {
       m.opengm_model->addVariable(2);
       m.trax_var_.left.insert(Model::trax_var_map::value_type(*t, m.opengm_model->numberOfVariables() - 1));
+      LOG(logDEBUG4) << "ModelBuilder::add_detection_vars: added var " << m.opengm_model->numberOfVariables() - 1
+                     << " for " << m.trax_of_var(m.opengm_model->numberOfVariables() - 1);
     }
   }
 }
@@ -258,6 +261,7 @@ std::vector<OpengmModel::IndexType> ModelBuilder::vars_for_incoming_factor( cons
   if (has_detection_vars()) {
     vi.push_back(m.var_of_trax(trax)); // first detection var, the others will be assignment vars
   }
+  std::vector<OpengmModel::IndexType> vi_arcs;
   MultiHypothesesGraph::ContainedRegionsMap& regions = hypotheses.get(node_regions_in_component());
   for (MultiHypothesesGraph::InArcIt a(hypotheses, node); a != lemon::INVALID; ++a) {
     const std::vector<Traxel>& traxels = regions[hypotheses.source(a)];
@@ -265,7 +269,9 @@ std::vector<OpengmModel::IndexType> ModelBuilder::vars_for_incoming_factor( cons
       vi.push_back(m.var_of_arc(Model::TraxelArc(*t, trax)));
     }
   }
-  std::reverse(vi.begin(), vi.end()); // det var should be the first index to be consistent with vars_for_outgoing_factor() WHY? -> ASK BERNHARD!!
+
+  
+  // std::reverse(vi.begin(), vi.end()); // det var should be the first index to be consistent with vars_for_outgoing_factor() WHY? -> ASK BERNHARD!!
   // it seems to be the last one here
   return vi;
 }
@@ -412,7 +418,7 @@ void ModelBuilder::couple_conflicts( const Model& m, const std::vector<Traxel>& 
 
 
 ////
-//// class TrinableChaingraphModelBuilder
+//// class TrainableModelBuilder
 ////
 boost::shared_ptr<ModelBuilder> TrainableModelBuilder::clone() const {
   return boost::shared_ptr<ModelBuilder>(new TrainableModelBuilder(*this));
@@ -667,8 +673,7 @@ void TrainableModelBuilder::add_outgoing_factor(const MultiHypothesesGraph& hypo
             .add_as_feature_to( *(m.opengm_model), m.weight_map[Model::div_weight].front() );
         coords[j] = 0;
       }
-      coords[i] = 0;
-    }
+      coords[i] = 0;    }
   }
 
   // forbidden configurations
@@ -703,6 +708,8 @@ void TrainableModelBuilder::add_incoming_factor(const MultiHypothesesGraph& hypo
   }
 
   // construct factor
+  LOG(logDEBUG2) << "TrainableModelBuilder::add_incoming_factor: constructing factor for "
+  << trax << ": " << std::pow(2., static_cast<int>(vi.size())) << " entries (2^" << vi.size() << ")";
   const size_t table_dim = vi.size();
   const std::vector<size_t> shape(table_dim, 2);
   std::vector<size_t> coords;
@@ -717,8 +724,8 @@ void TrainableModelBuilder::add_incoming_factor(const MultiHypothesesGraph& hypo
   // appearance
   coords = std::vector<size_t>(table_dim, 0);
   if (has_detection_vars()) {
-    *(coords.rbegin()) = 1;
-    //coords[0] = 1; // (1, 0, ..., 0)
+    // *(coords.rbegin()) = 1; reverse or not reverse in vars_for_incoming_factor?
+    coords[0] = 1; // (1, 0, ..., 0)
   }
   size_t check = entries.erase(BinToDec(coords));
   assert(check == 1);
@@ -733,6 +740,7 @@ void TrainableModelBuilder::add_incoming_factor(const MultiHypothesesGraph& hypo
 
   // moves
   // (1, 0, 0, ..., 1, ..., 0)
+  LOG(logDEBUG2) << "TrainableModelBuilder::add_incoming_factor: moves for " << trax;
   coords = std::vector<size_t>(table_dim, 0);
   size_t assignment_begin = 0;
   if (has_detection_vars()) {
@@ -747,6 +755,7 @@ void TrainableModelBuilder::add_incoming_factor(const MultiHypothesesGraph& hypo
   }
 
   // forbidden configurations
+  LOG(logDEBUG2) << "TrainableModelBuilder::add_incoming_factor: forbidden configurations for " << trax;
   for (std::set<size_t>::iterator it = entries.begin(); it != entries.end(); ++it) {
     coords = DecToBin(*it);
     // zero padding up to table dim
@@ -759,6 +768,286 @@ void TrainableModelBuilder::add_incoming_factor(const MultiHypothesesGraph& hypo
   }
 
   
+}
+
+
+////
+//// class CVPR2014ModelBuilder
+////
+boost::shared_ptr<ModelBuilder> CVPR2014ModelBuilder::clone() const {
+  return boost::shared_ptr<ModelBuilder>(new CVPR2014ModelBuilder(*this));
+}
+
+
+boost::shared_ptr<Model> CVPR2014ModelBuilder::build(const MultiHypothesesGraph& hypotheses) const {
+
+  if( !has_detection_vars() ) {
+    throw std::runtime_error("CVPR2014ModelBuilder::build(): option without detection vars not yet implemented");
+  }
+
+  
+  boost::shared_ptr<Model> model(new Model);
+
+
+  if (has_detection_vars()) {
+    add_detection_vars( hypotheses, *model );
+  }
+  add_assignment_vars( hypotheses, *model );
+
+  if ( has_detection_vars() ) {
+    for (MultiHypothesesGraph::NodeIt n(hypotheses); n != lemon::INVALID; ++n) {
+      add_detection_factors( hypotheses, *model, n );
+    }
+  }
+
+  for (MultiHypothesesGraph::NodeIt n(hypotheses); n != lemon::INVALID; ++n) {
+    add_outgoing_factors( hypotheses, *model, n );
+    add_incoming_factors( hypotheses, *model, n );
+  }
+
+  return model;
+}
+
+
+void CVPR2014ModelBuilder::add_detection_factors( const MultiHypothesesGraph& hypotheses,
+                                                   Model& m,
+                                                   const MultiHypothesesGraph::Node& n ) const {
+  MultiHypothesesGraph::ContainedRegionsMap& regions = hypotheses.get(node_regions_in_component());
+  const std::vector<Traxel>& traxels = regions[n];
+  for (std::vector<Traxel>::const_iterator t = traxels.begin(); t != traxels.end(); ++t) {
+    add_detection_factor(m, *t);
+  }
+}
+
+
+void CVPR2014ModelBuilder::add_outgoing_factors( const MultiHypothesesGraph& hypotheses,
+                                                  Model& m,
+                                                  const MultiHypothesesGraph::Node& n ) const {
+  MultiHypothesesGraph::ContainedRegionsMap& regions = hypotheses.get(node_regions_in_component());
+  const std::vector<Traxel>& traxels = regions[n];
+  for (std::vector<Traxel>::const_iterator t = traxels.begin(); t != traxels.end(); ++t) {
+    std::vector<Traxel> neighbors;
+    for (MultiHypothesesGraph::OutArcIt a(hypotheses, n); a != lemon::INVALID; ++a) {
+      const std::vector<Traxel>& neighbors_at = regions[hypotheses.target(a)];
+      neighbors.insert(neighbors.end(), neighbors_at.begin(), neighbors_at.end());      
+    }
+    add_outgoing_factor(hypotheses, m, n, *t, neighbors);
+  }
+
+}
+
+
+void CVPR2014ModelBuilder::add_incoming_factors( const MultiHypothesesGraph& hypotheses,
+                                                   Model& m,
+                                                   const MultiHypothesesGraph::Node& n ) const {
+  MultiHypothesesGraph::ContainedRegionsMap& regions = hypotheses.get(node_regions_in_component());
+  const std::vector<Traxel>& traxels = regions[n];
+  for (std::vector<Traxel>::const_iterator t = traxels.begin(); t != traxels.end(); ++t) {
+    std::vector<Traxel> neighbors;
+    for (MultiHypothesesGraph::InArcIt a(hypotheses, n); a != lemon::INVALID; ++a) {
+      const std::vector<Traxel>& neighbors_at = regions[hypotheses.target(a)];
+      neighbors.insert(neighbors.end(), neighbors_at.begin(), neighbors_at.end());
+    }
+    add_incoming_factor(hypotheses, m, n, *t, neighbors);
+  }
+
+}
+
+
+void CVPR2014ModelBuilder::add_detection_factor( Model& m,
+                                                 const Traxel& trax) const {
+  
+  size_t vi[] = {m.var_of_trax(trax)};
+  std::vector<size_t> coords(1, 0);
+  OpengmExplicitFactor<double> table(vi, vi+1);
+
+  coords[0] = 0;
+  table.set_value( coords, non_detection()(trax));
+
+  coords[0] = 1;
+  table.set_value( coords, detection()(trax));
+
+  // table = OpengmExplicitFactor<double>(vi, vi+1, 0);
+  LOG(logDEBUG2) << "CVPR2014ModelBuilder::add_detection_factor: for "
+  << trax << ": detection=" << table.get_value(std::vector<size_t>(1,1))
+  << "/" << detection()(trax) << ", non_detection=" << table.get_value(std::vector<size_t>(1,0))
+  << "/" << non_detection()(trax);
+  table.add_to( *(m.opengm_model) );
+
+}
+
+void CVPR2014ModelBuilder::add_outgoing_factor(const MultiHypothesesGraph& hypotheses,
+                                                Model& m,
+                                                const MultiHypothesesGraph::Node& node,
+                                                const Traxel& trax,
+                                                const std::vector<Traxel>& neighbors) const {
+  
+  const vector<size_t> vi = vars_for_outgoing_factor(hypotheses, m, node, trax);
+  LOG(logDEBUG2) << "CVPR2014ModelBuilder::add_outgoing_factor(): entered for " << trax
+                 << ", factor order: " << vi.size();
+  if (vi.size() == 0) {
+    // nothing to do here
+    // happens in case of no det vars and no outgoing arcs
+    return;
+  }
+
+  // collect TraxelArcs for use in feature functions
+  std::vector<Model::TraxelArc> arcs;
+  for (std::vector<size_t>::const_iterator v = vi.begin()+1;
+       v != vi.end();
+       ++v) {
+    arcs.push_back(m.arc_of_var(*v));
+  }
+
+  size_t table_dim = vi.size();
+  assert(table_dim == neighbors.size() + 1);
+
+  // construct factor
+  // only one detection var no outgoing arcs
+  if (table_dim == 1) {
+    std::vector<size_t> coords(table_dim, 0);
+    OpengmExplicitFactor<double> table( vi );
+
+    // oppportunity?
+    table.set_value( coords, 0 );
+    
+    // disappearance
+    if (trax.Timestep < hypotheses.latest_timestep()) {
+      coords[0] = 1;
+      table.set_value( coords, disappearance()(trax) );
+      coords[0] = 0;
+    }
+
+    table.add_to( *m.opengm_model );
+
+  } else if( table_dim == 2) {
+    // no division possible
+    std::vector<size_t> coords(table_dim, 0);
+    OpengmExplicitFactor<double> table( vi, forbidden_cost() );
+
+    // opportunity?
+    table.set_value( coords, 0 );
+
+    // disappearance configuration
+    if (trax.Timestep < hypotheses.latest_timestep()) {
+      coords[0] = 1;
+      table.set_value( coords, disappearance()(trax) );
+      coords[0] = 0;
+    }
+
+    // move configuration
+    coords[0] = 1; coords[1] = 1;
+    table.set_value( coords, move()(trax, neighbors[0]) );
+    coords[0] = 0; coords[1] = 0;
+
+    table.add_to( *m.opengm_model );
+
+    
+  } else {
+    
+    std::vector<size_t> coords(table_dim, 0);
+    OpengmExplicitFactor<double> table( vi, forbidden_cost() );
+
+    // opportunity?
+    table.set_value( coords, 0 );
+
+    // disappearance configuration
+    if (trax.Timestep < hypotheses.latest_timestep()) {
+      coords[0] = 1;
+      table.set_value( coords, disappearance()(trax) );
+      LOG(logDEBUG2) << "CVPR2014ModelBuilder::add_outgoing_factor: at least two outgoing arcs: "
+                     << "forbidden=" << forbidden_cost() << ", disappearance=" << table.get_value(coords);
+      coords[0] = 0;
+    }
+
+
+
+    // move configuration
+    coords[0] = 1;
+    for (size_t i = 1; i < table_dim; ++i) {
+      coords[i] = 1;
+      table.set_value( coords, move()(trax, arcs[i-1].second) );
+      LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_outgoing_factor: move="
+                     << table.get_value( coords );
+      coords[i] = 0;
+    }
+    coords[0] = 0;
+
+    // division configuration
+    if (has_divisions()) {
+      coords[0] = 1;
+      for (unsigned int i = 1; i < table_dim - 1; ++i) {
+        coords[i] = 1;
+        for (unsigned int j = i + 1; j < table_dim; ++j) {
+          coords[j] = 1;
+          table.set_value(coords, division()(trax,
+                                             arcs[i-1].second,
+                                             arcs[j-1].second
+                                             ));
+          LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_outgoing_factor: division="
+                         << table.get_value( coords );
+          coords[j] = 0;
+        }
+        coords[i] = 0;
+      }
+      coords[0] = 0;
+    }
+    // table = OpengmExplicitFactor<double>( vi, 999999 );
+    table.add_to( *m.opengm_model );
+
+  }
+  // LOG(logDEBUG2) << "CVPR2014ModelBuilder::add_outgoing_factor(): leaving";
+}
+
+
+void CVPR2014ModelBuilder::add_incoming_factor(const MultiHypothesesGraph& hypotheses,
+                                                Model& m,
+                                                const MultiHypothesesGraph::Node& node,
+                                                const Traxel& trax,
+                                                const std::vector<Traxel>& neighbors) const {
+  // LOG(logDEBUG2) << "CVPR2014ModelBuilder::add_incoming_factor(): entered for " << trax;
+  // LOG(logDEBUG1) << "CVPR2014ModelBuilder::add_incoming_factor(): entered";
+  const std::vector<size_t> vi = vars_for_incoming_factor(hypotheses, m, node, trax);
+  if (vi.size() == 0) {
+    // nothing to be done here
+    // no det vars and no incoming arcs
+    return;
+  }
+
+  // construct factor
+  LOG(logDEBUG2) << "CVPR2014ModelBuilder::add_incoming_factor: constructing factor for "
+  << trax << ": " << std::pow(2., static_cast<int>(vi.size())) << " entries (2^" << vi.size() << ")";
+  const size_t table_dim = vi.size();
+  std::vector<size_t> coords(table_dim, 0);
+  OpengmExplicitFactor<double> table( vi, forbidden_cost() );
+
+  // opportunity?
+  table.set_value( coords, 0 );
+
+  // appearance
+  if (trax.Timestep > hypotheses.earliest_timestep()) {
+    coords[0] = 1;
+    table.set_value( coords, appearance()(trax));
+    assert(table.get_value( coords ) == appearance()(trax) );
+    LOG(logDEBUG2) << "CVPR2014ModelBuilder::add_incoming_factor: appearance="
+                   << table.get_value( coords );
+    coords[0] = 0;
+  }
+
+  // move
+  coords[0] = 1;
+  for (size_t i = 1; i < table_dim; ++i) {
+    coords[i] = 1;
+    table.set_value( coords, 0 );
+    LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_incoming_factor: move="
+                   << table.get_value( coords );
+    coords[i] = 0;
+  }
+  coords[0] = 0;
+
+  // table = OpengmExplicitFactor<double>( vi, 999999 );
+  table.add_to( *m.opengm_model );
+  LOG(logDEBUG2) << "CVPR2014ModelBuilder::add_incoming_factor: done";
 }
 
 
