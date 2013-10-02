@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp ) {
   std::cout << " -> workflow: infer" << std::endl;
   double objective = reasoner.infer();
 
-  BOOST_CHECK_CLOSE(objective, 8035., 0.0001);
+  BOOST_CHECK_CLOSE(objective, 4075., 0.0001);
 
   std::cout << " -> workflow: conclude" << std::endl;
   reasoner.conclude( g );
