@@ -261,7 +261,6 @@ std::vector<OpengmModel::IndexType> ModelBuilder::vars_for_incoming_factor( cons
   if (has_detection_vars()) {
     vi.push_back(m.var_of_trax(trax)); // first detection var, the others will be assignment vars
   }
-  std::vector<OpengmModel::IndexType> vi_arcs;
   MultiHypothesesGraph::ContainedRegionsMap& regions = hypotheses.get(node_regions_in_component());
   for (MultiHypothesesGraph::InArcIt a(hypotheses, node); a != lemon::INVALID; ++a) {
     const std::vector<Traxel>& traxels = regions[hypotheses.source(a)];
@@ -673,7 +672,8 @@ void TrainableModelBuilder::add_outgoing_factor(const MultiHypothesesGraph& hypo
             .add_as_feature_to( *(m.opengm_model), m.weight_map[Model::div_weight].front() );
         coords[j] = 0;
       }
-      coords[i] = 0;    }
+      coords[i] = 0;
+    }
   }
 
   // forbidden configurations
