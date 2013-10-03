@@ -173,16 +173,20 @@ void ModelBuilder::add_hard_constraints(const Model& m, const MultiHypothesesGra
   for (MultiHypothesesGraph::NodeIt n(hypotheses); n != lemon::INVALID; ++n) {
     LOG(logDEBUG1) << "MultiHypotheses::add_hard_constraints: outgoing transitions";
     const std::vector<Traxel>& traxels = regions[n];
+    std::vector<Traxel> traxels_dest;
     for (MultiHypothesesGraph::OutArcIt a(hypotheses, n); a != lemon::INVALID; ++a) {
-      const std::vector<Traxel>& traxels_dest = regions[hypotheses.target(a)];
-      couple_outgoing(m, traxels, traxels_dest, cplex);
+      const std::vector<Traxel>& traxels_at = regions[hypotheses.target(a)];
+      traxels_dest.insert(traxels_dest.end(), traxels_at.begin(), traxels_at.end());      
     }
+    couple_outgoing(m, traxels, traxels_dest, cplex);
 
     LOG(logDEBUG1) << "MultiHypotheses::add_hard_constraints: incoming transitions";
+    std::vector<Traxel> traxels_src;
     for (MultiHypothesesGraph::InArcIt a(hypotheses, n); a != lemon::INVALID; ++a) {
-      const std::vector<Traxel>& traxels_src = regions[hypotheses.source(a)];
-      couple_incoming(m, traxels_src, traxels, cplex);
+      const std::vector<Traxel>& traxels_at = regions[hypotheses.source(a)];
+      traxels_src.insert(traxels_src.end(), traxels_at.begin(), traxels_at.end());
     }
+    couple_incoming(m, traxels_src, traxels, cplex);
 
     if (has_detection_vars()) {
       LOG(logDEBUG1) << "MultiHypotheses::add_hard_constraints: coupling conflicts";
