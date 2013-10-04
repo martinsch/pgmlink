@@ -888,8 +888,9 @@ void CVPR2014ModelBuilder::add_outgoing_factor(const MultiHypothesesGraph& hypot
                                                 const std::vector<Traxel>& neighbors) const {
   
   const vector<size_t> vi = vars_for_outgoing_factor(hypotheses, m, node, trax);
-  LOG(logDEBUG2) << "CVPR2014ModelBuilder::add_outgoing_factor(): entered for " << trax
-                 << ", factor order: " << vi.size();
+  LOG(logINFO) << "CVPR2014ModelBuilder::add_outgoing_factor(): entered for " << trax
+               << " at " << trax.features.find("com")->second[0] << "," << trax.features.find("com")->second[1] << ","
+               << trax.features.find("com")->second[2] << " lvl: " << trax.features.find("level")->second[0] << " - factor order: " << vi.size();
   if (vi.size() == 0) {
     // nothing to do here
     // happens in case of no det vars and no outgoing arcs
