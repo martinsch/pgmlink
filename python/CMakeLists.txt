@@ -23,6 +23,7 @@ set(PYPGMLINK_SRCS
   pytraxels.cpp
   pycrosscorrelation.cpp
   pymerger_resolving.cpp
+  pymulti_hypotheses.cpp
   )
 
 add_library(pypgmlink SHARED ${PYPGMLINK_SRCS})#
