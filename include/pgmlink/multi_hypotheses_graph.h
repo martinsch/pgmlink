@@ -4,6 +4,8 @@
 // stl
 #include <string>
 #include <vector>
+#include <set>
+#include <sstream>
 
 // boost
 #include <boost/shared_ptr.hpp>
@@ -11,11 +13,15 @@
 // lemon
 #include <lemon/list_graph.h>
 
+// vigra
+#include <vigra/multi_array.hxx>
+#include <vigra/multi_iterator_coupled.hxx>
+
 // pgmlink
-#include <pgmlink/graph.h>
-#include <pgmlink/hypotheses.h>
-#include <pgmlink/traxels.h>
-#include <pgmlink/region_graph.h>
+#include "pgmlink/graph.h"
+#include "pgmlink/hypotheses.h"
+#include "pgmlink/traxels.h"
+#include "pgmlink/region_graph.h"
 
 
 namespace pgmlink {
@@ -37,6 +43,8 @@ class MultiHypothesesGraphBuilder;
 
 class MultiHypothesesTraxelStore;
 
+class MultiHypothesesTraxelStoreBuilder;
+
 typedef std::vector<boost::shared_ptr<RegionGraph> > RegionGraphVector;
 
 typedef boost::shared_ptr<std::vector<boost::shared_ptr<RegionGraph> > >
@@ -44,7 +52,7 @@ RegionGraphVectorPtr;
 
 typedef boost::shared_ptr<MultiHypothesesGraph> MultiHypothesesGraphPtr;
 
-typedef std::map<unsigned, std::map<unsigned, std::pair<Traxel, std::vector<Traxel> > > >
+typedef std::map<int, std::map<unsigned, std::pair<Traxel, std::vector<Traxel> > > >
 TimestepRegionMap;
 
 template <typename PropertyTag, typename Graph>
@@ -237,13 +245,69 @@ class MultiHypothesesGraphBuilder {
   std::map<MultiHypothesesGraph::Node, RegionGraph::Node> cross_reference_map_;
 };
 
+
 ////
 //// class MultiHypothesesTraxelStore
 ////
 struct MultiHypothesesTraxelStore {
  public:
+  void add(const Traxel& trax) {
+    map[trax.Timestep][trax.Id].second.push_back(trax);
+  }
+
+  void start_component(const Traxel& trax) {
+    map[trax.Timestep][trax.Id] = std::make_pair(trax.Id, std::vector<Traxel>());
+    assert(map[trax.Timestep][trax.Id].second.size() == 0);
+    map[trax.Timestep][trax.Id].second.push_back(trax);
+  }
+
+  std::string print() {
+    std::stringstream ss;
+    for (TimestepRegionMap::const_iterator it = map.begin(); it != map.end(); ++it) {
+      ss << "t=" << it->first << '\n';
+      for (std::map<unsigned, std::pair<Traxel, std::vector<Traxel> > >::const_iterator it2 = it->second.begin();
+           it2 != it->second.end();
+           ++it2) {
+        ss << ".. connected component=" << it2->first << '\n';
+        for (std::vector<Traxel>::const_iterator it3 = it2->second.second.begin();
+             it3 != it2->second.second.end();
+             ++it3) {
+          ss << ".... region=" << *it3 << '\n';
+        }
+      }
+      ss << "\n";
+    }
+    return ss.str();
+  }
+
   TimestepRegionMap map;
 };
+
+
+////
+//// class MultiHypothesesTraxelStoreBuilder
+////
+
+class MultiHypothesesTraxelStoreBuilder {
+ public:
+  template <int N, typename LABEL_TYPE>
+  void build(MultiHypothesesTraxelStore& ts,
+             vigra::MultiArrayView<N+1, LABEL_TYPE> arr,
+             vigra::MultiArrayView<N, LABEL_TYPE> components,
+             unsigned object_layer,
+             int timestep,
+             LABEL_TYPE object_label
+             );
+ private:
+  template <int N, typename LABEL_TYPE>
+  Traxel& assign_component(MultiHypothesesTraxelStore& ts,
+                           vigra::MultiArrayView<N, LABEL_TYPE> arr,
+                           vigra::MultiArrayView<N, LABEL_TYPE> components,
+                           int timestep,
+                           LABEL_TYPE object_label
+                           );
+};
+
 
 
     
@@ -266,9 +330,84 @@ MultiHypothesesGraph::get_properties_at(int timestep) {
   }
   return properties;
 }
+
+
+////
+//// class MultiHypothesesTraxelStoreBuilder
+////
+template <int N, typename LABEL_TYPE>
+void MultiHypothesesTraxelStoreBuilder::build(MultiHypothesesTraxelStore& ts,
+                                              vigra::MultiArrayView<N+1, LABEL_TYPE> arr,
+                                              vigra::MultiArrayView<N, LABEL_TYPE> components,
+                                              unsigned object_layer,
+                                              int timestep,
+                                              LABEL_TYPE object_label
+                                              ) {
+  typedef typename vigra::CoupledIteratorType<N>::type ITERATOR;
+  unsigned bind_axis = N;
+
+  LOG(logDEBUG4) << "MultiHypothesesTraxelStoreBuilder::build - arr: " << arr.shape()
+                 << ", com: " << components.shape();
+  unsigned number_of_layers = arr.shape()[0];
+  assert(object_layer < number_of_layers);
+  Traxel& trax = assign_component<N, LABEL_TYPE>(ts, arr.bindAt(bind_axis, object_layer), components, timestep, object_label);
+  feature_array& conflicts = trax.features["conflicts"];
+
+  ITERATOR start = createCoupledIterator(arr.bindAt(bind_axis, object_label).shape());
+  ITERATOR end = start.getEndIterator();
+  for (; start != end; ++start) {
+    const vigra::TinyVector<vigra::MultiArrayIndex, N> coords = start.get<0>();
+    if (arr.bindAt(bind_axis, object_layer)[coords] == object_label) {
+      for (unsigned layer = 0; layer < number_of_layers; ++layer) {
+        if (layer != object_layer) {
+          LABEL_TYPE label = arr.bindAt(bind_axis, layer)[coords];
+          if (label != 0 &&
+              std::find(conflicts.begin(), conflicts.end(), label) == conflicts.end()) {
+            conflicts.push_back(label);
+          }
+        }
+      }
+    }
+  }
+}
+
+
+template <int N, typename LABEL_TYPE>
+Traxel& MultiHypothesesTraxelStoreBuilder::assign_component(MultiHypothesesTraxelStore& ts,
+                                                            vigra::MultiArrayView<N, LABEL_TYPE> arr,
+                                                            vigra::MultiArrayView<N, LABEL_TYPE> connected_components,
+                                                            int timestep,
+                                                            LABEL_TYPE object_label
+                                                            ) {
+  LOG(logDEBUG4) << "MultiHypothesesTraxelStoreBuilder::assign_component - arr: " << arr.shape()
+                 << ", com: " << connected_components.shape();
+  typedef typename vigra::CoupledIteratorType<N, LABEL_TYPE, LABEL_TYPE>::type ITERATOR;
+  ITERATOR start = createCoupledIterator(arr, connected_components);
+  ITERATOR end = start.getEndIterator();
+  LABEL_TYPE component_label = 0;
+  std::map<unsigned, std::pair<Traxel, std::vector<Traxel> > >& components = ts.map[timestep];
+  for (; start != end; ++start) {
+    if (start.get<1>() == object_label) {
+      component_label = start.get<2>();
+      if (components.find(component_label) == components.end()) {
+        ts.start_component(Traxel(component_label, timestep));
+      }
+      components[component_label].second.push_back(Traxel(object_label, timestep));
+      components[component_label].second.begin()->features["conflicts"].push_back(object_label);
+      components[component_label].second.rbegin()->features["conflicts"].push_back(component_label);
+      break;
+    }
+  }
+  return *(components[component_label].second.rbegin());
+}
+
   
     
 }
 
 
 #endif /* MULTI_HYPOTHESES_GRAPH */
+
+
+
+
