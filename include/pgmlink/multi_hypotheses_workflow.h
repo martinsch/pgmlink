@@ -265,7 +265,13 @@ namespace pgmlink {
       // va::activate<va::Count>(accumulator_split_regions);
       va::extractFeatures(start, end, accumulator_split_regions);
 
+      LOG(logDEBUG3) << "MultiHypothesesGraphVectorBuilder<T, " << N << ">::build()"
+                     << " about to split merge accumulators with "
+                     << accumulator_split_regions.maxRegionLabel()
+                     << " and " << accumulator_connected_components.maxRegionLabel() << "labels";
+
       accumulator.setMaxRegionLabel(accumulator_split_regions.maxRegionLabel());
+      accumulator_connected_components.setMaxRegionLabel(accumulator_split_regions.maxRegionLabel());
       accumulator += accumulator_connected_components;
       accumulator += accumulator_split_regions;
 
