@@ -134,6 +134,7 @@ void MultiHypothesesGraphBuilder::add_nodes(const MultiHypothesesTraxelStore& ts
                                             MultiHypothesesGraphPtr dest_graph) {
   LOG(logDEBUG) << "MultiHypothesesGraphBuilder::add_nodes -- entered";
   MultiHypothesesGraph::ContainedRegionsMap& regions = dest_graph->get(node_regions_in_component());
+  MultiHypothesesGraph::TraxelMap& traxel_map = dest_graph->get(node_traxel());
   for (TimestepRegionMap::const_iterator timestep = ts.map.begin();
        timestep != ts.map.end();
        ++timestep) {
@@ -143,8 +144,12 @@ void MultiHypothesesGraphBuilder::add_nodes(const MultiHypothesesTraxelStore& ts
          ++component) {
       const MultiHypothesesGraph::Node& node = dest_graph->add_node(timestep->first);
       std::vector<Traxel>& traxels = regions.get_value(node);
-      traxels.push_back(component->second.first);
       traxels.insert(traxels.end(), component->second.second.begin(), component->second.second.end());
+      assert(traxels.size() > 0);
+      traxel_map.set(node, traxels[0]);
+      LOG(logDEBUG4) << "MultiHypothesesGraphBuilder::add_nodes -- "
+                     << "added new component " << traxels[0].Id
+                     << " at time " << traxels[0].Timestep;
     }
   }
 }
@@ -247,6 +252,7 @@ void MultiHypothesesGraphBuilder::add_edges_at(MultiHypothesesGraphPtr graph,
   MultiHypothesesGraph::node_timestep_map& timestep_map = graph->get(node_timestep());
   MultiHypothesesGraph::TraxelMap& traxel_map = graph->get(node_traxel());
   TraxelVectorPtr traxels_at_next = graph->get_properties_at<node_traxel>(next_timestep);
+  LOG(logDEBUG3) << "MultiHypothesesGraphBuilder::add_edges_at -- initializing knn";
   NearestNeighborSearch nearest_neighbor_search(traxels_at_next->begin(),
                                                 traxels_at_next->end());
   for (MultiHypothesesGraph::node_timestep_map::ItemIt iterator_at(timestep_map, timestep);
@@ -373,6 +379,45 @@ void MultiHypothesesGraphBuilder::add_appearance_events(const Traxel& trax,
 void MultiHypothesesGraphBuilder::add_disappearance_events(const Traxel& trax,
                                                            MultiHypothesesGraphPtr graph) {
 
+}
+
+
+////
+//// MultiHypothesesTraxelStore
+////
+void MultiHypothesesTraxelStore::add(const Traxel& trax) {
+  map[trax.Timestep][trax.Id].second.push_back(trax);
+}
+
+
+void MultiHypothesesTraxelStore::start_component(const Traxel& trax) {
+  LOG(logDEBUG2) << "MultiHypothesesTraxelStore::start_component: " << trax;
+  map[trax.Timestep][trax.Id] = std::make_pair(trax, std::vector<Traxel>());
+  assert(map[trax.Timestep][trax.Id].second.size() == 0);
+  map[trax.Timestep][trax.Id].second.push_back(trax);
+  LOG(logDEBUG2) << "MultiHypothesesTraxelStore::start_component: "
+                 << "new trax has com?"
+                 << map[trax.Timestep][trax.Id].second.rbegin()->features.count("com");
+}
+
+
+std::string MultiHypothesesTraxelStore::print() {
+  std::stringstream ss;
+  for (TimestepRegionMap::const_iterator it = map.begin(); it != map.end(); ++it) {
+    ss << "t=" << it->first << '\n';
+    for (std::map<unsigned, std::pair<Traxel, std::vector<Traxel> > >::const_iterator it2 = it->second.begin();
+         it2 != it->second.end();
+         ++it2) {
+      ss << ".. connected component=" << it2->first << '\n';
+      for (std::vector<Traxel>::const_iterator it3 = it2->second.second.begin();
+           it3 != it2->second.second.end();
+           ++it3) {
+        ss << ".... region=" << *it3 << '\n';
+      }
+    }
+    ss << "\n";
+  }
+  return ss.str();
 }
   
 }

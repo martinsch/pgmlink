@@ -24,6 +24,7 @@
 #include "pgmlink/region_graph.h"
 
 
+
 namespace pgmlink {
 /*class TagNode;
   
@@ -251,34 +252,11 @@ class MultiHypothesesGraphBuilder {
 ////
 struct MultiHypothesesTraxelStore {
  public:
-  void add(const Traxel& trax) {
-    map[trax.Timestep][trax.Id].second.push_back(trax);
-  }
+  void add(const Traxel& trax);
 
-  void start_component(const Traxel& trax) {
-    map[trax.Timestep][trax.Id] = std::make_pair(trax.Id, std::vector<Traxel>());
-    assert(map[trax.Timestep][trax.Id].second.size() == 0);
-    map[trax.Timestep][trax.Id].second.push_back(trax);
-  }
+  void start_component(const Traxel& trax);
 
-  std::string print() {
-    std::stringstream ss;
-    for (TimestepRegionMap::const_iterator it = map.begin(); it != map.end(); ++it) {
-      ss << "t=" << it->first << '\n';
-      for (std::map<unsigned, std::pair<Traxel, std::vector<Traxel> > >::const_iterator it2 = it->second.begin();
-           it2 != it->second.end();
-           ++it2) {
-        ss << ".. connected component=" << it2->first << '\n';
-        for (std::vector<Traxel>::const_iterator it3 = it2->second.second.begin();
-             it3 != it2->second.second.end();
-             ++it3) {
-          ss << ".... region=" << *it3 << '\n';
-        }
-      }
-      ss << "\n";
-    }
-    return ss.str();
-  }
+  std::string print();
 
   TimestepRegionMap map;
 };
@@ -296,7 +274,8 @@ class MultiHypothesesTraxelStoreBuilder {
              vigra::MultiArrayView<N, LABEL_TYPE> components,
              unsigned object_layer,
              int timestep,
-             LABEL_TYPE object_label
+             LABEL_TYPE object_label,
+             const Traxel& trax
              );
  private:
   template <int N, typename LABEL_TYPE>
@@ -304,7 +283,8 @@ class MultiHypothesesTraxelStoreBuilder {
                            vigra::MultiArrayView<N, LABEL_TYPE> arr,
                            vigra::MultiArrayView<N, LABEL_TYPE> components,
                            int timestep,
-                           LABEL_TYPE object_label
+                           LABEL_TYPE object_label,
+                           const Traxel& trax
                            );
 };
 
@@ -341,7 +321,8 @@ void MultiHypothesesTraxelStoreBuilder::build(MultiHypothesesTraxelStore& ts,
                                               vigra::MultiArrayView<N, LABEL_TYPE> components,
                                               unsigned object_layer,
                                               int timestep,
-                                              LABEL_TYPE object_label
+                                              LABEL_TYPE object_label,
+                                              const Traxel& trax
                                               ) {
   typedef typename vigra::CoupledIteratorType<N>::type ITERATOR;
   unsigned bind_axis = N;
@@ -350,8 +331,8 @@ void MultiHypothesesTraxelStoreBuilder::build(MultiHypothesesTraxelStore& ts,
                  << ", com: " << components.shape();
   unsigned number_of_layers = arr.shape()[0];
   assert(object_layer < number_of_layers);
-  Traxel& trax = assign_component<N, LABEL_TYPE>(ts, arr.bindAt(bind_axis, object_layer), components, timestep, object_label);
-  feature_array& conflicts = trax.features["conflicts"];
+  Traxel& traxel = assign_component<N, LABEL_TYPE>(ts, arr.bindAt(bind_axis, object_layer), components, timestep, object_label, trax);
+  feature_array& conflicts = traxel.features["conflicts"];
 
   ITERATOR start = createCoupledIterator(arr.bindAt(bind_axis, object_label).shape());
   ITERATOR end = start.getEndIterator();
@@ -377,7 +358,8 @@ Traxel& MultiHypothesesTraxelStoreBuilder::assign_component(MultiHypothesesTraxe
                                                             vigra::MultiArrayView<N, LABEL_TYPE> arr,
                                                             vigra::MultiArrayView<N, LABEL_TYPE> connected_components,
                                                             int timestep,
-                                                            LABEL_TYPE object_label
+                                                            LABEL_TYPE object_label,
+                                                            const Traxel& trax
                                                             ) {
   LOG(logDEBUG4) << "MultiHypothesesTraxelStoreBuilder::assign_component - arr: " << arr.shape()
                  << ", com: " << connected_components.shape();
@@ -392,7 +374,7 @@ Traxel& MultiHypothesesTraxelStoreBuilder::assign_component(MultiHypothesesTraxe
       if (components.find(component_label) == components.end()) {
         ts.start_component(Traxel(component_label, timestep));
       }
-      components[component_label].second.push_back(Traxel(object_label, timestep));
+      components[component_label].second.push_back(trax);
       components[component_label].second.begin()->features["conflicts"].push_back(object_label);
       components[component_label].second.rbegin()->features["conflicts"].push_back(component_label);
       break;
