@@ -117,6 +117,7 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
     std::vector<Traxel>& traxels = regions.get_value(n);
     LOG(logDEBUG4) << "Region " << traxels[0].Id << " at time " << traxels[0].Timestep << '\n';
     for (std::vector<Traxel>::iterator t = traxels.begin(); t != traxels.end(); ++t) {
+      break; // no event creation for now!
       if (t->features["active"][0] > 0.) {        
         if (t->features["outgoing"].size() == 2) {
           Event e;
