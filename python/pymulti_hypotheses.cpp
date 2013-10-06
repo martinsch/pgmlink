@@ -2,6 +2,8 @@
 #define NO_IMPORT_ARRAY
 
 // stl
+// temp
+#include <iostream>
 
 // boost
 #include <boost/archive/text_oarchive.hpp>
@@ -15,6 +17,11 @@
 
 // pgmlink
 #include "pgmlink/multi_hypotheses_graph.h"
+#include "pgmlink/multi_hypotheses_tracking.h"
+// temp
+#include "pgmlink/feature.h"
+#include "pgmlink/pgm_multi_hypotheses.h"
+#include "pgmlink/reasoner_multi_hypotheses.h"
 
 
 using namespace pgmlink;
@@ -77,23 +84,143 @@ class PyMultiHypothesesTraxelStoreBuilder {
              vigra::NumpyArray<N, LABEL_TYPE> components,
              unsigned object_layer,
              int timestep,
-             LABEL_TYPE object_label
+             LABEL_TYPE object_label,
+             const Traxel& trax
              ) {
     MultiHypothesesTraxelStoreBuilder builder;
-    builder.build<N, LABEL_TYPE>(ts_, arr, components, object_layer, timestep, object_label);
+    builder.build<N, LABEL_TYPE>(ts_, arr, components, object_layer, timestep, object_label, trax);
   }
  private:
   MultiHypothesesTraxelStore& ts_;
 };
 
+class PyTrackerTemp {
+ public:
+  PyTrackerTemp(const MultiHypothesesTraxelStore& ts) : ts_(ts) {}
+  void track() {
+
+    pgmlink::MultiHypothesesGraphBuilder mult_builder(pgmlink::MultiHypothesesGraphBuilder::Options(2, 100000000000, false));
+    pgmlink::MultiHypothesesGraphPtr mult_graph = mult_builder.build(ts_);
+    ConstantFeature det(10);
+    ConstantFeature mis(1000);
+    ConstantFeature div(5);
+    std::cout << " -> workflow: initializing builder" << std::endl;
+    pgm::multihypotheses::CVPR2014ModelBuilder builder( ConstantFeature(10), // appearance
+                                                        ConstantFeature(10), // disappearance
+                                                        SquaredDistance(), // move
+                                                        0, // forbidden_cost
+                                                        50, // max_division_level
+                                                        3 // max_count
+                                                        );
+    builder
+        .with_detection_vars(det, mis)
+        .with_divisions(div);
+
+    std::cout << " -> workflow: initializing reasoner" << std::endl;
+    MultiHypotheses reasoner(builder,
+                             true, // with_constraints
+                             0. // ep_gap
+                             );
+
+    std::cout << " -> workflow: formulating model" << std::endl;
+    reasoner.formulate( *mult_graph );
+
+    std::cout << " -> workflow: infer" << std::endl;
+    double objective = reasoner.infer();
+
+    std::cout << " -> workflow: conclude" << std::endl;
+    reasoner.conclude( *mult_graph );
+
+    MultiHypothesesGraph::ContainedRegionsMap& regions = mult_graph->get(node_regions_in_component());
+
+    for (MultiHypothesesGraph::NodeIt n(*mult_graph); n != lemon::INVALID; ++n) {
+      std::vector<Traxel>& traxels = regions.get_value(n);
+      std::cout << "Region " << traxels[0].Id << " at time " << traxels[0].Timestep << '\n';
+      for (std::vector<Traxel>::iterator t = traxels.begin(); t != traxels.end(); ++t) {
+        std::cout << *t << " is active? " << t->features["active"][0];
+        if (t->features["active"][0] > 0.) {
+          std::cout << "   descendants: ";
+          std::ostream_iterator<feature_type> os_it(std::cout, ", ");
+          std::copy(t->features["outgoing"].begin(),
+                    t->features["outgoing"].end(),
+                    os_it);
+          std::cout << " parent: ";
+          std::copy(t->features["parent"].begin(),
+                    t->features["parent"].end(),
+                    os_it);
+        }
+        std::cout << '\n';
+      }
+      std::cout << '\n';
+    }
+
+  }
+ private:
+  const MultiHypothesesTraxelStore& ts_;
+};
+
+
+struct PyTrackingOptions {
+  MultiHypothesesTracking::Options options;
+  PyTrackingOptions() {
+    options.weights["forbidden"] = 0.;
+    options.weights["timeout"] = 1e+75;
+    options.weights["gap"] = 0.01;
+  }
+  
+  void set(std::string name, double value) {
+    options.weights[name] = value;
+  }
+
+  void with_divisions(bool check) {
+    options.with_divisions = check;
+  }
+
+  void with_constraints(bool check) {
+    options.with_constraints = check;
+  }
+
+  void with_detection_vars(bool check) {
+    options.with_detection_vars = check;
+  }
+
+  std::string sanity_check() {
+    return std::string("To be implemented");
+  }
+  
+};
+
+
+class PyMultiHypothesesTracking {
+ public:
+  PyMultiHypothesesTracking(const PyTrackingOptions& options)
+      : tracker_(MultiHypothesesTracking(options.options))
+  {}
+  boost::shared_ptr<std::vector<std::vector<Event> > > operator()(MultiHypothesesTraxelStore& ts) {
+    return tracker_(ts);
+  }
+ private:
+  MultiHypothesesTracking tracker_;
+};
+
+template <typename T>
+class PySharedPtr {
+  PySharedPtr() : ptr_(new T) {}
+  PySharedPtr(boost::shared_ptr<T> other) : ptr_(other) {}
+ private:
+  boost::shared_ptr<T> ptr_;
+};
+
+
+
 
 void export_multi_hypotheses() {
-  class_<typename MultiHypothesesGraph::Arc>("Arc");
-  class_<typename MultiHypothesesGraph::ArcIt>("ArcIt");
-  class_<typename MultiHypothesesGraph::Node>("Node");
-  class_<typename MultiHypothesesGraph::NodeIt>("NodeIt");
-  class_<typename MultiHypothesesGraph::InArcIt>("InArcIt");
-  class_<typename MultiHypothesesGraph::OutArcIt>("OutArcIt");
+  /* class_<typename MultiHypothesesGraph::Arc>("MultiArc");
+  class_<typename MultiHypothesesGraph::ArcIt>("MultiArcIt");
+  class_<typename MultiHypothesesGraph::Node>("MultiNode");
+  class_<typename MultiHypothesesGraph::NodeIt>("MultiNodeIt");
+  class_<typename MultiHypothesesGraph::InArcIt>("MultiInArcIt");
+  class_<typename MultiHypothesesGraph::OutArcIt>("MultiOutArcIt"); */
 
   IterableValueMap_ValueIterator<MultiHypothesesGraph::ContainedRegionsMap>::wrap("ContainedRegionsMap_ValueIt");
   // IterableValueMap_ValueIterator<node_traxel>::wrap("NodeTraxelMap_ValueIt");
@@ -146,6 +273,49 @@ void export_multi_hypotheses() {
       .def("build", vigra::registerConverters(&PyMultiHypothesesTraxelStoreBuilder::build<2, unsigned long>), return_internal_reference<>())
       .def("build", vigra::registerConverters(&PyMultiHypothesesTraxelStoreBuilder::build<3, unsigned long>), return_internal_reference<>())
       ;
+
+
+  ////
+  //// PyTrackerTemp
+  ////
+  class_<PyTrackerTemp, boost::noncopyable>("MultiHypothesesTrackerTemp",
+                                            init<const MultiHypothesesTraxelStore&>()[with_custodian_and_ward<1, 2>()]
+                                            )
+      .def("track", &PyTrackerTemp::track, return_internal_reference<>())
+      ;
+
+  ////
+  //// TrackingOptions
+  ////
+  class_<PyTrackingOptions, boost::noncopyable>("TrackingOptions", init<>())
+      .def("set", &PyTrackingOptions::set, return_internal_reference<>())
+      .def("with_divisions", &PyTrackingOptions::with_divisions, return_internal_reference<>())
+      .def("with_constraints", &PyTrackingOptions::with_constraints, return_internal_reference<>())
+      .def("with_detection_vars", &PyTrackingOptions::with_detection_vars, return_internal_reference<>())
+      .def("sanity_check", &PyTrackingOptions::sanity_check)
+      ;
+
+
+  ////
+  //// MultiHypothesesTracking
+  ////
+  class_<PyMultiHypothesesTracking, boost::noncopyable>("MultiHypothesesTracker",
+                                                        init<const PyTrackingOptions&>()[with_custodian_and_ward<1, 2>()]
+                                                        )
+      .def("track", &PyMultiHypothesesTracking::operator())
+      .def("__call__", &PyMultiHypothesesTracking::operator())
+      ;
+
+
+  ////
+  //// EventsPointer
+  ////
+  class_<boost::shared_ptr<std::vector<std::vector<Event> > > >("EventsPointer",
+                                                                init<boost::shared_ptr<std::vector<std::vector<Event> > > >()
+                                                                );
+      
+
+
 
 
   
