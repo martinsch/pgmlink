@@ -112,6 +112,7 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
   
   MultiHypothesesGraph::ContainedRegionsMap& regions = graph->get(node_regions_in_component());
 
+  // CHECK INDICES AT PUSH_BACK!
   for (MultiHypothesesGraph::NodeIt n(*graph); n != lemon::INVALID; ++n) {
     std::vector<Traxel>& traxels = regions.get_value(n);
     LOG(logDEBUG4) << "Region " << traxels[0].Id << " at time " << traxels[0].Timestep << '\n';
@@ -123,13 +124,13 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
           e.traxel_ids.push_back(t->Id);
           e.traxel_ids.push_back(t->features["outgoing"][0]);
           e.traxel_ids.push_back(t->features["outgoing"][1]);
-          (*events)[t->Timestep-graph->earliest_timestep()-1].push_back(e);
+          (*events)[t->Timestep-graph->earliest_timestep()].push_back(e);
         } else if (t->features["outgoing"].size() == 1) {
           Event e;
           e.type = Event::Move;
           e.traxel_ids.push_back(t->Id);
           e.traxel_ids.push_back(t->features["outgoing"][0]);
-          (*events)[t->Timestep-graph->earliest_timestep()-1].push_back(e);
+          (*events)[t->Timestep-graph->earliest_timestep()].push_back(e);
         } else if (t->features["outgoing"].size() == 0 && t->Timestep < graph->latest_timestep()) {
           Event e;
           e.type = Event::Disappearance;
@@ -140,12 +141,13 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
           Event e;
           e.type = Event::Appearance;
           e.traxel_ids.push_back(t->Id);
-          (*events)[t->Timestep-graph->earliest_timestep()-1].push_back(e);
+          (*events)[t->Timestep-graph->earliest_timestep()].push_back(e);
         }
       }
     }
   }
 
+  std::cout << " -> workflow: return events" << std::endl;
   return events;
 }
 
