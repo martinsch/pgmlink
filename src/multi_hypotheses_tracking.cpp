@@ -48,7 +48,8 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
                << "\tep gap: " << options_.weights["gap"] << '\n'
                << "\tmaximum division level " << options_.weights["max_div"];
 
-  boost::shared_ptr<std::vector<std::vector<Event> > > events;
+  boost::shared_ptr<std::vector<std::vector<Event> > >
+      events (new std::vector<std::vector<Event> >);
 
   MultiHypothesesGraphBuilder mult_builder(MultiHypothesesGraphBuilder::Options(options_.get_weight("neighbors"),
                                                                                 options_.get_weight("distance"),
