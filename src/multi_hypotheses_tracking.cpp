@@ -33,18 +33,19 @@ double MultiHypothesesTracking::Options::get_weight(const std::string& name) con
 boost::shared_ptr<std::vector<std::vector<Event> > >
 MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
   LOG(logINFO) << "Calling multihypotheses tracking with the following parameters:\n"
-               << "\tappearance: " << options_.weights["app"]
-               << "\tdisapparance: " << options_.weights["dis"]
-               << "\tdetection: " << options_.weights["det"]
-               << "\tmisdetection: " << options_.weights["mis"]
-               << "\tforbidden cost: " << options_.weights["forbidden"]
-               << "\twith constraints: " << options_.with_constraints
-               << "\twith divisions: " << options_.with_divisions
-               << "\twith detection variables: " << options_.with_detection_vars
-               << "\tnumber of neighbors: " << options_.weights["neighbors"]
-               << "\tmaximum neighbor distance: " << options_.weights["distance"]
-               << "\tcplex timeout: " << options_.weights["timeout"]
-               << "\tep gap: " << options_.weights["gap"]
+               << "\tappearance: " << options_.weights["app"] << '\n'
+               << "\tdisapparance: " << options_.weights["dis"] << '\n'
+               << "\tdetection: " << options_.weights["det"] << '\n'
+               << "\tmisdetection: " << options_.weights["mis"] << '\n'
+               << "\tdvision: " << options_.weights["div"] << '\n'
+               << "\tforbidden cost: " << options_.weights["forbidden"] << '\n'
+               << "\twith constraints: " << options_.with_constraints << '\n'
+               << "\twith divisions: " << options_.with_divisions << '\n'
+               << "\twith detection variables: " << options_.with_detection_vars << '\n'
+               << "\tnumber of neighbors: " << options_.weights["neighbors"] << '\n'
+               << "\tmaximum neighbor distance: " << options_.weights["distance"] << '\n'
+               << "\tcplex timeout: " << options_.weights["timeout"] << '\n'
+               << "\tep gap: " << options_.weights["gap"] << '\n'
                << "\tmaximum division level " << options_.weights["max_div"];
 
   boost::shared_ptr<std::vector<std::vector<Event> > > events;
