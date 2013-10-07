@@ -2,9 +2,13 @@
 #include <algorithm>
 #include <set>
 #include <vector>
+#include <cassert>
 
 // boost
 #include <boost/assert.hpp>
+
+// vigra
+#include <vigra/random_forest.hxx>
 
 // pgmlink
 #include <pgmlink/multi_hypotheses_graph.h>
@@ -419,6 +423,101 @@ std::string MultiHypothesesTraxelStore::print() {
   }
   return ss.str();
 }
+
+
+
+////
+//// ClassifierStrategy
+////
+ClassifierStrategy::ClassifierStrategy(std::string name) :
+    name_(name) {}
+
+
+ClassifierStrategy::~ClassifierStrategy() {}
+
+
+////
+//// ClassifierRF
+////
+ClassifierRF::ClassifierRF(vigra::RandomForest<> rf, std::string name) :
+    ClassifierStrategy(name),
+    rf_(rf),
+    features_(vigra::MultiArray<2, feature_type>::difference_type(1, rf.feature_count())),
+    probabilities_(vigra::MultiArray<2, feature_type>::difference_type(1, rf.class_count())) {}
+
+
+ClassifierRF::~ClassifierRF() {}
+
+
+void ClassifierRF::classify(const std::vector<Traxel>& traxels_out,
+                            const std::vector<Traxel>& traxels_in,
+                            std::map<Traxel, std::map<Traxel, feature_array> >& feature_map) {}
+
+
+void ClassifierRF::classify(const std::vector<Traxel>& traxels_out,
+                            const std::vector<Traxel>& traxels_in,
+                            std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_array> >& feature_map) {}
+
+
+ClassifierMoveRF::ClassifierMoveRF(vigra::RandomForest<> rf, std::string name) :
+    ClassifierRF(rf, name) {}
+
+
+ClassifierMoveRF::~ClassifierMoveRF() {}
+
+
+void ClassifierMoveRF::classify(const std::vector<Traxel>& traxels_out,
+                                const std::vector<Traxel>& traxels_in,
+                                std::map<Traxel, std::map<Traxel, feature_array> >& feature_map) {
+  for (std::vector<Traxel>::const_iterator out = traxels_out.begin(); out != traxels_out.end(); ++out) {
+    for (std::vector<Traxel>::const_iterator in = traxels_in.begin(); in != traxels_in.end(); ++in) {
+      extract_features(*out, *in);
+      assert(feature_map[*out][*in].size() == 0);
+      rf_.predictProbabilities(features_, probabilities_);
+      std::copy(probabilities_.begin(),
+                probabilities_.end(),
+                std::back_insert_iterator<feature_array>(feature_map[*out][*in]));
+    }
+  }
+}
+
+
+void ClassifierMoveRF::extract_features(const Traxel& t1, const Traxel& t2) {
+  // extract the neccessary features here! to be implemented as soon as classifiers exist
+}
+
+
+ClassifierDivisionRF::ClassifierDivisionRF(vigra::RandomForest<> rf, std::string name) :
+    ClassifierRF(rf, name) {}
+
+
+ClassifierDivisionRF::~ClassifierDivisionRF() {}
+
+
+void ClassifierDivisionRF::classify(const std::vector<Traxel>& traxels_out,
+                                    const std::vector<Traxel>& traxels_in,
+                                    std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_array> >& feature_map) {
+  for (std::vector<Traxel>::const_iterator out = traxels_out.begin(); out != traxels_out.end(); ++out) {
+    for (std::vector<Traxel>::const_iterator child1 = traxels_in.begin(); child1 != traxels_in.end(); ++child1) {
+      for (std::vector<Traxel>::const_iterator child2 = child1 + 1; child2 != traxels_in.end(); ++child2) {
+        extract_features(*out, *child1, *child2);
+        assert(feature_map[*out][std::make_pair(*child1, *child2)].size() == 0);
+        rf_.predictProbabilities(features_, probabilities_);
+        std::copy(probabilities_.begin(),
+                  probabilities_.end(),
+                  std::back_insert_iterator<feature_array>(feature_map[*out][std::make_pair(*child1, *child2)]));
+      }
+    }
+  }
+}
+
+
+void ClassifierDivisionRF::extract_features(const Traxel& parent, const Traxel& child1, const Traxel& child2) {
+  // extract the neccessary features here! to be implemented as soon as classifiers exist
+}
+
+
+
   
 }
 

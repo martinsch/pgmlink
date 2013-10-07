@@ -6,6 +6,7 @@
 #include <vector>
 #include <set>
 #include <sstream>
+#include <cassert>
 
 // boost
 #include <boost/shared_ptr.hpp>
@@ -16,6 +17,7 @@
 // vigra
 #include <vigra/multi_array.hxx>
 #include <vigra/multi_iterator_coupled.hxx>
+#include <vigra/random_forest.hxx>
 
 // pgmlink
 #include "pgmlink/graph.h"
@@ -45,6 +47,8 @@ class MultiHypothesesGraphBuilder;
 class MultiHypothesesTraxelStore;
 
 class MultiHypothesesTraxelStoreBuilder;
+
+class ClassifierStrategy;
 
 typedef std::vector<boost::shared_ptr<RegionGraph> > RegionGraphVector;
 
@@ -161,6 +165,11 @@ class MultiHypothesesGraph : public HypothesesGraph {
   template <typename PropertyTag>
   typename PropertyValueVectorPtr<PropertyTag, base_graph>::type
   get_properties_at(int timestep);
+
+  void add_classifier_features(const ClassifierStrategy* move,
+                               const ClassifierStrategy* division,
+                               const ClassifierStrategy* count,
+                               const ClassifierStrategy* detection);
 
   
  private:
@@ -289,6 +298,87 @@ class MultiHypothesesTraxelStoreBuilder {
 };
 
 
+////
+//// class ClassifierStrategy
+////
+class ClassifierStrategy {
+ public:
+  explicit ClassifierStrategy(std::string name = "");
+  virtual ~ClassifierStrategy();
+  virtual void classify(const std::vector<Traxel>& traxels_out,
+                        const std::vector<Traxel>& traxels_in,
+                        std::map<Traxel, std::map<Traxel, feature_array> >& feature_map) = 0;
+  virtual void classify(const std::vector<Traxel>& traxels_out,
+                        const std::vector<Traxel>& traxels_in,
+                        std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_array> >& feature_map) = 0;
+ protected:
+  std::string name_;
+};
+
+
+class ClassifierConstant : public ClassifierStrategy {};
+
+
+class ClassifierRF : public ClassifierStrategy {
+ public:
+  ClassifierRF(vigra::RandomForest<> rf, std::string name = "");
+  virtual ~ClassifierRF();
+  virtual void classify(const std::vector<Traxel>& traxels_out,
+                        const std::vector<Traxel>& traxels_in,
+                        std::map<Traxel, std::map<Traxel, feature_array> >& feature_map);
+  virtual void classify(const std::vector<Traxel>& traxels_out,
+                        const std::vector<Traxel>& traxels_in,
+                        std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_array> >& feature_map);
+ protected:
+  vigra::RandomForest<> rf_;
+  vigra::MultiArray<2, feature_type> features_;
+  vigra::MultiArray<2, feature_type> probabilities_;
+};
+
+
+class ClassifierMoveRF : public ClassifierRF {
+ public:
+  ClassifierMoveRF(vigra::RandomForest<> rf, std::string name = "");
+  virtual ~ClassifierMoveRF();
+  virtual void classify(const std::vector<Traxel>& traxels_out,
+                        const std::vector<Traxel>& traxels_in,
+                        std::map<Traxel, std::map<Traxel, feature_array> >& feature_map);
+ private:
+  void extract_features(const Traxel& t1, const Traxel& t2);
+};
+
+
+class ClassifierDivisionRF : public ClassifierRF {
+ public:
+  ClassifierDivisionRF(vigra::RandomForest<> rf, std::string name = "");
+  virtual ~ClassifierDivisionRF();
+  virtual void classify(const std::vector<Traxel>& traxels_out,
+                        const std::vector<Traxel>& traxels_in,
+                        std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_array> >& feature_map);
+ private:
+  void extract_features(const Traxel& parent, const Traxel& child1, const Traxel& child2);
+};
+
+
+class ClassifierCountRF : public ClassifierRF{
+ public:
+  ClassifierCountRF(vigra::RandomForest<> rf, std::string name = "");
+  ~ClassifierCountRF();
+  virtual void classify(const std::vector<Traxel>& traxels_out,
+                        const std::vector<Traxel>& traxels_in,
+                        std::map<Traxel, std::map<Traxel, feature_array> >& feature_map);
+};
+
+
+class ClassifierDetectionRF : public ClassifierRF{
+ public:
+  ClassifierDetectionRF(vigra::RandomForest<> rf, std::string name = "");
+  ~ClassifierDetectionRF();
+  virtual void classify(const std::vector<Traxel>& traxels_out,
+                        const std::vector<Traxel>& traxels_in,
+                        std::map<Traxel, std::map<Traxel, feature_array> >& feature_map);
+};
+
 
     
   
@@ -382,6 +472,10 @@ Traxel& MultiHypothesesTraxelStoreBuilder::assign_component(MultiHypothesesTraxe
   }
   return *(components[component_label].second.rbegin());
 }
+
+
+
+
 
   
     
