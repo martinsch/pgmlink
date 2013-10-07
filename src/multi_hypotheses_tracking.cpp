@@ -106,47 +106,62 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
   std::cout << " -> workflow: creating events" << std::endl;
 
   // create all neccessary vectors:
-  for (int i = graph->earliest_timestep(); i < graph->latest_timestep(); ++i) {
+  /* for (int i = graph->earliest_timestep(); i < graph->latest_timestep(); ++i) {
     events->push_back(std::vector<Event>());
-  }
+  } */
+
+
   
   MultiHypothesesGraph::ContainedRegionsMap& regions = graph->get(node_regions_in_component());
+  MultiHypothesesGraph::node_timestep_map& timesteps = graph->get(node_timestep());
 
   // CHECK INDICES AT PUSH_BACK!
-  for (MultiHypothesesGraph::NodeIt n(*graph); n != lemon::INVALID; ++n) {
-    std::vector<Traxel>& traxels = regions.get_value(n);
-    LOG(logDEBUG4) << "Region " << traxels[0].Id << " at time " << traxels[0].Timestep << '\n';
-    for (std::vector<Traxel>::iterator t = traxels.begin(); t != traxels.end(); ++t) {
-      break; // no event creation for now!
-      if (t->features["active"][0] > 0.) {        
-        if (t->features["outgoing"].size() == 2) {
-          Event e;
-          e.type = Event::Division;
-          e.traxel_ids.push_back(t->Id);
-          e.traxel_ids.push_back(t->features["outgoing"][0]);
-          e.traxel_ids.push_back(t->features["outgoing"][1]);
-          (*events)[t->Timestep-graph->earliest_timestep()].push_back(e);
-        } else if (t->features["outgoing"].size() == 1) {
-          Event e;
-          e.type = Event::Move;
-          e.traxel_ids.push_back(t->Id);
-          e.traxel_ids.push_back(t->features["outgoing"][0]);
-          (*events)[t->Timestep-graph->earliest_timestep()].push_back(e);
-        } else if (t->features["outgoing"].size() == 0 && t->Timestep < graph->latest_timestep()) {
-          Event e;
-          e.type = Event::Disappearance;
-          e.traxel_ids.push_back(t->Id);
-          (*events)[t->Timestep-graph->earliest_timestep()].push_back(e);
-        }
-        if (t->features["incoming"].size() == 0 && t->Timestep > graph->earliest_timestep()) {
-          Event e;
-          e.type = Event::Appearance;
-          e.traxel_ids.push_back(t->Id);
-          (*events)[t->Timestep-graph->earliest_timestep()].push_back(e);
+  for (MultiHypothesesGraph::node_timestep_map::ValueIt timestep = timesteps.beginValue();
+       timestep != timesteps.endValue();
+       ++timestep) {
+    // iterating over timesteps. current timestep t == *timestep
+    events->push_back(std::vector<Event>());
+    for (MultiHypothesesGraph::node_timestep_map::ItemIt n(timesteps, *timestep);
+         n!= lemon::INVALID;
+         ++n) {
+      std::vector<Traxel>& traxels = regions.get_value(n);
+      LOG(logDEBUG4) << "Region " << traxels[0].Id << " at time " << traxels[0].Timestep << '\n';
+      for (std::vector<Traxel>::iterator t = traxels.begin(); t != traxels.end(); ++t) {
+        assert(t->Timestep == *timestep);
+        std::vector<Event>& events_at = *(events->rbegin());
+        if (t->features["active"][0] > 0.) {        
+          if (t->features["outgoing"].size() == 2) {
+            // division: parent cell in timestep t, children cells in t+1
+            Event e;
+            e.type = Event::Division;
+            e.traxel_ids.push_back(t->Id);
+            e.traxel_ids.push_back(t->features["outgoing"][0]);
+            e.traxel_ids.push_back(t->features["outgoing"][1]);
+            events_at.push_back(e);
+          } else if (t->features["outgoing"].size() == 1) {
+            Event e;
+            e.type = Event::Move;
+            e.traxel_ids.push_back(t->Id);
+            e.traxel_ids.push_back(t->features["outgoing"][0]);
+            events_at.push_back(e);
+          } else if (t->features["outgoing"].size() == 0 && t->Timestep < graph->latest_timestep()) {
+            Event e;
+            e.type = Event::Disappearance;
+            e.traxel_ids.push_back(t->Id);
+            events_at.push_back(e);
+          }
+          if (t->features["parent"].size() == 0 && t->Timestep > graph->earliest_timestep()) {
+            Event e;
+            e.type = Event::Appearance;
+            e.traxel_ids.push_back(t->Id);
+            events_at.push_back(e);
+          }
         }
       }
     }
   }
+
+
 
   std::cout << " -> workflow: return events" << std::endl;
   return events;
