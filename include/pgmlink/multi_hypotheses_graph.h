@@ -90,6 +90,51 @@ template <typename Graph>
 const std::string property_map<node_regions_in_component, Graph>::name = "node_regions_in_component";
 
 
+////
+//// node_move_features
+////
+struct node_move_features{};
+
+template <typename Graph>
+struct property_map<node_move_features, Graph> {
+  typedef IterableEditableValueMap<Graph, typename Graph::Node, std::map<Traxel, std::map<Traxel, feature_type> > > type;
+  static const std::string name;
+};
+
+template <typename Graph>
+const std::string property_map<node_move_features, Graph>::name = "node_move_features";
+
+
+////
+//// node_division_features
+////
+struct node_division_features{};
+
+template <typename Graph>
+struct property_map<node_division_features, Graph> {
+  typedef IterableEditableValueMap<Graph, typename Graph::Node, std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_type> > > type;
+  static const std::string name;
+};
+
+template <typename Graph>
+const std::string property_map<node_division_features, Graph>::name = "node_division_features";
+
+
+////
+//// node_count_features
+////
+struct node_count_features{};
+
+template <typename Graph>
+struct property_map<node_count_features, Graph> {
+  typedef IterableEditableValueMap<Graph, typename Graph::Node, feature_type> type;
+  static const std::string name;
+};
+
+template <typename Graph>
+const std::string property_map<node_count_features, Graph>::name = "node_count_features";
+
+
 
 /* class TagNode : public lemon::ListGraph::Node {
    public:
