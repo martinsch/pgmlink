@@ -54,6 +54,34 @@ MultiHypothesesGraph::MultiHypothesesGraph() {
 }
 
 
+void MultiHypothesesGraph::add_classifier_features(ClassifierStrategy* move,
+                                                   ClassifierStrategy* division,
+                                                   ClassifierStrategy* count,
+                                                   ClassifierStrategy* detection) {
+  add(node_move_features());
+  add(node_division_features());
+  add(node_count_features());
+
+  DivisionFeatureMap& division_map = get(node_division_features());
+  CountFeatureMap& count_map = get(node_count_features());
+  MoveFeatureMap& move_map = get(node_move_features());
+  ContainedRegionsMap& regions = get(node_regions_in_component());
+  
+  for (NodeIt n(*this); n != lemon::INVALID; ++n) {
+    const std::vector<Traxel>& sources = regions[n];
+    std::vector<Traxel> targets; 
+    for (OutArcIt a(*this, n); a != lemon::INVALID; ++n) {
+      const std::vector<Traxel>& target = regions[this->target(a)];
+      targets.insert(targets.end(), target.begin(), target.end());
+    }
+    move->classify(sources, targets, move_map.get_value(n));
+    division->classify(sources, targets, division_map.get_value(n));
+    // count->classify(sources, targets, count_map.get_value(n));
+  }
+  
+}
+
+
 ////
 //// MultiHypothesesGraphBuilder
 ////

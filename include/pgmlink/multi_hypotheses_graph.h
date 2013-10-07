@@ -97,7 +97,7 @@ struct node_move_features{};
 
 template <typename Graph>
 struct property_map<node_move_features, Graph> {
-  typedef IterableEditableValueMap<Graph, typename Graph::Node, std::map<Traxel, std::map<Traxel, feature_type> > > type;
+  typedef IterableEditableValueMap<Graph, typename Graph::Node, std::map<Traxel, std::map<Traxel, feature_array> > > type;
   static const std::string name;
 };
 
@@ -112,7 +112,7 @@ struct node_division_features{};
 
 template <typename Graph>
 struct property_map<node_division_features, Graph> {
-  typedef IterableEditableValueMap<Graph, typename Graph::Node, std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_type> > > type;
+  typedef IterableEditableValueMap<Graph, typename Graph::Node, std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_array> > > type;
   static const std::string name;
 };
 
@@ -214,10 +214,10 @@ class MultiHypothesesGraph : public HypothesesGraph {
   typename PropertyValueVectorPtr<PropertyTag, base_graph>::type
   get_properties_at(int timestep);
 
-  void add_classifier_features(const ClassifierStrategy* move,
-                               const ClassifierStrategy* division,
-                               const ClassifierStrategy* count,
-                               const ClassifierStrategy* detection);
+  void add_classifier_features(ClassifierStrategy* move,
+                               ClassifierStrategy* division,
+                               ClassifierStrategy* count,
+                               ClassifierStrategy* detection);
 
   
  private:
