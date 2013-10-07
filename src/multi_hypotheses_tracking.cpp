@@ -62,7 +62,7 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
   std::cout << " -> workflow: initializing builder" << std::endl;
   
   // IMPORTANT FIXME!
-  // FIXME: Build proper cost functions!n
+  // FIXME: Build proper cost functions!
 
   ConstantFeature app(options_.get_weight("app"));  // appearance
   ConstantFeature dis(options_.get_weight("dis"));  // disappearance
@@ -70,6 +70,11 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
   ConstantFeature mis(options_.get_weight("mis"));  // misdetection
   ConstantFeature div(options_.get_weight("div"));  // division
   SquaredDistance mov; // move
+
+  if (options_.with_classifier) {
+    // assign detection, division, move, count feature functions
+    // calculate features (in python?)
+  }
 
   pgm::multihypotheses::CVPR2014ModelBuilder builder( app, // appearance
                                                       dis, // disappearance,
