@@ -71,7 +71,7 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
   ConstantFeature div(options_.get_weight("div"));  // division
   SquaredDistance mov; // move
 
-  if (options_.with_classifier) {
+  if (options_.with_classifiers) {
     // assign detection, division, move, count feature functions
     // calculate features (in python?)
   }
