@@ -15,6 +15,9 @@
 // boost
 #include <boost/shared_ptr.hpp>
 
+// vigra
+#include <vigra/random_forest.hxx>
+
 // pgmlink
 #include "pgmlink/event.h"
 #include "pgmlink/traxels.h"
@@ -32,6 +35,7 @@ public:
   struct Options {
     double get_weight(const std::string& name) const;
     std::map<std::string, double> weights;
+    std::map<std::string, vigra::RandomForest<> > classifiers;
     bool with_divisions;
     bool with_constraints;
     bool with_detection_vars;
