@@ -196,8 +196,9 @@ class PyMultiHypothesesTracking {
   PyMultiHypothesesTracking(const PyTrackingOptions& options)
       : tracker_(MultiHypothesesTracking(options.options))
   {}
-  boost::shared_ptr<std::vector<std::vector<Event> > > operator()(MultiHypothesesTraxelStore& ts) {
-    return tracker_(ts);
+  std::vector<std::vector<Event> > operator()(MultiHypothesesTraxelStore& ts) {
+    std::vector<std::vector<Event> > ret = *tracker_(ts);
+    return ret;
   }
  private:
   MultiHypothesesTracking tracker_;
