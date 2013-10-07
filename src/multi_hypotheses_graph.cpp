@@ -457,7 +457,7 @@ std::string MultiHypothesesTraxelStore::print() {
 ////
 //// ClassifierStrategy
 ////
-ClassifierStrategy::ClassifierStrategy(std::string name) :
+ClassifierStrategy::ClassifierStrategy(const std::string& name) :
     name_(name) {}
 
 
@@ -465,9 +465,54 @@ ClassifierStrategy::~ClassifierStrategy() {}
 
 
 ////
+//// ClassifierConstant
+////
+ClassifierConstant::ClassifierConstant(double probability, const std::string& name) :
+    ClassifierStrategy(name),
+    probability_(probability) {
+  if (probability_ > 1.) {
+    throw std::runtime_error("Probability > 1!");
+  }
+  if (probability_ < 0.) {
+    throw std::runtime_error("Probability < 0!");
+  }
+}
+
+
+ClassifierConstant::~ClassifierConstant() {}
+
+
+void ClassifierConstant::classify(const std::vector<Traxel>& traxels_out,
+                                  const std::vector<Traxel>& traxels_in,
+                                  std::map<Traxel, std::map<Traxel, feature_array> >& feature_map) {
+  for (std::vector<Traxel>::const_iterator out = traxels_out.begin(); out != traxels_out.end(); ++out) {
+    for (std::vector<Traxel>::const_iterator in = traxels_in.begin(); in != traxels_in.end(); ++in) {
+      assert(feature_map[*out][*in].size() == 0);
+      feature_map[*out][*in].push_back(probability_);
+      feature_map[*out][*in].push_back(1-probability_);
+    }
+  }
+}
+
+void ClassifierConstant::classify(const std::vector<Traxel>& traxels_out,
+                                  const std::vector<Traxel>& traxels_in,
+                                  std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_array> >& feature_map) {
+  for (std::vector<Traxel>::const_iterator out = traxels_out.begin(); out != traxels_out.end(); ++out) {
+    for (std::vector<Traxel>::const_iterator child1 = traxels_in.begin(); child1 != traxels_in.end(); ++child1) {
+      for (std::vector<Traxel>::const_iterator child2 = child1 + 1; child2 != traxels_in.end(); ++child2) {
+        assert(feature_map[*out][std::make_pair(*child1, *child2)].size() == 0);
+        feature_map[*out][std::make_pair(*child1, *child2)].push_back(probability_);
+        feature_map[*out][std::make_pair(*child1, *child2)].push_back(1-probability_);
+      }
+    }
+  }
+}
+
+
+////
 //// ClassifierRF
 ////
-ClassifierRF::ClassifierRF(vigra::RandomForest<> rf, std::string name) :
+ClassifierRF::ClassifierRF(vigra::RandomForest<> rf, const std::string& name) :
     ClassifierStrategy(name),
     rf_(rf),
     features_(vigra::MultiArray<2, feature_type>::difference_type(1, rf.feature_count())),
@@ -487,7 +532,7 @@ void ClassifierRF::classify(const std::vector<Traxel>& traxels_out,
                             std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_array> >& feature_map) {}
 
 
-ClassifierMoveRF::ClassifierMoveRF(vigra::RandomForest<> rf, std::string name) :
+ClassifierMoveRF::ClassifierMoveRF(vigra::RandomForest<> rf, const std::string& name) :
     ClassifierRF(rf, name) {}
 
 
@@ -515,7 +560,7 @@ void ClassifierMoveRF::extract_features(const Traxel& t1, const Traxel& t2) {
 }
 
 
-ClassifierDivisionRF::ClassifierDivisionRF(vigra::RandomForest<> rf, std::string name) :
+ClassifierDivisionRF::ClassifierDivisionRF(vigra::RandomForest<> rf, const std::string& name) :
     ClassifierRF(rf, name) {}
 
 
