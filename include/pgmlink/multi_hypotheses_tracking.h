@@ -39,7 +39,8 @@ public:
     bool with_divisions;
     bool with_constraints;
     bool with_detection_vars;
-    bool with_classifier;
+    bool with_classifiers;
+    bool with_constant_classifiers;
   };
   MultiHypothesesTracking(const Options& options) : options_(options) {}
   boost::shared_ptr<std::vector<std::vector<Event> > > operator()(MultiHypothesesTraxelStore& ts);
