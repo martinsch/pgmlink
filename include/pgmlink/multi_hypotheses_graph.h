@@ -203,6 +203,9 @@ class MultiHypothesesGraph : public HypothesesGraph {
   enum ArcType {Connection, Conflict};
   typedef property_map<node_regions_in_component, base_graph>::type ContainedRegionsMap;
   typedef property_map<node_traxel, base_graph>::type TraxelMap;
+  typedef property_map<node_division_features, base_graph>::type DivisionFeatureMap;
+  typedef property_map<node_move_features, base_graph>::type MoveFeatureMap;
+  typedef property_map<node_count_features, base_graph>::type CountFeatureMap;
 
 
   MultiHypothesesGraph();
