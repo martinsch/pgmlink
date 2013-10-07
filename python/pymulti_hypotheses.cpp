@@ -168,8 +168,12 @@ struct PyTrackingOptions {
     options.weights["gap"] = 0.01;
   }
   
-  void set(std::string name, double value) {
+  void set(const std::string& name, double value) {
     options.weights[name] = value;
+  }
+
+  void set_rf(const std::string& name, const vigra::RandomForest<>& rf) {
+    options.classifiers[name] = rf;
   }
 
   void with_divisions(bool check) {
@@ -182,6 +186,14 @@ struct PyTrackingOptions {
 
   void with_detection_vars(bool check) {
     options.with_detection_vars = check;
+  }
+
+  void with_classifiers(bool check) {
+    options.with_classifiers = check;
+  }
+
+  void with_constant_classifiers(bool check) {
+    options.with_classifiers = check;
   }
 
   std::string sanity_check() {
@@ -290,9 +302,12 @@ void export_multi_hypotheses() {
   ////
   class_<PyTrackingOptions, boost::noncopyable>("TrackingOptions", init<>())
       .def("set", &PyTrackingOptions::set, return_internal_reference<>())
+      .def("set", &PyTrackingOptions::set_rf, return_internal_reference<>())
       .def("with_divisions", &PyTrackingOptions::with_divisions, return_internal_reference<>())
       .def("with_constraints", &PyTrackingOptions::with_constraints, return_internal_reference<>())
       .def("with_detection_vars", &PyTrackingOptions::with_detection_vars, return_internal_reference<>())
+      .def("with_classifiers", &PyTrackingOptions::with_classifiers, return_internal_reference<>())
+      .def("with_constant_classifiers", &PyTrackingOptions::with_detection_vars, return_internal_reference<>())
       .def("sanity_check", &PyTrackingOptions::sanity_check)
       ;
 
