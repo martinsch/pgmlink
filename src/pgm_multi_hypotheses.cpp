@@ -877,6 +877,7 @@ void CVPR2014ModelBuilder::add_detection_factors( const MultiHypothesesGraph& hy
   for (std::vector<Traxel>::const_iterator t = traxels.begin(); t != traxels.end(); ++t) {
     add_detection_factor(m, *t);
   }
+  add_count_factor(m, traxels);
 }
 
 
@@ -936,11 +937,23 @@ void CVPR2014ModelBuilder::add_detection_factor( Model& m,
 
 }
 
-void CVPR2014ModelBuilder::add_outgoing_factor(const MultiHypothesesGraph& hypotheses,
+
+void CVPR2014ModelBuilder::add_count_factor( Model& m,
+                                             const std::vector<Traxel>& traxels ) const {
+  assert(traxels.size() > 0);
+  feature_array probabilities = traxels[0].features.find("count")->second;
+  assert(probabilities .size() > 0);
+  if (probabilities.size() < traxels.size()) {
+    probabilities.insert(probabilities.end(), traxels.size() - probabilities.size(), *(probabilities.rbegin()));
+  }
+}
+
+
+void CVPR2014ModelBuilder::add_outgoing_factor( const MultiHypothesesGraph& hypotheses,
                                                 Model& m,
                                                 const MultiHypothesesGraph::Node& node,
                                                 const Traxel& trax,
-                                                const std::vector<Traxel>& neighbors) const {
+                                                const std::vector<Traxel>& neighbors ) const {
   
   const vector<size_t> vi = vars_for_outgoing_factor(hypotheses, m, node, trax);
   LOG(logDEBUG2) << "CVPR2014ModelBuilder::add_outgoing_factor(): entered for " << trax
