@@ -122,6 +122,12 @@ double NegLnDivision::operator ()(const Traxel& tr, size_t state) const {
 }
 
 
+double NegLnDivision::operator()(const Traxel&, const Traxel&, const Traxel&, feature_type probability) const {
+  if (probability < 0.0000000001) probability = 0.0000000001;
+  return w_*-1*log(probability);
+}
+
+
 ////
 //// class NegLnTransition
 ////
@@ -129,6 +135,11 @@ double NegLnTransition::operator ()(const double dist_prob) const {
 	double arg = dist_prob;
     if(arg < 0.0000000001) arg = 0.0000000001;
 	return w_*-1*log(arg);
+}
+
+
+double NegLnTransition::operator()(const Traxel&, const Traxel&, feature_type probability) const {
+  return operator()(probability);
 }
 
 
