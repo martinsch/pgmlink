@@ -193,7 +193,7 @@ struct PyTrackingOptions {
   }
 
   void with_constant_classifiers(bool check) {
-    options.with_classifiers = check;
+    options.with_constant_classifiers = check;
   }
 
   std::string sanity_check() {
@@ -307,7 +307,7 @@ void export_multi_hypotheses() {
       .def("with_constraints", &PyTrackingOptions::with_constraints, return_internal_reference<>())
       .def("with_detection_vars", &PyTrackingOptions::with_detection_vars, return_internal_reference<>())
       .def("with_classifiers", &PyTrackingOptions::with_classifiers, return_internal_reference<>())
-      .def("with_constant_classifiers", &PyTrackingOptions::with_detection_vars, return_internal_reference<>())
+      .def("with_constant_classifiers", &PyTrackingOptions::with_constant_classifiers, return_internal_reference<>())
       .def("sanity_check", &PyTrackingOptions::sanity_check)
       ;
 
