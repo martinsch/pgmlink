@@ -129,19 +129,19 @@ class ModelBuilder {
   ModelBuilder& disappearance( function<double (const Traxel&)> );
 
   function<double (const Traxel&, const Traxel&, feature_type)> move() const { return move_; }
-  ModelBuilder& move(function<double (const Traxel&, const Traxel&, double feature_type)> );
+  ModelBuilder& move(function<double (const Traxel&, const Traxel&, feature_type)> );
 
   double forbidden_cost() const { return forbidden_cost_; }
   ModelBuilder& forbidden_cost( double c ) { forbidden_cost_ = c; return *this; }
 
   // optional parameters
   // detection vars
-  ModelBuilder& with_detection_vars( function<double (const Traxel&)> detection=ConstantFeature(10),
-                                     function<double (const Traxel&)> non_detection=ConstantFeature(200));
+  ModelBuilder& with_detection_vars( function<double (const Traxel&, size_t)> detection=ConstantFeature(10),
+                                     function<double (const Traxel&, size_t)> non_detection=ConstantFeature(200));
   ModelBuilder& without_detection_vars();
   bool has_detection_vars() const { return with_detection_vars_; }
-  function<double (const Traxel&)> detection() const { return detection_; }
-  function<double (const Traxel&)> non_detection() const { return non_detection_; }
+  function<double (const Traxel&, size_t)> detection() const { return detection_; }
+  function<double (const Traxel&, size_t)> non_detection() const { return non_detection_; }
 
   // divisions
   ModelBuilder& with_divisions( function<double (const Traxel&, const Traxel&, const Traxel&, feature_type)> div = KasterDivision(10) );
@@ -200,8 +200,8 @@ class ModelBuilder {
   bool with_divisions_;
   bool with_classifier_priors_;
 
-  function<double (const Traxel&)> detection_;
-  function<double (const Traxel&)> non_detection_;
+  function<double (const Traxel&, size_t)> detection_;
+  function<double (const Traxel&, size_t)> non_detection_;
   function<double (const Traxel&)> appearance_;
   function<double (const Traxel&)> disappearance_;
   function<double (const Traxel&, const Traxel&, feature_type)> move_;

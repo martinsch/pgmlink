@@ -60,10 +60,11 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
   MultiHypothesesGraphPtr graph = mult_builder.build(ts);
 
   if (options_.with_constant_classifiers) {
+    LOG(logINFO) << "MultiHypothesesTracking: using constant classifiers";
     ClassifierConstant c(options_.weights["const_prob"]);
     graph->add_classifier_features(&c, &c, &c, &c);
   } else if (options_.with_classifiers) {
-
+    LOG(logINFO) << "MultiHypothesesTracking: using classifiers";
   }
 
   std::cout << " -> workflow: initializing builder" << std::endl;
@@ -78,12 +79,7 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
   ConstantFeature div(options_.get_weight("div"));  // division
   SquaredDistance mov; // move
 
-  if (options_.with_classifiers || options_.with_constant_classifiers) {
-    // assign detection, division, move, count feature functions
-    // calculate features (in python?)
-  }
-
-  
+   
 
   pgm::multihypotheses::CVPR2014ModelBuilder builder( app, // appearance
                                                       dis, // disappearance,
@@ -99,6 +95,20 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
     builder.with_divisions(div);
   }
 
+  
+  if (options_.with_constant_classifiers || options_.with_classifiers) {
+    builder
+        .move(NegLnTransition(options_.get_weight("mov")));
+    if (options_.with_detection_vars) {
+      builder
+          .with_detection_vars(NegLnDetection(options_.get_weight("det")),
+                               NegLnDetection(options_.get_weight("det")));
+    }
+    if (options_.with_divisions) {
+      builder.with_divisions(NegLnDivision(options_.get_weight("div")));
+    }
+  }
+
   std::cout << " -> workflow: initializing reasoner" << std::endl;
   MultiHypotheses reasoner(builder,
                            options_.with_constraints,
@@ -107,7 +117,7 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
                            options_.weights["timeout"] // cplex timeout
                            );
 
-  std::cout << " -> workflow: formulationg model" << std::endl;
+  std::cout << " -> workflow: formulating model" << std::endl;
   reasoner.formulate( *graph );
 
   std::cout << " -> workflow: infer" << std::endl;

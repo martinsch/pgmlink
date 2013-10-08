@@ -121,8 +121,35 @@ void Model::init() {
 ////
 //// class multihypotheses::ModelBuilder
 ////
-ModelBuilder& ModelBuilder::with_detection_vars(  function<double (const Traxel&)> detection,
-                                                  function<double (const Traxel&)> non_detection) {
+ModelBuilder& ModelBuilder::appearance( function<double (const Traxel&)> app) {
+  if (!app) {
+    throw std::invalid_argument("MultiHypothesesModelBuilder::appearance(): empty function");
+  }
+  appearance_ = app;
+  return *this;
+}
+
+
+ModelBuilder& ModelBuilder::disappearance( function<double (const Traxel&)> dis) {
+  if (!dis) {
+    throw std::invalid_argument("MultiHypothesesModelBuilder::disappearance(): empty function");
+  }
+  disappearance_ = dis;
+  return *this;
+}
+
+
+ModelBuilder& ModelBuilder::move(function<double (const Traxel&, const Traxel&, feature_type)> mov) {
+  if (!mov) {
+    throw std::invalid_argument("MultiHypothesesModelBuilder::move(): empty function");
+  }
+  move_ = mov;
+  return *this;
+}
+
+
+ModelBuilder& ModelBuilder::with_detection_vars(  function<double (const Traxel&, size_t)> detection,
+                                                  function<double (const Traxel&, size_t)> non_detection) {
   if (!(detection && non_detection)) {
     throw std::invalid_argument("MultiHypothesesModelBuilder::with_detection_vars(): empty function");
   }
@@ -164,6 +191,7 @@ ModelBuilder& ModelBuilder::with_classifier_priors( function<double (const Traxe
   with_classifier_priors_ = true;
   move_ = move;
   division_ = division;
+  return *this;
 }
 
 
@@ -172,6 +200,7 @@ ModelBuilder& ModelBuilder::without_classifier_priors( function<double (const Tr
   with_classifier_priors_ = false;
   move_ = move;
   division_ = division;
+  return *this;
 }
 
 namespace {
@@ -537,13 +566,13 @@ void TrainableModelBuilder::add_detection_factor( Model& m,
   size_t indicate[] = {0};
 
   LOG(logDEBUG2) << "TrainableModelBuilder::add_detection_factor(): entered for " << trax
-                 << " - non_detection: " << non_detection()(trax)
-                 << " detection: " << detection()(trax);
-  OpengmWeightedFeature<OpengmModel::ValueType>(var_indices, shape, shape+1, indicate, non_detection()(trax))
+                 << " - non_detection: " << non_detection()(trax, 0)
+                 << " detection: " << detection()(trax, 1);
+  OpengmWeightedFeature<OpengmModel::ValueType>(var_indices, shape, shape+1, indicate, non_detection()(trax, 0))
       .add_as_feature_to( *(m.opengm_model), m.weight_map[Model::det_weight].front() );
 
   indicate[0] = 1;
-  OpengmWeightedFeature<OpengmModel::ValueType>(var_indices, shape, shape+1, indicate, detection()(trax))
+  OpengmWeightedFeature<OpengmModel::ValueType>(var_indices, shape, shape+1, indicate, detection()(trax, 1))
       .add_as_feature_to( *(m.opengm_model), m.weight_map[Model::det_weight].front() );
 }
 
@@ -893,16 +922,16 @@ void CVPR2014ModelBuilder::add_detection_factor( Model& m,
   OpengmExplicitFactor<double> table(vi, vi+1);
 
   coords[0] = 0;
-  table.set_value( coords, non_detection()(trax));
+  table.set_value( coords, non_detection()(trax, 0));
 
   coords[0] = 1;
-  table.set_value( coords, detection()(trax));
+  table.set_value( coords, detection()(trax, 1));
 
   // table = OpengmExplicitFactor<double>(vi, vi+1, 0);
   LOG(logDEBUG2) << "CVPR2014ModelBuilder::add_detection_factor: for "
-  << trax << ": detection=" << table.get_value(std::vector<size_t>(1,1))
-  << "/" << detection()(trax) << ", non_detection=" << table.get_value(std::vector<size_t>(1,0))
-  << "/" << non_detection()(trax);
+                 << trax << ": detection=" << table.get_value(std::vector<size_t>(1,1))
+                 << "/" << detection()(trax, 1) << ", non_detection=" << table.get_value(std::vector<size_t>(1,0))
+                 << "/" << non_detection()(trax, 0);
   table.add_to( *(m.opengm_model) );
 
 }
