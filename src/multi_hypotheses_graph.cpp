@@ -58,6 +58,7 @@ void MultiHypothesesGraph::add_classifier_features(ClassifierStrategy* move,
                                                    ClassifierStrategy* division,
                                                    ClassifierStrategy* count,
                                                    ClassifierStrategy* detection) {
+  LOG(logDEBUG) << "MultiHypothesesGraph::add_classifier_features: entered";
   add(node_move_features());
   add(node_division_features());
   add(node_count_features());
@@ -68,13 +69,20 @@ void MultiHypothesesGraph::add_classifier_features(ClassifierStrategy* move,
   ContainedRegionsMap& regions = get(node_regions_in_component());
   
   for (NodeIt n(*this); n != lemon::INVALID; ++n) {
+    LOG(logDEBUG1) << "MultiHypothesesGraph::add_classifier_features: classifying region "
+                   << get(node_traxel())[n].Id << " at timestep "
+                   << get(node_traxel())[n].Timestep;
     const std::vector<Traxel>& sources = regions[n];
     std::vector<Traxel> targets; 
-    for (OutArcIt a(*this, n); a != lemon::INVALID; ++n) {
+    for (OutArcIt a(*this, n); a != lemon::INVALID; ++a) {
       const std::vector<Traxel>& target = regions[this->target(a)];
+      LOG(logDEBUG4) << "MultiHypothesesGraph::add_classifier_features: added "
+                     << target.size() << " regions to target";
       targets.insert(targets.end(), target.begin(), target.end());
     }
+    LOG(logDEBUG3) << "MultiHypothesesGraph::add_classifier_features: classifying moves";
     move->classify(sources, targets, move_map.get_value(n));
+    LOG(logDEBUG3) << "MultiHypothesesGraph::add_classifier_features: classifying divisions";
     division->classify(sources, targets, division_map.get_value(n));
     // count->classify(sources, targets, count_map.get_value(n));
   }
@@ -485,6 +493,7 @@ ClassifierConstant::~ClassifierConstant() {}
 void ClassifierConstant::classify(const std::vector<Traxel>& traxels_out,
                                   const std::vector<Traxel>& traxels_in,
                                   std::map<Traxel, std::map<Traxel, feature_array> >& feature_map) {
+  LOG(logDEBUG3) << "ClassifierConstant::classify: entered";
   for (std::vector<Traxel>::const_iterator out = traxels_out.begin(); out != traxels_out.end(); ++out) {
     for (std::vector<Traxel>::const_iterator in = traxels_in.begin(); in != traxels_in.end(); ++in) {
       assert(feature_map[*out][*in].size() == 0);
