@@ -105,6 +105,7 @@ class ModelBuilder {
                boost::function<double (const Traxel&)> disappearance = ConstantFeature(1000),
                boost::function<double (const Traxel&, const Traxel&, feature_type)> move = SquaredDistance(),
                double forbidden_cost = 1000000,
+               double opportunity_cost = 1000,
                unsigned max_division_level=0,
                unsigned max_count=2)
       : with_detection_vars_(false),
@@ -114,6 +115,7 @@ class ModelBuilder {
         disappearance_(disappearance),
     move_(move),
     forbidden_cost_(forbidden_cost),
+    opportunity_cost_(opportunity_cost),
     cplex_timeout_(1e+75),
     max_division_level_(max_division_level),
     max_count_(max_count) {}
@@ -133,6 +135,9 @@ class ModelBuilder {
 
   double forbidden_cost() const { return forbidden_cost_; }
   ModelBuilder& forbidden_cost( double c ) { forbidden_cost_ = c; return *this; }
+
+  double opportunity_cost() const { return opportunity_cost_; }
+  ModelBuilder& opportunity_cost( double c ) { opportunity_cost_ = c; return *this; }
 
   // optional parameters
   // detection vars
@@ -207,6 +212,7 @@ class ModelBuilder {
   function<double (const Traxel&, const Traxel&, feature_type)> move_;
   function<double (const Traxel&, const Traxel&, const Traxel&, feature_type)> division_;
   double forbidden_cost_;
+  double opportunity_cost_;
   double cplex_timeout_;
   unsigned max_division_level_;
   unsigned max_count_;
@@ -220,9 +226,10 @@ class TrainableModelBuilder : public ModelBuilder {
                         boost::function<double (const Traxel&)> disappearance = ConstantFeature(1000),
                         boost::function<double (const Traxel&, const Traxel&, feature_type)> move = SquaredDistance(),
                         double forbidden_cost = 1000000,
+                        double opportunity_cost = 1000,
                         unsigned max_division_level=0,
                         unsigned max_count=2) :
-      ModelBuilder(appearance, disappearance, move, forbidden_cost, max_division_level, max_count) {}
+  ModelBuilder(appearance, disappearance, move, forbidden_cost, opportunity_cost, max_division_level, max_count) {}
   virtual boost::shared_ptr<ModelBuilder> clone() const;
   virtual ~TrainableModelBuilder() {}
 
@@ -255,9 +262,10 @@ class CVPR2014ModelBuilder : public ModelBuilder {
                        boost::function<double (const Traxel&)> disappearance = ConstantFeature(1000),
                        boost::function<double (const Traxel&, const Traxel&, feature_type)> move = SquaredDistance(),
                        double forbidden_cost = 1000000,
+                       double opportunity_cost = 1000,
                        unsigned max_division_level=0,
                        unsigned max_count=2) :
-      ModelBuilder(appearance, disappearance, move, forbidden_cost, max_division_level, max_count) {}
+  ModelBuilder(appearance, disappearance, move, forbidden_cost, opportunity_cost, max_division_level, max_count) {}
   virtual boost::shared_ptr<ModelBuilder> clone() const;
   virtual ~CVPR2014ModelBuilder() {}
 

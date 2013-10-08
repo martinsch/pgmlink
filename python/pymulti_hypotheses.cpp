@@ -166,6 +166,7 @@ struct PyTrackingOptions {
     options.weights["forbidden"] = 0.;
     options.weights["timeout"] = 1e+75;
     options.weights["gap"] = 0.01;
+    options.weights["opportunity"] = 1000;
   }
   
   void set(const std::string& name, double value) {

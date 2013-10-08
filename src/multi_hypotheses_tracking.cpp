@@ -86,6 +86,7 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
                                                       dis, // disappearance,
                                                       mov, // move
                                                       options_.get_weight("forbidden"), // forbidden cost
+                                                      options_.get_weight("opportunity"), // opportunity cost
                                                       options_.get_weight("max_div"), // maximum division level
                                                       10000 // max_count -> not neccessary -> fix!
   );

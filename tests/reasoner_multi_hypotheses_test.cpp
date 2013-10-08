@@ -150,6 +150,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp ) {
                                                            ConstantFeature(10), // disappearance
                                                            SquaredDistance(), // move
                                                            0, // forbidden_cost
+                                                           0., // opportunity cost
                                                            50, // max_division_level
                                                            3 // max_count
                                                            );
@@ -158,6 +159,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp ) {
                                                       ConstantFeature(10), // disappearance
                                                       SquaredDistance(), // move
                                                       0, // forbidden_cost
+                                                      0., // opportunity cost
                                                       50, // max_division_level
                                                       3 // max_count
                                                       );
