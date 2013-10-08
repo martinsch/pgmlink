@@ -965,7 +965,7 @@ void CVPR2014ModelBuilder::add_outgoing_factor(const MultiHypothesesGraph& hypot
 
   // construct factor
   // only one detection var no outgoing arcs
-  if (table_dim == 1) {
+  /* if (table_dim == 1) {
     std::vector<size_t> coords(table_dim, 0);
     OpengmExplicitFactor<double> table( vi );
 
@@ -1008,10 +1008,9 @@ void CVPR2014ModelBuilder::add_outgoing_factor(const MultiHypothesesGraph& hypot
     table.set_value( coords, move()(trax, neighbors[0], probability) );
     coords[0] = 0; coords[1] = 0;
 
-    table.add_to( *m.opengm_model );
+    table.add_to( *m.opengm_model ); */
 
-    
-  } else {
+  // } else {
     
     std::vector<size_t> coords(table_dim, 0);
     OpengmExplicitFactor<double> table( vi, forbidden_cost() );
@@ -1077,7 +1076,7 @@ void CVPR2014ModelBuilder::add_outgoing_factor(const MultiHypothesesGraph& hypot
     // table = OpengmExplicitFactor<double>( vi, 999999 );
     table.add_to( *m.opengm_model );
 
-  }
+    // }
   // LOG(logDEBUG2) << "CVPR2014ModelBuilder::add_outgoing_factor(): leaving";
 }
 
