@@ -154,7 +154,12 @@ double NegLnConstant::operator ()(size_t state) const {
 				     const Traxel& t2) const {
     return t1.distance_to(t2);
   }
-    
+
+  double SquaredDistance::operator()(const Traxel& t1,
+				     const Traxel& t2,
+                                     feature_type) const {
+    return t1.distance_to(t2);
+  }    
 
     
   ////
@@ -165,6 +170,13 @@ double NegLnConstant::operator ()(size_t state) const {
 				    const Traxel& child2) const {
     SquaredDistance sqd;
     return sqd(ancestor, child1) + sqd(ancestor, child2) + div_cost_;
+  }
+
+  double KasterDivision::operator()(const Traxel& ancestor,
+				    const Traxel& child1,
+                                    const Traxel& child2,
+                                    feature_type) const {
+    return operator()(ancestor, child1, child2);
   }
     
 

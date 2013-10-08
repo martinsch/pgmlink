@@ -168,6 +168,10 @@ private:
 		       const Traxel&) const { return value; }
     double operator()( const Traxel& ) const { return value; }
     double operator()() const { return value; };
+    double operator()(const Traxel&,
+                      const Traxel&,
+                      const Traxel&,
+                      feature_type) const { return value; }
    
     double value;
   };
@@ -175,6 +179,7 @@ private:
   class PGMLINK_EXPORT SquaredDistance {
   public:
     double operator()(const Traxel& from, const Traxel& to) const;
+    double operator()(const Traxel& from, const Traxel& to, feature_type probability) const;
   };
 
   class PGMLINK_EXPORT KasterDivision {
@@ -184,6 +189,10 @@ private:
     double operator()(const Traxel& ancestor,
 		      const Traxel& child1,
 		      const Traxel& child2) const;
+    double operator()(const Traxel& ancestor,
+                      const Traxel& child1,
+                      const Traxel& child2,
+                      feature_type) const;
   private:
     double div_cost_;
   };
