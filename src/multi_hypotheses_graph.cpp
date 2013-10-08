@@ -59,20 +59,20 @@ void MultiHypothesesGraph::add_classifier_features(ClassifierStrategy* move,
                                                    ClassifierStrategy* count,
                                                    ClassifierStrategy* detection) {
   LOG(logDEBUG) << "MultiHypothesesGraph::add_classifier_features: entered";
-  // add(node_move_features());
-  // add(node_division_features());
-  // add(node_count_features());
+  add(node_move_features());
+  add(node_division_features());
+  add(node_count_features());
 
-  // DivisionFeatureMap& division_map = get(node_division_features());
-  // CountFeatureMap& count_map = get(node_count_features());
-  // MoveFeatureMap& move_map = get(node_move_features());
+  DivisionFeatureMap& division_map = get(node_division_features());
+  CountFeatureMap& count_map = get(node_count_features());
+  MoveFeatureMap& move_map = get(node_move_features());
   ContainedRegionsMap& regions = get(node_regions_in_component());
   
   for (NodeIt n(*this); n != lemon::INVALID; ++n) {
     LOG(logDEBUG1) << "MultiHypothesesGraph::add_classifier_features: classifying region "
                    << get(node_traxel())[n].Id << " at timestep "
                    << get(node_traxel())[n].Timestep;
-    std::vector<Traxel>& sources = regions.get_value(n);
+    const std::vector<Traxel>& sources = regions.get_value(n);
     std::vector<Traxel> targets; 
     for (OutArcIt a(*this, n); a != lemon::INVALID; ++a) {
       const std::vector<Traxel>& target = regions[this->target(a)];
@@ -81,9 +81,9 @@ void MultiHypothesesGraph::add_classifier_features(ClassifierStrategy* move,
       targets.insert(targets.end(), target.begin(), target.end());
     }
     LOG(logDEBUG3) << "MultiHypothesesGraph::add_classifier_features: classifying moves";
-    move->classify(sources, targets);
+    move->classify(sources, targets, move_map.get_value(n));
     LOG(logDEBUG3) << "MultiHypothesesGraph::add_classifier_features: classifying divisions";
-    division->classify(sources, targets);
+    division->classify(sources, targets, division_map.get_value(n));
     // count->classify(sources, targets, count_map.get_value(n));
   }
   
