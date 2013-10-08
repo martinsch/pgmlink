@@ -142,7 +142,7 @@ ModelBuilder& ModelBuilder::without_detection_vars() {
 }
 
 
-ModelBuilder& ModelBuilder::with_divisions( function<double (const Traxel&, const Traxel&, const Traxel&)> division ) {
+ModelBuilder& ModelBuilder::with_divisions( function<double (const Traxel&, const Traxel&, const Traxel&, feature_type)> division ) {
   if (!division) {
     throw std::invalid_argument("MultiHypothesesModelBuilder::with_divisions(): empty function");
   }
@@ -156,6 +156,22 @@ ModelBuilder& ModelBuilder::without_divisions() {
   with_divisions_ = false;
   division_ = NULL;
   return *this;
+}
+
+
+ModelBuilder& ModelBuilder::with_classifier_priors( function<double (const Traxel&, const Traxel&, feature_type)> move,
+                                                    function<double (const Traxel&, const Traxel&, const Traxel&, feature_type)> division ) {
+  with_classifier_priors_ = true;
+  move_ = move;
+  division_ = division;
+}
+
+
+ModelBuilder& ModelBuilder::without_classifier_priors( function<double (const Traxel&, const Traxel&, feature_type)> move,
+                                                       function<double (const Traxel&, const Traxel&, const Traxel&, feature_type)> division ) {
+  with_classifier_priors_ = false;
+  move_ = move;
+  division_ = division;
 }
 
 namespace {
@@ -644,7 +660,12 @@ void TrainableModelBuilder::add_outgoing_factor(const MultiHypothesesGraph& hypo
       // LOG(logDEBUG4) << "TrainableModelBuilder::add_outgoing_factor(): moves: "
       // << "successfully erased? " << check;
       assert(check == 1);
-      OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), move()(trax, arcs[i - assignment_begin].second) )
+      feature_type probability  = 0.;
+      if (has_classifiers()) {
+      // FIXME: NEEDS TO BE IMPLENENTED
+        throw std::runtime_error("TrainableModelBuilder does not support classifier priors yet!");
+      }
+      OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), move()(trax, arcs[i - assignment_begin].second, probability) )
           .add_as_feature_to( *(m.opengm_model), m.weight_map[Model::mov_weight].front() );
       coords[i] = 0;
     }
@@ -672,7 +693,12 @@ void TrainableModelBuilder::add_outgoing_factor(const MultiHypothesesGraph& hypo
         // LOG(logDEBUG4) << "TrainableModelBuilder::add_outgoing_factor(): divisions: "
         // << "successfully erased? " << check;
         assert(check == 1);
-        OpengmModel::ValueType value = division()(trax, arcs[i-assignment_begin].second, arcs[j-assignment_begin].second);
+        feature_type probability = 0.;
+        if (has_classifiers()) {
+          // FIXME: NEEDS TO BE IMPLENENTED
+          throw std::runtime_error("TrainableModelBuilder does not support classifier priors yet!");
+        }
+        OpengmModel::ValueType value = division()(trax, arcs[i-assignment_begin].second, arcs[j-assignment_begin].second, probability);
         OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), value)
             .add_as_feature_to( *(m.opengm_model), m.weight_map[Model::div_weight].front() );
         coords[j] = 0;
@@ -942,8 +968,15 @@ void CVPR2014ModelBuilder::add_outgoing_factor(const MultiHypothesesGraph& hypot
     }
 
     // move configuration
+    feature_type probability = 0.;
+    if (has_classifiers()) {
+      // messy! needs better implementation
+      probability = hypotheses.get(node_move_features())[node]
+          .find(trax)->second
+          .find(neighbors[0])->second[0];
+    }
     coords[0] = 1; coords[1] = 1;
-    table.set_value( coords, move()(trax, neighbors[0]) );
+    table.set_value( coords, move()(trax, neighbors[0], probability) );
     coords[0] = 0; coords[1] = 0;
 
     table.add_to( *m.opengm_model );
@@ -969,10 +1002,17 @@ void CVPR2014ModelBuilder::add_outgoing_factor(const MultiHypothesesGraph& hypot
 
 
     // move configuration
+
     coords[0] = 1;
     for (size_t i = 1; i < table_dim; ++i) {
+      feature_type probability = 0.;
+      if (has_classifiers()) {
+        probability = hypotheses.get(node_move_features())[node]
+            .find(trax)->second
+            .find(arcs[i-1].second)->second[0];
+      }
       coords[i] = 1;
-      table.set_value( coords, move()(trax, arcs[i-1].second) );
+      table.set_value( coords, move()(trax, arcs[i-1].second, probability) );
       LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_outgoing_factor: move="
                      << table.get_value( coords );
       coords[i] = 0;
@@ -985,10 +1025,17 @@ void CVPR2014ModelBuilder::add_outgoing_factor(const MultiHypothesesGraph& hypot
       for (unsigned int i = 1; i < table_dim - 1; ++i) {
         coords[i] = 1;
         for (unsigned int j = i + 1; j < table_dim; ++j) {
+          feature_type probability = 0.;
+          if (has_classifiers()) {
+            probability = hypotheses.get(node_division_features())[node]
+                .find(trax)->second
+                .find(std::make_pair(arcs[i-1].second, arcs[j-1].second))->second[0];
+          }
           coords[j] = 1;
           table.set_value(coords, division()(trax,
                                              arcs[i-1].second,
-                                             arcs[j-1].second
+                                             arcs[j-1].second,
+                                             probability
                                              ));
           LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_outgoing_factor: division="
                          << table.get_value( coords );

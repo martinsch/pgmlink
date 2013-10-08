@@ -103,12 +103,13 @@ class ModelBuilder {
   enum MAX_OUTGOING_ARCS {TRANSITION=1, DIVISION=2};
   ModelBuilder(boost::function<double (const Traxel&)> appearance = ConstantFeature(1000),
                boost::function<double (const Traxel&)> disappearance = ConstantFeature(1000),
-               boost::function<double (const Traxel&, const Traxel&)> move = SquaredDistance(),
+               boost::function<double (const Traxel&, const Traxel&, feature_type)> move = SquaredDistance(),
                double forbidden_cost = 1000000,
                unsigned max_division_level=0,
                unsigned max_count=2)
       : with_detection_vars_(false),
         with_divisions_(false),
+        with_classifier_priors_(false),
         appearance_(appearance),
         disappearance_(disappearance),
     move_(move),
@@ -127,8 +128,8 @@ class ModelBuilder {
   function<double (const Traxel&)> disappearance() const { return disappearance_; }
   ModelBuilder& disappearance( function<double (const Traxel&)> );
 
-  function<double (const Traxel&, const Traxel&)> move() const { return move_; }
-  ModelBuilder& move(function<double (const Traxel&, const Traxel&)> );
+  function<double (const Traxel&, const Traxel&, feature_type)> move() const { return move_; }
+  ModelBuilder& move(function<double (const Traxel&, const Traxel&, double feature_type)> );
 
   double forbidden_cost() const { return forbidden_cost_; }
   ModelBuilder& forbidden_cost( double c ) { forbidden_cost_ = c; return *this; }
@@ -143,10 +144,17 @@ class ModelBuilder {
   function<double (const Traxel&)> non_detection() const { return non_detection_; }
 
   // divisions
-  ModelBuilder& with_divisions( function<double (const Traxel&, const Traxel&, const Traxel&)> div = KasterDivision(10) );
+  ModelBuilder& with_divisions( function<double (const Traxel&, const Traxel&, const Traxel&, feature_type)> div = KasterDivision(10) );
   ModelBuilder& without_divisions();
   bool has_divisions() const { return with_divisions_; }
-  function<double (const Traxel&, const Traxel&, const Traxel&)> division() const { return division_; }
+  function<double (const Traxel&, const Traxel&, const Traxel&, feature_type)> division() const { return division_; }
+
+  // classifier priors
+  ModelBuilder& with_classifier_priors( function<double (const Traxel&, const Traxel&, feature_type)> move,
+                                        function<double (const Traxel&, const Traxel&, const Traxel&, feature_type)> division );
+  ModelBuilder& without_classifier_priors( function<double (const Traxel&, const Traxel&, feature_type)> move,
+                                           function<double (const Traxel&, const Traxel&, const Traxel&, feature_type)> division );
+  bool has_classifiers() const { return with_classifier_priors_; }
 
   // build
   virtual boost::shared_ptr<Model> build( const MultiHypothesesGraph& ) const = 0;
@@ -190,13 +198,14 @@ class ModelBuilder {
 
   bool with_detection_vars_;
   bool with_divisions_;
+  bool with_classifier_priors_;
 
   function<double (const Traxel&)> detection_;
   function<double (const Traxel&)> non_detection_;
   function<double (const Traxel&)> appearance_;
   function<double (const Traxel&)> disappearance_;
-  function<double (const Traxel&, const Traxel&)> move_;
-  function<double (const Traxel&, const Traxel&, const Traxel&)> division_;
+  function<double (const Traxel&, const Traxel&, feature_type)> move_;
+  function<double (const Traxel&, const Traxel&, const Traxel&, feature_type)> division_;
   double forbidden_cost_;
   double cplex_timeout_;
   unsigned max_division_level_;
@@ -209,7 +218,7 @@ class TrainableModelBuilder : public ModelBuilder {
  public:
   TrainableModelBuilder(boost::function<double (const Traxel&)> appearance = ConstantFeature(1000),
                         boost::function<double (const Traxel&)> disappearance = ConstantFeature(1000),
-                        boost::function<double (const Traxel&, const Traxel&)> move = SquaredDistance(),
+                        boost::function<double (const Traxel&, const Traxel&, feature_type)> move = SquaredDistance(),
                         double forbidden_cost = 1000000,
                         unsigned max_division_level=0,
                         unsigned max_count=2) :
@@ -243,11 +252,11 @@ class TrainableModelBuilder : public ModelBuilder {
 class CVPR2014ModelBuilder : public ModelBuilder {
  public:
   CVPR2014ModelBuilder(boost::function<double (const Traxel&)> appearance = ConstantFeature(1000),
-                        boost::function<double (const Traxel&)> disappearance = ConstantFeature(1000),
-                        boost::function<double (const Traxel&, const Traxel&)> move = SquaredDistance(),
-                        double forbidden_cost = 1000000,
-                        unsigned max_division_level=0,
-                        unsigned max_count=2) :
+                       boost::function<double (const Traxel&)> disappearance = ConstantFeature(1000),
+                       boost::function<double (const Traxel&, const Traxel&, feature_type)> move = SquaredDistance(),
+                       double forbidden_cost = 1000000,
+                       unsigned max_division_level=0,
+                       unsigned max_count=2) :
       ModelBuilder(appearance, disappearance, move, forbidden_cost, max_division_level, max_count) {}
   virtual boost::shared_ptr<ModelBuilder> clone() const;
   virtual ~CVPR2014ModelBuilder() {}
