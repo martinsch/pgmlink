@@ -46,7 +46,8 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
                << "\tmaximum neighbor distance: " << options_.weights["distance"] << '\n'
                << "\tcplex timeout: " << options_.weights["timeout"] << '\n'
                << "\tep gap: " << options_.weights["gap"] << '\n'
-               << "\tmaximum division level " << options_.weights["max_div"];
+               << "\tmaximum division level: " << options_.weights["max_div"] << '\n'
+               << "\twith constant classifiers: " << options_.with_constant_classifiers;
 
   boost::shared_ptr<std::vector<std::vector<Event> > >
       events (new std::vector<std::vector<Event> >);
