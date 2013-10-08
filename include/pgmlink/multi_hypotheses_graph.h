@@ -353,6 +353,8 @@ class ClassifierStrategy {
  public:
   explicit ClassifierStrategy(const std::string& name = "");
   virtual ~ClassifierStrategy();
+  virtual void classify(std::vector<Traxel>& traxels_out,
+                        const std::vector<Traxel>& traxels_in) = 0;
   virtual void classify(const std::vector<Traxel>& traxels_out,
                         const std::vector<Traxel>& traxels_in,
                         std::map<Traxel, std::map<Traxel, feature_array> >& feature_map) = 0;
@@ -368,6 +370,8 @@ class ClassifierConstant : public ClassifierStrategy {
  public:
   ClassifierConstant(double probability, const std::string& name = "");
   virtual ~ClassifierConstant();
+  virtual void classify(std::vector<Traxel>& traxels_out,
+                        const std::vector<Traxel>& traxels_in);
   virtual void classify(const std::vector<Traxel>& traxels_out,
                         const std::vector<Traxel>& traxels_in,
                         std::map<Traxel, std::map<Traxel, feature_array> >& feature_map);
@@ -383,6 +387,8 @@ class ClassifierRF : public ClassifierStrategy {
  public:
   ClassifierRF(vigra::RandomForest<> rf, const std::string& name = "");
   virtual ~ClassifierRF();
+  virtual void classify(std::vector<Traxel>& traxels_out,
+                        const std::vector<Traxel>& traxels_in);
   virtual void classify(const std::vector<Traxel>& traxels_out,
                         const std::vector<Traxel>& traxels_in,
                         std::map<Traxel, std::map<Traxel, feature_array> >& feature_map);
@@ -400,6 +406,8 @@ class ClassifierMoveRF : public ClassifierRF {
  public:
   ClassifierMoveRF(vigra::RandomForest<> rf, const std::string& name = "");
   virtual ~ClassifierMoveRF();
+  virtual void classify(std::vector<Traxel>& traxels_out,
+                        const std::vector<Traxel>& traxels_in);
   virtual void classify(const std::vector<Traxel>& traxels_out,
                         const std::vector<Traxel>& traxels_in,
                         std::map<Traxel, std::map<Traxel, feature_array> >& feature_map);
@@ -412,6 +420,8 @@ class ClassifierDivisionRF : public ClassifierRF {
  public:
   ClassifierDivisionRF(vigra::RandomForest<> rf, const std::string& name = "");
   virtual ~ClassifierDivisionRF();
+  virtual void classify(std::vector<Traxel>& traxels_out,
+                        const std::vector<Traxel>& traxels_in);
   virtual void classify(const std::vector<Traxel>& traxels_out,
                         const std::vector<Traxel>& traxels_in,
                         std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_array> >& feature_map);

@@ -59,20 +59,20 @@ void MultiHypothesesGraph::add_classifier_features(ClassifierStrategy* move,
                                                    ClassifierStrategy* count,
                                                    ClassifierStrategy* detection) {
   LOG(logDEBUG) << "MultiHypothesesGraph::add_classifier_features: entered";
-  add(node_move_features());
-  add(node_division_features());
-  add(node_count_features());
+  // add(node_move_features());
+  // add(node_division_features());
+  // add(node_count_features());
 
-  DivisionFeatureMap& division_map = get(node_division_features());
-  CountFeatureMap& count_map = get(node_count_features());
-  MoveFeatureMap& move_map = get(node_move_features());
+  // DivisionFeatureMap& division_map = get(node_division_features());
+  // CountFeatureMap& count_map = get(node_count_features());
+  // MoveFeatureMap& move_map = get(node_move_features());
   ContainedRegionsMap& regions = get(node_regions_in_component());
   
   for (NodeIt n(*this); n != lemon::INVALID; ++n) {
     LOG(logDEBUG1) << "MultiHypothesesGraph::add_classifier_features: classifying region "
                    << get(node_traxel())[n].Id << " at timestep "
                    << get(node_traxel())[n].Timestep;
-    const std::vector<Traxel>& sources = regions[n];
+    std::vector<Traxel>& sources = regions.get_value(n);
     std::vector<Traxel> targets; 
     for (OutArcIt a(*this, n); a != lemon::INVALID; ++a) {
       const std::vector<Traxel>& target = regions[this->target(a)];
@@ -81,9 +81,9 @@ void MultiHypothesesGraph::add_classifier_features(ClassifierStrategy* move,
       targets.insert(targets.end(), target.begin(), target.end());
     }
     LOG(logDEBUG3) << "MultiHypothesesGraph::add_classifier_features: classifying moves";
-    move->classify(sources, targets, move_map.get_value(n));
+    move->classify(sources, targets);
     LOG(logDEBUG3) << "MultiHypothesesGraph::add_classifier_features: classifying divisions";
-    division->classify(sources, targets, division_map.get_value(n));
+    division->classify(sources, targets);
     // count->classify(sources, targets, count_map.get_value(n));
   }
   
@@ -490,6 +490,17 @@ ClassifierConstant::ClassifierConstant(double probability, const std::string& na
 ClassifierConstant::~ClassifierConstant() {}
 
 
+void ClassifierConstant::classify(std::vector<Traxel>& traxels_out,
+                                  const std::vector<Traxel>&) {
+  LOG(logDEBUG3) << "ClassifierConstant::classify: entered";
+  for (std::vector<Traxel>::iterator out = traxels_out.begin(); out != traxels_out.end(); ++out) {
+    out->features[name_].push_back(1-probability_);
+    out->features[name_].push_back(probability_);
+  }
+}
+                                  
+
+
 void ClassifierConstant::classify(const std::vector<Traxel>& traxels_out,
                                   const std::vector<Traxel>& traxels_in,
                                   std::map<Traxel, std::map<Traxel, feature_array> >& feature_map) {
@@ -525,10 +536,18 @@ ClassifierRF::ClassifierRF(vigra::RandomForest<> rf, const std::string& name) :
     ClassifierStrategy(name),
     rf_(rf),
     features_(vigra::MultiArray<2, feature_type>::difference_type(1, rf.feature_count())),
-    probabilities_(vigra::MultiArray<2, feature_type>::difference_type(1, rf.class_count())) {}
+    probabilities_(vigra::MultiArray<2, feature_type>::difference_type(1, rf.class_count())) {
+  if(rf_.class_count() < 2) {
+    throw std::runtime_error("ClassifierRF: Random Forest has less than two classes!");
+  }
+}
 
 
 ClassifierRF::~ClassifierRF() {}
+
+
+void ClassifierRF::classify(std::vector<Traxel>& traxels_out,
+                            const std::vector<Traxel>& traxels_in) {}
 
 
 void ClassifierRF::classify(const std::vector<Traxel>& traxels_out,
@@ -546,6 +565,24 @@ ClassifierMoveRF::ClassifierMoveRF(vigra::RandomForest<> rf, const std::string& 
 
 
 ClassifierMoveRF::~ClassifierMoveRF() {}
+
+
+void ClassifierMoveRF::classify(std::vector<Traxel>& traxels_out,
+                                const std::vector<Traxel>& traxels_in) {
+  for (std::vector<Traxel>::iterator out = traxels_out.begin(); out != traxels_out.end(); ++out) {
+    vigra::MultiArray<2, feature_type> max_prob(vigra::Shape2(1, rf_.class_count()), 0.);
+    for (std::vector<Traxel>::const_iterator in = traxels_in.begin(); in != traxels_in.end(); ++in) {
+      extract_features(*out, *in);
+      rf_.predictProbabilities(features_, probabilities_);
+      if (probabilities_(0, 1) > max_prob(0, 1)) {
+        max_prob.swapData(probabilities_);
+      }
+    }
+    assert(out->features[name_].size() == 0);
+    out->features[name_].insert(out->features[name_].begin(), max_prob.begin(), max_prob.end());
+    assert(out->features[name_].size() == rf_.class_count());
+  }
+}
 
 
 void ClassifierMoveRF::classify(const std::vector<Traxel>& traxels_out,
@@ -574,6 +611,26 @@ ClassifierDivisionRF::ClassifierDivisionRF(vigra::RandomForest<> rf, const std::
 
 
 ClassifierDivisionRF::~ClassifierDivisionRF() {}
+
+
+void ClassifierDivisionRF::classify(std::vector<Traxel>& traxels_out,
+                                    const std::vector<Traxel>& traxels_in) {
+  for (std::vector<Traxel>::iterator out = traxels_out.begin(); out != traxels_out.end(); ++out) {
+    vigra::MultiArray<2, feature_type> max_prob(vigra::Shape2(1, rf_.class_count()), 0.);
+    for (std::vector<Traxel>::const_iterator child1 = traxels_in.begin(); child1 != traxels_in.end(); ++child1) {
+      for (std::vector<Traxel>::const_iterator child2 = child1 + 1; child2 != traxels_in.end(); ++child2) {
+        extract_features(*out, *child1, *child2);
+        rf_.predictProbabilities(features_, probabilities_);
+        if (probabilities_(0, 1) > max_prob(0, 1)) {
+          max_prob.swapData(probabilities_);
+        }
+      }
+    }
+    assert(out->features[name_].size() == 0);
+    out->features[name_].insert(out->features[name_].begin(), max_prob.begin(), max_prob.end());
+    assert(out->features[name_].size() == rf_.class_count());
+  }
+}
 
 
 void ClassifierDivisionRF::classify(const std::vector<Traxel>& traxels_out,
