@@ -174,6 +174,8 @@ private:
                       const Traxel&,
                       const Traxel&,
                       feature_type) const { return value; }
+    double operator()(const Traxel&,
+                      size_t) { return value; }
    
     double value;
   };
