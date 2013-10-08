@@ -48,6 +48,10 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp ) {
   std::vector<Traxel>& t3 = regions.get_value(n3);
 
   feature_array com(3,1.);
+  feature_array count;
+  count.push_back(0.1);
+  count.push_back(0.5);
+  count.push_back(0.2);
 
   
   t1.push_back(Traxel(1, 0));
@@ -55,6 +59,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp ) {
   (t1.end()-1)->features["conflicts"] = feature_array(conflict_arr11, conflict_arr11 + 4);
   (t1.end()-1)->features["level"].push_back(0.);
   (t1.end()-1)->features["com"] = com;
+  (t1.end()-1)->features["count"] = count;
 
   t1.push_back(Traxel(2, 0));
   float conflict_arr12[] = {1., 4., 5.};
@@ -105,6 +110,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp ) {
   (t2.end()-1)->features["conflicts"] = feature_array(conflict_arr21, conflict_arr21 + 2);
   (t2.end()-1)->features["level"].push_back(0.);
   (t2.end()-1)->features["com"] = com;
+  (t2.end()-1)->features["count"] = count;
   
   t2.push_back(Traxel(3, 1));
   float conflict_arr23[] = {1.};
@@ -127,6 +133,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp ) {
   (t3.end()-1)->features["conflicts"] = feature_array(conflict_arr22, conflict_arr22 + 2);
   (t3.end()-1)->features["level"].push_back(0);
   (t3.end()-1)->features["com"] = com;
+  (t3.end()-1)->features["count"] = count;
                                             
   t3.push_back(Traxel(5, 1));
   com[0] = 1;
@@ -242,12 +249,17 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp2 ) {
   std::vector<Traxel>& t3 = regions.get_value(n3);
 
   feature_array com(3,1.);
+  feature_array count;
+  count.push_back(0.1);
+  count.push_back(0.5);
+  count.push_back(0.2);
 
   
   t1.push_back(Traxel(1, 0));
   (t1.end()-1)->features["conflicts"] = feature_array();
   (t1.end()-1)->features["level"].push_back(0.);
   (t1.end()-1)->features["com"] = com;
+  (t1.end()-1)->features["count"] = count;
 
 
   
@@ -258,6 +270,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp2 ) {
   (t2.end()-1)->features["conflicts"] = feature_array(conflict_arr21, conflict_arr21 + 2);
   (t2.end()-1)->features["level"].push_back(0);
   (t2.end()-1)->features["com"] = com;
+  (t2.end()-1)->features["count"] = count;
   
   t2.push_back(Traxel(3, 1));
   float conflict_arr23[] = {1.};
@@ -279,6 +292,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp2 ) {
   (t3.end()-1)->features["conflicts"] = feature_array();
   (t3.end()-1)->features["level"].push_back(0);
   (t3.end()-1)->features["com"] = com;
+  (t3.end()-1)->features["count"] = count;
 
 
   ConstantFeature det(10);
@@ -372,12 +386,17 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp3 ) {
   std::vector<Traxel>& t3 = regions.get_value(n3);
 
   feature_array com(3,1.);
+  feature_array count;
+  count.push_back(0.1);
+  count.push_back(0.5);
+  count.push_back(0.2);
 
   
   t1.push_back(Traxel(1, 0));
   (t1.end()-1)->features["conflicts"] = feature_array();
   (t1.end()-1)->features["level"].push_back(0.);
   (t1.end()-1)->features["com"] = com;
+  (t1.end()-1)->features["count"] = count;
 
 
   
@@ -388,6 +407,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp3 ) {
   (t2.end()-1)->features["conflicts"] = feature_array(conflict_arr21, conflict_arr21 + 2);
   (t2.end()-1)->features["level"].push_back(0);
   (t2.end()-1)->features["com"] = com;
+  (t1.end()-1)->features["count"] = count;
   
   t2.push_back(Traxel(3, 1));
   float conflict_arr23[] = {1.};
@@ -409,6 +429,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp3 ) {
   (t3.end()-1)->features["conflicts"] = feature_array();
   (t3.end()-1)->features["level"].push_back(0);
   (t3.end()-1)->features["com"] = com;
+  (t1.end()-1)->features["count"] = count;
 
 
   ConstantFeature det(10);
