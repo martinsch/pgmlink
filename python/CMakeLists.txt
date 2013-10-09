@@ -24,6 +24,7 @@ set(PYPGMLINK_SRCS
   pycrosscorrelation.cpp
   pymerger_resolving.cpp
   pymulti_hypotheses.cpp
+  pyregion_adjacency.cpp
   )
 
 add_library(pypgmlink SHARED ${PYPGMLINK_SRCS})#

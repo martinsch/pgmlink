@@ -474,16 +474,22 @@ namespace pgmlink {
       return;
     }
     // NeighborhoodVisitorBase<N, label_type>::PixelActorPtr<T, T>::type pixel_actor(new PixelActorFindNeighbors<label_type>);
+    // label_image_ = oversegmentation
+    // connected_component_image_ = level 0 regions
     Iterator start = createCoupledIterator(label_image_, connected_component_image_);
     Iterator end = start.getEndIterator();
     for (Iterator it = start; it != end; ++it) {
+    	// look at neighboring pixels (right and bottom pixel) and check whether they are different
       neighborhood_accessor_->visit(label_image_,
                                     it);
 
+      // if the pixel is not background, we add the segment to the connected component
       if (it.get<1>() != DefaultValue<T>::value) {
+    	  assert(it.get<2>() != DefaultValue<T>::value);
         parent_connected_component_->add_to_connected_component(it.get<1>(), it.get<2>());
       }
     }
+    // create the conflicts between connected component and each segment
     parent_connected_component_->create_conflicts();
   }
 

@@ -15,6 +15,7 @@ void export_traxels();
 void export_cross_correlation();
 void export_gmm();
 void export_multi_hypotheses();
+void export_region_adjacency();
 
 
 BOOST_PYTHON_MODULE( pgmlink )
@@ -27,4 +28,5 @@ BOOST_PYTHON_MODULE( pgmlink )
     export_cross_correlation();
     export_gmm();
     export_multi_hypotheses();
+    export_region_adjacency();
 }

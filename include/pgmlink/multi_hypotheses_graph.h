@@ -330,8 +330,6 @@ class MultiHypothesesTraxelStoreBuilder {
              vigra::MultiArrayView<N+1, LABEL_TYPE> arr,
              vigra::MultiArrayView<N, LABEL_TYPE> components,
              unsigned object_layer,
-             int timestep,
-             LABEL_TYPE object_label,
              const Traxel& trax
              );
  private:
@@ -339,8 +337,6 @@ class MultiHypothesesTraxelStoreBuilder {
   Traxel& assign_component(MultiHypothesesTraxelStore& ts,
                            vigra::MultiArrayView<N, LABEL_TYPE> arr,
                            vigra::MultiArrayView<N, LABEL_TYPE> components,
-                           int timestep,
-                           LABEL_TYPE object_label,
                            const Traxel& trax
                            );
 };
@@ -480,18 +476,17 @@ void MultiHypothesesTraxelStoreBuilder::build(MultiHypothesesTraxelStore& ts,
                                               vigra::MultiArrayView<N+1, LABEL_TYPE> arr,
                                               vigra::MultiArrayView<N, LABEL_TYPE> components,
                                               unsigned object_layer,
-                                              int timestep,
-                                              LABEL_TYPE object_label,
                                               const Traxel& trax
                                               ) {
   typedef typename vigra::CoupledIteratorType<N>::type ITERATOR;
   unsigned bind_axis = N;
+  LABEL_TYPE object_label = trax.Id;
 
-  LOG(logDEBUG4) << "MultiHypothesesTraxelStoreBuilder::build - arr: " << arr.shape()
-                 << ", com: " << components.shape();
-  unsigned number_of_layers = arr.shape()[0];
+  LOG(logDEBUG4) << "MultiHypothesesTraxelStoreBuilder::build - arr.shape(): " << arr.shape()
+                 << ", components.shape(): " << components.shape();
+  unsigned number_of_layers = arr.shape()[arr.shape().size()-1];
   assert(object_layer < number_of_layers);
-  Traxel& traxel = assign_component<N, LABEL_TYPE>(ts, arr.bindAt(bind_axis, object_layer), components, timestep, object_label, trax);
+  Traxel& traxel = assign_component<N, LABEL_TYPE>(ts, arr.bindAt(bind_axis, object_layer), components, trax);
   feature_array& conflicts = traxel.features["conflicts"];
 
   ITERATOR start = createCoupledIterator(arr.bindAt(bind_axis, object_label).shape());
@@ -517,8 +512,6 @@ template <int N, typename LABEL_TYPE>
 Traxel& MultiHypothesesTraxelStoreBuilder::assign_component(MultiHypothesesTraxelStore& ts,
                                                             vigra::MultiArrayView<N, LABEL_TYPE> arr,
                                                             vigra::MultiArrayView<N, LABEL_TYPE> connected_components,
-                                                            int timestep,
-                                                            LABEL_TYPE object_label,
                                                             const Traxel& trax
                                                             ) {
   LOG(logDEBUG4) << "MultiHypothesesTraxelStoreBuilder::assign_component - arr: " << arr.shape()
@@ -526,6 +519,9 @@ Traxel& MultiHypothesesTraxelStoreBuilder::assign_component(MultiHypothesesTraxe
   typedef typename vigra::CoupledIteratorType<N, LABEL_TYPE, LABEL_TYPE>::type ITERATOR;
   ITERATOR start = createCoupledIterator(arr, connected_components);
   ITERATOR end = start.getEndIterator();
+  int timestep = trax.Timestep;
+  LABEL_TYPE object_label = trax.Id;
+
   LABEL_TYPE component_label = 0;
   std::map<unsigned, std::pair<Traxel, std::vector<Traxel> > >& components = ts.map[timestep];
   for (; start != end; ++start) {
