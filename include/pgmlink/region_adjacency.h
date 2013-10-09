@@ -108,6 +108,19 @@ void RegionAdjacencyGraph::buildRegionAdjacencyGraph(const vigra::MultiArrayView
 		int label = (int) *it;
 		// if it is the background label, skip
 		if (label == background_value) {
+			vigra::TinyVector<long, N> coordinates = it.get<0>();
+			for(unsigned int d = 0; d < N; ++d) {
+				coordinates[d] += 1;
+				if (segmentImage.isInside(coordinates)) {
+					if ((int) segmentImage[coordinates] != background_value) {
+						int neighbor_label = segmentImage[coordinates];
+						LOG(logDEBUG4) << "found neighbor " << neighbor_label;
+						RegionAdjacencyGraph::Node neighbor_node = add_node(neighbor_label);
+						incrementPerimeter(neighbor_node);
+					}
+				}
+			}
+
 			continue;
 		}
 		// if the label is not in the graph yet, add a node
