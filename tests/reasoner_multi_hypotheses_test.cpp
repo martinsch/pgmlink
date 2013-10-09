@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp ) {
   (t1.end()-1)->features["conflicts"] = feature_array(conflict_arr11, conflict_arr11 + 4);
   (t1.end()-1)->features["level"].push_back(0.);
   (t1.end()-1)->features["com"] = com;
-  (t1.end()-1)->features["count"] = count;
+  (t1.end()-1)->features["count_prediction"] = count;
 
   t1.push_back(Traxel(2, 0));
   float conflict_arr12[] = {1., 4., 5.};
@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp ) {
   (t2.end()-1)->features["conflicts"] = feature_array(conflict_arr21, conflict_arr21 + 2);
   (t2.end()-1)->features["level"].push_back(0.);
   (t2.end()-1)->features["com"] = com;
-  (t2.end()-1)->features["count"] = count;
+  (t2.end()-1)->features["count_prediction"] = count;
   
   t2.push_back(Traxel(3, 1));
   float conflict_arr23[] = {1.};
@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp ) {
   (t3.end()-1)->features["conflicts"] = feature_array(conflict_arr22, conflict_arr22 + 2);
   (t3.end()-1)->features["level"].push_back(0);
   (t3.end()-1)->features["com"] = com;
-  (t3.end()-1)->features["count"] = count;
+  (t3.end()-1)->features["count_prediction"] = count;
                                             
   t3.push_back(Traxel(5, 1));
   com[0] = 1;
@@ -156,6 +156,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp ) {
   pgm::multihypotheses::TrainableModelBuilder builder_old( ConstantFeature(10), // appearance
                                                            ConstantFeature(10), // disappearance
                                                            SquaredDistance(), // move
+                                                           ConstantFeature(0), // count
                                                            0, // forbidden_cost
                                                            0., // opportunity cost
                                                            50, // max_division_level
@@ -165,6 +166,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp ) {
   pgm::multihypotheses::CVPR2014ModelBuilder builder( ConstantFeature(10), // appearance
                                                       ConstantFeature(10), // disappearance
                                                       SquaredDistance(), // move
+                                                      ConstantFeature(0), // count
                                                       0, // forbidden_cost
                                                       0., // opportunity cost
                                                       50, // max_division_level
@@ -259,7 +261,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp2 ) {
   (t1.end()-1)->features["conflicts"] = feature_array();
   (t1.end()-1)->features["level"].push_back(0.);
   (t1.end()-1)->features["com"] = com;
-  (t1.end()-1)->features["count"] = count;
+  (t1.end()-1)->features["count_prediction"] = count;
 
 
   
@@ -270,7 +272,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp2 ) {
   (t2.end()-1)->features["conflicts"] = feature_array(conflict_arr21, conflict_arr21 + 2);
   (t2.end()-1)->features["level"].push_back(0);
   (t2.end()-1)->features["com"] = com;
-  (t2.end()-1)->features["count"] = count;
+  (t2.end()-1)->features["count_prediction"] = count;
   
   t2.push_back(Traxel(3, 1));
   float conflict_arr23[] = {1.};
@@ -292,7 +294,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp2 ) {
   (t3.end()-1)->features["conflicts"] = feature_array();
   (t3.end()-1)->features["level"].push_back(0);
   (t3.end()-1)->features["com"] = com;
-  (t3.end()-1)->features["count"] = count;
+  (t3.end()-1)->features["count_prediction"] = count;
 
 
   ConstantFeature det(10);
@@ -301,6 +303,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp2 ) {
   pgm::multihypotheses::TrainableModelBuilder builder( ConstantFeature(1000), // appearance
                                                        ConstantFeature(1000), // disappearance
                                                        SquaredDistance(), // move
+                                                       ConstantFeature(0), // count
                                                        0, // forbidden_cost
                                                        50, // max_division_level
                                                        3 // max_count
@@ -396,7 +399,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp3 ) {
   (t1.end()-1)->features["conflicts"] = feature_array();
   (t1.end()-1)->features["level"].push_back(0.);
   (t1.end()-1)->features["com"] = com;
-  (t1.end()-1)->features["count"] = count;
+  (t1.end()-1)->features["count_prediction"] = count;
 
 
   
@@ -407,7 +410,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp3 ) {
   (t2.end()-1)->features["conflicts"] = feature_array(conflict_arr21, conflict_arr21 + 2);
   (t2.end()-1)->features["level"].push_back(0);
   (t2.end()-1)->features["com"] = com;
-  (t1.end()-1)->features["count"] = count;
+  (t2.end()-1)->features["count_prediction"] = count;
   
   t2.push_back(Traxel(3, 1));
   float conflict_arr23[] = {1.};
@@ -429,7 +432,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp3 ) {
   (t3.end()-1)->features["conflicts"] = feature_array();
   (t3.end()-1)->features["level"].push_back(0);
   (t3.end()-1)->features["com"] = com;
-  (t1.end()-1)->features["count"] = count;
+  (t3.end()-1)->features["count_prediction"] = count;
 
 
   ConstantFeature det(10);
@@ -438,6 +441,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp3 ) {
   pgm::multihypotheses::TrainableModelBuilder builder_old( ConstantFeature(1000), // appearance
                                                            ConstantFeature(1000), // disappearance
                                                            SquaredDistance(), // move
+                                                           ConstantFeature(0), // count
                                                            0, // forbidden_cost
                                                            50, // max_division_level
                                                            3 // max_count
@@ -446,6 +450,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp3 ) {
   pgm::multihypotheses::CVPR2014ModelBuilder builder( ConstantFeature(1000), // appearance
                                                       ConstantFeature(1000), // disappearance
                                                       SquaredDistance(), // move
+                                                      ConstantFeature(0), // count
                                                       0, // forbidden_cost
                                                       50, // max_division_level
                                                       3 // max_count

@@ -78,6 +78,7 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
   ConstantFeature det(options_.get_weight("det"));  // detection
   ConstantFeature mis(options_.get_weight("mis"));  // misdetection
   ConstantFeature div(options_.get_weight("div"));  // division
+  ConstantFeature count(options_.get_weight("count")); // count
   SquaredDistance mov; // move
 
    
@@ -85,6 +86,7 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
   pgm::multihypotheses::CVPR2014ModelBuilder builder( app, // appearance
                                                       dis, // disappearance,
                                                       mov, // move
+                                                      count, // count
                                                       options_.get_weight("forbidden"), // forbidden cost
                                                       options_.get_weight("opportunity"), // opportunity cost
                                                       options_.get_weight("max_div"), // maximum division level
@@ -100,7 +102,9 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
   
   if (options_.with_constant_classifiers || options_.with_classifiers) {
     builder
-        .move(NegLnTransition(options_.get_weight("mov")));
+        .move(NegLnTransition(options_.get_weight("mov")))
+        .count(NegLn(options_.get_weight("count")))
+        ;
     if (options_.with_detection_vars) {
       builder
           .with_detection_vars(NegLnDetection(options_.get_weight("det")),

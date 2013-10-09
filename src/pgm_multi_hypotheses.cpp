@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <utility>
 #include <iterator>
+#include <functional>
 
 // boost
 #include <boost/shared_ptr.hpp>
@@ -144,6 +145,15 @@ ModelBuilder& ModelBuilder::move(function<double (const Traxel&, const Traxel&, 
     throw std::invalid_argument("MultiHypothesesModelBuilder::move(): empty function");
   }
   move_ = mov;
+  return *this;
+}
+
+
+ModelBuilder& ModelBuilder::count(function<double (feature_type)> count) {
+  if (!count) {
+    throw std::invalid_argument("MultiHypothesesModelBuilder::count(): empty function");
+  }
+  count_ = count;
   return *this;
 }
 
@@ -940,12 +950,46 @@ void CVPR2014ModelBuilder::add_detection_factor( Model& m,
 
 void CVPR2014ModelBuilder::add_count_factor( Model& m,
                                              const std::vector<Traxel>& traxels ) const {
+  LOG(logINFO) << "CVPR2014ModelBuilder::add_count_factor: entered";
   assert(traxels.size() > 0);
-  feature_array probabilities = traxels[0].features.find("count")->second;
-  assert(probabilities .size() > 0);
-  if (probabilities.size() < traxels.size()) {
-    probabilities.insert(probabilities.end(), traxels.size() - probabilities.size(), *(probabilities.rbegin()));
+  assert(traxels[0].features.find("count_prediction") != traxels[0].features.end());
+  feature_array probabilities = traxels[0].features.find("count_prediction")->second;
+  size_t table_dim = traxels.size();
+  
+  assert(probabilities.size() > 0);
+  if (probabilities.size() < table_dim) {
+    probabilities.insert(probabilities.end(), table_dim - probabilities.size(), *(probabilities.rbegin()));
   }
+  feature_type sum = std::accumulate(probabilities.begin(), probabilities.end(), 0.);
+  if (sum > 0) {
+    for(feature_array::iterator p = probabilities.begin(); p != probabilities.end(); ++p) {
+      *p /= sum;
+    }
+  } else {
+    feature_type constant = 1/probabilities.size();
+    std::fill(probabilities.begin(), probabilities.end(), constant);
+  }
+
+  vector<size_t> vi;
+  for (std::vector<Traxel>::const_iterator t = traxels.begin(); t != traxels.end(); ++t) {
+    vi.push_back(m.var_of_trax(*t));
+  }
+
+  std::vector<size_t> coords(table_dim, 0);
+  OpengmExplicitFactor<double> table( vi, forbidden_cost() );
+  
+  for (size_t i = 0; i < static_cast<size_t>(std::pow(2., static_cast<int>(table_dim))); ++i) {
+    std::vector<size_t> state = DecToBin(i);
+    assert(state.size() <= coords.size());
+    std::copy(state.begin(), state.end(), coords.begin());
+    LOG(logINFO) << "CVPR2014ModelBuilder::add_count_factor: " << coords.size()
+                 << ", " << vi.size();
+        
+    size_t active_count = std::accumulate(coords.begin(), coords.end(), 0);
+    table.set_value(coords, count()(probabilities[active_count]));
+    coords = std::vector<size_t>(table_dim, 0);
+  }
+  table.add_to( *m.opengm_model );
 }
 
 
