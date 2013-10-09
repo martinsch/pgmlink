@@ -18,7 +18,7 @@ tests/CMakeList.txt
 learning_systemtest.cpp
 learning_systemtest
 Doxyfile
-
+pgmlink_export.h
 
 
 # Compiled source #
