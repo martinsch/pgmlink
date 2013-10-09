@@ -142,6 +142,11 @@ double NegLnTransition::operator()(const Traxel&, const Traxel&, feature_type pr
   return operator()(probability);
 }
 
+double NegLn::operator()(feature_type arg) const {
+  if(arg < 0.0000000001) arg = 0.0000000001;
+  return w_*-1*log(arg);
+}
+
 
 ////
 //// class NegLnConstant

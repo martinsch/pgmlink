@@ -106,6 +106,14 @@ private:
 	double w_;
 };
 
+class NegLn {
+ public:
+  NegLn(double weight) : w_(weight) {}
+  double operator()( feature_type ) const;
+ private:
+  double w_;
+};
+
   /**
      @brief Zero near temporal border, else 1.
   */
