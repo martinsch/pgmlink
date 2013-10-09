@@ -29,10 +29,14 @@ BOOST_AUTO_TEST_CASE( RegionGraph_functions ) {
   
   pgmlink::RegionGraph g;
   
+  // mapping from graph node (=region) to the list of segments contained in this node
   RegionGraph::ContainingMap& containing_map = g.get(node_contains());
+  // mapping from graph node (=region) to the list of conflicting segments
   RegionGraph::ConflictMap& conflict_map = g.get(node_conflicts());
+  // mapping from graph node (=region) to the neighboring regions
   RegionGraph::NeighborMap& neighbor_map = g.get(node_neighbors());
 
+  // add 3 nodes (=regions) to the region adjacency graph
   RegionGraph::Region r1 = g.add_region(1u);
   BOOST_CHECK_EQUAL(g.get_maximum_label(), 1u);
   RegionGraph::Region r2 = g.add_region(2u);
@@ -40,6 +44,7 @@ BOOST_AUTO_TEST_CASE( RegionGraph_functions ) {
   RegionGraph::Region r3 = g.add_region(3u);
   BOOST_CHECK_EQUAL(g.get_maximum_label(), 3u);
 
+  // add directed edges between the regions
   neighbor_map.get_value(r1).insert(r2);
   neighbor_map.get_value(r1).insert(r3);
 
@@ -49,7 +54,7 @@ BOOST_AUTO_TEST_CASE( RegionGraph_functions ) {
   neighbor_map.get_value(r3).insert(r1);
   neighbor_map.get_value(r3).insert(r2);
   
-  
+  // merge regions 1 and 2 to 4: conflict/containing/neighboring maps are adjusted appropriately
   RegionGraph::Region r4 = g.merge_regions(r1,r2);
   comparison.insert(r1);
   comparison.insert(r2);
