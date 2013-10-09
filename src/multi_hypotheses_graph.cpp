@@ -431,11 +431,11 @@ void MultiHypothesesTraxelStore::add(const Traxel& trax) {
 
 
 void MultiHypothesesTraxelStore::start_component(const Traxel& trax) {
-  LOG(logDEBUG2) << "MultiHypothesesTraxelStore::start_component: " << trax;
+  LOG(logDEBUG4) << "MultiHypothesesTraxelStore::start_component: " << trax;
   map[trax.Timestep][trax.Id] = std::make_pair(trax, std::vector<Traxel>());
   assert(map[trax.Timestep][trax.Id].second.size() == 0);
   map[trax.Timestep][trax.Id].second.push_back(trax);
-  LOG(logDEBUG2) << "MultiHypothesesTraxelStore::start_component: "
+  LOG(logDEBUG4) << "MultiHypothesesTraxelStore::start_component: "
                  << "new trax has com?"
                  << map[trax.Timestep][trax.Id].second.rbegin()->features.count("com");
 }

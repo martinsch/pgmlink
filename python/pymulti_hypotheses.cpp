@@ -83,12 +83,10 @@ class PyMultiHypothesesTraxelStoreBuilder {
   void build(vigra::NumpyArray<N+1, LABEL_TYPE> arr,
              vigra::NumpyArray<N, LABEL_TYPE> components,
              unsigned object_layer,
-             int timestep,
-             LABEL_TYPE object_label,
              const Traxel& trax
              ) {
     MultiHypothesesTraxelStoreBuilder builder;
-    builder.build<N, LABEL_TYPE>(ts_, arr, components, object_layer, timestep, object_label, trax);
+    builder.build<N, LABEL_TYPE>(ts_, arr, components, object_layer, trax);
   }
  private:
   MultiHypothesesTraxelStore& ts_;
