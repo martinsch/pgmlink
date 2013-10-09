@@ -8,6 +8,7 @@
 #include <boost/python/iterator.hpp>
 #include <boost/python/return_internal_reference.hpp>
 #include <boost/python/return_value_policy.hpp>
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include <boost/utility.hpp>
 
 #include <lemon/core.h>
@@ -26,7 +27,7 @@ typedef property_map<edge_weight, typename RegionAdjacencyGraph::base_graph>::ty
 
 template<unsigned int N, class T>
 void buildGraphPython(RegionAdjacencyGraph& g, const vigra::NumpyArray<N,T> segmentImage) {
-	g.getRegionAdjacencyGraph<N,T>(segmentImage);
+	g.buildRegionAdjacencyGraph<N,T>(segmentImage);
 }
 
 
@@ -75,14 +76,15 @@ void export_region_adjacency() {
   class_<typename RegionAdjacencyGraph::IncEdgeIt>("IncEdgeIt");
 
   IterableValueMap_ValueIterator<edge_weight_m>::wrap("EdgeWeightMap_ValueIt");
-
-
   class_<edge_weight_m, boost::noncopyable>("EdgeWeightMap", init<const RegionAdjacencyGraph&>(args("region_adjacency_graph")))
       .def("__getitem__", &edge_weight_m::operator[], return_value_policy<copy_const_reference>() )
       .def("__setitem__", &edge_weight_m::set)
       .def("values", &IterableValueMap_ValueIterator<edge_weight_m>::values)
       ;
 
+  class_<std::vector<std::vector<int> > >("LabelsVector")
+        .def(vector_indexing_suite<std::vector<std::vector<int> > >())
+      ;
 
 
   // handle function overloading
@@ -118,6 +120,9 @@ void export_region_adjacency() {
 
     .def("getEdgeWeightMap", &RegionAdjacencyGraph::get_edge_weight_map, return_internal_reference<>())
     .def("getLabelToNodeMap", &RegionAdjacencyGraph::get_label_to_node_map, return_internal_reference<>())
+    .def("mergeNodesThreshold", &RegionAdjacencyGraph::merge_nodes_threshold)
+
+    .def("getLabelsVector", &RegionAdjacencyGraph::get_labels_vector)
 
     ;
 

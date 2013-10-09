@@ -36,6 +36,15 @@ namespace pgmlink {
   template <typename Graph>
     const std::string property_map<node_features,Graph>::name = "node_features";
 
+  struct node_labels {};
+    template <typename Graph>
+      struct property_map<node_labels, Graph> {
+      typedef lemon::IterableValueMap< Graph, typename Graph::Node, std::vector<int> > type;
+      static const std::string name;
+    };
+    template <typename Graph>
+      const std::string property_map<node_labels,Graph>::name = "node_labels";
+
 	// edge_weight
 	struct edge_weight {};
 	template <typename Graph>
@@ -53,7 +62,7 @@ namespace pgmlink {
       // Properties attached to every RegionAdjacencyGraph
       add(node_features());
       add(edge_weight());
-//      label_to_node_;
+      add(node_labels());
     };
 
     typedef property_map<edge_weight, typename RegionAdjacencyGraph::base_graph>::type edge_weight_m;
@@ -69,7 +78,11 @@ namespace pgmlink {
     std::map<int, RegionAdjacencyGraph::Node>& get_label_to_node_map();
 
     template<unsigned int N, typename T>
-    void getRegionAdjacencyGraph(const vigra::MultiArrayView<N, T> segmentImage, int background_value = 0);
+    void buildRegionAdjacencyGraph(const vigra::MultiArrayView<N, T> segmentImage, int background_value = 0);
+
+	void merge_nodes_threshold(double threshold, bool greedy=false);
+
+	std::vector<std::vector<int> > get_labels_vector();
 
   private:
     void incrementPerimeter(RegionAdjacencyGraph::Node n);
@@ -85,7 +98,7 @@ namespace pgmlink {
 /* IMPLEMENTATIONS */
 
 template<unsigned int N, typename T>
-void RegionAdjacencyGraph::getRegionAdjacencyGraph(const vigra::MultiArrayView<N, T> segmentImage, int background_value) {
+void RegionAdjacencyGraph::buildRegionAdjacencyGraph(const vigra::MultiArrayView<N, T> segmentImage, int background_value) {
 	LOG(logDEBUG) << "RegionAdjacencyGraph::getRegionAdjacencyGraph entered";
 	std::map<int, std::set<int> > neighbors;
 

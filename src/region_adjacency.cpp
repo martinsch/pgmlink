@@ -24,6 +24,12 @@ RegionAdjacencyGraph::Node RegionAdjacencyGraph::add_node( int label ) {
 	LOG(logDEBUG4) << "add_node: add " << label << " to graph";
 	RegionAdjacencyGraph::Node node = addNode();
 	label_to_node_[label] = node;
+
+	property_map<node_labels, RegionAdjacencyGraph::base_graph>::type& node_labels_map = get(node_labels());
+	std::vector<int> label_list = node_labels_map[node];
+	label_list.push_back(label);
+	node_labels_map.set(node,label_list);
+
 	return node;
 }
 
@@ -134,5 +140,55 @@ property_map<edge_weight, RegionAdjacencyGraph::base_graph>::type& RegionAdjacen
 std::map<int, RegionAdjacencyGraph::Node>& RegionAdjacencyGraph::get_label_to_node_map() {
 	return label_to_node_;
 }
+
+
+void RegionAdjacencyGraph::merge_nodes_threshold(double threshold, bool greedy) {
+	property_map<edge_weight, RegionAdjacencyGraph::base_graph>::type& edge_weight_map = get(edge_weight());
+	property_map<node_labels, RegionAdjacencyGraph::base_graph>::type& node_labels_map = get(node_labels());
+
+	std::vector<RegionAdjacencyGraph::Edge> edges_to_contract;
+
+	for (EdgeIt e(*this); e != lemon::INVALID; ++e) {
+		if (edge_weight_map[e] < threshold) {
+			continue;
+		}
+		edges_to_contract.push_back(e);
+	}
+
+	for (std::vector<RegionAdjacencyGraph::Edge>::const_iterator it = edges_to_contract.begin(); it != edges_to_contract.end(); ++it) {
+		Edge e = *it;
+		if (!this->valid(e)) { // might be invalid since cycles are removed by contract()
+			LOG(logDEBUG) << "edge is invalid";
+			continue;
+		}
+		Node u = this->u(e);
+		Node v = this->v(e);
+		if (!this->valid(u) || !this->valid(v)) {
+			LOG(logDEBUG) << "one of the nodes is invalid!!!!";
+			continue;
+		}
+
+		std::vector<int> label_list = node_labels_map[u];
+		for (std::vector<int>::const_iterator lab_it = node_labels_map[v].begin(); lab_it != node_labels_map[v].end(); ++lab_it) {
+			label_list.push_back(*lab_it);
+		}
+		node_labels_map.set(u, label_list);
+
+		this->contract(u,v,greedy);
+
+	}
+}
+
+
+std::vector<std::vector<int> > RegionAdjacencyGraph::get_labels_vector() {
+	property_map<node_labels, RegionAdjacencyGraph::base_graph>::type& node_labels_map = get(node_labels());
+	std::vector<std::vector<int> > result;
+	for (NodeIt n(*this); n != lemon::INVALID; ++n) {
+		result.push_back(node_labels_map[n]);
+	}
+
+	return result;
+}
+
 
 } /* namespace pgmlink */
