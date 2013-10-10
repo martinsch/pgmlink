@@ -252,7 +252,7 @@ void ModelBuilder::add_hard_constraints(const Model& m, const MultiHypothesesGra
 
     if (has_detection_vars()) {
       LOG(logDEBUG1) << "MultiHypotheses::add_hard_constraints: coupling conflicts";
-      couple_conflicts(m, traxels, cplex);
+      couple_conflicts(m, hypotheses, n, traxels, cplex);
       
       // LOG(logDEBUG1) << "MultiHypotheses::add_hard_constraints: coupling count";
       // couple_count(m, traxels, cplex);
@@ -458,10 +458,17 @@ void ModelBuilder::couple_count( const Model& m, const std::vector<Traxel>& trax
 }
 
 
-void ModelBuilder::couple_conflicts( const Model& m, const std::vector<Traxel>& traxels, OpengmLPCplex& cplex) {
+void ModelBuilder::couple_conflicts( const Model& m,
+                                     const MultiHypothesesGraph& hypotheses,
+                                     const MultiHypothesesGraph::Node& node,
+                                     const std::vector<Traxel>& traxels,
+                                     OpengmLPCplex& cplex) {
   LOG(logDEBUG1) << "MultiHypotheses::couple_conflicts()";
   if (has_maximal_conflict_cliques()) {
-    couple_conflicts_maximal_cliques( m, traxels[0], cplex );
+    couple_conflicts_maximal_cliques( m,
+                                      traxels[0].Timestep,
+                                      hypotheses.get(node_conflict_sets())[node],
+                                      cplex );
   }
   else {
     couple_conflicts_pairwise( m, traxels, cplex);
@@ -469,7 +476,9 @@ void ModelBuilder::couple_conflicts( const Model& m, const std::vector<Traxel>& 
 }
 
 
-void ModelBuilder::couple_conflicts_pairwise( const Model& m, const std::vector<Traxel>& traxels, OpengmLPCplex& cplex) {
+void ModelBuilder::couple_conflicts_pairwise( const Model& m,
+                                              const std::vector<Traxel>& traxels,
+                                              OpengmLPCplex& cplex) {
   for (std::vector<Traxel>::const_iterator t = traxels.begin(); t != traxels.end(); ++t) {
     FeatureMap::const_iterator feature = t->features.find("conflicts");
     if (feature == t->features.end()) {
@@ -493,8 +502,23 @@ void ModelBuilder::couple_conflicts_pairwise( const Model& m, const std::vector<
 }
 
 
-void ModelBuilder::couple_conflicts_maximal_cliques( const Model& m, const Traxel& trax, OpengmLPCplex& cplex) {
-  
+void ModelBuilder::couple_conflicts_maximal_cliques( const Model& m,
+                                                     int timestep,
+                                                     const std::vector<std::vector<unsigned> >& conflict_sets,
+                                                     OpengmLPCplex& cplex) {
+  for (std::vector<std::vector<unsigned> >::const_iterator set = conflict_sets.begin();
+       set != conflict_sets.end();
+       ++set) {
+    std::vector<size_t> cplex_idxs;
+    for (std::vector<unsigned>::const_iterator object_id = set->begin();
+         object_id != set->end();
+         ++object_id) {
+      cplex_idxs.push_back(cplex_id(m.var_of_trax(Traxel(*object_id, timestep))));
+    }
+    std::vector<int> coeffs(cplex_idxs.size(), 1);
+    // 0 <= 1*detection + ... + 1*detection <= 1
+    cplex.addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0, 1);
+  }
 }
 
 

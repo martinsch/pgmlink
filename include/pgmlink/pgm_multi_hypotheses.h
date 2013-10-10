@@ -209,9 +209,9 @@ class ModelBuilder {
   void couple_outgoing_assignments( const Model&, const std::vector<Traxel>&, const std::vector<Traxel>&, OpengmLPCplex& );
   void couple_incoming_assignments( const Model&, const std::vector<Traxel>&, const std::vector<Traxel>&, OpengmLPCplex& );
   void couple_count( const Model&, const std::vector<Traxel>&, OpengmLPCplex& );
-  void couple_conflicts( const Model&, const std::vector<Traxel>&, OpengmLPCplex& );
+  void couple_conflicts( const Model&, const MultiHypothesesGraph&, const MultiHypothesesGraph::Node&, const std::vector<Traxel>&, OpengmLPCplex& );
   void couple_conflicts_pairwise( const Model&, const std::vector<Traxel>&, OpengmLPCplex& );
-  void couple_conflicts_maximal_cliques( const Model&, const Traxel&, OpengmLPCplex& );
+  void couple_conflicts_maximal_cliques( const Model&, int, const std::vector<std::vector<unsigned> >&, OpengmLPCplex& );
 
   bool with_detection_vars_;
   bool with_divisions_;
