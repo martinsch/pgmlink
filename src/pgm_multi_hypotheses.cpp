@@ -510,7 +510,9 @@ void ModelBuilder::couple_conflicts_maximal_cliques( const Model& m,
   for (std::vector<std::vector<unsigned> >::const_iterator set = conflict_sets.begin();
        set != conflict_sets.end();
        ++set) {
-    assert(set->size() > 0);
+    if (set->size() <= 1) {
+      continue;
+    }
     std::vector<size_t> cplex_idxs;
     for (std::vector<unsigned>::const_iterator object_id = set->begin();
          object_id != set->end();
