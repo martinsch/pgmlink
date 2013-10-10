@@ -92,6 +92,9 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
                                                       options_.get_weight("max_div"), // maximum division level
                                                       10000 // max_count -> not neccessary -> fix!
   );
+
+  builder.with_maximal_conflict_cliques(options_.with_maximal_conflict_cliques);
+
   if (options_.with_detection_vars) {
     builder.with_detection_vars(det, mis);
   }

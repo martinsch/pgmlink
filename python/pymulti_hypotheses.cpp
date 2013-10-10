@@ -195,6 +195,10 @@ struct PyTrackingOptions {
     options.with_constant_classifiers = check;
   }
 
+  void with_maximal_conflict_cliques(bool check) {
+    options.with_maximal_conflict_cliques = check;
+  }
+
   std::string sanity_check() {
     return std::string("To be implemented");
   }
