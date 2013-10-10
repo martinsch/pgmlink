@@ -88,7 +88,7 @@ namespace pgmlink {
 
   class RegionAdjacencyGraph : public PropertyGraph<lemon::ListGraph> {
   public:
-    RegionAdjacencyGraph() : region_max_id_(0) {
+    RegionAdjacencyGraph() : region_max_id_(0), segment_max_id_(9999999) {
       // Properties attached to every RegionAdjacencyGraph
       add(node_features());
       add(edge_weight());

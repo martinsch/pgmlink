@@ -70,7 +70,7 @@ int RegionAdjacencyGraph::create_region(RegionAdjacencyGraph::Node n, bool with_
 	if (with_check) { // check whether the region already exists
 		int region_found = find_region(labels);
 		if (region_found != -1 ) {
-			LOG(logDEBUG3) << "region found, id = " << region_found;
+			LOG(logDEBUG4) << "region found, id = " << region_found;
 			node_to_region_id_map.set(n, region_found);
 			return region_found;
 		}
@@ -78,7 +78,7 @@ int RegionAdjacencyGraph::create_region(RegionAdjacencyGraph::Node n, bool with_
 
 	Region reg = Region();
 	reg.id = ++region_max_id_;
-	LOG(logDEBUG3) << "create region with id = " << reg.id;
+	LOG(logDEBUG4) << "create region with id = " << reg.id;
 	for (std::vector<int>::const_iterator it = labels.begin(); it != labels.end(); ++it) {
 		assert(*it <= segment_max_id_ && "a region can only contain segments, not other regions (1)");
 		reg.contains_labels.push_back(*it);
@@ -94,8 +94,6 @@ int RegionAdjacencyGraph::create_region(RegionAdjacencyGraph::Node n, bool with_
 }
 
 RegionAdjacencyGraph::Node RegionAdjacencyGraph::add_node( int label, std::map<std::string,double> features ) {
-//	typedef property_map<node_features, RegionAdjacencyGraph::base_graph>::type node_features_map;
-//	lemon::IterableValueMap< Graph, typename Graph::Node, std::map<std::string,double> >
 	property_map<node_features, RegionAdjacencyGraph::base_graph>::type& node_feature_map = get(node_features());
 	RegionAdjacencyGraph::Node node = add_node(label);
 
