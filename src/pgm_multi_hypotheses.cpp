@@ -361,7 +361,7 @@ void ModelBuilder::couple_incoming(const Model& m, const std::vector<Traxel>& so
 
 
 void ModelBuilder::couple_detections_assignments(const Model& m, const std::vector<Traxel>& source, const std::vector<Traxel>& dest, OpengmLPCplex& cplex) {
-  LOG(logDEBUG1) << "MultiHypotheses::couple_detection_assignments()";
+  // LOG(logDEBUG1) << "MultiHypotheses::couple_detection_assignments()";
   LOG(logDEBUG2) << "MultiHypotheses::couple_detection_assignments: "
                  << source.size() << " source(s) and "
                  << dest.size() << " target(s)";
@@ -482,12 +482,12 @@ void ModelBuilder::couple_conflicts_pairwise( const Model& m,
   for (std::vector<Traxel>::const_iterator t = traxels.begin(); t != traxels.end(); ++t) {
     FeatureMap::const_iterator feature = t->features.find("conflicts");
     if (feature == t->features.end()) {
-      throw std::runtime_error("MultiHypotheses: couple_conflicts - Feature conflicts not found in traxel!");
+      throw std::runtime_error("MultiHypotheses: couple_conflicts_pairwise - Feature conflicts not found in traxel!");
     }
     for (feature_array::const_iterator conflict = feature->second.begin(); conflict != feature->second.end(); ++conflict) {
       std::vector<size_t> cplex_idxs;
       cplex_idxs.push_back(cplex_id(m.var_of_trax(*t)));
-      LOG(logDEBUG4) << "MultiHypotheses::couple_conflicts: Adding cplex ids for " << *t
+      LOG(logDEBUG4) << "MultiHypotheses::couple_conflicts_pairwise: Adding cplex ids for " << *t
                      << " conflicting with " << *conflict;
       assert(std::find(traxels.begin(), traxels.end(), Traxel(*conflict, t->Timestep)) != traxels.end());
       cplex_idxs.push_back(cplex_id(m.var_of_trax(Traxel(*conflict, t->Timestep))));
@@ -506,9 +506,11 @@ void ModelBuilder::couple_conflicts_maximal_cliques( const Model& m,
                                                      int timestep,
                                                      const std::vector<std::vector<unsigned> >& conflict_sets,
                                                      OpengmLPCplex& cplex) {
+  LOG(logDEBUG) << "MultiHypotheses::couple_conflicts_maximal_cliques: entered";
   for (std::vector<std::vector<unsigned> >::const_iterator set = conflict_sets.begin();
        set != conflict_sets.end();
        ++set) {
+    assert(set->size() > 0);
     std::vector<size_t> cplex_idxs;
     for (std::vector<unsigned>::const_iterator object_id = set->begin();
          object_id != set->end();
@@ -996,7 +998,7 @@ void CVPR2014ModelBuilder::add_detection_factor( Model& m,
 
 void CVPR2014ModelBuilder::add_count_factor( Model& m,
                                              const std::vector<Traxel>& traxels ) const {
-  LOG(logINFO) << "CVPR2014ModelBuilder::add_count_factor: entered";
+  LOG(logDEBUG) << "CVPR2014ModelBuilder::add_count_factor: entered";
   assert(traxels.size() > 0);
   assert(traxels[0].features.find("count_prediction") != traxels[0].features.end());
   feature_array probabilities = traxels[0].features.find("count_prediction")->second;
@@ -1028,7 +1030,7 @@ void CVPR2014ModelBuilder::add_count_factor( Model& m,
     std::vector<size_t> state = DecToBin(i);
     assert(state.size() <= coords.size());
     std::copy(state.begin(), state.end(), coords.begin());
-    LOG(logINFO) << "CVPR2014ModelBuilder::add_count_factor: " << coords.size()
+    LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_count_factor: " << coords.size()
                  << ", " << vi.size();
         
     size_t active_count = std::accumulate(coords.begin(), coords.end(), 0);
