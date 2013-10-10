@@ -26,7 +26,11 @@ namespace pgmlink {
   ////
   //// class Traxel
   ////
-  Traxel::Traxel(const Traxel& other): Id(other.Id), Timestep(other.Timestep), features(other.features) {
+  Traxel::Traxel(const Traxel& other) :
+      Id(other.Id),
+      Timestep(other.Timestep),
+      Level(other.Level),
+      features(other.features) {
     locator_ = other.locator_->clone();
     corr_locator_ = other.corr_locator_;
   }
@@ -34,6 +38,7 @@ namespace pgmlink {
   Traxel& Traxel::operator=(const Traxel& other) {
     Id = other.Id;
     Timestep = other.Timestep;
+    Level = other.Level;
     features = other.features;
     corr_locator_ = other.corr_locator_;
     // This gracefully handles self assignment
