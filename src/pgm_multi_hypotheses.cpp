@@ -407,11 +407,7 @@ void ModelBuilder::couple_outgoing_assignments(const Model& m, const std::vector
   LOG(logDEBUG1) << "MultiHypotheses::couple_outgoing_assignments()";
   for (std::vector<Traxel>::const_iterator s = source.begin(); s != source.end(); ++s) {
     MAX_OUTGOING_ARCS max_outgoing_arcs = DIVISION;
-    FeatureMap::const_iterator feature = s->features.find("level");
-    if (feature == s->features.end()) {
-      throw std::runtime_error("MultiHypotheses: couple_outgoing_assignments - Feature level not found in traxel!");
-    }
-    if (feature->second[0] > max_division_level_) {
+    if (s->Level > max_division_level_) {
       max_outgoing_arcs = TRANSITION;
     }
     std::vector<size_t> cplex_idxs;
@@ -1052,7 +1048,7 @@ void CVPR2014ModelBuilder::add_outgoing_factor( const MultiHypothesesGraph& hypo
   const vector<size_t> vi = vars_for_outgoing_factor(hypotheses, m, node, trax);
   LOG(logDEBUG2) << "CVPR2014ModelBuilder::add_outgoing_factor(): entered for " << trax
                  << " at " << trax.features.find("com")->second[0] << "," << trax.features.find("com")->second[1] << ","
-                 << trax.features.find("com")->second[2] << " lvl: " << trax.features.find("level")->second[0] << " - factor order: " << vi.size();
+                 << trax.features.find("com")->second[2] << " lvl: " << trax.Level << " - factor order: " << vi.size();
   if (vi.size() == 0) {
     // nothing to do here
     // happens in case of no det vars and no outgoing arcs
