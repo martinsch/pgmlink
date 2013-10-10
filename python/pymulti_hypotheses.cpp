@@ -307,12 +307,13 @@ void export_multi_hypotheses() {
   class_<PyTrackingOptions, boost::noncopyable>("TrackingOptions", init<>())
       .def("set", &PyTrackingOptions::set, return_internal_reference<>())
       .def("set", &PyTrackingOptions::set_rf, return_internal_reference<>())
-      .def("with_divisions", &PyTrackingOptions::with_divisions, return_internal_reference<>())
-      .def("with_constraints", &PyTrackingOptions::with_constraints, return_internal_reference<>())
-      .def("with_detection_vars", &PyTrackingOptions::with_detection_vars, return_internal_reference<>())
-      .def("with_classifiers", &PyTrackingOptions::with_classifiers, return_internal_reference<>())
-      .def("with_constant_classifiers", &PyTrackingOptions::with_constant_classifiers, return_internal_reference<>())
-      .def("sanity_check", &PyTrackingOptions::sanity_check)
+      .def("withDivisions", &PyTrackingOptions::with_divisions, return_internal_reference<>())
+      .def("withConstraints", &PyTrackingOptions::with_constraints, return_internal_reference<>())
+      .def("withDetectionVars", &PyTrackingOptions::with_detection_vars, return_internal_reference<>())
+      .def("withClassifiers", &PyTrackingOptions::with_classifiers, return_internal_reference<>())
+      .def("withConstantClassifiers", &PyTrackingOptions::with_constant_classifiers, return_internal_reference<>())
+      .def("withMaximalConflictCliques", &PyTrackingOptions::with_maximal_conflict_cliques, return_internal_reference<>())
+      .def("sanityCheck", &PyTrackingOptions::sanity_check)
       ;
 
 
