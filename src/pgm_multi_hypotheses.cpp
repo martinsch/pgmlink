@@ -213,6 +213,13 @@ ModelBuilder& ModelBuilder::without_classifier_priors( function<double (const Tr
   return *this;
 }
 
+
+ModelBuilder& ModelBuilder::with_maximal_conflict_cliques(bool check) {
+  with_maximal_conflit_cliques_ = check;
+  return *this;
+}
+
+
 namespace {
 inline size_t cplex_id(size_t opengm_id) {
   return 2*opengm_id+1;
@@ -453,6 +460,16 @@ void ModelBuilder::couple_count( const Model& m, const std::vector<Traxel>& trax
 
 void ModelBuilder::couple_conflicts( const Model& m, const std::vector<Traxel>& traxels, OpengmLPCplex& cplex) {
   LOG(logDEBUG1) << "MultiHypotheses::couple_conflicts()";
+  if (has_maximal_conflict_cliques()) {
+    couple_conflicts_maximal_cliques( m, traxels[0], cplex );
+  }
+  else {
+    couple_conflicts_pairwise( m, traxels, cplex);
+  }
+}
+
+
+void ModelBuilder::couple_conflicts_pairwise( const Model& m, const std::vector<Traxel>& traxels, OpengmLPCplex& cplex) {
   for (std::vector<Traxel>::const_iterator t = traxels.begin(); t != traxels.end(); ++t) {
     FeatureMap::const_iterator feature = t->features.find("conflicts");
     if (feature == t->features.end()) {
@@ -472,7 +489,12 @@ void ModelBuilder::couple_conflicts( const Model& m, const std::vector<Traxel>& 
       cplex.addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0, 1);
       
     }
-  }
+  }  
+}
+
+
+void ModelBuilder::couple_conflicts_maximal_cliques( const Model& m, const Traxel& trax, OpengmLPCplex& cplex) {
+  
 }
 
 
