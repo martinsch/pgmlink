@@ -135,6 +135,21 @@ template <typename Graph>
 const std::string property_map<node_count_features, Graph>::name = "node_count_features";
 
 
+////
+//// node_conflict_sets
+////
+struct node_conflict_sets{};
+
+template <typename Graph>
+struct property_map<node_conflict_sets, Graph> {
+  typedef IterableEditableValueMap<Graph, typename Graph::Node, std::vector<std::vector<unsigned> > > type;
+  static const std::string name;
+};
+
+template <typename Graph>
+const std::string property_map<node_conflict_sets, Graph>::name = "node_conflict_sets";
+
+
 
 /* class TagNode : public lemon::ListGraph::Node {
    public:
@@ -206,6 +221,7 @@ class MultiHypothesesGraph : public HypothesesGraph {
   typedef property_map<node_division_features, base_graph>::type DivisionFeatureMap;
   typedef property_map<node_move_features, base_graph>::type MoveFeatureMap;
   typedef property_map<node_count_features, base_graph>::type CountFeatureMap;
+  typedef property_map<node_conflict_sets, base_graph>::type ConflictSetMap;
 
 
   MultiHypothesesGraph();
