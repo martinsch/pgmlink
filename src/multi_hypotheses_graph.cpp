@@ -195,6 +195,9 @@ void MultiHypothesesGraphBuilder::add_nodes(const MultiHypothesesTraxelStore& ts
       LOG(logDEBUG4) << "MultiHypothesesGraphBuilder::add_nodes -- "
                      << "added new component " << traxels[0].Id
                      << " at time " << traxels[0].Timestep;
+      LOG(logDEBUG4) << "MultiHypothesesGraphBuilder::add_nodes -- "
+                     <<  "new component has " << conflict_sets[node].size()
+                     << " conflict sets";
     }
   }
 }
