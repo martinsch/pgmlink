@@ -83,6 +83,7 @@ namespace pgmlink {
 	void merge_nodes_threshold(double threshold, bool greedy=false);
 
 	std::vector<std::vector<int> > get_labels_vector();
+	std::vector<std::vector<int> > get_connected_components();
 
   private:
     void incrementPerimeter(RegionAdjacencyGraph::Node n);
