@@ -74,7 +74,7 @@ struct IterableValueMap_ValueIterator {
 
 
 
-class PyMultiHypothesesTraxelStoreBuilder {
+/* class PyMultiHypothesesTraxelStoreBuilder {
  public:
   PyMultiHypothesesTraxelStoreBuilder(MultiHypothesesTraxelStore& ts) : ts_(ts) {
     
@@ -90,7 +90,7 @@ class PyMultiHypothesesTraxelStoreBuilder {
   }
  private:
   MultiHypothesesTraxelStore& ts_;
-};
+}; */
 
 class PyTrackerTemp {
  public:
@@ -275,20 +275,21 @@ void export_multi_hypotheses() {
            return_internal_reference<>())
       .def("make_string", &MultiHypothesesTraxelStore::print)
       .def("__str__", &MultiHypothesesTraxelStore::print)
+      .def("addConflictMap", &MultiHypothesesTraxelStore::add_conflict_map)
       ;
 
 
   ////
   //// class MultiHypothesesTraxelStoreBuilder
   ////
-  class_<PyMultiHypothesesTraxelStoreBuilder, boost::noncopyable>("MultiHypothesesTraxelStoreBuilder",
+  /* class_<PyMultiHypothesesTraxelStoreBuilder, boost::noncopyable>("MultiHypothesesTraxelStoreBuilder",
                                                                   init<MultiHypothesesTraxelStore&>()[with_custodian_and_ward<1, 2>()]
                                                                   )
       .def("build", vigra::registerConverters(&PyMultiHypothesesTraxelStoreBuilder::build<2, unsigned>), return_internal_reference<>())
       .def("build", vigra::registerConverters(&PyMultiHypothesesTraxelStoreBuilder::build<3, unsigned>), return_internal_reference<>())
       .def("build", vigra::registerConverters(&PyMultiHypothesesTraxelStoreBuilder::build<2, unsigned long>), return_internal_reference<>())
       .def("build", vigra::registerConverters(&PyMultiHypothesesTraxelStoreBuilder::build<3, unsigned long>), return_internal_reference<>())
-      ;
+      ; */
 
 
   ////

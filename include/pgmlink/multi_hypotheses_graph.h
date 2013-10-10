@@ -46,7 +46,7 @@ class MultiHypothesesGraphBuilder;
 
 class MultiHypothesesTraxelStore;
 
-class MultiHypothesesTraxelStoreBuilder;
+// class MultiHypothesesTraxelStoreBuilder;
 
 class ClassifierStrategy;
 
@@ -57,8 +57,11 @@ RegionGraphVectorPtr;
 
 typedef boost::shared_ptr<MultiHypothesesGraph> MultiHypothesesGraphPtr;
 
-typedef std::map<int, std::map<unsigned, std::pair<Traxel, std::vector<Traxel> > > >
-TimestepRegionMap;
+typedef std::map<int, std::map<unsigned, std::vector<Traxel> > > TimestepRegionMap;
+
+typedef std::map<unsigned, std::vector<std::vector<Traxel> > > ConflictSetMap;
+
+typedef std::map<int, ConflictSetMap> TimestepConflictSetMap;
 
 template <typename PropertyTag, typename Graph>
 struct PropertyValue {
@@ -325,13 +328,13 @@ class MultiHypothesesGraphBuilder {
 ////
 struct MultiHypothesesTraxelStore {
  public:
-  void add(const Traxel& trax);
-
+  void add(const Traxel& trax, unsigned component_id);
+  void add_conflict_map(int timestep, const ConflictSetMap& conflicts);
   void start_component(const Traxel& trax);
-
   std::string print();
 
   TimestepRegionMap map;
+  TimestepConflictSetMap conflicts_by_timestep;
 };
 
 
@@ -339,7 +342,7 @@ struct MultiHypothesesTraxelStore {
 //// class MultiHypothesesTraxelStoreBuilder
 ////
 
-class MultiHypothesesTraxelStoreBuilder {
+/* class MultiHypothesesTraxelStoreBuilder {
  public:
   template <int N, typename LABEL_TYPE>
   void build(MultiHypothesesTraxelStore& ts,
@@ -355,7 +358,7 @@ class MultiHypothesesTraxelStoreBuilder {
                            vigra::MultiArrayView<N, LABEL_TYPE> components,
                            const Traxel& trax
                            );
-};
+}; */
 
 
 ////
@@ -487,7 +490,7 @@ MultiHypothesesGraph::get_properties_at(int timestep) {
 ////
 //// class MultiHypothesesTraxelStoreBuilder
 ////
-template <int N, typename LABEL_TYPE>
+/* template <int N, typename LABEL_TYPE>
 void MultiHypothesesTraxelStoreBuilder::build(MultiHypothesesTraxelStore& ts,
                                               vigra::MultiArrayView<N+1, LABEL_TYPE> arr,
                                               vigra::MultiArrayView<N, LABEL_TYPE> components,
@@ -553,7 +556,7 @@ Traxel& MultiHypothesesTraxelStoreBuilder::assign_component(MultiHypothesesTraxe
     }
   }
   return *(components[component_label].second.rbegin());
-}
+} */
 
 
 

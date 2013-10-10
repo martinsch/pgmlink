@@ -178,13 +178,12 @@ void MultiHypothesesGraphBuilder::add_nodes(const MultiHypothesesTraxelStore& ts
   for (TimestepRegionMap::const_iterator timestep = ts.map.begin();
        timestep != ts.map.end();
        ++timestep) {
-    for (std::map<unsigned, std::pair<Traxel, std::vector<Traxel> > >::const_iterator component
-             = timestep->second.begin();
+    for (std::map<unsigned, std::vector<Traxel> >::const_iterator component = timestep->second.begin();
          component != timestep->second.end();
          ++component) {
       const MultiHypothesesGraph::Node& node = dest_graph->add_node(timestep->first);
       std::vector<Traxel>& traxels = regions.get_value(node);
-      traxels.insert(traxels.end(), component->second.second.begin(), component->second.second.end());
+      traxels.insert(traxels.end(), component->second.begin(), component->second.end());
       assert(traxels.size() > 0);
       traxel_map.set(node, traxels[0]);
       LOG(logDEBUG4) << "MultiHypothesesGraphBuilder::add_nodes -- "
@@ -425,19 +424,24 @@ void MultiHypothesesGraphBuilder::add_disappearance_events(const Traxel& trax,
 ////
 //// MultiHypothesesTraxelStore
 ////
-void MultiHypothesesTraxelStore::add(const Traxel& trax) {
-  map[trax.Timestep][trax.Id].second.push_back(trax);
+void MultiHypothesesTraxelStore::add(const Traxel& trax, unsigned component_id) {
+  map[trax.Timestep][component_id].push_back(trax);
+}
+
+
+void MultiHypothesesTraxelStore::add_conflict_map(int timestep, const ConflictSetMap& conflicts) {
+  conflicts_by_timestep[timestep] = conflicts;
 }
 
 
 void MultiHypothesesTraxelStore::start_component(const Traxel& trax) {
   LOG(logDEBUG4) << "MultiHypothesesTraxelStore::start_component: " << trax;
-  map[trax.Timestep][trax.Id] = std::make_pair(trax, std::vector<Traxel>());
-  assert(map[trax.Timestep][trax.Id].second.size() == 0);
-  map[trax.Timestep][trax.Id].second.push_back(trax);
+  map[trax.Timestep][trax.Id] = std::vector<Traxel>();
+  assert(map[trax.Timestep][trax.Id].size() == 0);
+  map[trax.Timestep][trax.Id].push_back(trax);
   LOG(logDEBUG4) << "MultiHypothesesTraxelStore::start_component: "
                  << "new trax has com?"
-                 << map[trax.Timestep][trax.Id].second.rbegin()->features.count("com");
+                 << map[trax.Timestep][trax.Id].rbegin()->features.count("com");
 }
 
 
@@ -445,12 +449,12 @@ std::string MultiHypothesesTraxelStore::print() {
   std::stringstream ss;
   for (TimestepRegionMap::const_iterator it = map.begin(); it != map.end(); ++it) {
     ss << "t=" << it->first << '\n';
-    for (std::map<unsigned, std::pair<Traxel, std::vector<Traxel> > >::const_iterator it2 = it->second.begin();
+    for (std::map<unsigned, std::vector<Traxel> >::const_iterator it2 = it->second.begin();
          it2 != it->second.end();
          ++it2) {
       ss << ".. connected component=" << it2->first << '\n';
-      for (std::vector<Traxel>::const_iterator it3 = it2->second.second.begin();
-           it3 != it2->second.second.end();
+      for (std::vector<Traxel>::const_iterator it3 = it2->second.begin();
+           it3 != it2->second.end();
            ++it3) {
         ss << ".... region=" << *it3 << '\n';
       }
