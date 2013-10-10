@@ -110,10 +110,11 @@ class ModelBuilder {
                unsigned max_division_level=0,
                unsigned max_count=2)
       : with_detection_vars_(false),
-        with_divisions_(false),
-        with_classifier_priors_(false),
-        appearance_(appearance),
-        disappearance_(disappearance),
+    with_divisions_(false),
+    with_classifier_priors_(false),
+    with_maximal_conflit_cliques_(false),
+    appearance_(appearance),
+    disappearance_(disappearance),
     move_(move),
     count_(count),
     forbidden_cost_(forbidden_cost),
@@ -166,6 +167,10 @@ class ModelBuilder {
                                            function<double (const Traxel&, const Traxel&, const Traxel&, feature_type)> division );
   bool has_classifiers() const { return with_classifier_priors_; }
 
+  // maximal conflict cliques
+  ModelBuilder& with_maximal_conflict_cliques(bool);
+  bool has_maximal_conflict_cliques() const { return with_maximal_conflit_cliques_; }
+
   // build
   virtual boost::shared_ptr<Model> build( const MultiHypothesesGraph& ) const = 0;
 
@@ -209,6 +214,7 @@ class ModelBuilder {
   bool with_detection_vars_;
   bool with_divisions_;
   bool with_classifier_priors_;
+  bool with_maximal_conflit_cliques_;
 
   function<double (const Traxel&, size_t)> detection_;
   function<double (const Traxel&, size_t)> non_detection_;

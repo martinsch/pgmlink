@@ -213,6 +213,13 @@ ModelBuilder& ModelBuilder::without_classifier_priors( function<double (const Tr
   return *this;
 }
 
+
+ModelBuilder& ModelBuilder::with_maximal_conflict_cliques(bool check) {
+  with_maximal_conflit_cliques_ = check;
+  return *this;
+}
+
+
 namespace {
 inline size_t cplex_id(size_t opengm_id) {
   return 2*opengm_id+1;
