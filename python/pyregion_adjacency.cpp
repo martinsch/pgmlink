@@ -9,6 +9,7 @@
 #include <boost/python/return_internal_reference.hpp>
 #include <boost/python/return_value_policy.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#include <boost/python/suite/indexing/map_indexing_suite.hpp>
 #include <boost/utility.hpp>
 
 #include <lemon/core.h>
@@ -69,6 +70,11 @@ struct IterableValueMap_ValueIterator {
 
 
 void export_region_adjacency() {
+  class_<Region>("Region")
+	.def_readwrite("id", &Region::id)
+	.def_readwrite("contains_labels", &Region::contains_labels)
+	;
+
   class_<typename RegionAdjacencyGraph::Edge>("Edge");
   class_<typename RegionAdjacencyGraph::EdgeIt>("EdgeIt");
   class_<typename RegionAdjacencyGraph::Node>("Node");
@@ -82,9 +88,21 @@ void export_region_adjacency() {
       .def("values", &IterableValueMap_ValueIterator<edge_weight_m>::values)
       ;
 
-  class_<std::vector<std::vector<int> > >("LabelsVector")
+  class_<std::vector<std::vector<int> > >("VectorOfVectorOfInt")
         .def(vector_indexing_suite<std::vector<std::vector<int> > >())
       ;
+
+  class_<std::vector<Region> >("RegionVector")
+		 .def(vector_indexing_suite<std::vector<Region> >())
+		 ;
+
+  class_<std::vector<int> >("IntVector")
+		  .def(vector_indexing_suite<std::vector<int> >())
+		  ;
+
+  class_<std::map<int, std::vector<std::vector<int> > > >("ConflictSetsMap")
+		  .def(map_indexing_suite<std::map<int, std::vector<std::vector<int> > > >())
+		  ;
 
 
   // handle function overloading
@@ -123,6 +141,9 @@ void export_region_adjacency() {
     .def("mergeNodesThreshold", &RegionAdjacencyGraph::merge_nodes_threshold)
 
     .def("getLabelsVector", &RegionAdjacencyGraph::get_labels_vector)
+    .def("getConnectedComponentIds", &RegionAdjacencyGraph::get_connected_component_ids)
+    .def("getRegions", &RegionAdjacencyGraph::get_regions)
+    .def("getConflictSets", &RegionAdjacencyGraph::get_conflict_sets)
 
     ;
 
