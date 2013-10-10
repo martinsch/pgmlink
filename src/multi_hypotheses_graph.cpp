@@ -155,6 +155,7 @@ MultiHypothesesGraphBuilder::build(RegionGraphVectorPtr graphs) {
 MultiHypothesesGraphPtr
 MultiHypothesesGraphBuilder::build(const MultiHypothesesTraxelStore& ts) {
   MultiHypothesesGraphPtr graph(new MultiHypothesesGraph);
+  graph->add(node_conflict_sets());
   add_nodes(ts, graph);
   add_edges(graph);
 
@@ -175,6 +176,7 @@ void MultiHypothesesGraphBuilder::add_nodes(const MultiHypothesesTraxelStore& ts
   LOG(logDEBUG) << "MultiHypothesesGraphBuilder::add_nodes -- entered";
   MultiHypothesesGraph::ContainedRegionsMap& regions = dest_graph->get(node_regions_in_component());
   MultiHypothesesGraph::TraxelMap& traxel_map = dest_graph->get(node_traxel());
+  MultiHypothesesGraph::ConflictSetMap& conflict_sets = dest_graph->get(node_conflict_sets());
   for (TimestepRegionMap::const_iterator timestep = ts.map.begin();
        timestep != ts.map.end();
        ++timestep) {
@@ -186,6 +188,10 @@ void MultiHypothesesGraphBuilder::add_nodes(const MultiHypothesesTraxelStore& ts
       traxels.insert(traxels.end(), component->second.begin(), component->second.end());
       assert(traxels.size() > 0);
       traxel_map.set(node, traxels[0]);
+      assert(ts.conflicts_by_timestep.find(timestep->first) != ts.conflicts_by_timestep.end());
+      const ConflictSetMap& conflicts_source = ts.conflicts_by_timestep.find(timestep->first)->second;
+      assert(conflicts_source.find(component->first) != conflicts_source.end());
+      conflict_sets.get_value(node) = conflicts_source.find(component->first)->second;
       LOG(logDEBUG4) << "MultiHypothesesGraphBuilder::add_nodes -- "
                      << "added new component " << traxels[0].Id
                      << " at time " << traxels[0].Timestep;
