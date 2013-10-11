@@ -10,6 +10,8 @@
 
 // boost
 #include <boost/shared_ptr.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/map.hpp>
 
 // lemon
 #include <lemon/list_graph.h>
@@ -328,6 +330,11 @@ class MultiHypothesesGraphBuilder {
 ////
 struct MultiHypothesesTraxelStore {
  public:
+  MultiHypothesesTraxelStore() {}
+
+  MultiHypothesesTraxelStore(TimestepRegionMap map, TimestepConflictSetMap conflicts_by_timestep):
+	  map(map), conflicts_by_timestep(conflicts_by_timestep) {}
+
   void add(const Traxel& trax, unsigned component_id);
   void add_conflict_map(int timestep, const ConflictSetMap& conflicts);
   void start_component(const Traxel& trax);
@@ -336,8 +343,19 @@ struct MultiHypothesesTraxelStore {
 
   TimestepRegionMap map;
   TimestepConflictSetMap conflicts_by_timestep;
+
+ private:
+  friend class boost::serialization::access;
+  template< typename Archive >
+   void serialize( Archive&, const unsigned int /*version*/ );
 };
 
+
+template< typename Archive >
+void MultiHypothesesTraxelStore::serialize( Archive& ar, const unsigned int /*version*/ ) {
+   ar & map;
+   ar & conflicts_by_timestep;
+}
 
 ////
 //// class MultiHypothesesTraxelStoreBuilder

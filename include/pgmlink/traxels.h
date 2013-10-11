@@ -275,6 +275,7 @@ void Traxel::serialize( Archive& ar, const unsigned int /*version*/ ) {
 
   ar & Id;
   ar & Timestep;
+  ar & Level;
   ar & features;
   ar & locator_;
 }

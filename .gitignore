@@ -19,6 +19,8 @@ learning_systemtest.cpp
 learning_systemtest
 Doxyfile
 pgmlink_export.h
+*.pkl
+*overseg-merged.h5
 
 
 # Compiled source #
