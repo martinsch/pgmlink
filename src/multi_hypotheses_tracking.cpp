@@ -58,6 +58,7 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
                                                                                 )
                                            );
   std::cout << " -> workflow: building graph from traxelstore" << std::endl;
+  ts.make_sane();
   MultiHypothesesGraphPtr graph = mult_builder.build(ts);
 
   if (options_.with_constant_classifiers) {

@@ -331,6 +331,7 @@ struct MultiHypothesesTraxelStore {
   void add(const Traxel& trax, unsigned component_id);
   void add_conflict_map(int timestep, const ConflictSetMap& conflicts);
   void start_component(const Traxel& trax);
+  void make_sane();
   std::string print();
 
   TimestepRegionMap map;

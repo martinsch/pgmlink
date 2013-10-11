@@ -454,6 +454,20 @@ void MultiHypothesesTraxelStore::start_component(const Traxel& trax) {
 }
 
 
+void MultiHypothesesTraxelStore::make_sane() {
+  for (TimestepRegionMap::const_iterator t = map.begin(); t != map.end(); ++t) {
+    if (conflicts_by_timestep.find(t->first) == conflicts_by_timestep.end()) {
+      conflicts_by_timestep[t->first] = ConflictSetMap();
+    }
+    for (std::map<unsigned, std::vector<Traxel> >::const_iterator r = t->second.begin(); r != t->second.end(); ++r) {
+      if (conflicts_by_timestep[t->first].find(r->first) == conflicts_by_timestep[t->first].end()) {
+        conflicts_by_timestep[t->first][r->first] = std::vector<std::vector<unsigned> >();
+      }
+    }
+  }
+}
+
+
 std::string MultiHypothesesTraxelStore::print() {
   std::stringstream ss;
   for (TimestepRegionMap::const_iterator it = map.begin(); it != map.end(); ++it) {
