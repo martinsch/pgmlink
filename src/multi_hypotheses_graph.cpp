@@ -333,7 +333,7 @@ void MultiHypothesesGraphBuilder::add_edges_for_node(MultiHypothesesGraphPtr gra
     assert(neighbor_node != node);
     if (direction == FORWARD) {
       graph->addArc(node, neighbor_node);
-    } else {
+    } else if (lemon::findArc(*graph, neighbor_node, node) == lemon::INVALID) {
       graph->addArc(neighbor_node, node);
     }
   }
@@ -534,7 +534,8 @@ void ClassifierConstant::classify(const std::vector<Traxel>& traxels_out,
   LOG(logDEBUG3) << "ClassifierConstant::classify: entered";
   for (std::vector<Traxel>::const_iterator out = traxels_out.begin(); out != traxels_out.end(); ++out) {
     for (std::vector<Traxel>::const_iterator in = traxels_in.begin(); in != traxels_in.end(); ++in) {
-      assert(feature_map[*out][*in].size() == 0);
+      LOG(logDEBUG4) << "ClassifierConstant::classify: " << *out << " -> " << *in;
+      // assert(feature_map[*out][*in].size() == 0);
       feature_map[*out][*in].push_back(probability_);
       feature_map[*out][*in].push_back(1-probability_);
     }
