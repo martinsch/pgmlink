@@ -54,7 +54,7 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
 
   MultiHypothesesGraphBuilder mult_builder(MultiHypothesesGraphBuilder::Options(options_.get_weight("neighbors"),
                                                                                 options_.get_weight("distance"),
-                                                                                false // forward backward
+                                                                                options_.forward_backward // forward backward
                                                                                 )
                                            );
   std::cout << " -> workflow: building graph from traxelstore" << std::endl;

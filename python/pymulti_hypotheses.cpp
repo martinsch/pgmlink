@@ -165,6 +165,8 @@ struct PyTrackingOptions {
     options.weights["timeout"] = 1e+75;
     options.weights["gap"] = 0.01;
     options.weights["opportunity"] = 1000;
+
+    options.forward_backward = true;
   }
   
   void set(const std::string& name, double value) {
@@ -197,6 +199,10 @@ struct PyTrackingOptions {
 
   void with_maximal_conflict_cliques(bool check) {
     options.with_maximal_conflict_cliques = check;
+  }
+
+  void forward_backward(bool check) {
+    options.forward_backward = check;
   }
 
   std::string sanity_check() {
@@ -313,6 +319,7 @@ void export_multi_hypotheses() {
       .def("withClassifiers", &PyTrackingOptions::with_classifiers, return_internal_reference<>())
       .def("withConstantClassifiers", &PyTrackingOptions::with_constant_classifiers, return_internal_reference<>())
       .def("withMaximalConflictCliques", &PyTrackingOptions::with_maximal_conflict_cliques, return_internal_reference<>())
+      .def("forwardBackward", &PyTrackingOptions::forward_backward, return_internal_reference<>())
       .def("sanityCheck", &PyTrackingOptions::sanity_check)
       ;
 
