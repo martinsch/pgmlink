@@ -4,12 +4,16 @@
 // stl
 // temp
 #include <iostream>
+#include <string>
+#include <sstream>
 
 // boost
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/python.hpp>
 #include <boost/python/return_internal_reference.hpp>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
 
 // vigra
 #include <vigra/numpy_array.hxx>
@@ -235,6 +239,20 @@ class PySharedPtr {
 
 
 
+struct traxelstore_pickle_suite : pickle_suite {
+    static std::string getstate( const MultiHypothesesTraxelStore& g ) {
+      std::stringstream ss;
+      boost::archive::text_oarchive oa(ss);
+      oa & g;
+      return ss.str();
+    }
+
+    static void setstate( MultiHypothesesTraxelStore& g, const std::string& state ) {
+      std::stringstream ss(state);
+      boost::archive::text_iarchive ia(ss);
+      ia & g;
+    }
+};
 
 void export_multi_hypotheses() {
   /* class_<typename MultiHypothesesGraph::Arc>("MultiArc");
@@ -282,6 +300,7 @@ void export_multi_hypotheses() {
       .def("make_string", &MultiHypothesesTraxelStore::print)
       .def("__str__", &MultiHypothesesTraxelStore::print)
       .def("addConflictMap", &MultiHypothesesTraxelStore::add_conflict_map)
+      .def_pickle(traxelstore_pickle_suite())
       ;
 
 

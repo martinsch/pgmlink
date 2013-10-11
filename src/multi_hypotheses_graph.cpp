@@ -488,7 +488,6 @@ std::string MultiHypothesesTraxelStore::print() {
 }
 
 
-
 ////
 //// ClassifierStrategy
 ////
