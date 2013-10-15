@@ -23,6 +23,8 @@ class FeatureCalculator {
 
   virtual ~FeatureCalculator();
   virtual feature_array calculate(const feature_array& f1, const feature_array& f2) const = 0;
+
+  bool operator==(const FeatureCalculator& other);
 };
 
 

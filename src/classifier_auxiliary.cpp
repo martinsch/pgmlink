@@ -30,6 +30,11 @@ FeatureCalculator::~FeatureCalculator() {
 }
 
 
+bool FeatureCalculator::operator==(const FeatureCalculator& other) {
+  return name == other.name;
+}
+
+
 ////
 //// class DistanceCalculator
 ////
