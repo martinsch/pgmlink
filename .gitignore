@@ -58,6 +58,11 @@ ehthumbs.db
 Icon?
 Thumbs.db
 
+# data #
+########
+*.tif
+*.png
+
 /build/
 html
 doc/html
