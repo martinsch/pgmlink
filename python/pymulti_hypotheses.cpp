@@ -181,6 +181,23 @@ class FeatureExtractorCollection {
     std::vector<std::string> features;
     features.push_back("com");
     name_extractor_mapping_.insert(std::make_pair("distance", FeatureExtractor(calc, features)));
+  
+    features.clear();
+
+    calc = boost::shared_ptr<FeatureCalculator>(new SizeRatioCalculator);
+    features.push_back("count");
+    name_extractor_mapping_.insert(std::make_pair("size_ratio", FeatureExtractor(calc, features)));
+    features.clear();
+
+    calc = boost::shared_ptr<FeatureCalculator>(new IntensityRatioCalculator);
+    features.push_back("intensity");
+    name_extractor_mapping_.insert(std::make_pair("intensity_ratio", FeatureExtractor(calc, features)));
+    features.clear();
+
+    calc = boost::shared_ptr<FeatureCalculator>(new ChildrenMeanParentIntensityRatioCalculator);
+    features.push_back("intensity");
+    name_extractor_mapping_.insert(std::make_pair("children_parent_intensity_ratio", FeatureExtractor(calc, features)));
+    features.clear();
   }
   
 
