@@ -18,12 +18,13 @@ namespace pgmlink {
 
 class FeatureCalculator {
  public:
-  static const std::string name;
+  static const std::string name_;
   static const unsigned length;
 
   virtual ~FeatureCalculator();
   virtual feature_array calculate(const feature_array& f1, const feature_array& f2) const;
   virtual feature_array calculate(const feature_array& f1, const feature_array& f2, const feature_array& f3) const;
+  virtual const std::string& name() const;
 
   bool operator==(const FeatureCalculator& other);
 };
@@ -31,13 +32,48 @@ class FeatureCalculator {
 
 class DistanceCalculator : public FeatureCalculator {
  public:
-  static const std::string name;
+  static const std::string name_;
   static const unsigned length;
 
   virtual ~DistanceCalculator();
   virtual feature_array calculate(const feature_array& f1, const feature_array& f2) const;
+  virtual const std::string& name() const;
 };
 
+
+class SizeRatioCalculator : public FeatureCalculator {
+ public:
+  static const std::string name_;
+  static const unsigned length;
+
+  virtual ~SizeRatioCalculator();
+  virtual feature_array calculate(const feature_array& f1, const feature_array& f2) const;
+  virtual feature_array calculate(const feature_array& f1, const feature_array& f2, const feature_array& f3) const;
+  virtual const std::string& name() const;
+};
+
+
+class IntensityRatioCalculator : public FeatureCalculator {
+ public:
+  static const std::string name_;
+  static const unsigned length;
+
+  virtual ~IntensityRatioCalculator();
+  virtual feature_array calculate(const feature_array& f1, const feature_array& f2) const;
+  virtual feature_array calculate(const feature_array& f1, const feature_array& f2, const feature_array& f3) const;
+  virtual const std::string& name() const;
+};
+
+
+class ChildrenMeanParentIntensityRatioCalculator : public FeatureCalculator {
+  public:
+  static const std::string name_;
+  static const unsigned length;
+
+  virtual ~ChildrenMeanParentIntensityRatioCalculator();
+  virtual feature_array calculate(const feature_array& f1, const feature_array& f2, const feature_array& f3) const;
+  virtual const std::string& name() const;
+};
   
 
 class FeatureExtractor {

@@ -21,7 +21,7 @@ namespace pgmlink {
 ////
 //// class FeatureCalculator
 ////
-const std::string FeatureCalculator::name = "";
+const std::string FeatureCalculator::name_ = "";
 
 const unsigned FeatureCalculator::length = 0;
 
@@ -32,26 +32,31 @@ FeatureCalculator::~FeatureCalculator() {
 
 
 feature_array FeatureCalculator::calculate(const feature_array& f1, const feature_array& f2) const {
-  throw std::runtime_error("FeatureCalculator \"" + name + "\" does not take two feature arrays");
+  throw std::runtime_error("FeatureCalculator \"" + name() + "\" does not take two feature arrays");
   return feature_array();
 }
 
 
 feature_array FeatureCalculator::calculate(const feature_array& f1, const feature_array& f2, const feature_array& f3) const {
-  throw std::runtime_error("FeatureCalculator \"" + name + "\" does not take three feature arrays");
+  throw std::runtime_error("FeatureCalculator \"" + name() + "\" does not take three feature arrays");
   return feature_array();
 }
 
 
+const std::string& FeatureCalculator::name() const {
+  return FeatureCalculator::name_;
+}
+
+
 bool FeatureCalculator::operator==(const FeatureCalculator& other) {
-  return name == other.name;
+  return name() == other.name();
 }
 
 
 ////
 //// class DistanceCalculator
 ////
-const std::string DistanceCalculator::name = "distance";
+const std::string DistanceCalculator::name_ = "distance";
 
 const unsigned DistanceCalculator::length = 1;
 
@@ -70,6 +75,11 @@ feature_array DistanceCalculator::calculate(const feature_array& f1, const featu
     ret[0] += (*f1_it - *f2_it)*(*f1_it - *f2_it);
   }
   return ret;
+}
+
+
+const std::string& DistanceCalculator::name() const {
+  return DistanceCalculator::name_;
 }
 
 
