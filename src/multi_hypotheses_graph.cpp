@@ -16,6 +16,7 @@
 #include <pgmlink/nearest_neighbors.h>
 #include <pgmlink/hypotheses.h> // for tags
 #include <pgmlink/region_graph.h> // more tags and RegionGraph
+#include <pgmlink/classifier_auxiliary.h>
 
 
 namespace pgmlink {
@@ -560,11 +561,11 @@ void ClassifierConstant::classify(const std::vector<Traxel>& traxels_out,
 //// ClassifierRF
 ////
 ClassifierRF::ClassifierRF(vigra::RandomForest<> rf,
-                           const std::vector<std::string>& feature_list,
+                           const std::vector<FeatureExtractor> feature_extractors,
                            const std::string& name) :
     ClassifierStrategy(name),
     rf_(rf),
-    feature_list_(feature_list),
+    feature_extractors_(feature_extractors),
     features_(vigra::MultiArray<2, feature_type>::difference_type(1, rf.feature_count())),
     probabilities_(vigra::MultiArray<2, feature_type>::difference_type(1, rf.class_count())) {
   if(rf_.class_count() < 2) {
@@ -590,10 +591,40 @@ void ClassifierRF::classify(const std::vector<Traxel>& traxels_out,
                             std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_array> >& feature_map) {}
 
 
+void ClassifierRF::extract_features(const Traxel& t1, const Traxel& t2) {
+  size_t starting_index = 0;
+  for (std::vector<FeatureExtractor>::const_iterator it = feature_extractors_.begin();
+       it != feature_extractors_.end();
+       ++it) {
+    feature_array feats = it->extract(t1, t2);
+    assert(starting_index + feats.size() <= features_.shape()[1]);
+    std::copy(feats.begin(), feats.end(), features_.begin() + starting_index);
+  }
+  if (starting_index != features_.shape()[1]) {
+    throw std::runtime_error("ClassifierRF: extracted features size does not match random forest feature size");
+  }
+}
+
+
+void ClassifierRF::extract_features(const Traxel& parent, const Traxel& child1, const Traxel& child2) {
+  size_t starting_index = 0;
+  for (std::vector<FeatureExtractor>::const_iterator it = feature_extractors_.begin();
+       it != feature_extractors_.end();
+       ++it) {
+    feature_array feats = it->extract(parent, child1, child2);
+    assert(starting_index + feats.size() <= features_.shape()[1]);
+    std::copy(feats.begin(), feats.end(), features_.begin() + starting_index);
+  }
+  if (starting_index != features_.shape()[1]) {
+    throw std::runtime_error("ClassifierRF: extracted features size does not match random forest feature size");
+  }
+}
+
+
 ClassifierMoveRF::ClassifierMoveRF(vigra::RandomForest<> rf, 
-                                   const std::vector<std::string>& feature_list,
+                                   const std::vector<FeatureExtractor> feature_extractors,
                                    const std::string& name) :
-    ClassifierRF(rf, feature_list, name) {}
+    ClassifierRF(rf, feature_extractors, name) {}
 
 
 ClassifierMoveRF::~ClassifierMoveRF() {}
@@ -633,15 +664,13 @@ void ClassifierMoveRF::classify(const std::vector<Traxel>& traxels_out,
 }
 
 
-void ClassifierMoveRF::extract_features(const Traxel& t1, const Traxel& t2) {
-  // extract the neccessary features here! to be implemented as soon as classifiers exist
-}
+
 
 
 ClassifierDivisionRF::ClassifierDivisionRF(vigra::RandomForest<> rf, 
-                                           const std::vector<std::string>& feature_list,
+                                           const std::vector<FeatureExtractor> feature_extractors,
                                            const std::string& name) :
-    ClassifierRF(rf, feature_list, name) {}
+    ClassifierRF(rf, feature_extractors, name) {}
 
 
 ClassifierDivisionRF::~ClassifierDivisionRF() {}
@@ -685,9 +714,7 @@ void ClassifierDivisionRF::classify(const std::vector<Traxel>& traxels_out,
 }
 
 
-void ClassifierDivisionRF::extract_features(const Traxel& parent, const Traxel& child1, const Traxel& child2) {
-  // extract the neccessary features here! to be implemented as soon as classifiers exist
-}
+
 
 
 
