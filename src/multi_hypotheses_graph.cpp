@@ -559,9 +559,12 @@ void ClassifierConstant::classify(const std::vector<Traxel>& traxels_out,
 ////
 //// ClassifierRF
 ////
-ClassifierRF::ClassifierRF(vigra::RandomForest<> rf, const std::string& name) :
+ClassifierRF::ClassifierRF(vigra::RandomForest<> rf,
+                           const std::vector<std::string>& feature_list,
+                           const std::string& name) :
     ClassifierStrategy(name),
     rf_(rf),
+    feature_list_(feature_list),
     features_(vigra::MultiArray<2, feature_type>::difference_type(1, rf.feature_count())),
     probabilities_(vigra::MultiArray<2, feature_type>::difference_type(1, rf.class_count())) {
   if(rf_.class_count() < 2) {
@@ -587,8 +590,10 @@ void ClassifierRF::classify(const std::vector<Traxel>& traxels_out,
                             std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_array> >& feature_map) {}
 
 
-ClassifierMoveRF::ClassifierMoveRF(vigra::RandomForest<> rf, const std::string& name) :
-    ClassifierRF(rf, name) {}
+ClassifierMoveRF::ClassifierMoveRF(vigra::RandomForest<> rf, 
+                                   const std::vector<std::string>& feature_list,
+                                   const std::string& name) :
+    ClassifierRF(rf, feature_list, name) {}
 
 
 ClassifierMoveRF::~ClassifierMoveRF() {}
@@ -633,8 +638,10 @@ void ClassifierMoveRF::extract_features(const Traxel& t1, const Traxel& t2) {
 }
 
 
-ClassifierDivisionRF::ClassifierDivisionRF(vigra::RandomForest<> rf, const std::string& name) :
-    ClassifierRF(rf, name) {}
+ClassifierDivisionRF::ClassifierDivisionRF(vigra::RandomForest<> rf, 
+                                           const std::vector<std::string>& feature_list,
+                                           const std::string& name) :
+    ClassifierRF(rf, feature_list, name) {}
 
 
 ClassifierDivisionRF::~ClassifierDivisionRF() {}
