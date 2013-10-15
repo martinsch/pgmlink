@@ -22,7 +22,8 @@ class FeatureCalculator {
   static const unsigned length;
 
   virtual ~FeatureCalculator();
-  virtual feature_array calculate(const feature_array& f1, const feature_array& f2) const = 0;
+  virtual feature_array calculate(const feature_array& f1, const feature_array& f2) const;
+  virtual feature_array calculate(const feature_array& f1, const feature_array& f2, const feature_array& f3) const;
 
   bool operator==(const FeatureCalculator& other);
 };
@@ -43,6 +44,7 @@ class FeatureExtractor {
  public:
   FeatureExtractor(boost::shared_ptr<FeatureCalculator> calculator, const std::vector<std::string>& feature_names);
   feature_array extract(const Traxel& t1, const Traxel& t2) const;
+  feature_array extract(const Traxel& t1, const Traxel& t2, const Traxel& t3) const;
   boost::shared_ptr<FeatureCalculator> calculator();
 
  private:
