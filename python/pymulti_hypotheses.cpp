@@ -170,13 +170,6 @@ struct traxelstore_pickle_suite : pickle_suite {
 };
 
 void export_multi_hypotheses() {
-  /* class_<typename MultiHypothesesGraph::Arc>("MultiArc");
-  class_<typename MultiHypothesesGraph::ArcIt>("MultiArcIt");
-  class_<typename MultiHypothesesGraph::Node>("MultiNode");
-  class_<typename MultiHypothesesGraph::NodeIt>("MultiNodeIt");
-  class_<typename MultiHypothesesGraph::InArcIt>("MultiInArcIt");
-  class_<typename MultiHypothesesGraph::OutArcIt>("MultiOutArcIt"); */
-
   IterableValueMap_ValueIterator<MultiHypothesesGraph::ContainedRegionsMap>::wrap("ContainedRegionsMap_ValueIt");
   // IterableValueMap_ValueIterator<node_traxel>::wrap("NodeTraxelMap_ValueIt");
 
