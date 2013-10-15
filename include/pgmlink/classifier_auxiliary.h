@@ -41,12 +41,13 @@ class DistanceCalculator : public FeatureCalculator {
 
 class FeatureExtractor {
  public:
-  explicit FeatureExtractor(boost::shared_ptr<FeatureCalculator> calculator, const std::vector<std::string>& feature_names);
+  FeatureExtractor(boost::shared_ptr<FeatureCalculator> calculator, const std::vector<std::string>& feature_names);
   feature_array extract(const Traxel& t1, const Traxel& t2) const;
-  
+  boost::shared_ptr<FeatureCalculator> calculator();
+
  private:
   boost::shared_ptr<FeatureCalculator> calculator_;
-  const std::vector<std::string>& feature_names_;
+  std::vector<std::string> feature_names_;
 };
   
 

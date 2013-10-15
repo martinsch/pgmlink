@@ -85,5 +85,10 @@ feature_array FeatureExtractor::extract(const Traxel& t1, const Traxel& t2) cons
 }
 
 
+boost::shared_ptr<FeatureCalculator> FeatureExtractor::calculator() {
+  return calculator_;
+}
+
+
 
 } /* namespace pgmlink */
