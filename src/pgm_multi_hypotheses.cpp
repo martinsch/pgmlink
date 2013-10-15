@@ -1219,9 +1219,8 @@ void CVPR2014ModelBuilder::add_incoming_factor(const MultiHypothesesGraph& hypot
   }
 
   // move
-  // do not need to create factor, as all configurations produce 0 energy
   // move cost already included in outgoing factor
-  /* coords[0] = 1;
+  coords[0] = 1;
   for (size_t i = 1; i < table_dim; ++i) {
     coords[i] = 1;
     table.set_value( coords, 0 );
@@ -1232,7 +1231,7 @@ void CVPR2014ModelBuilder::add_incoming_factor(const MultiHypothesesGraph& hypot
   coords[0] = 0;
 
   // table = OpengmExplicitFactor<double>( vi, 999999 );
-  table.add_to( *m.opengm_model ); */
+  table.add_to( *m.opengm_model );
   LOG(logDEBUG2) << "CVPR2014ModelBuilder::add_incoming_factor: done";
 }
 
