@@ -84,6 +84,112 @@ const std::string& DistanceCalculator::name() const {
 
 
 ////
+//// class SizeRatioCalculator
+////
+const std::string SizeRatioCalculator::name_ = "size_ratio";
+
+const unsigned SizeRatioCalculator::length = 1;
+
+
+SizeRatioCalculator::~SizeRatioCalculator() {
+
+}
+
+
+feature_array SizeRatioCalculator::calculate(const feature_array& f1, const feature_array& f2) const {
+  assert(f1.size() == f2.size());
+  feature_array ret(length, 0.);
+  // keep ratio <= 1
+  // no zero check, as we do not have empty regions
+  assert(f1[0] > 0);
+  assert(f2[0] > 0);
+  if (f1[0] > f2[0]) {
+    ret[0] = f2[0]/f1[0];
+  } else {
+    ret[0] = f1[0]/f2[0];
+  }
+  return ret;
+}
+
+
+feature_array SizeRatioCalculator::calculate(const feature_array&, const feature_array& f2, const feature_array& f3) const {
+  return calculate(f2, f3);
+}
+
+
+const std::string& SizeRatioCalculator::name() const {
+  return SizeRatioCalculator::name_;
+}
+
+
+
+////
+//// class IntensityRatioCalculator
+////
+const std::string IntensityRatioCalculator::name_ = "intensity_ratio";
+
+const unsigned IntensityRatioCalculator::length = 1;
+
+
+IntensityRatioCalculator::~IntensityRatioCalculator() {
+
+}
+
+
+feature_array IntensityRatioCalculator::calculate(const feature_array& f1, const feature_array& f2) const {
+  assert(f1.size() == f2.size());
+  feature_array ret(length, 0.);
+  // keep ratio <= 1
+  // no zero check, as we do not have empty regions
+  assert(f1[0] > 0);
+  assert(f2[0] > 0);
+  if (f1[0] > f2[0]) {
+    ret[0] = f2[0]/f1[0];
+  } else {
+    ret[0] = f1[0]/f2[0];
+  }
+  return ret;
+}
+
+
+feature_array IntensityRatioCalculator::calculate(const feature_array&, const feature_array& f2, const feature_array& f3) const {
+  return calculate(f2, f3);
+}
+
+
+const std::string& IntensityRatioCalculator::name() const {
+  return IntensityRatioCalculator::name_;
+}
+
+
+////
+//// class ChildrenMeanParentIntensityRatioCalculator
+////
+const std::string ChildrenMeanParentIntensityRatioCalculator::name_ = "children_parent_intensity_ratio";
+
+const unsigned ChildrenMeanParentIntensityRatioCalculator::length = 1;
+
+
+ChildrenMeanParentIntensityRatioCalculator::~ChildrenMeanParentIntensityRatioCalculator() {
+
+}
+
+
+feature_array ChildrenMeanParentIntensityRatioCalculator::calculate(const feature_array& f1, const feature_array& f2, const feature_array& f3) const {
+  feature_array ret(length, 0.);
+  // mean of children intensities divided by parent intensity
+  ret[0] = 0.5*(f2[0] + f3[0])/f1[0];
+  return ret;
+}
+
+
+const std::string& ChildrenMeanParentIntensityRatioCalculator::name() const {
+  return ChildrenMeanParentIntensityRatioCalculator::name_;
+}
+
+
+
+////
 //// class FeatureExtractor
 ////
 FeatureExtractor::FeatureExtractor(boost::shared_ptr<FeatureCalculator> calculator, const std::vector<std::string>& feature_names)
