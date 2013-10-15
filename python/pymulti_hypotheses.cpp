@@ -23,9 +23,9 @@
 #include "pgmlink/multi_hypotheses_graph.h"
 #include "pgmlink/multi_hypotheses_tracking.h"
 #include "pgmlink/classifier_auxiliary.h"
+#include "pgmlink/feature.h"
 
 // temp
-#include "pgmlink/feature.h"
 #include "pgmlink/pgm_multi_hypotheses.h"
 #include "pgmlink/reasoner_multi_hypotheses.h"
 
@@ -212,6 +212,70 @@ class FeatureExtractorCollection {
 };
 
 
+// wrap feature calculation w/o traxels
+vigra::NumpyArray<2, feature_type> calculate_2f(const std::vector<boost::shared_ptr<FeatureCalculator> >& calculators,
+                                                const feature_array& f1,
+                                                const feature_array& f2) {
+  feature_array ret;
+  for (std::vector<boost::shared_ptr<FeatureCalculator> >::const_iterator it = calculators.begin();
+       it != calculators.end();
+       ++it) {
+    feature_array res = (*it)->calculate(f1, f2);
+    ret.insert(ret.end(), res.begin(), res.end());
+  }
+  vigra::NumpyArray<2, feature_type> features(vigra::Shape2(1, ret.size()));
+  std::copy(ret.begin(), ret.end(), features.begin());
+  return features;
+}
+
+
+vigra::NumpyArray<2, feature_type> calculate_2n(const std::vector<boost::shared_ptr<FeatureCalculator> >& calculators,
+                                                const vigra::NumpyArray<2, feature_type> n1,
+                                                const vigra::NumpyArray<2, feature_type> n2) {
+  feature_array f1(n1.shape()[1]);
+  feature_array f2(n2.shape()[1]);
+  assert(f1.size() == f2.size());
+  std::copy(n1.begin(), n1.end(), f1.begin());
+  std::copy(n2.begin(), n2.end(), f2.begin());
+  return calculate_2f(calculators, f1, f2);
+}
+
+
+vigra::NumpyArray<2, feature_type> calculate_3f(const std::vector<boost::shared_ptr<FeatureCalculator> >& calculators,
+                                                const feature_array& f1,
+                                                const feature_array& f2,
+                                                const feature_array& f3) {
+  feature_array ret;
+  for (std::vector<boost::shared_ptr<FeatureCalculator> >::const_iterator it = calculators.begin();
+       it != calculators.end();
+       ++it) {
+    feature_array res = (*it)->calculate(f1, f2, f3);
+    ret.insert(ret.end(), res.begin(), res.end());
+  }
+  vigra::NumpyArray<2, feature_type> features(vigra::Shape2(1, ret.size()));
+  std::copy(ret.begin(), ret.end(), features.begin());
+  return features;
+}
+
+
+vigra::NumpyArray<2, feature_type> calculate_3n(const std::vector<boost::shared_ptr<FeatureCalculator> >& calculators,
+                                                const vigra::NumpyArray<2, feature_type> n1,
+                                                const vigra::NumpyArray<2, feature_type> n2,
+                                                const vigra::NumpyArray<2, feature_type> n3) {
+  feature_array f1(n1.shape()[1]);
+  feature_array f2(n2.shape()[1]);
+  feature_array f3(n3.shape()[1]);
+  assert(f1.size() == f2.size());
+  assert(f2.size() == f3.size());
+  std::copy(n1.begin(), n1.end(), f1.begin());
+  std::copy(n2.begin(), n2.end(), f2.begin());
+  std::copy(n3.begin(), n3.end(), f3.begin());
+  return calculate_3f(calculators, f1, f2, f3);
+}
+
+
+
+
 void export_multi_hypotheses() {
   IterableValueMap_ValueIterator<MultiHypothesesGraph::ContainedRegionsMap>::wrap("ContainedRegionsMap_ValueIt");
   // IterableValueMap_ValueIterator<node_traxel>::wrap("NodeTraxelMap_ValueIt");
@@ -302,9 +366,10 @@ void export_multi_hypotheses() {
       .def("getCalculators", &FeatureExtractorCollection::get_calculators)
       ;
 
-
-
-
+  def("calculateFeature", &calculate_2n);
+  def("calculateFeature", &calculate_3n);
+  def("calculateFeature", &calculate_2f);
+  def("calculateFeature", &calculate_3f);
   
 }
 
