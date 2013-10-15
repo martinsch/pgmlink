@@ -96,72 +96,6 @@ struct IterableValueMap_ValueIterator {
   MultiHypothesesTraxelStore& ts_;
 }; */
 
-class PyTrackerTemp {
- public:
-  PyTrackerTemp(const MultiHypothesesTraxelStore& ts) : ts_(ts) {}
-  void track() {
-
-    pgmlink::MultiHypothesesGraphBuilder mult_builder(pgmlink::MultiHypothesesGraphBuilder::Options(2, 100000000000, false));
-    pgmlink::MultiHypothesesGraphPtr mult_graph = mult_builder.build(ts_);
-    ConstantFeature det(10);
-    ConstantFeature mis(1000);
-    ConstantFeature div(5);
-    std::cout << " -> workflow: initializing builder" << std::endl;
-    pgm::multihypotheses::CVPR2014ModelBuilder builder( ConstantFeature(10), // appearance
-                                                        ConstantFeature(10), // disappearance
-                                                        SquaredDistance(), // move
-                                                        0, // forbidden_cost
-                                                        50, // max_division_level
-                                                        3 // max_count
-                                                        );
-    builder
-        .with_detection_vars(det, mis)
-        .with_divisions(div);
-
-    std::cout << " -> workflow: initializing reasoner" << std::endl;
-    MultiHypotheses reasoner(builder,
-                             true, // with_constraints
-                             0. // ep_gap
-                             );
-
-    std::cout << " -> workflow: formulating model" << std::endl;
-    reasoner.formulate( *mult_graph );
-
-    std::cout << " -> workflow: infer" << std::endl;
-    double objective = reasoner.infer();
-
-    std::cout << " -> workflow: conclude" << std::endl;
-    reasoner.conclude( *mult_graph );
-
-    MultiHypothesesGraph::ContainedRegionsMap& regions = mult_graph->get(node_regions_in_component());
-
-    for (MultiHypothesesGraph::NodeIt n(*mult_graph); n != lemon::INVALID; ++n) {
-      std::vector<Traxel>& traxels = regions.get_value(n);
-      std::cout << "Region " << traxels[0].Id << " at time " << traxels[0].Timestep << '\n';
-      for (std::vector<Traxel>::iterator t = traxels.begin(); t != traxels.end(); ++t) {
-        std::cout << *t << " is active? " << t->features["active"][0];
-        if (t->features["active"][0] > 0.) {
-          std::cout << "   descendants: ";
-          std::ostream_iterator<feature_type> os_it(std::cout, ", ");
-          std::copy(t->features["outgoing"].begin(),
-                    t->features["outgoing"].end(),
-                    os_it);
-          std::cout << " parent: ";
-          std::copy(t->features["parent"].begin(),
-                    t->features["parent"].end(),
-                    os_it);
-        }
-        std::cout << '\n';
-      }
-      std::cout << '\n';
-    }
-
-  }
- private:
-  const MultiHypothesesTraxelStore& ts_;
-};
-
-
 struct PyTrackingOptions {
   MultiHypothesesTracking::Options options;
   PyTrackingOptions() {
@@ -316,15 +250,6 @@ void export_multi_hypotheses() {
       .def("build", vigra::registerConverters(&PyMultiHypothesesTraxelStoreBuilder::build<3, unsigned long>), return_internal_reference<>())
       ; */
 
-
-  ////
-  //// PyTrackerTemp
-  ////
-  class_<PyTrackerTemp, boost::noncopyable>("MultiHypothesesTrackerTemp",
-                                            init<const MultiHypothesesTraxelStore&>()[with_custodian_and_ward<1, 2>()]
-                                            )
-      .def("track", &PyTrackerTemp::track, return_internal_reference<>())
-      ;
 
   ////
   //// TrackingOptions
