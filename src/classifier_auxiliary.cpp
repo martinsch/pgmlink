@@ -185,6 +185,11 @@ const std::string& RatioCalculator::name() const {
 }
 
 
+////
+//// class ParentRatios
+////
+
+
 
 ////
 //// class IntensityRatioCalculator
@@ -228,7 +233,7 @@ const std::string& IntensityRatioCalculator::name() const {
 ////
 //// class ChildrenMeanParentIntensityRatioCalculator
 ////
-const std::string ChildrenMeanParentIntensityRatioCalculator::name_ = "children_parent_intensity_ratio";
+/* const std::string ChildrenMeanParentIntensityRatioCalculator::name_ = "children_parent_intensity_ratio";
 
 const unsigned ChildrenMeanParentIntensityRatioCalculator::length = 1;
 
@@ -248,7 +253,7 @@ feature_array ChildrenMeanParentIntensityRatioCalculator::calculate(const featur
 
 const std::string& ChildrenMeanParentIntensityRatioCalculator::name() const {
   return ChildrenMeanParentIntensityRatioCalculator::name_;
-}
+} */
 
 
 
@@ -312,6 +317,15 @@ std::map<std::string, boost::shared_ptr<FeatureCalculator> > define_features() {
 
   calc = boost::shared_ptr<FeatureCalculator>(new SquareRootSquaredDifferenceCalculator);
   feature_map.insert(std::make_pair("SqrtSquaredDiff", calc));
+
+  calc = boost::shared_ptr<FeatureCalculator>(new MaxParentRatio);
+  feature_map.insert(std::make_pair("MaxParentRatio", calc));
+
+  calc = boost::shared_ptr<FeatureCalculator>(new MinParentRatio);
+  feature_map.insert(std::make_pair("MinParentRatio", calc));
+
+  calc = boost::shared_ptr<FeatureCalculator>(new MeanParentRatio);
+  feature_map.insert(std::make_pair("MeanParentRatio", calc));
 
   return feature_map;
 }

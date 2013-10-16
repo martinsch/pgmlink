@@ -4,6 +4,7 @@
 // stl
 #include <vector>
 #include <string>
+#include <algorithm>
 
 // boost
 #include <boost/shared_ptr.hpp>
@@ -78,6 +79,84 @@ class RatioCalculator : public FeatureCalculator {
 };
 
 
+////
+//// class ParentRatios
+////
+template <typename Modifier>
+class ParentRatios : public FeatureCalculator {
+ public:
+  static const std::string name_;
+  static const unsigned length;
+
+  virtual ~ParentRatios();
+  feature_array calculate(const feature_array& parent, const feature_array& child1, const feature_array& child2) const;
+  virtual const std::string& name() const;
+};
+
+
+////
+//// class ParentSquaredDifferences
+////
+template <typename Modifier>
+class ParentSquaredDifferences {
+ public:
+  feature_array calculate(const feature_array& parent, const feature_array& child1, const feature_array& child2) const;
+};
+
+
+////
+//// class MaxParentRatio
+////
+class Max {
+ public:
+  feature_type operator()(feature_array::const_iterator begin, feature_array::const_iterator end) {
+    return *std::max_element(begin, end);
+  }
+};
+typedef ParentRatios<Max> MaxParentRatio;
+
+////
+//// class MinParentRatio
+////
+class Min {
+ public:
+  feature_type operator()(feature_array::const_iterator begin, feature_array::const_iterator end) {
+    return *std::min_element(begin, end);
+  }
+};
+typedef ParentRatios<Min> MinParentRatio;
+
+
+////
+//// class MeanParentRatio
+////
+class Mean {
+ public:
+  feature_type operator()(feature_array::const_iterator begin, feature_array::const_iterator end) {
+    assert (begin != end);
+    return std::accumulate(begin, end, 0)/(end-begin);
+  }
+};
+typedef ParentRatios<Mean> MeanParentRatio;
+
+
+////
+//// class MaxSquaredDifferenceRatio
+////
+/* typedef ParentSquaredDifferences<std::max_element> MaxParentSquaredDifferenceRatio; */
+
+
+////
+//// class MinSquaredDifferenceRatio
+////
+
+
+////
+
+
+
+
+
 /* class IntensityRatioCalculator : public FeatureCalculator {
  public:
   static const std::string name_;
@@ -90,7 +169,7 @@ class RatioCalculator : public FeatureCalculator {
 }; */
 
 
-class ChildrenMeanParentIntensityRatioCalculator : public FeatureCalculator {
+/* class ChildrenMeanParentIntensityRatioCalculator : public FeatureCalculator {
   public:
   static const std::string name_;
   static const unsigned length;
@@ -98,7 +177,7 @@ class ChildrenMeanParentIntensityRatioCalculator : public FeatureCalculator {
   virtual ~ChildrenMeanParentIntensityRatioCalculator();
   virtual feature_array calculate(const feature_array& f1, const feature_array& f2, const feature_array& f3) const;
   virtual const std::string& name() const;
-};
+}; */
   
 
 ////
@@ -124,6 +203,40 @@ class AvailableCalculators {
  private:
   static std::map<std::string, boost::shared_ptr<FeatureCalculator> > features_;
 };
+
+
+/* IMPLEMENTATIONS */
+
+
+////
+//// class ParentRatios
+////
+template <typename Modifier>
+const std::string ParentRatios<Modifier>::name_ = "ParentRatio";
+
+template <typename Modifier>
+const unsigned ParentRatios<Modifier>::length = 1;
+
+template <typename Modifier>
+ParentRatios<Modifier>::~ParentRatios() {
+
+}
+
+template <typename Modifier>
+feature_array ParentRatios<Modifier>::calculate(const feature_array& parent, const feature_array& child1, const feature_array& child2) const {
+  feature_array ratios(2, 0.);
+  ratios[0] = child1[0] < parent[0] ? child1[0]/parent[0] : parent[0]/child1[0];
+  ratios[1] = child2[0] < parent[0] ? child2[0]/parent[0] : parent[0]/child2[0];
+  Modifier mod;
+  return feature_array(1, mod(ratios.begin(), ratios.end()));
+}
+
+
+template <typename Modifier>
+const std::string& ParentRatios<Modifier>::name() const {
+  return ParentRatios<Modifier>::name_;
+}
+
 
 } /* namesapce pgmlink */
 
