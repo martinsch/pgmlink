@@ -164,9 +164,9 @@ feature_array RatioCalculator::calculate(const feature_array& f1, const feature_
   feature_array ret(length, 0.);
   // keep ratio <= 1
   // no zero check, as we do not have empty regions
-  assert(f1[0] > 0);
-  assert(f2[0] > 0);
-  if (f1[0] < f2[0]) {
+  if (f1[0] == f2[0]) {
+    ret[0] = 1;
+  } else if (f1[0] < f2[0]) {
     ret[0] = f1[0]/f2[0];
   } else {
     ret[0] = f2[0]/f1[0];

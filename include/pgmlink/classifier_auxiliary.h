@@ -170,7 +170,12 @@ class Ratio {
  public:
   feature_type operator()(feature_array::const_iterator begin, feature_array::const_iterator end) {
     assert(end - begin == 2);
-    return *begin < *end ? *begin/(*end) : *end/(*begin);
+    feature_array::const_iterator second = end - 1;
+    if (*begin == *second) {
+      return 1.;
+    } else {
+      return *begin < *second ? *begin/(*second) : (*second)/(*begin);
+    }
   }
 };
 typedef ParentSquaredDifferences<Ratio> RatioParentSquaredDifference;
@@ -247,8 +252,16 @@ ParentRatios<Modifier>::~ParentRatios() {
 template <typename Modifier>
 feature_array ParentRatios<Modifier>::calculate(const feature_array& parent, const feature_array& child1, const feature_array& child2) const {
   feature_array ratios(2, 0.);
-  ratios[0] = child1[0] < parent[0] ? child1[0]/parent[0] : parent[0]/child1[0];
-  ratios[1] = child2[0] < parent[0] ? child2[0]/parent[0] : parent[0]/child2[0];
+  if (child1[0] == parent[0]) {
+    ratios[0] = 1.;
+  } else {
+    ratios[0] = child1[0] < parent[0] ? child1[0]/parent[0] : parent[0]/child1[0];
+  }
+  if (child2[0] == parent[0]) {
+    ratios[1] = 1.;
+  } else {
+    ratios[1] = child2[0] < parent[0] ? child2[0]/parent[0] : parent[0]/child2[0];
+  }
   Modifier mod;
   return feature_array(1, mod(ratios.begin(), ratios.end()));
 }
