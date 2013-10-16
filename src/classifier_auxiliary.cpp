@@ -103,10 +103,10 @@ feature_array RatioCalculator::calculate(const feature_array& f1, const feature_
   // no zero check, as we do not have empty regions
   assert(f1[0] > 0);
   assert(f2[0] > 0);
-  if (f1[0] > f2[0]) {
-    ret[0] = f2[0]/f1[0];
-  } else {
+  if (f1[0] < f2[0]) {
     ret[0] = f1[0]/f2[0];
+  } else {
+    ret[0] = f2[0]/f1[0];
   }
   return ret;
 }
@@ -238,7 +238,7 @@ std::map<std::string, boost::shared_ptr<FeatureCalculator> > define_features() {
   
   boost::shared_ptr<FeatureCalculator> calc =
       boost::shared_ptr<FeatureCalculator>(new SquaredDifferenceCalculator);
-  feature_map.insert(std::make_pair("SquaredDifference", calc));
+  feature_map.insert(std::make_pair("SquaredDiff", calc));
 
   calc = boost::shared_ptr<FeatureCalculator>(new RatioCalculator);
   feature_map.insert(std::make_pair("Ratio", calc));
