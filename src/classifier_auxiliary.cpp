@@ -305,6 +305,7 @@ std::map<std::string, boost::shared_ptr<FeatureCalculator> > define_features() {
 
   calc = boost::shared_ptr<FeatureCalculator>(new RatioCalculator);
   feature_map.insert(std::make_pair("Ratio", calc));
+  feature_map.insert(std::make_pair("ChildrenRatio", calc));
 
   calc = boost::shared_ptr<FeatureCalculator>(new AbsoluteDifferenceCalculator);
   feature_map.insert(std::make_pair("AbsDiff", calc));
