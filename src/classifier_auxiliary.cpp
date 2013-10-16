@@ -56,7 +56,7 @@ bool FeatureCalculator::operator==(const FeatureCalculator& other) {
 ////
 //// class SquaredDifferenceCalculator
 ////
-const std::string SquaredDifferenceCalculator::name_ = "SquaredDifference";
+const std::string SquaredDifferenceCalculator::name_ = "SquaredDiff";
 
 const unsigned SquaredDifferenceCalculator::length = 1;
 
@@ -80,6 +80,37 @@ feature_array SquaredDifferenceCalculator::calculate(const feature_array& f1, co
 
 const std::string& SquaredDifferenceCalculator::name() const {
   return SquaredDifferenceCalculator::name_;
+}
+
+
+////
+//// class AbsoluteDifferenceCalculator
+////
+const std::string AbsoluteDifferenceCalculator::name_ = "AbsDiff";
+
+const unsigned AbsoluteDifferenceCalculator::length = 1;
+
+
+AbsoluteDifferenceCalculator::~AbsoluteDifferenceCalculator() {
+
+}
+
+
+feature_array AbsoluteDifferenceCalculator::calculate(const feature_array&f1, const feature_array& f2) const {
+  assert(f1.size() == f2.size());
+  feature_array ret(length, 0.);
+  feature_array::const_iterator f1_it = f1.begin();
+  feature_array::const_iterator f2_it = f2.begin();
+  for (; f1_it != f1.end(); ++f1_it, ++f2_it) {
+    float res = *f1_it - *f2_it;
+    ret[0] += res > 0 ? res : -res;
+  }
+  return ret;
+}
+
+
+const std::string& AbsoluteDifferenceCalculator::name() const {
+  return AbsoluteDifferenceCalculator::name_;
 }
 
 
@@ -242,6 +273,9 @@ std::map<std::string, boost::shared_ptr<FeatureCalculator> > define_features() {
 
   calc = boost::shared_ptr<FeatureCalculator>(new RatioCalculator);
   feature_map.insert(std::make_pair("Ratio", calc));
+
+  calc = boost::shared_ptr<FeatureCalculator>(new AbsoluteDifferenceCalculator);
+  feature_map.insert(std::make_pair("AbsDiff", calc));
 
   return feature_map;
 }

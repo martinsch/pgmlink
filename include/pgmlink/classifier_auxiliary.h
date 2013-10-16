@@ -44,6 +44,17 @@ class SquaredDifferenceCalculator : public FeatureCalculator {
 };
 
 
+class AbsoluteDifferenceCalculator : public FeatureCalculator {
+ public:
+  static const std::string name_;
+  static const unsigned length;
+
+  virtual ~AbsoluteDifferenceCalculator();
+  virtual feature_array calculate(const feature_array& f1, const feature_array& f2) const;
+  virtual const std::string& name() const;
+};
+
+
 class RatioCalculator : public FeatureCalculator {
  public:
   static const std::string name_;
