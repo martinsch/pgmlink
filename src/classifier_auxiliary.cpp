@@ -327,6 +327,18 @@ std::map<std::string, boost::shared_ptr<FeatureCalculator> > define_features() {
   calc = boost::shared_ptr<FeatureCalculator>(new MeanParentRatio);
   feature_map.insert(std::make_pair("MeanParentRatio", calc));
 
+  calc = boost::shared_ptr<FeatureCalculator>(new MaxParentSquaredDifference);
+  feature_map.insert(std::make_pair("MaxParentSquaredDifference", calc));
+  
+  calc = boost::shared_ptr<FeatureCalculator>(new MinParentSquaredDifference);
+  feature_map.insert(std::make_pair("MinParentSquaredDifference", calc));
+  
+  calc = boost::shared_ptr<FeatureCalculator>(new MeanParentSquaredDifference);
+  feature_map.insert(std::make_pair("MeanParentSquaredDifference", calc));
+  
+  calc = boost::shared_ptr<FeatureCalculator>(new RatioParentSquaredDifference);
+  feature_map.insert(std::make_pair("RatioParentSquaredDifference", calc));
+
   return feature_map;
 }
 } /* namespace */

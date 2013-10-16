@@ -190,6 +190,7 @@ class NegLn {
     
   class PGMLINK_EXPORT SquaredDistance {
   public:
+    feature_type operator()(const feature_array& f1, const feature_array& f2) const;
     double operator()(const Traxel& from, const Traxel& to) const;
     double operator()(const Traxel& from, const Traxel& to, feature_type probability) const;
   };

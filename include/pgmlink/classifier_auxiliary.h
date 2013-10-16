@@ -98,9 +98,14 @@ class ParentRatios : public FeatureCalculator {
 //// class ParentSquaredDifferences
 ////
 template <typename Modifier>
-class ParentSquaredDifferences {
+class ParentSquaredDifferences : public FeatureCalculator {
  public:
+  static const std::string name_;
+  static const unsigned length;
+
+  virtual ~ParentSquaredDifferences();
   feature_array calculate(const feature_array& parent, const feature_array& child1, const feature_array& child2) const;
+  virtual const std::string& name() const;
 };
 
 
@@ -141,17 +146,34 @@ typedef ParentRatios<Mean> MeanParentRatio;
 
 
 ////
-//// class MaxSquaredDifferenceRatio
+//// class MaxParentSquaredDifference
 ////
-/* typedef ParentSquaredDifferences<std::max_element> MaxParentSquaredDifferenceRatio; */
+typedef ParentSquaredDifferences<Max> MaxParentSquaredDifference;
 
 
 ////
-//// class MinSquaredDifferenceRatio
+//// class MinParentSquaredDifference
 ////
+typedef ParentSquaredDifferences<Min> MinParentSquaredDifference;
 
 
 ////
+//// class MeanParentSquaredDifference
+////
+typedef ParentSquaredDifferences<Mean> MeanParentSquaredDifference;
+
+
+
+////
+//// class RatioParentSquaredDifference
+class Ratio {
+ public:
+  feature_type operator()(feature_array::const_iterator begin, feature_array::const_iterator end) {
+    assert(end - begin == 2);
+    return *begin < *end ? *begin/(*end) : *end/(*begin);
+  }
+};
+typedef ParentSquaredDifferences<Ratio> RatioParentSquaredDifference;
 
 
 
@@ -235,6 +257,37 @@ feature_array ParentRatios<Modifier>::calculate(const feature_array& parent, con
 template <typename Modifier>
 const std::string& ParentRatios<Modifier>::name() const {
   return ParentRatios<Modifier>::name_;
+}
+
+
+////
+//// class ParentSquaredDifferences
+////
+template <typename Modifier>
+const std::string ParentSquaredDifferences<Modifier>::name_ = "ParentSquaredDifferencesRatio";
+
+template <typename Modifier>
+const unsigned ParentSquaredDifferences<Modifier>::length = 1;
+
+template <typename Modifier>
+ParentSquaredDifferences<Modifier>::~ParentSquaredDifferences() {
+
+}
+
+template <typename Modifier>
+feature_array ParentSquaredDifferences<Modifier>::calculate(const feature_array& parent, const feature_array& child1, const feature_array& child2) const {
+  feature_array dist(2, 0.);
+  SquaredDistance distance;
+  dist[0] = distance(parent, child1);
+  dist[1] = distance(parent, child2);
+  Modifier mod;
+  return feature_array(1, mod(dist.begin(), dist.end()));
+}
+
+
+template <typename Modifier>
+const std::string& ParentSquaredDifferences<Modifier>::name() const {
+  return ParentSquaredDifferences<Modifier>::name_;
 }
 
 
