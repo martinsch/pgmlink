@@ -54,19 +54,19 @@ bool FeatureCalculator::operator==(const FeatureCalculator& other) {
 
 
 ////
-//// class DistanceCalculator
+//// class SquaredDifferenceCalculator
 ////
-const std::string DistanceCalculator::name_ = "distance";
+const std::string SquaredDifferenceCalculator::name_ = "SquaredDifference";
 
-const unsigned DistanceCalculator::length = 1;
+const unsigned SquaredDifferenceCalculator::length = 1;
 
 
-DistanceCalculator::~DistanceCalculator() {
+SquaredDifferenceCalculator::~SquaredDifferenceCalculator() {
 
 }
 
 
-feature_array DistanceCalculator::calculate(const feature_array& f1, const feature_array& f2) const {
+feature_array SquaredDifferenceCalculator::calculate(const feature_array& f1, const feature_array& f2) const {
   assert(f1.size() == f2.size());
   feature_array ret(length, 0.);
   feature_array::const_iterator f1_it = f1.begin();
@@ -78,25 +78,25 @@ feature_array DistanceCalculator::calculate(const feature_array& f1, const featu
 }
 
 
-const std::string& DistanceCalculator::name() const {
-  return DistanceCalculator::name_;
+const std::string& SquaredDifferenceCalculator::name() const {
+  return SquaredDifferenceCalculator::name_;
 }
 
 
 ////
-//// class SizeRatioCalculator
+//// class RatioCalculator
 ////
-const std::string SizeRatioCalculator::name_ = "size_ratio";
+const std::string RatioCalculator::name_ = "Ratio";
 
-const unsigned SizeRatioCalculator::length = 1;
+const unsigned RatioCalculator::length = 1;
 
 
-SizeRatioCalculator::~SizeRatioCalculator() {
+RatioCalculator::~RatioCalculator() {
 
 }
 
 
-feature_array SizeRatioCalculator::calculate(const feature_array& f1, const feature_array& f2) const {
+feature_array RatioCalculator::calculate(const feature_array& f1, const feature_array& f2) const {
   assert(f1.size() == f2.size());
   feature_array ret(length, 0.);
   // keep ratio <= 1
@@ -112,13 +112,13 @@ feature_array SizeRatioCalculator::calculate(const feature_array& f1, const feat
 }
 
 
-feature_array SizeRatioCalculator::calculate(const feature_array&, const feature_array& f2, const feature_array& f3) const {
+feature_array RatioCalculator::calculate(const feature_array&, const feature_array& f2, const feature_array& f3) const {
   return calculate(f2, f3);
 }
 
 
-const std::string& SizeRatioCalculator::name() const {
-  return SizeRatioCalculator::name_;
+const std::string& RatioCalculator::name() const {
+  return RatioCalculator::name_;
 }
 
 
@@ -126,7 +126,7 @@ const std::string& SizeRatioCalculator::name() const {
 ////
 //// class IntensityRatioCalculator
 ////
-const std::string IntensityRatioCalculator::name_ = "intensity_ratio";
+/* const std::string IntensityRatioCalculator::name_ = "intensity_ratio";
 
 const unsigned IntensityRatioCalculator::length = 1;
 
@@ -159,7 +159,7 @@ feature_array IntensityRatioCalculator::calculate(const feature_array&, const fe
 
 const std::string& IntensityRatioCalculator::name() const {
   return IntensityRatioCalculator::name_;
-}
+} */
 
 
 ////
@@ -192,51 +192,70 @@ const std::string& ChildrenMeanParentIntensityRatioCalculator::name() const {
 ////
 //// class FeatureExtractor
 ////
-FeatureExtractor::FeatureExtractor(boost::shared_ptr<FeatureCalculator> calculator, const std::vector<std::string>& feature_names)
-    : calculator_(calculator), feature_names_(feature_names) {
+FeatureExtractor::FeatureExtractor(boost::shared_ptr<FeatureCalculator> calculator, const std::string& feature_name)
+    : calculator_(calculator), feature_name_(feature_name) {
   
 }
 
 
 feature_array FeatureExtractor::extract(const Traxel& t1, const Traxel& t2) const {
-  feature_array features1, features2;
-  for (std::vector<std::string>::const_iterator feature_name = feature_names_.begin();
-       feature_name != feature_names_.end();
-       ++feature_name) {
-    FeatureMap::const_iterator f1 = t1.features.find(*feature_name);
-    FeatureMap::const_iterator f2 = t2.features.find(*feature_name);
-    assert(f1 != t1.features.end());
-    assert(f2 != t2.features.end());
-    features1.insert(features1.end(), f1->second.begin(), f1->second.end());
-    features2.insert(features2.end(), f2->second.begin(), f2->second.end());
-  }
+  FeatureMap::const_iterator f1 = t1.features.find(feature_name_);
+  FeatureMap::const_iterator f2 = t2.features.find(feature_name_);
+  assert(f1 != t1.features.end());
+  assert(f2 != t2.features.end());
+  feature_array features1 = f1->second;
+  feature_array features2 = f2->second;
   return calculator_->calculate(features1, features2);
 }
 
 
 feature_array FeatureExtractor::extract(const Traxel& t1, const Traxel& t2, const Traxel& t3) const {
-  feature_array features1, features2, features3;
-  for (std::vector<std::string>::const_iterator feature_name = feature_names_.begin();
-       feature_name != feature_names_.end();
-       ++feature_name) {
-    FeatureMap::const_iterator f1 = t1.features.find(*feature_name);
-    FeatureMap::const_iterator f2 = t2.features.find(*feature_name);
-    FeatureMap::const_iterator f3 = t3.features.find(*feature_name);
-    assert(f1 != t1.features.end());
-    assert(f2 != t2.features.end());
-    assert(f3 != t3.features.end());
-    features1.insert(features1.end(), f1->second.begin(), f1->second.end());
-    features2.insert(features2.end(), f2->second.begin(), f2->second.end());
-    features2.insert(features3.end(), f3->second.begin(), f3->second.end());
-  }
+  FeatureMap::const_iterator f1 = t1.features.find(feature_name_);
+  FeatureMap::const_iterator f2 = t2.features.find(feature_name_);
+  FeatureMap::const_iterator f3 = t3.features.find(feature_name_);
+  assert(f1 != t1.features.end());
+  assert(f2 != t2.features.end());
+  assert(f3 != t3.features.end());
+  feature_array features1 = f1->second;
+  feature_array features2 = f2->second;
+  feature_array features3 = f3->second;
   return calculator_->calculate(features1, features2, features3);
 }
 
 
-boost::shared_ptr<FeatureCalculator> FeatureExtractor::calculator() {
+boost::shared_ptr<FeatureCalculator> FeatureExtractor::calculator() const {
   return calculator_;
 }
 
+std::string FeatureExtractor::name() const {
+  return calculator_->name() + "<" + feature_name_ + ">";
+}
+
+namespace {
+std::map<std::string, boost::shared_ptr<FeatureCalculator> > define_features() {
+  // put here all the available features:
+  std::map<std::string, boost::shared_ptr<FeatureCalculator> > feature_map;
+  
+  boost::shared_ptr<FeatureCalculator> calc =
+      boost::shared_ptr<FeatureCalculator>(new SquaredDifferenceCalculator);
+  feature_map.insert(std::make_pair("SquaredDifference", calc));
+
+  calc = boost::shared_ptr<FeatureCalculator>(new RatioCalculator);
+  feature_map.insert(std::make_pair("Ratio", calc));
+
+  return feature_map;
+}
+} /* namespace */
+
+////
+//// class AvailableCalculators
+////
+std::map<std::string, boost::shared_ptr<FeatureCalculator> > AvailableCalculators::features_ = define_features();
+
+
+const std::map<std::string, boost::shared_ptr<FeatureCalculator> >& AvailableCalculators::get() {
+  return features_;
+}
 
 
 } /* namespace pgmlink */

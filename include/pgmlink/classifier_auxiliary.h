@@ -16,6 +16,9 @@
 
 namespace pgmlink {
 
+////
+//// class FeatureCalculator
+////
 class FeatureCalculator {
  public:
   static const std::string name_;
@@ -30,30 +33,30 @@ class FeatureCalculator {
 };
 
 
-class DistanceCalculator : public FeatureCalculator {
+class SquaredDifferenceCalculator : public FeatureCalculator {
  public:
   static const std::string name_;
   static const unsigned length;
 
-  virtual ~DistanceCalculator();
+  virtual ~SquaredDifferenceCalculator();
   virtual feature_array calculate(const feature_array& f1, const feature_array& f2) const;
   virtual const std::string& name() const;
 };
 
 
-class SizeRatioCalculator : public FeatureCalculator {
+class RatioCalculator : public FeatureCalculator {
  public:
   static const std::string name_;
   static const unsigned length;
 
-  virtual ~SizeRatioCalculator();
+  virtual ~RatioCalculator();
   virtual feature_array calculate(const feature_array& f1, const feature_array& f2) const;
   virtual feature_array calculate(const feature_array& f1, const feature_array& f2, const feature_array& f3) const;
   virtual const std::string& name() const;
 };
 
 
-class IntensityRatioCalculator : public FeatureCalculator {
+/* class IntensityRatioCalculator : public FeatureCalculator {
  public:
   static const std::string name_;
   static const unsigned length;
@@ -62,7 +65,7 @@ class IntensityRatioCalculator : public FeatureCalculator {
   virtual feature_array calculate(const feature_array& f1, const feature_array& f2) const;
   virtual feature_array calculate(const feature_array& f1, const feature_array& f2, const feature_array& f3) const;
   virtual const std::string& name() const;
-};
+}; */
 
 
 class ChildrenMeanParentIntensityRatioCalculator : public FeatureCalculator {
@@ -76,18 +79,29 @@ class ChildrenMeanParentIntensityRatioCalculator : public FeatureCalculator {
 };
   
 
+////
+//// class FeatureExtractor
+////
 class FeatureExtractor {
  public:
-  FeatureExtractor(boost::shared_ptr<FeatureCalculator> calculator, const std::vector<std::string>& feature_names);
+  FeatureExtractor(boost::shared_ptr<FeatureCalculator> calculator, const std::string& feature_name);
   feature_array extract(const Traxel& t1, const Traxel& t2) const;
   feature_array extract(const Traxel& t1, const Traxel& t2, const Traxel& t3) const;
-  boost::shared_ptr<FeatureCalculator> calculator();
+  boost::shared_ptr<FeatureCalculator> calculator() const;
+  std::string name() const;
 
  private:
   boost::shared_ptr<FeatureCalculator> calculator_;
-  std::vector<std::string> feature_names_;
+  std::string feature_name_;
 };
-  
+
+
+class AvailableCalculators {
+ public:
+  static const std::map<std::string, boost::shared_ptr<FeatureCalculator> >& get();
+ private:
+  static std::map<std::string, boost::shared_ptr<FeatureCalculator> > features_;
+};
 
 } /* namesapce pgmlink */
 

@@ -24,6 +24,7 @@
 #include "pgmlink/multi_hypotheses_tracking.h"
 #include "pgmlink/classifier_auxiliary.h"
 #include "pgmlink/feature.h"
+#include "pgmlink/log.h"
 
 // temp
 #include "pgmlink/pgm_multi_hypotheses.h"
@@ -174,40 +175,19 @@ struct traxelstore_pickle_suite : pickle_suite {
 
 class FeatureExtractorCollection {
  public:
-  FeatureExtractorCollection() {
-    // put here all the available features:
-    boost::shared_ptr<FeatureCalculator> calc =
-        boost::shared_ptr<FeatureCalculator>(new DistanceCalculator);
-    std::vector<std::string> features;
-    features.push_back("com");
-    name_extractor_mapping_.insert(std::make_pair("distance", FeatureExtractor(calc, features)));
-  
-    features.clear();
+  FeatureExtractorCollection()
+      : name_calculator_mapping_(AvailableCalculators::get()) {
 
-    calc = boost::shared_ptr<FeatureCalculator>(new SizeRatioCalculator);
-    features.push_back("count");
-    name_extractor_mapping_.insert(std::make_pair("size_ratio", FeatureExtractor(calc, features)));
-    features.clear();
-
-    calc = boost::shared_ptr<FeatureCalculator>(new IntensityRatioCalculator);
-    features.push_back("intensity");
-    name_extractor_mapping_.insert(std::make_pair("intensity_ratio", FeatureExtractor(calc, features)));
-    features.clear();
-
-    calc = boost::shared_ptr<FeatureCalculator>(new ChildrenMeanParentIntensityRatioCalculator);
-    features.push_back("intensity");
-    name_extractor_mapping_.insert(std::make_pair("children_parent_intensity_ratio", FeatureExtractor(calc, features)));
-    features.clear();
   }
   
 
-  void add_to_vector(std::string name) {
-    std::map<std::string, FeatureExtractor>::iterator it = name_extractor_mapping_.find(name);
-    if (it == name_extractor_mapping_.end()) {
-      throw std::runtime_error("Feature \"" + name + "\" not available!");
+  void add_to_vector(std::string calculator_name, std::string feature_name) {
+    std::map<std::string, boost::shared_ptr<FeatureCalculator> >::const_iterator it = name_calculator_mapping_.find(calculator_name);
+    if (it == name_calculator_mapping_.end()) {
+      throw std::runtime_error("Calculator \"" + calculator_name + "\" not available!");
     } else {
-      extractors_.push_back(it->second);
-      calculators_.push_back(it->second.calculator());
+      extractors_.push_back(FeatureExtractor(it->second, feature_name));
+      calculators_.push_back(it->second);
     }
   }
 
@@ -223,14 +203,49 @@ class FeatureExtractorCollection {
 
   
  private:
-  std::map<std::string, FeatureExtractor> name_extractor_mapping_;
+  const std::map<std::string, boost::shared_ptr<FeatureCalculator> >& name_calculator_mapping_;
   std::vector<FeatureExtractor> extractors_;
   std::vector<boost::shared_ptr<FeatureCalculator> > calculators_;
 };
 
+// wrap feature calculation w/traxels
+vigra::NumpyArray<2, feature_type> calculate_2t(const std::vector<FeatureExtractor>& extractors,
+                                                const Traxel& t1,
+                                                const Traxel& t2) {
+  feature_array res;
+  for (std::vector<FeatureExtractor>::const_iterator ex = extractors.begin();
+       ex != extractors.end();
+       ++ex) {
+    feature_array temp = ex->extract(t1, t2);
+    res.insert(res.end(), temp.begin(), temp.end());
+    LOG(logDEBUG3) << "Calculated " << ex->name();
+  }
+  vigra::NumpyArray<2, feature_type> ret(vigra::Shape2(1, res.size()));
+  std::copy(res.begin(), res.end(), ret.begin());
+  return ret;
+}
+
+
+vigra::NumpyArray<2, feature_type> calculate_3t(const std::vector<FeatureExtractor>& extractors,
+                                                const Traxel& t1,
+                                                const Traxel& t2,
+                                                const Traxel& t3) {
+  feature_array res;
+  for (std::vector<FeatureExtractor>::const_iterator ex = extractors.begin();
+       ex != extractors.end();
+       ++ex) {
+    feature_array temp = ex->extract(t1, t2, t3);
+    res.insert(res.end(), temp.begin(), temp.end());
+    LOG(logDEBUG3) << "Calculated " << ex->name();
+  }
+  vigra::NumpyArray<2, feature_type> ret(vigra::Shape2(1, res.size()));
+  std::copy(res.begin(), res.end(), ret.begin());
+  return ret;
+}
+
 
 // wrap feature calculation w/o traxels
-vigra::NumpyArray<2, feature_type> calculate_2f(const std::vector<boost::shared_ptr<FeatureCalculator> >& calculators,
+/* vigra::NumpyArray<2, feature_type> calculate_2f(const std::vector<boost::shared_ptr<FeatureCalculator> >& calculators,
                                                 const feature_array& f1,
                                                 const feature_array& f2) {
   feature_array ret;
@@ -288,7 +303,7 @@ vigra::NumpyArray<2, feature_type> calculate_3n(const std::vector<boost::shared_
   std::copy(n2.begin(), n2.end(), f2.begin());
   std::copy(n3.begin(), n3.end(), f3.begin());
   return calculate_3f(calculators, f1, f2, f3);
-}
+  } */
 
 
 
@@ -383,10 +398,12 @@ void export_multi_hypotheses() {
       .def("getCalculators", &FeatureExtractorCollection::get_calculators)
       ;
 
-  def("calculateFeature", &calculate_2n);
+  def ("extractFeatures", &calculate_2t);
+  def ("extractFeatures", &calculate_3t);
+  /* def("calculateFeature", &calculate_2n);
   def("calculateFeature", &calculate_3n);
   def("calculateFeature", &calculate_2f);
-  def("calculateFeature", &calculate_3f);
+  def("calculateFeature", &calculate_3f); */
   
 }
 
