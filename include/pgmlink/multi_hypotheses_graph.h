@@ -421,7 +421,7 @@ class ClassifierConstant : public ClassifierStrategy {
 class ClassifierRF : public ClassifierStrategy {
  public:
   ClassifierRF(vigra::RandomForest<> rf,
-               const std::vector<FeatureExtractor> extractor_list,
+               const std::vector<FeatureExtractor>& extractor_list,
                const std::string& name = "");
   virtual ~ClassifierRF();
   virtual void classify(std::vector<Traxel>& traxels_out,
@@ -446,7 +446,7 @@ class ClassifierRF : public ClassifierStrategy {
 class ClassifierMoveRF : public ClassifierRF {
  public:
   ClassifierMoveRF(vigra::RandomForest<> rf, 
-                   const std::vector<FeatureExtractor> extractor_list,
+                   const std::vector<FeatureExtractor>& extractor_list,
                    const std::string& name = "");
   virtual ~ClassifierMoveRF();
   virtual void classify(std::vector<Traxel>& traxels_out,
@@ -461,7 +461,7 @@ class ClassifierMoveRF : public ClassifierRF {
 class ClassifierDivisionRF : public ClassifierRF {
  public:
   ClassifierDivisionRF(vigra::RandomForest<> rf, 
-                       const std::vector<FeatureExtractor> extractor_list,
+                       const std::vector<FeatureExtractor>& extractor_list,
                        const std::string& name = "");
   virtual ~ClassifierDivisionRF();
   virtual void classify(std::vector<Traxel>& traxels_out,
