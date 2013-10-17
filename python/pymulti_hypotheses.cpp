@@ -217,6 +217,20 @@ class FeatureExtractorCollection {
 };
 
 // wrap feature calculation w/traxels
+vigra::NumpyArray<2, feature_type> calculate_1t(const std::vector<FeatureExtractor>& extractors,
+                                                const Traxel& t1) {
+  feature_array res;
+  for (std::vector<FeatureExtractor>::const_iterator ex = extractors.begin();
+       ex != extractors.end();
+       ++ex) {
+    feature_array temp = ex->extract(t1);
+    res.insert(res.end(), temp.begin(), temp.end());
+    LOG(logDEBUG3) << "Calculated " << ex->name();
+  }
+  vigra::NumpyArray<2, feature_type> ret(vigra::Shape2(1, res.size()));
+  std::copy(res.begin(), res.end(), ret.begin());
+  return ret;
+}
 vigra::NumpyArray<2, feature_type> calculate_2t(const std::vector<FeatureExtractor>& extractors,
                                                 const Traxel& t1,
                                                 const Traxel& t2) {
@@ -408,6 +422,7 @@ void export_multi_hypotheses() {
       .def("getCalculators", &FeatureExtractorCollection::get_calculators)
       ;
 
+  def ("extractFeatures", &calculate_1t);
   def ("extractFeatures", &calculate_2t);
   def ("extractFeatures", &calculate_3t);
   /* def("calculateFeature", &calculate_2n);
