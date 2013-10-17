@@ -1008,9 +1008,28 @@ void CVPR2014ModelBuilder::add_count_factor( Model& m,
   size_t table_dim = traxels.size();
   
   assert(probabilities.size() > 0);
-  if (probabilities.size() < table_dim) {
-    probabilities.insert(probabilities.end(), table_dim - probabilities.size(), *(probabilities.rbegin()));
+  // probabilities must have one state more than maximum_active_regions to
+  // include the state for all regions deactivated
+  if (probabilities.size() < maximum_active_regions + 1) {
+    // fill the missing states with copies of the last state
+    probabilities.insert(probabilities.end(),
+                         maximum_active_regions + 1 - probabilities.size(),
+                         *(probabilities.rbegin()));
+  } else if (probabilities.size() > maximum_active_regions + 1) {
+    // merge states n, n+1, ..., end into state n and divide by the
+    // number of excess states
+    // n is the last valid state, i.e. n == maximum_active_regions
+    size_t overhead = probabilities.size() - maximum_active_regions;
+    assert(probabilities.begin() + maximum_active_regions < probabilities.end());
+    probabilities[maximum_active_regions] =
+        std::accumulate(probabilities.begin() + maximum_active_regions,
+                        probabilities.end(),
+                        0.)
+        / overhead;
   }
+  
+  assert(probabilities.size() == maximum_active_regions + 1);
+  
   feature_type sum = std::accumulate(probabilities.begin(), probabilities.end(), 0.);
   if (sum > 0) {
     for(feature_array::iterator p = probabilities.begin(); p != probabilities.end(); ++p) {
