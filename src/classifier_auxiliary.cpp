@@ -267,6 +267,7 @@ FeatureExtractor::FeatureExtractor(boost::shared_ptr<FeatureCalculator> calculat
 
 
 feature_array FeatureExtractor::extract(const Traxel& t1, const Traxel& t2) const {
+  LOG(logDEBUG4) << "FeatureExtractor::extract: feature " << feature_name_;
   FeatureMap::const_iterator f1 = t1.features.find(feature_name_);
   FeatureMap::const_iterator f2 = t2.features.find(feature_name_);
   assert(f1 != t1.features.end());
