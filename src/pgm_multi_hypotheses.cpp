@@ -1024,8 +1024,7 @@ void CVPR2014ModelBuilder::add_count_factor( Model& m,
     probabilities[maximum_active_regions] =
         std::accumulate(probabilities.begin() + maximum_active_regions,
                         probabilities.end(),
-                        0.)
-        / overhead;
+                        0.) / overhead;
   }
   
   assert(probabilities.size() == maximum_active_regions + 1);
@@ -1056,7 +1055,9 @@ void CVPR2014ModelBuilder::add_count_factor( Model& m,
                  << ", " << vi.size();
         
     size_t active_count = std::accumulate(coords.begin(), coords.end(), 0);
-    table.set_value(coords, count()(probabilities[active_count]));
+    if (active_count <= maximum_active_regions) {
+      table.set_value(coords, count()(probabilities[active_count]));
+    }
     coords = std::vector<size_t>(table_dim, 0);
   }
   table.add_to( *m.opengm_model );
