@@ -1025,6 +1025,7 @@ void CVPR2014ModelBuilder::add_count_factor( Model& m,
         std::accumulate(probabilities.begin() + maximum_active_regions,
                         probabilities.end(),
                         0.) / overhead;
+    probabilities.resize(maximum_active_regions + 1);
   }
   
   assert(probabilities.size() == maximum_active_regions + 1);
