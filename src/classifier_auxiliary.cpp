@@ -740,7 +740,7 @@ boost::shared_ptr<ClassifierStrategy> ClassifierStrategyBuilder::build(const Opt
         throw std::runtime_error("Calculator \"" + feature->first + "\" not available!");
       } else {
         extractors.push_back(FeatureExtractor(c->second, feature->second));
-        LOG(logINFO) << "ClassifierStrategyBuilder::builder() -- Created Feature Extractor " << extractors.rbegin()->name();
+        LOG(logDEBUG4) << "ClassifierStrategyBuilder::builder() -- Created Feature Extractor " << extractors.rbegin()->name();
       }
     }
 
