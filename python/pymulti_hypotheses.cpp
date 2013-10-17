@@ -95,8 +95,16 @@ struct PyTrackingOptions {
     options.weights[name] = value;
   }
 
-  void set_rf(const std::string& name, const vigra::RandomForest<>& rf) {
+  void set_rf(const std::string& name, const vigra::RandomForest<double>& rf) {
     options.classifiers[name] = rf;
+  }
+
+  void set_path(const std::string& name, const std::string& path) {
+    options.paths[name] = path;
+  }
+
+  void add_feature(const std::string& classifier_type, const std::string& feature_name, const std::string& traxel_feature_name) {
+    options.feature_lists[classifier_type].push_back(std::make_pair(feature_name, traxel_feature_name));
   }
 
   void with_divisions(bool check) {
@@ -357,6 +365,8 @@ void export_multi_hypotheses() {
   class_<PyTrackingOptions, boost::noncopyable>("TrackingOptions", init<>())
       .def("set", &PyTrackingOptions::set, return_internal_reference<>())
       .def("set", &PyTrackingOptions::set_rf, return_internal_reference<>())
+      .def("set", &PyTrackingOptions::set_path, return_internal_reference<>())
+      .def("add", &PyTrackingOptions::add_feature, return_internal_reference<>())
       .def("withDivisions", &PyTrackingOptions::with_divisions, return_internal_reference<>())
       .def("withConstraints", &PyTrackingOptions::with_constraints, return_internal_reference<>())
       .def("withDetectionVars", &PyTrackingOptions::with_detection_vars, return_internal_reference<>())
