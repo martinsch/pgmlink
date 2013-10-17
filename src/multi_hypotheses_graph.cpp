@@ -70,7 +70,7 @@ void MultiHypothesesGraph::add_classifier_features(ClassifierStrategy* move,
     LOG(logDEBUG1) << "MultiHypothesesGraph::add_classifier_features: classifying region "
                    << get(node_traxel())[n].Id << " at timestep "
                    << get(node_traxel())[n].Timestep;
-    const std::vector<Traxel>& sources = regions.get_value(n);
+    std::vector<Traxel>& sources = regions.get_value(n);
     std::vector<Traxel> targets; 
     for (OutArcIt a(*this, n); a != lemon::INVALID; ++a) {
       const std::vector<Traxel>& target = regions[this->target(a)];
@@ -82,7 +82,10 @@ void MultiHypothesesGraph::add_classifier_features(ClassifierStrategy* move,
     move->classify(sources, targets, move_map.get_value(n));
     LOG(logDEBUG3) << "MultiHypothesesGraph::add_classifier_features: classifying divisions";
     division->classify(sources, targets, division_map.get_value(n));
-    // count->classify(sources, targets, count_map.get_value(n));
+    LOG(logDEBUG3) << "MultiHypothesesGraph::add_classifier_features: classifying detections";
+    detection->classify(sources);
+    LOG(logDEBUG3) << "MultiHypothesesGraph::add_classifier_features: classifying count";
+    count->classify(sources);
   }
   
 }
