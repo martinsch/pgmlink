@@ -18,6 +18,7 @@
 #include "pgmlink/pgm_multi_hypotheses.h"
 #include "pgmlink/log.h"
 #include "pgmlink/multi_hypotheses_tracking.h"
+#include "pgmlink/classifier_auxiliary.h"
 
 
 namespace pgmlink {

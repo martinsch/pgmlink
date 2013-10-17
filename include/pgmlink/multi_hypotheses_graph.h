@@ -16,17 +16,12 @@
 // lemon
 #include <lemon/list_graph.h>
 
-// vigra
-#include <vigra/multi_array.hxx>
-#include <vigra/multi_iterator_coupled.hxx>
-#include <vigra/random_forest.hxx>
-
 // pgmlink
 #include "pgmlink/graph.h"
 #include "pgmlink/hypotheses.h"
 #include "pgmlink/traxels.h"
 #include "pgmlink/region_graph.h"
-#include "pgmlink/classifier_auxiliary.h"
+// #include "pgmlink/classifier_auxiliary.h"
 
 
 
@@ -380,124 +375,7 @@ void MultiHypothesesTraxelStore::serialize( Archive& ar, const unsigned int /*ve
                            );
 }; */
 
-
-////
-//// class ClassifierStrategy
-////
-class ClassifierStrategy {
- public:
-  explicit ClassifierStrategy(const std::string& name = "");
-  virtual ~ClassifierStrategy();
-  virtual void classify(std::vector<Traxel>& traxels_out,
-                        const std::vector<Traxel>& traxels_in) = 0;
-  virtual void classify(const std::vector<Traxel>& traxels_out,
-                        const std::vector<Traxel>& traxels_in,
-                        std::map<Traxel, std::map<Traxel, feature_array> >& feature_map) = 0;
-  virtual void classify(const std::vector<Traxel>& traxels_out,
-                        const std::vector<Traxel>& traxels_in,
-                        std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_array> >& feature_map) = 0;
- protected:
-  std::string name_;
-};
-
-
-class ClassifierConstant : public ClassifierStrategy {
- public:
-  ClassifierConstant(double probability, const std::string& name = "");
-  virtual ~ClassifierConstant();
-  virtual void classify(std::vector<Traxel>& traxels_out,
-                        const std::vector<Traxel>& traxels_in);
-  virtual void classify(const std::vector<Traxel>& traxels_out,
-                        const std::vector<Traxel>& traxels_in,
-                        std::map<Traxel, std::map<Traxel, feature_array> >& feature_map);
-  virtual void classify(const std::vector<Traxel>& traxels_out,
-                        const std::vector<Traxel>& traxels_in,
-                        std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_array> >& feature_map);
- private:
-  double probability_;
-};
-
-
-class ClassifierRF : public ClassifierStrategy {
- public:
-  ClassifierRF(vigra::RandomForest<> rf,
-               const std::vector<FeatureExtractor>& extractor_list,
-               const std::string& name = "");
-  virtual ~ClassifierRF();
-  virtual void classify(std::vector<Traxel>& traxels_out,
-                        const std::vector<Traxel>& traxels_in);
-  virtual void classify(const std::vector<Traxel>& traxels_out,
-                        const std::vector<Traxel>& traxels_in,
-                        std::map<Traxel, std::map<Traxel, feature_array> >& feature_map);
-  virtual void classify(const std::vector<Traxel>& traxels_out,
-                        const std::vector<Traxel>& traxels_in,
-                        std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_array> >& feature_map);
- protected:
-  virtual void extract_features(const Traxel& t1, const Traxel& t2);
-  virtual void extract_features(const Traxel& parent, const Traxel& child1, const Traxel& child2);
-  
-  vigra::RandomForest<> rf_;
-  const std::vector<FeatureExtractor>& feature_extractors_;
-  vigra::MultiArray<2, feature_type> features_;
-  vigra::MultiArray<2, feature_type> probabilities_;
-};
-
-
-class ClassifierMoveRF : public ClassifierRF {
- public:
-  ClassifierMoveRF(vigra::RandomForest<> rf, 
-                   const std::vector<FeatureExtractor>& extractor_list,
-                   const std::string& name = "");
-  virtual ~ClassifierMoveRF();
-  virtual void classify(std::vector<Traxel>& traxels_out,
-                        const std::vector<Traxel>& traxels_in);
-  virtual void classify(const std::vector<Traxel>& traxels_out,
-                        const std::vector<Traxel>& traxels_in,
-                        std::map<Traxel, std::map<Traxel, feature_array> >& feature_map);
-  
-};
-
-
-class ClassifierDivisionRF : public ClassifierRF {
- public:
-  ClassifierDivisionRF(vigra::RandomForest<> rf, 
-                       const std::vector<FeatureExtractor>& extractor_list,
-                       const std::string& name = "");
-  virtual ~ClassifierDivisionRF();
-  virtual void classify(std::vector<Traxel>& traxels_out,
-                        const std::vector<Traxel>& traxels_in);
-  virtual void classify(const std::vector<Traxel>& traxels_out,
-                        const std::vector<Traxel>& traxels_in,
-                        std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_array> >& feature_map);
-};
-
-
-class ClassifierCountRF : public ClassifierRF{
- public:
-  ClassifierCountRF(vigra::RandomForest<> rf, 
-                    const std::vector<FeatureExtractor> extractor_list,
-                    const std::string& name = "");
-  ~ClassifierCountRF();
-  virtual void classify(const std::vector<Traxel>& traxels_out,
-                        const std::vector<Traxel>& traxels_in,
-                        std::map<Traxel, std::map<Traxel, feature_array> >& feature_map);
-};
-
-
-class ClassifierDetectionRF : public ClassifierRF{
- public:
-  ClassifierDetectionRF(vigra::RandomForest<> rf, 
-                        const std::vector<FeatureExtractor> extractor_list,
-                        const std::string& name = "");
-  ~ClassifierDetectionRF();
-  virtual void classify(const std::vector<Traxel>& traxels_out,
-                        const std::vector<Traxel>& traxels_in,
-                        std::map<Traxel, std::map<Traxel, feature_array> >& feature_map);
-};
-
-
-    
-  
+ 
 /* IMPLEMENTATIONS */
 
 

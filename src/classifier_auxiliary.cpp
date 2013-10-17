@@ -396,4 +396,236 @@ const std::map<std::string, boost::shared_ptr<FeatureCalculator> >& AvailableCal
 }
 
 
+////
+//// ClassifierStrategy
+////
+ClassifierStrategy::ClassifierStrategy(const std::string& name) :
+    name_(name) {}
+
+
+ClassifierStrategy::~ClassifierStrategy() {}
+
+
+////
+//// ClassifierConstant
+////
+ClassifierConstant::ClassifierConstant(double probability, const std::string& name) :
+    ClassifierStrategy(name),
+    probability_(probability) {
+  if (probability_ > 1.) {
+    throw std::runtime_error("Probability > 1!");
+  }
+  if (probability_ < 0.) {
+    throw std::runtime_error("Probability < 0!");
+  }
+}
+
+
+ClassifierConstant::~ClassifierConstant() {}
+
+
+void ClassifierConstant::classify(std::vector<Traxel>& traxels_out,
+                                  const std::vector<Traxel>&) {
+  LOG(logDEBUG3) << "ClassifierConstant::classify: entered";
+  for (std::vector<Traxel>::iterator out = traxels_out.begin(); out != traxels_out.end(); ++out) {
+    out->features[name_].push_back(1-probability_);
+    out->features[name_].push_back(probability_);
+  }
+}
+                                  
+
+
+void ClassifierConstant::classify(const std::vector<Traxel>& traxels_out,
+                                  const std::vector<Traxel>& traxels_in,
+                                  std::map<Traxel, std::map<Traxel, feature_array> >& feature_map) {
+  LOG(logDEBUG3) << "ClassifierConstant::classify: entered";
+  for (std::vector<Traxel>::const_iterator out = traxels_out.begin(); out != traxels_out.end(); ++out) {
+    for (std::vector<Traxel>::const_iterator in = traxels_in.begin(); in != traxels_in.end(); ++in) {
+      LOG(logDEBUG4) << "ClassifierConstant::classify: " << *out << " -> " << *in;
+      // assert(feature_map[*out][*in].size() == 0);
+      feature_map[*out][*in].push_back(probability_);
+      feature_map[*out][*in].push_back(1-probability_);
+    }
+  }
+}
+
+void ClassifierConstant::classify(const std::vector<Traxel>& traxels_out,
+                                  const std::vector<Traxel>& traxels_in,
+                                  std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_array> >& feature_map) {
+  for (std::vector<Traxel>::const_iterator out = traxels_out.begin(); out != traxels_out.end(); ++out) {
+    for (std::vector<Traxel>::const_iterator child1 = traxels_in.begin(); child1 != traxels_in.end(); ++child1) {
+      for (std::vector<Traxel>::const_iterator child2 = child1 + 1; child2 != traxels_in.end(); ++child2) {
+        assert(feature_map[*out][std::make_pair(*child1, *child2)].size() == 0);
+        feature_map[*out][std::make_pair(*child1, *child2)].push_back(probability_);
+        feature_map[*out][std::make_pair(*child1, *child2)].push_back(1-probability_);
+      }
+    }
+  }
+}
+
+
+////
+//// ClassifierRF
+////
+ClassifierRF::ClassifierRF(vigra::RandomForest<> rf,
+                           const std::vector<FeatureExtractor>& feature_extractors,
+                           const std::string& name) :
+    ClassifierStrategy(name),
+    rf_(rf),
+    feature_extractors_(feature_extractors),
+    features_(vigra::MultiArray<2, feature_type>::difference_type(1, rf.feature_count())),
+    probabilities_(vigra::MultiArray<2, feature_type>::difference_type(1, rf.class_count())) {
+  assert(feature_extractors.size() == feature_extractors_.size());
+  assert(feature_extractors_.size() > 0);
+  if(rf_.class_count() < 2) {
+    throw std::runtime_error("ClassifierRF: Random Forest has less than two classes!");
+  }
+}
+
+
+ClassifierRF::~ClassifierRF() {}
+
+
+void ClassifierRF::classify(std::vector<Traxel>& traxels_out,
+                            const std::vector<Traxel>& traxels_in) {}
+
+
+void ClassifierRF::classify(const std::vector<Traxel>& traxels_out,
+                            const std::vector<Traxel>& traxels_in,
+                            std::map<Traxel, std::map<Traxel, feature_array> >& feature_map) {}
+
+
+void ClassifierRF::classify(const std::vector<Traxel>& traxels_out,
+                            const std::vector<Traxel>& traxels_in,
+                            std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_array> >& feature_map) {}
+
+
+void ClassifierRF::extract_features(const Traxel& t1, const Traxel& t2) {
+  size_t starting_index = 0;
+  for (std::vector<FeatureExtractor>::const_iterator it = feature_extractors_.begin();
+       it != feature_extractors_.end();
+       ++it) {
+    LOG(logDEBUG4) << "ClassifierRF: extracting " << it->name();
+    feature_array feats = it->extract(t1, t2);
+    assert(starting_index + feats.size() <= features_.shape()[1]);
+    std::copy(feats.begin(), feats.end(), features_.begin() + starting_index);
+    starting_index += feats.size();
+  }
+  LOG(logDEBUG4) << "ClassifierRF: " << starting_index << "," << features_.shape()[1];
+  if (starting_index != features_.shape()[1]) {
+    throw std::runtime_error("ClassifierRF: extracted features size does not match random forest feature size");
+  }
+}
+
+
+void ClassifierRF::extract_features(const Traxel& parent, const Traxel& child1, const Traxel& child2) {
+  size_t starting_index = 0;
+  for (std::vector<FeatureExtractor>::const_iterator it = feature_extractors_.begin();
+       it != feature_extractors_.end();
+       ++it) {
+    LOG(logDEBUG4) << "ClassifierRF: extracting " << it->name();
+    feature_array feats = it->extract(parent, child1, child2);
+    assert(starting_index + feats.size() <= features_.shape()[1]);
+    std::copy(feats.begin(), feats.end(), features_.begin() + starting_index);
+    starting_index += feats.size();
+  }
+  if (starting_index != features_.shape()[1]) {
+    throw std::runtime_error("ClassifierRF: extracted features size does not match random forest feature size");
+  }
+}
+
+
+ClassifierMoveRF::ClassifierMoveRF(vigra::RandomForest<> rf, 
+                                   const std::vector<FeatureExtractor>& feature_extractors,
+                                   const std::string& name) :
+    ClassifierRF(rf, feature_extractors, name) {}
+
+
+ClassifierMoveRF::~ClassifierMoveRF() {}
+
+
+void ClassifierMoveRF::classify(std::vector<Traxel>& traxels_out,
+                                const std::vector<Traxel>& traxels_in) {
+  for (std::vector<Traxel>::iterator out = traxels_out.begin(); out != traxels_out.end(); ++out) {
+    vigra::MultiArray<2, feature_type> max_prob(vigra::Shape2(1, rf_.class_count()), 0.);
+    for (std::vector<Traxel>::const_iterator in = traxels_in.begin(); in != traxels_in.end(); ++in) {
+      extract_features(*out, *in);
+      rf_.predictProbabilities(features_, probabilities_);
+      if (probabilities_(0, 1) > max_prob(0, 1)) {
+        max_prob.swapData(probabilities_);
+      }
+    }
+    assert(out->features[name_].size() == 0);
+    out->features[name_].insert(out->features[name_].begin(), max_prob.begin(), max_prob.end());
+    assert(out->features[name_].size() == rf_.class_count());
+  }
+}
+
+
+void ClassifierMoveRF::classify(const std::vector<Traxel>& traxels_out,
+                                const std::vector<Traxel>& traxels_in,
+                                std::map<Traxel, std::map<Traxel, feature_array> >& feature_map) {
+  for (std::vector<Traxel>::const_iterator out = traxels_out.begin(); out != traxels_out.end(); ++out) {
+    for (std::vector<Traxel>::const_iterator in = traxels_in.begin(); in != traxels_in.end(); ++in) {
+      extract_features(*out, *in);
+      assert(feature_map[*out][*in].size() == 0);
+      rf_.predictProbabilities(features_, probabilities_);
+      std::copy(probabilities_.begin(),
+                probabilities_.end(),
+                std::back_insert_iterator<feature_array>(feature_map[*out][*in]));
+    }
+  }
+}
+
+
+
+
+
+ClassifierDivisionRF::ClassifierDivisionRF(vigra::RandomForest<> rf, 
+                                           const std::vector<FeatureExtractor>& feature_extractors,
+                                           const std::string& name) :
+    ClassifierRF(rf, feature_extractors, name) {}
+
+
+ClassifierDivisionRF::~ClassifierDivisionRF() {}
+
+
+void ClassifierDivisionRF::classify(std::vector<Traxel>& traxels_out,
+                                    const std::vector<Traxel>& traxels_in) {
+  for (std::vector<Traxel>::iterator out = traxels_out.begin(); out != traxels_out.end(); ++out) {
+    vigra::MultiArray<2, feature_type> max_prob(vigra::Shape2(1, rf_.class_count()), 0.);
+    for (std::vector<Traxel>::const_iterator child1 = traxels_in.begin(); child1 != traxels_in.end(); ++child1) {
+      for (std::vector<Traxel>::const_iterator child2 = child1 + 1; child2 != traxels_in.end(); ++child2) {
+        extract_features(*out, *child1, *child2);
+        rf_.predictProbabilities(features_, probabilities_);
+        if (probabilities_(0, 1) > max_prob(0, 1)) {
+          max_prob.swapData(probabilities_);
+        }
+      }
+    }
+    assert(out->features[name_].size() == 0);
+    out->features[name_].insert(out->features[name_].begin(), max_prob.begin(), max_prob.end());
+    assert(out->features[name_].size() == rf_.class_count());
+  }
+}
+
+
+void ClassifierDivisionRF::classify(const std::vector<Traxel>& traxels_out,
+                                    const std::vector<Traxel>& traxels_in,
+                                    std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_array> >& feature_map) {
+  for (std::vector<Traxel>::const_iterator out = traxels_out.begin(); out != traxels_out.end(); ++out) {
+    for (std::vector<Traxel>::const_iterator child1 = traxels_in.begin(); child1 != traxels_in.end(); ++child1) {
+      for (std::vector<Traxel>::const_iterator child2 = child1 + 1; child2 != traxels_in.end(); ++child2) {
+        extract_features(*out, *child1, *child2);
+        assert(feature_map[*out][std::make_pair(*child1, *child2)].size() == 0);
+        rf_.predictProbabilities(features_, probabilities_);
+        std::copy(probabilities_.begin(),
+                  probabilities_.end(),
+                  std::back_insert_iterator<feature_array>(feature_map[*out][std::make_pair(*child1, *child2)]));
+      }
+    }
+  }
+}
+
+
 } /* namespace pgmlink */
