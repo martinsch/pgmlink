@@ -10,6 +10,8 @@
 #include <boost/shared_ptr.hpp>
 
 // vigra
+#include <vigra/random_forest.hxx>
+#include <vigra/random_forest_hdf5_impex.hxx>
 
 // pgmlink
 #include "pgmlink/feature.h"
@@ -424,6 +426,15 @@ ClassifierConstant::ClassifierConstant(double probability, const std::string& na
 ClassifierConstant::~ClassifierConstant() {}
 
 
+void ClassifierConstant::classify(std::vector<Traxel>& traxels) {
+  for (std::vector<Traxel>::iterator t = traxels.begin();
+       t != traxels.end();
+       ++t) {
+    t->features[name_] = feature_array(1, probability_);
+  }
+}
+
+
 void ClassifierConstant::classify(std::vector<Traxel>& traxels_out,
                                   const std::vector<Traxel>&) {
   LOG(logDEBUG3) << "ClassifierConstant::classify: entered";
@@ -486,6 +497,9 @@ ClassifierRF::ClassifierRF(vigra::RandomForest<> rf,
 ClassifierRF::~ClassifierRF() {}
 
 
+void ClassifierRF::classify(std::vector<Traxel>& traxels) {}
+
+
 void ClassifierRF::classify(std::vector<Traxel>& traxels_out,
                             const std::vector<Traxel>& traxels_in) {}
 
@@ -500,6 +514,23 @@ void ClassifierRF::classify(const std::vector<Traxel>& traxels_out,
                             std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_array> >& feature_map) {}
 
 
+void ClassifierRF::extract_features(const Traxel& t) {
+  size_t starting_index = 0;
+  for (std::vector<FeatureExtractor>::const_iterator it = feature_extractors_.begin();
+       it != feature_extractors_.end();
+       ++it) {
+    LOG(logDEBUG4) << "ClassifierRF: extracting " << it->name();
+    feature_array feats = it->extract(t);
+    assert(starting_index + feats.size() <= features_.shape()[1]);
+    std::copy(feats.begin(), feats.end(), features_.begin() + starting_index);
+    starting_index += feats.size();
+  }
+  if (starting_index != features_.shape()[1]) {
+    throw std::runtime_error("ClassifierRF: extracted features size does not match random forest feature size");
+  }
+}
+
+
 void ClassifierRF::extract_features(const Traxel& t1, const Traxel& t2) {
   size_t starting_index = 0;
   for (std::vector<FeatureExtractor>::const_iterator it = feature_extractors_.begin();
@@ -511,7 +542,6 @@ void ClassifierRF::extract_features(const Traxel& t1, const Traxel& t2) {
     std::copy(feats.begin(), feats.end(), features_.begin() + starting_index);
     starting_index += feats.size();
   }
-  LOG(logDEBUG4) << "ClassifierRF: " << starting_index << "," << features_.shape()[1];
   if (starting_index != features_.shape()[1]) {
     throw std::runtime_error("ClassifierRF: extracted features size does not match random forest feature size");
   }
@@ -578,9 +608,6 @@ void ClassifierMoveRF::classify(const std::vector<Traxel>& traxels_out,
 }
 
 
-
-
-
 ClassifierDivisionRF::ClassifierDivisionRF(vigra::RandomForest<> rf, 
                                            const std::vector<FeatureExtractor>& feature_extractors,
                                            const std::string& name) :
@@ -625,6 +652,114 @@ void ClassifierDivisionRF::classify(const std::vector<Traxel>& traxels_out,
       }
     }
   }
+}
+
+
+ClassifierCountRF::ClassifierCountRF(vigra::RandomForest<> rf,
+                                     const std::vector<FeatureExtractor>& feature_extractors,
+                                     const std::string& name) :
+    ClassifierRF(rf, feature_extractors, name) {}
+
+
+ClassifierCountRF::~ClassifierCountRF() {}
+
+
+void ClassifierCountRF::classify(std::vector<Traxel>& traxels) {
+  extract_features(traxels[0]);
+  rf_.predictProbabilities(features_, probabilities_);
+  assert(traxels[0].features[name_].size() == 0);
+  traxels[0].features[name_].insert(traxels[0].features[name_].end(),
+                                    probabilities_.begin(),
+                                    probabilities_.end()
+                                    );
+}
+
+
+ClassifierDetectionRF::ClassifierDetectionRF(vigra::RandomForest<> rf,
+                                             const std::vector<FeatureExtractor>& feature_extractors,
+                                             const std::string& name) :
+    ClassifierRF(rf, feature_extractors, name) {}
+
+
+ClassifierDetectionRF::~ClassifierDetectionRF() {}
+
+
+void ClassifierDetectionRF::classify(std::vector<Traxel>& traxels) {
+  for (std::vector<Traxel>::iterator t = traxels.begin();
+       t != traxels.end();
+       ++t) {
+    extract_features(*t);
+    rf_.predictProbabilities(features_, probabilities_);
+    assert(traxels[0].features[name_].size() == 0);
+    t->features[name_].insert(t->features[name_].end(),
+                              probabilities_.begin(),
+                              probabilities_.end()
+                              );
+  }
+}
+
+
+////
+//// class ClassifierStrategyBuilder
+////
+boost::shared_ptr<ClassifierStrategy> ClassifierStrategyBuilder::build(const Options& options) {
+  boost::shared_ptr<ClassifierStrategy> classifier;
+  
+  if (options.type == CONSTANT) {
+    classifier = boost::shared_ptr<ClassifierStrategy>(new ClassifierConstant(options.constant_probability,
+                                                                              options.name)
+                                                       );
+
+  } else {
+    vigra::RandomForest<> rf;
+    if (!vigra::rf_import_HDF5(rf, options.rf_filename, options.rf_internal_path)) {
+      throw std::runtime_error("Coult not load random forest from "
+                               + options.rf_filename + "/" + options.rf_internal_path);
+    }
+    
+    std::vector<FeatureExtractor> extractors;
+    const std::map<std::string, boost::shared_ptr<FeatureCalculator> >& cmap = AvailableCalculators::get();
+    for (std::vector<std::pair<std::string, std::string> >::const_iterator feature = options.feature_list.begin();
+         feature != options.feature_list.end();
+         ++feature) {
+      std::map<std::string, boost::shared_ptr<FeatureCalculator> >::const_iterator c = cmap.find(feature->first);
+      if (c == cmap.end()) {
+        throw std::runtime_error("Calculator \"" + feature->first + "\" not available!");
+      } else {
+        extractors.push_back(FeatureExtractor(c->second, feature->second));
+        LOG(logINFO) << "ClassifierStrategyBuilder::builder() -- Created Feature Extractor " << extractors.rbegin()->name();
+      }
+    }
+
+    
+    if (options.type == RF_MOVE) {
+      LOG(logDEBUG) << "ClassifierStrategyBuilder::build: create MoveRF";
+      classifier = boost::shared_ptr<ClassifierStrategy>(new ClassifierMoveRF(rf,
+                                                                              extractors,
+                                                                              options.name)
+                                                         );
+    }
+    else if (options.type == RF_DIVISION) {
+      classifier = boost::shared_ptr<ClassifierStrategy>(new ClassifierDivisionRF(rf,
+                                                                                  extractors,
+                                                                                  options.name)
+                                                        );
+    } else if (options.type == RF_COUNT) {
+      classifier = boost::shared_ptr<ClassifierStrategy>(new ClassifierCountRF(rf,
+                                                                               extractors,
+                                                                               options.name)
+                                                         );
+    } else if (options.type == RF_DETECTION) {
+      classifier = boost::shared_ptr<ClassifierStrategy>(new ClassifierDetectionRF(rf,
+                                                                                   extractors,
+                                                                                   options.name)
+                                                         );
+    }  else {
+      throw std::runtime_error("Not a valid choice for classifier!");
+    }
+  }
+
+  return classifier;
 }
 
 

@@ -253,6 +253,7 @@ class ClassifierStrategy {
  public:
   explicit ClassifierStrategy(const std::string& name = "");
   virtual ~ClassifierStrategy();
+  virtual void classify(std::vector<Traxel>& traxels) = 0;
   virtual void classify(std::vector<Traxel>& traxels_out,
                         const std::vector<Traxel>& traxels_in) = 0;
   virtual void classify(const std::vector<Traxel>& traxels_out,
@@ -270,6 +271,7 @@ class ClassifierConstant : public ClassifierStrategy {
  public:
   ClassifierConstant(double probability, const std::string& name = "");
   virtual ~ClassifierConstant();
+  virtual void classify(std::vector<Traxel>& traxels);
   virtual void classify(std::vector<Traxel>& traxels_out,
                         const std::vector<Traxel>& traxels_in);
   virtual void classify(const std::vector<Traxel>& traxels_out,
@@ -289,6 +291,7 @@ class ClassifierRF : public ClassifierStrategy {
                const std::vector<FeatureExtractor>& extractor_list,
                const std::string& name = "");
   virtual ~ClassifierRF();
+  virtual void classify(std::vector<Traxel>& traxels);
   virtual void classify(std::vector<Traxel>& traxels_out,
                         const std::vector<Traxel>& traxels_in);
   virtual void classify(const std::vector<Traxel>& traxels_out,
@@ -298,11 +301,12 @@ class ClassifierRF : public ClassifierStrategy {
                         const std::vector<Traxel>& traxels_in,
                         std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_array> >& feature_map);
  protected:
+  virtual void extract_features(const Traxel& t);
   virtual void extract_features(const Traxel& t1, const Traxel& t2);
   virtual void extract_features(const Traxel& parent, const Traxel& child1, const Traxel& child2);
   
   vigra::RandomForest<> rf_;
-  const std::vector<FeatureExtractor>& feature_extractors_;
+  const std::vector<FeatureExtractor> feature_extractors_;
   vigra::MultiArray<2, feature_type> features_;
   vigra::MultiArray<2, feature_type> probabilities_;
 };
@@ -337,28 +341,40 @@ class ClassifierDivisionRF : public ClassifierRF {
 };
 
 
-class ClassifierCountRF : public ClassifierRF{
+class ClassifierCountRF : public ClassifierRF {
  public:
   ClassifierCountRF(vigra::RandomForest<> rf, 
-                    const std::vector<FeatureExtractor> extractor_list,
+                    const std::vector<FeatureExtractor>& extractor_list,
                     const std::string& name = "");
   ~ClassifierCountRF();
-  virtual void classify(const std::vector<Traxel>& traxels_out,
-                        const std::vector<Traxel>& traxels_in,
-                        std::map<Traxel, std::map<Traxel, feature_array> >& feature_map);
+  virtual void classify(std::vector<Traxel>& traxels);
 };
 
 
-class ClassifierDetectionRF : public ClassifierRF{
+class ClassifierDetectionRF : public ClassifierRF {
  public:
   ClassifierDetectionRF(vigra::RandomForest<> rf, 
-                        const std::vector<FeatureExtractor> extractor_list,
+                        const std::vector<FeatureExtractor>& extractor_list,
                         const std::string& name = "");
   ~ClassifierDetectionRF();
-  virtual void classify(const std::vector<Traxel>& traxels_out,
-                        const std::vector<Traxel>& traxels_in,
-                        std::map<Traxel, std::map<Traxel, feature_array> >& feature_map);
+  virtual void classify(std::vector<Traxel>& traxels);
 };
+
+
+class ClassifierStrategyBuilder {
+ public:
+  enum CLASSIFIER_TYPE {CONSTANT, RF_MOVE, RF_DIVISION, RF_COUNT, RF_DETECTION};
+  struct Options {
+    CLASSIFIER_TYPE type;
+    std::string name;
+    double constant_probability;
+    std::string rf_filename;
+    std::string rf_internal_path;
+    std::vector<std::pair<std::string, std::string> > feature_list;
+  };
+  boost::shared_ptr<ClassifierStrategy> build(const Options& options);
+};
+    
 
 
 /* IMPLEMENTATIONS */

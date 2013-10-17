@@ -109,7 +109,7 @@ endif(NOT CMAKE_BUILD_TYPE)
 if(NOT MSVC)
   set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wfatal-errors -std=c++98 -pedantic -pthread -fopenmp")
   set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
-  set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Werror")
+  set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 endif()
 
 set(WITH_CHECKED_STL "True" CACHE BOOL "Build with checked stl for more robust code (may degrade performance; gcc only).")

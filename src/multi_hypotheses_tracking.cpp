@@ -72,32 +72,46 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
     graph->add_classifier_features(&c, &c, &c, &c);
   } else if (options_.with_classifiers) {
     LOG(logINFO) << "MultiHypothesesTracking: using classifiers";
-    ClassifierConstant co(options_.weights["const_prob"]);
-    vigra::RandomForest<> rf; //  = options_.classifiers["move"];
-    LOG(logINFO) << "MultiHypothesesTracking: loading rf";
-    vigra::rf_import_HDF5(rf, options_.paths["classifier_file"], options_.paths["classifier_move"]);
-    LOG(logINFO) << "MultiHypothesesTracking: loading feature_list";
-    const std::vector<std::pair<std::string, std::string> >& feature_list = options_.feature_lists["move"];
-    assert (feature_list.size() > 0);
-    std::vector<FeatureExtractor> extractor_list;
-    LOG(logINFO) << "MultiHypothesesTracking: getting available calculators";
-    const std::map<std::string, boost::shared_ptr<FeatureCalculator> >& cmap = AvailableCalculators::get();
-    for (std::vector<std::pair<std::string, std::string> >::const_iterator it = feature_list.begin();
-         it != feature_list.end();
-         ++it) {
-      std::map<std::string, boost::shared_ptr<FeatureCalculator> >::const_iterator c = cmap.find(it->first);
-      if (c == cmap.end()) {
-        throw std::runtime_error("Calculator \"" + it->first + "\" not available!");
-      } else {
-        LOG(logINFO) << "MultiHypothesesTracking: creating extractor for " << it->second;
-        extractor_list.push_back(FeatureExtractor(c->second, it->second));
-      }
-    }
-    LOG(logINFO) << "MultiHypothesesTracking: creating ClassifierMoveRF";
-    assert(extractor_list.size() > 0);
-    ClassifierMoveRF m(rf, extractor_list);
+    ClassifierConstant c(options_.weights["const_prob"]);
+    ClassifierStrategyBuilder classifier_builder;
+    ClassifierStrategyBuilder::Options classifier_options;
+    classifier_options.rf_filename = options_.paths["classifier_file"];
+
+    LOG(logINFO) << "MultiHypothesesTracking: creating move classifier";
+    classifier_options.rf_internal_path = options_.paths["classifier_move"];
+    classifier_options.type = ClassifierStrategyBuilder::RF_MOVE;
+    classifier_options.feature_list.insert(classifier_options.feature_list.end(),
+                                           options_.feature_lists["move"].begin(),
+                                           options_.feature_lists["move"].end());
+    boost::shared_ptr<ClassifierStrategy> mov = classifier_builder.build(classifier_options);
+
+    LOG(logINFO) << "MultiHypothesesTracking: creating division classifier";
+    classifier_options.rf_internal_path = options_.paths["classifier_division"];
+    classifier_options.type = ClassifierStrategyBuilder::RF_DIVISION;
+    classifier_options.feature_list.insert(classifier_options.feature_list.end(),
+                                           options_.feature_lists["division"].begin(),
+                                           options_.feature_lists["division"].end());
+    boost::shared_ptr<ClassifierStrategy> div = classifier_builder.build(classifier_options);
+
+    LOG(logINFO) << "MultiHypothesesTracking: creating count classifier";
+    classifier_options.rf_internal_path = options_.paths["classifier_count"];
+    classifier_options.type = ClassifierStrategyBuilder::RF_COUNT;
+    classifier_options.feature_list.insert(classifier_options.feature_list.end(),
+                                           options_.feature_lists["count"].begin(),
+                                           options_.feature_lists["count"].end());
+    boost::shared_ptr<ClassifierStrategy> cnt = classifier_builder.build(classifier_options);
+
+    LOG(logINFO) << "MultiHypothesesTracking: creating count classifier";
+    classifier_options.rf_internal_path = options_.paths["classifier_detection"];
+    classifier_options.type = ClassifierStrategyBuilder::RF_DETECTION;
+    classifier_options.feature_list.insert(classifier_options.feature_list.end(),
+                                           options_.feature_lists["detection"].begin(),
+                                           options_.feature_lists["detection"].end());
+    boost::shared_ptr<ClassifierStrategy> det = classifier_builder.build(classifier_options);
+    
+
     LOG(logINFO) << "MultiHypothesesTracking: adding classifier features";
-    graph->add_classifier_features(&m, &co, &co, &co);
+    graph->add_classifier_features(mov.get(), div.get(), cnt.get(), det.get());
   }
 
   std::cout << " -> workflow: initializing builder" << std::endl;
