@@ -85,6 +85,7 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
                                            options_.feature_lists["move"].begin(),
                                            options_.feature_lists["move"].end());
     boost::shared_ptr<ClassifierStrategy> mov = classifier_builder.build(classifier_options);
+    classifier_options.feature_list.clear();
 
     LOG(logINFO) << "MultiHypothesesTracking: creating division classifier";
     classifier_options.name = "division";
@@ -94,6 +95,7 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
                                            options_.feature_lists["division"].begin(),
                                            options_.feature_lists["division"].end());
     boost::shared_ptr<ClassifierStrategy> div = classifier_builder.build(classifier_options);
+    classifier_options.feature_list.clear();
 
     LOG(logINFO) << "MultiHypothesesTracking: creating count classifier";
     classifier_options.name = "count_prediction";
@@ -103,6 +105,7 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
                                            options_.feature_lists["count"].begin(),
                                            options_.feature_lists["count"].end());
     boost::shared_ptr<ClassifierStrategy> cnt = classifier_builder.build(classifier_options);
+    classifier_options.feature_list.clear();
 
     LOG(logINFO) << "MultiHypothesesTracking: creating detection classifier";
     classifier_options.name = "cellness";
@@ -112,6 +115,7 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
                                            options_.feature_lists["detection"].begin(),
                                            options_.feature_lists["detection"].end());
     boost::shared_ptr<ClassifierStrategy> det = classifier_builder.build(classifier_options);
+    classifier_options.feature_list.clear();
     
 
     LOG(logINFO) << "MultiHypothesesTracking: adding classifier features";
