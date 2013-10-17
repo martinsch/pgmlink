@@ -522,6 +522,8 @@ void ClassifierRF::extract_features(const Traxel& t) {
        ++it) {
     LOG(logDEBUG4) << "ClassifierRF: extracting " << it->name();
     feature_array feats = it->extract(t);
+    LOG(logDEBUG4) << "ClassifierRF: current feats.size(): " << feats.size()
+                   << ", features_.shape(): " << features_.shape();
     assert(starting_index + feats.size() <= features_.shape()[1]);
     std::copy(feats.begin(), feats.end(), features_.begin() + starting_index);
     starting_index += feats.size();
