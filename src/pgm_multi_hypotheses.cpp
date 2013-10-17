@@ -983,16 +983,16 @@ void CVPR2014ModelBuilder::add_detection_factor( Model& m,
   OpengmExplicitFactor<double> table(vi, vi+1);
 
   coords[0] = 0;
-  table.set_value( coords, non_detection()(trax, 0));
+  table.set_value( coords, detection()(trax, 0) );
 
   coords[0] = 1;
-  table.set_value( coords, detection()(trax, 1));
+  table.set_value( coords, detection()(trax, 1) );
 
   // table = OpengmExplicitFactor<double>(vi, vi+1, 0);
   LOG(logDEBUG2) << "CVPR2014ModelBuilder::add_detection_factor: for "
                  << trax << ": detection=" << table.get_value(std::vector<size_t>(1,1))
                  << "/" << detection()(trax, 1) << ", non_detection=" << table.get_value(std::vector<size_t>(1,0))
-                 << "/" << non_detection()(trax, 0);
+                 << "/" << detection()(trax, 0);
   table.add_to( *(m.opengm_model) );
 
 }
