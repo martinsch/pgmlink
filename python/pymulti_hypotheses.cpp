@@ -135,6 +135,10 @@ struct PyTrackingOptions {
     options.forward_backward = check;
   }
 
+  void with_constant_classifier_fallback(bool check) {
+    options.constant_classifier_fallback = check;
+  }
+
   std::string sanity_check() {
     return std::string("To be implemented");
   }
@@ -387,6 +391,7 @@ void export_multi_hypotheses() {
       .def("withClassifiers", &PyTrackingOptions::with_classifiers, return_internal_reference<>())
       .def("withConstantClassifiers", &PyTrackingOptions::with_constant_classifiers, return_internal_reference<>())
       .def("withMaximalConflictCliques", &PyTrackingOptions::with_maximal_conflict_cliques, return_internal_reference<>())
+      .def("withConstantClassifierFallback", &PyTrackingOptions::with_constant_classifier_fallback, return_internal_reference<>())
       .def("forwardBackward", &PyTrackingOptions::forward_backward, return_internal_reference<>())
       .def("sanityCheck", &PyTrackingOptions::sanity_check)
       ;

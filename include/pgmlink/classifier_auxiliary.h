@@ -371,6 +371,7 @@ class ClassifierStrategyBuilder {
     std::string rf_filename;
     std::string rf_internal_path;
     std::vector<std::pair<std::string, std::string> > feature_list;
+    bool constant_classifier_fallback;
   };
   boost::shared_ptr<ClassifierStrategy> build(const Options& options);
 };

@@ -12,6 +12,7 @@
 // vigra
 #include <vigra/random_forest.hxx>
 #include <vigra/random_forest_hdf5_impex.hxx>
+#include <vigra/error.hxx>
 
 // pgmlink
 #include "pgmlink/feature.h"
@@ -712,9 +713,21 @@ boost::shared_ptr<ClassifierStrategy> ClassifierStrategyBuilder::build(const Opt
 
   } else {
     vigra::RandomForest<> rf;
-    if (!vigra::rf_import_HDF5(rf, options.rf_filename, options.rf_internal_path)) {
-      throw std::runtime_error("Coult not load random forest from "
-                               + options.rf_filename + "/" + options.rf_internal_path);
+    try {
+      vigra::rf_import_HDF5(rf, options.rf_filename, options.rf_internal_path);
+    }
+    catch (vigra::PreconditionViolation e) {
+      if (options.constant_classifier_fallback) {
+        LOG(logINFO) << "ClassifierStrategyBuilder::build() -- Could not load random forest from "
+                     << options.rf_filename << "/" << options.rf_internal_path
+                     << " -> falling back to constant classifier";
+        Options options_fallback = options;
+        options_fallback.type = CONSTANT;
+        return build(options_fallback);
+      } else {
+        throw std::runtime_error("Could not load random forest from "
+                                 + options.rf_filename + "/" + options.rf_internal_path);
+      }
     }
     
     std::vector<FeatureExtractor> extractors;
