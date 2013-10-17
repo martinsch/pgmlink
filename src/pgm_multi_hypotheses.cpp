@@ -933,7 +933,11 @@ void CVPR2014ModelBuilder::add_detection_factors( const MultiHypothesesGraph& hy
   for (std::vector<Traxel>::const_iterator t = traxels.begin(); t != traxels.end(); ++t) {
     add_detection_factor(m, *t);
   }
-  add_count_factor(m, traxels);
+  if (has_maximal_conflict_cliques()) {
+    add_count_factor(m, traxels, hypotheses.get(node_conflict_sets())[n].size());
+  } else {
+    add_count_factor(m, traxels, traxels.size());
+  }
 }
 
 
@@ -995,7 +999,8 @@ void CVPR2014ModelBuilder::add_detection_factor( Model& m,
 
 
 void CVPR2014ModelBuilder::add_count_factor( Model& m,
-                                             const std::vector<Traxel>& traxels ) const {
+                                             const std::vector<Traxel>& traxels,
+                                             size_t maximum_active_regions) const {
   LOG(logDEBUG) << "CVPR2014ModelBuilder::add_count_factor: entered";
   assert(traxels.size() > 0);
   assert(traxels[0].features.find("count_prediction") != traxels[0].features.end());

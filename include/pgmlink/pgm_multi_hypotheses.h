@@ -294,7 +294,8 @@ class CVPR2014ModelBuilder : public ModelBuilder {
 
   void add_detection_factor( Model&, const Traxel& ) const;
   void add_count_factor( Model& m,
-                         const std::vector<Traxel>& traxels ) const;
+                         const std::vector<Traxel>& traxels,
+                         size_t maximum_active_regions ) const;
   void add_outgoing_factor( const MultiHypothesesGraph&,
                             Model&,
                             const MultiHypothesesGraph::Node&,
