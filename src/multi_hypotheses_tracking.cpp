@@ -78,6 +78,7 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
     classifier_options.rf_filename = options_.paths["classifier_file"];
 
     LOG(logINFO) << "MultiHypothesesTracking: creating move classifier";
+    classifier_options.name = "move";
     classifier_options.rf_internal_path = options_.paths["classifier_move"];
     classifier_options.type = ClassifierStrategyBuilder::RF_MOVE;
     classifier_options.feature_list.insert(classifier_options.feature_list.end(),
@@ -86,6 +87,7 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
     boost::shared_ptr<ClassifierStrategy> mov = classifier_builder.build(classifier_options);
 
     LOG(logINFO) << "MultiHypothesesTracking: creating division classifier";
+    classifier_options.name = "division";
     classifier_options.rf_internal_path = options_.paths["classifier_division"];
     classifier_options.type = ClassifierStrategyBuilder::RF_DIVISION;
     classifier_options.feature_list.insert(classifier_options.feature_list.end(),
@@ -94,6 +96,7 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
     boost::shared_ptr<ClassifierStrategy> div = classifier_builder.build(classifier_options);
 
     LOG(logINFO) << "MultiHypothesesTracking: creating count classifier";
+    classifier_options.name = "count_prediction";
     classifier_options.rf_internal_path = options_.paths["classifier_count"];
     classifier_options.type = ClassifierStrategyBuilder::RF_COUNT;
     classifier_options.feature_list.insert(classifier_options.feature_list.end(),
@@ -101,7 +104,8 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
                                            options_.feature_lists["count"].end());
     boost::shared_ptr<ClassifierStrategy> cnt = classifier_builder.build(classifier_options);
 
-    LOG(logINFO) << "MultiHypothesesTracking: creating count classifier";
+    LOG(logINFO) << "MultiHypothesesTracking: creating detection classifier";
+    classifier_options.name = "cellness";
     classifier_options.rf_internal_path = options_.paths["classifier_detection"];
     classifier_options.type = ClassifierStrategyBuilder::RF_DETECTION;
     classifier_options.feature_list.insert(classifier_options.feature_list.end(),
