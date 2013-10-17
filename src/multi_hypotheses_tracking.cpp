@@ -7,6 +7,10 @@
 // boost
 #include <boost/shared_ptr.hpp>
 
+// vigra
+#include <vigra/random_forest.hxx>
+#include <vigra/random_forest_hdf5_impex.hxx>
+
 // pgmlink
 #include "pgmlink/feature.h"
 #include "pgmlink/multi_hypotheses_graph.h"
@@ -67,6 +71,32 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
     graph->add_classifier_features(&c, &c, &c, &c);
   } else if (options_.with_classifiers) {
     LOG(logINFO) << "MultiHypothesesTracking: using classifiers";
+    ClassifierConstant co(options_.weights["const_prob"]);
+    vigra::RandomForest<> rf; //  = options_.classifiers["move"];
+    LOG(logINFO) << "MultiHypothesesTracking: loading rf";
+    vigra::rf_import_HDF5(rf, options_.paths["classifier_file"], options_.paths["classifier_move"]);
+    LOG(logINFO) << "MultiHypothesesTracking: loading feature_list";
+    const std::vector<std::pair<std::string, std::string> >& feature_list = options_.feature_lists["move"];
+    assert (feature_list.size() > 0);
+    std::vector<FeatureExtractor> extractor_list;
+    LOG(logINFO) << "MultiHypothesesTracking: getting available calculators";
+    const std::map<std::string, boost::shared_ptr<FeatureCalculator> >& cmap = AvailableCalculators::get();
+    for (std::vector<std::pair<std::string, std::string> >::const_iterator it = feature_list.begin();
+         it != feature_list.end();
+         ++it) {
+      std::map<std::string, boost::shared_ptr<FeatureCalculator> >::const_iterator c = cmap.find(it->first);
+      if (c == cmap.end()) {
+        throw std::runtime_error("Calculator \"" + it->first + "\" not available!");
+      } else {
+        LOG(logINFO) << "MultiHypothesesTracking: creating extractor for " << it->second;
+        extractor_list.push_back(FeatureExtractor(c->second, it->second));
+      }
+    }
+    LOG(logINFO) << "MultiHypothesesTracking: creating ClassifierMoveRF";
+    assert(extractor_list.size() > 0);
+    ClassifierMoveRF m(rf, extractor_list);
+    LOG(logINFO) << "MultiHypothesesTracking: adding classifier features";
+    graph->add_classifier_features(&m, &co, &co, &co);
   }
 
   std::cout << " -> workflow: initializing builder" << std::endl;
