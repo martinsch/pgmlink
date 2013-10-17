@@ -16,7 +16,6 @@
 #include "pgmlink/traxels.h"
 
 namespace pgmlink {
-
 ////
 //// class FeatureCalculator
 ////
@@ -26,11 +25,24 @@ class FeatureCalculator {
   static const unsigned length;
 
   virtual ~FeatureCalculator();
+  virtual feature_array calculate(const feature_array& f1) const;
   virtual feature_array calculate(const feature_array& f1, const feature_array& f2) const;
   virtual feature_array calculate(const feature_array& f1, const feature_array& f2, const feature_array& f3) const;
   virtual const std::string& name() const;
 
   bool operator==(const FeatureCalculator& other);
+};
+
+
+class IdentityCalculator : public FeatureCalculator {
+ public:
+  static const std::string name_;
+  static const unsigned length;
+
+  virtual ~IdentityCalculator();
+  virtual feature_array calculate(const feature_array& f1) const;
+  virtual const std::string& name() const;
+
 };
 
 
@@ -213,6 +225,7 @@ typedef ParentSquaredDifferences<Ratio> RatioParentSquaredDifference;
 class FeatureExtractor {
  public:
   FeatureExtractor(boost::shared_ptr<FeatureCalculator> calculator, const std::string& feature_name);
+  feature_array extract(const Traxel& t1) const;
   feature_array extract(const Traxel& t1, const Traxel& t2) const;
   feature_array extract(const Traxel& t1, const Traxel& t2, const Traxel& t3) const;
   boost::shared_ptr<FeatureCalculator> calculator() const;

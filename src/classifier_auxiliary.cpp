@@ -32,6 +32,12 @@ FeatureCalculator::~FeatureCalculator() {
 }
 
 
+feature_array FeatureCalculator::calculate(const feature_array& f1) const {
+  throw std::runtime_error("FeatureCalculator \"" + name() + "\" does not take one feature array");
+  return feature_array();
+}
+
+
 feature_array FeatureCalculator::calculate(const feature_array& f1, const feature_array& f2) const {
   throw std::runtime_error("FeatureCalculator \"" + name() + "\" does not take two feature arrays");
   return feature_array();
@@ -51,6 +57,29 @@ const std::string& FeatureCalculator::name() const {
 
 bool FeatureCalculator::operator==(const FeatureCalculator& other) {
   return name() == other.name();
+}
+
+
+////
+//// class IdentityCalculator
+////
+const std::string IdentityCalculator::name_ = "Identity";
+
+const unsigned IdentityCalculator::length = 0;
+
+
+IdentityCalculator::~IdentityCalculator() {
+
+}
+
+
+feature_array IdentityCalculator::calculate(const feature_array& f1) const {
+  return f1;
+}
+
+
+const std::string& IdentityCalculator::name() const {
+  return IdentityCalculator::name_;
 }
 
 
@@ -81,11 +110,6 @@ feature_array SquaredDifferenceCalculator::calculate(const feature_array& f1, co
 
 const std::string& SquaredDifferenceCalculator::name() const {
   return SquaredDifferenceCalculator::name_;
-}
-
-
-const std::string& SquareRootSquaredDifferenceCalculator::name() const {
-  return SquareRootSquaredDifferenceCalculator::name_;
 }
 
 
@@ -143,6 +167,11 @@ feature_array SquareRootSquaredDifferenceCalculator::calculate(const feature_arr
   }
   ret[0] = sqrt(ret[0]);
   return ret;
+}
+
+
+const std::string& SquareRootSquaredDifferenceCalculator::name() const {
+  return SquareRootSquaredDifferenceCalculator::name_;
 }
 
 
@@ -266,6 +295,15 @@ FeatureExtractor::FeatureExtractor(boost::shared_ptr<FeatureCalculator> calculat
 }
 
 
+feature_array FeatureExtractor::extract(const Traxel& t1) const {
+  LOG(logDEBUG4) << "FeatureExtractor::extract: feature " << feature_name_;
+  FeatureMap::const_iterator f1 = t1.features.find(feature_name_);
+  assert(f1 != t1.features.end());
+  feature_array features1 = f1->second;
+  return calculator_->calculate(features1);
+}
+
+
 feature_array FeatureExtractor::extract(const Traxel& t1, const Traxel& t2) const {
   LOG(logDEBUG4) << "FeatureExtractor::extract: feature " << feature_name_;
   FeatureMap::const_iterator f1 = t1.features.find(feature_name_);
@@ -339,6 +377,9 @@ std::map<std::string, boost::shared_ptr<FeatureCalculator> > define_features() {
   
   calc = boost::shared_ptr<FeatureCalculator>(new RatioParentSquaredDifference);
   feature_map.insert(std::make_pair("RatioParentSquaredDifference", calc));
+
+  calc = boost::shared_ptr<FeatureCalculator>(new IdentityCalculator);
+  feature_map.insert(std::make_pair("Identity", calc));
 
   return feature_map;
 }
