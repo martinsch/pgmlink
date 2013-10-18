@@ -46,6 +46,7 @@ public:
     bool with_maximal_conflict_cliques;
     bool forward_backward;
     bool constant_classifier_fallback;
+    bool classifier_count_precomputed;
   };
   MultiHypothesesTracking(const Options& options) : options_(options) {}
   boost::shared_ptr<std::vector<std::vector<Event> > > operator()(MultiHypothesesTraxelStore& ts);
