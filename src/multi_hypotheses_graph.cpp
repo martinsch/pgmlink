@@ -204,6 +204,7 @@ void MultiHypothesesGraphBuilder::add_nodes(const MultiHypothesesTraxelStore& ts
       }
       
       assert(traxels.size() > 0);
+      assert(traxels.size() == component->second.size());
       traxel_map.set(node, traxels[0]);
       assert(ts.conflicts_by_timestep.find(timestep->first) != ts.conflicts_by_timestep.end());
       const ConflictSetMap& conflicts_source = ts.conflicts_by_timestep.find(timestep->first)->second;
