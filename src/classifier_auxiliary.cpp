@@ -466,14 +466,17 @@ void ClassifierConstant::classify(std::vector<Traxel>& traxels) {
   for (std::vector<Traxel>::iterator t = traxels.begin();
        t != traxels.end();
        ++t) {
-    t->features[name_] = feature_array(1, probability_);
+    LOG(logDEBUG4) << "ClassifierConstant::classify() -- adding feature " << name_
+                   << " to " << *t;
+    t->features[name_] = feature_array(1, 1-probability_);
+    t->features[name_].push_back(probability_);
   }
 }
 
 
 void ClassifierConstant::classify(std::vector<Traxel>& traxels_out,
                                   const std::vector<Traxel>&) {
-  LOG(logDEBUG3) << "ClassifierConstant::classify: entered";
+  LOG(logDEBUG3) << "ClassifierConstant::classify() -- entered";
   for (std::vector<Traxel>::iterator out = traxels_out.begin(); out != traxels_out.end(); ++out) {
     out->features[name_].push_back(1-probability_);
     out->features[name_].push_back(probability_);
