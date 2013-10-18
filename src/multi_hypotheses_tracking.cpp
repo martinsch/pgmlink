@@ -68,13 +68,16 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
 
   if (options_.with_constant_classifiers) {
     LOG(logINFO) << "MultiHypothesesTracking: using constant classifiers";
-    ClassifierConstant c(options_.weights["const_prob"]);
-    graph->add_classifier_features(&c, &c, &c, &c);
+    ClassifierConstant mov(options_.weights["const_prob"], "move");
+    ClassifierConstant div(options_.weights["const_prob"], "division");
+    ClassifierConstant det(options_.weights["const_prob"], "detProb");
+    ClassifierConstant cnt(options_.weights["const_prob"], "count_prediction");
+    graph->add_classifier_features(&mov, &div, &cnt, &det);
   } else if (options_.with_classifiers) {
     LOG(logINFO) << "MultiHypothesesTracking: using classifiers";
-    ClassifierConstant c(options_.weights["const_prob"]);
     ClassifierStrategyBuilder classifier_builder;
     ClassifierStrategyBuilder::Options classifier_options;
+    classifier_options.constant_probability = options_.weights["const_prob"];
     classifier_options.rf_filename = options_.paths["classifier_file"];
 
     LOG(logINFO) << "MultiHypothesesTracking: creating move classifier";
@@ -97,6 +100,11 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
     boost::shared_ptr<ClassifierStrategy> div = classifier_builder.build(classifier_options);
     classifier_options.feature_list.clear();
 
+    boost::shared_ptr<ClassifierStrategy> cnt;
+    if (options_.classifier_count_precomputed) {
+      LOG(logINFO) << "MultiHypothesesTracking: detection probability already calculated - using \"lazy\" classifier ";
+      cnt = boost::shared_ptr<ClassifierStrategy>(new ClassifierLazy);
+    } else {
     LOG(logINFO) << "MultiHypothesesTracking: creating count classifier";
     classifier_options.name = "count_prediction";
     classifier_options.rf_internal_path = options_.paths["classifier_count"];
@@ -104,11 +112,12 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
     classifier_options.feature_list.insert(classifier_options.feature_list.end(),
                                            options_.feature_lists["count"].begin(),
                                            options_.feature_lists["count"].end());
-    boost::shared_ptr<ClassifierStrategy> cnt = classifier_builder.build(classifier_options);
+    cnt = classifier_builder.build(classifier_options);
     classifier_options.feature_list.clear();
-
+    }
+    
     LOG(logINFO) << "MultiHypothesesTracking: creating detection classifier";
-    classifier_options.name = "cellness";
+    classifier_options.name = "detProb";
     classifier_options.rf_internal_path = options_.paths["classifier_detection"];
     classifier_options.type = ClassifierStrategyBuilder::RF_DETECTION;
     classifier_options.feature_list.insert(classifier_options.feature_list.end(),
@@ -117,7 +126,6 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
     boost::shared_ptr<ClassifierStrategy> det = classifier_builder.build(classifier_options);
     classifier_options.feature_list.clear();
     
-
     LOG(logINFO) << "MultiHypothesesTracking: adding classifier features";
     graph->add_classifier_features(mov.get(), div.get(), cnt.get(), det.get());
   }
