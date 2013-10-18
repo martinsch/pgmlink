@@ -485,10 +485,10 @@ void ClassifierConstant::classify(std::vector<Traxel>& traxels_out,
 void ClassifierConstant::classify(const std::vector<Traxel>& traxels_out,
                                   const std::vector<Traxel>& traxels_in,
                                   std::map<Traxel, std::map<Traxel, feature_array> >& feature_map) {
-  LOG(logDEBUG3) << "ClassifierConstant::classify: entered";
+  LOG(logDEBUG3) << "ClassifierConstant::classify() -- entered";
   for (std::vector<Traxel>::const_iterator out = traxels_out.begin(); out != traxels_out.end(); ++out) {
     for (std::vector<Traxel>::const_iterator in = traxels_in.begin(); in != traxels_in.end(); ++in) {
-      LOG(logDEBUG4) << "ClassifierConstant::classify: " << *out << " -> " << *in;
+      LOG(logDEBUG4) << "ClassifierConstant::classify() -- " << *out << " -> " << *in;
       // assert(feature_map[*out][*in].size() == 0);
       feature_map[*out][*in].push_back(probability_);
       feature_map[*out][*in].push_back(1-probability_);
@@ -525,7 +525,7 @@ ClassifierRF::ClassifierRF(vigra::RandomForest<> rf,
   assert(feature_extractors.size() == feature_extractors_.size());
   assert(feature_extractors_.size() > 0);
   if(rf_.class_count() < 2) {
-    throw std::runtime_error("ClassifierRF: Random Forest has less than two classes!");
+    throw std::runtime_error("ClassifierRF -- Random Forest has less than two classes!");
   }
 }
 
@@ -533,6 +533,7 @@ ClassifierRF::ClassifierRF(vigra::RandomForest<> rf,
 ClassifierRF::~ClassifierRF() {}
 
 
+// ClassifierRF is not doing anything. Create derived class if you want to take action.
 void ClassifierRF::classify(std::vector<Traxel>& traxels) {}
 
 
@@ -564,7 +565,7 @@ void ClassifierRF::extract_features(const Traxel& t) {
     starting_index += feats.size();
   }
   if (starting_index != features_.shape()[1]) {
-    throw std::runtime_error("ClassifierRF: extracted features size does not match random forest feature size");
+    throw std::runtime_error("ClassifierRF -- extracted features size does not match random forest feature size");
   }
 }
 
@@ -581,7 +582,7 @@ void ClassifierRF::extract_features(const Traxel& t1, const Traxel& t2) {
     starting_index += feats.size();
   }
   if (starting_index != features_.shape()[1]) {
-    throw std::runtime_error("ClassifierRF: extracted features size does not match random forest feature size");
+    throw std::runtime_error("ClassifierRF -- extracted features size does not match random forest feature size");
   }
 }
 
@@ -591,14 +592,14 @@ void ClassifierRF::extract_features(const Traxel& parent, const Traxel& child1, 
   for (std::vector<FeatureExtractor>::const_iterator it = feature_extractors_.begin();
        it != feature_extractors_.end();
        ++it) {
-    LOG(logDEBUG4) << "ClassifierRF: extracting " << it->name();
+    LOG(logDEBUG4) << "ClassifierRF:extract_features() -- extracting " << it->name();
     feature_array feats = it->extract(parent, child1, child2);
     assert(starting_index + feats.size() <= features_.shape()[1]);
     std::copy(feats.begin(), feats.end(), features_.begin() + starting_index);
     starting_index += feats.size();
   }
   if (starting_index != features_.shape()[1]) {
-    throw std::runtime_error("ClassifierRF: extracted features size does not match random forest feature size");
+    throw std::runtime_error("ClassifierRF::extract_features() -- extracted features size does not match random forest feature size");
   }
 }
 
@@ -705,6 +706,8 @@ ClassifierCountRF::~ClassifierCountRF() {}
 void ClassifierCountRF::classify(std::vector<Traxel>& traxels) {
   extract_features(traxels[0]);
   rf_.predictProbabilities(features_, probabilities_);
+  LOG(logDEBUG4) << "ClassifierCountRF::classify() -- adding feature "
+                 << name_ << " to " << traxels[0];
   assert(traxels[0].features[name_].size() == 0);
   traxels[0].features[name_].insert(traxels[0].features[name_].end(),
                                     probabilities_.begin(),
@@ -728,7 +731,9 @@ void ClassifierDetectionRF::classify(std::vector<Traxel>& traxels) {
        ++t) {
     extract_features(*t);
     rf_.predictProbabilities(features_, probabilities_);
-    assert(traxels[0].features[name_].size() == 0);
+    LOG(logDEBUG4) << "ClassifierDetectionRF::classify() -- adding feature "
+                   << name_ << " to " << *t << ',' << t->Level;
+    assert(t->features[name_].size() == 0);
     t->features[name_].insert(t->features[name_].end(),
                               probabilities_.begin(),
                               probabilities_.end()
