@@ -410,6 +410,41 @@ ClassifierStrategy::~ClassifierStrategy() {}
 
 
 ////
+//// ClassifierLazy
+////
+ClassifierLazy::ClassifierLazy() :
+    ClassifierStrategy("") {}
+
+
+ClassifierLazy::~ClassifierLazy() {}
+
+
+void ClassifierLazy::classify(std::vector<Traxel>& traxels) {
+
+}
+
+
+void ClassifierLazy::classify(std::vector<Traxel>& traxels_out,
+              const std::vector<Traxel>& traxels_in) {
+
+}
+
+
+void ClassifierLazy::classify(const std::vector<Traxel>& traxels_out,
+              const std::vector<Traxel>& traxels_in,
+              std::map<Traxel, std::map<Traxel, feature_array> >& feature_map) {
+
+}
+
+
+void ClassifierLazy::classify(const std::vector<Traxel>& traxels_out,
+              const std::vector<Traxel>& traxels_in,
+              std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_array> >& feature_map) {
+
+}
+
+
+////
 //// ClassifierConstant
 ////
 ClassifierConstant::ClassifierConstant(double probability, const std::string& name) :

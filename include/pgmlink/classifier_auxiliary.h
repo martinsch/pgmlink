@@ -267,6 +267,27 @@ class ClassifierStrategy {
 };
 
 
+////
+//// class ClassifierLazy
+////
+class ClassifierLazy : public ClassifierStrategy {
+ public:
+  ClassifierLazy();
+  virtual ~ClassifierLazy();
+  virtual void classify(std::vector<Traxel>& traxels);
+  virtual void classify(std::vector<Traxel>& traxels_out,
+                        const std::vector<Traxel>& traxels_in);
+  virtual void classify(const std::vector<Traxel>& traxels_out,
+                        const std::vector<Traxel>& traxels_in,
+                        std::map<Traxel, std::map<Traxel, feature_array> >& feature_map);
+  virtual void classify(const std::vector<Traxel>& traxels_out,
+                        const std::vector<Traxel>& traxels_in,
+                        std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_array> >& feature_map);
+ protected:
+  std::string name_;
+};
+
+
 class ClassifierConstant : public ClassifierStrategy {
  public:
   ClassifierConstant(double probability, const std::string& name = "");
