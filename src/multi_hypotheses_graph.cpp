@@ -174,7 +174,7 @@ void MultiHypothesesGraphBuilder::add_nodes(RegionGraphVectorPtr source_graphs,
 
 void MultiHypothesesGraphBuilder::add_nodes(const MultiHypothesesTraxelStore& ts,
                                             MultiHypothesesGraphPtr dest_graph) {
-  LOG(logDEBUG) << "MultiHypothesesGraphBuilder::add_nodes -- entered";
+  LOG(logDEBUG) << "MultiHypothesesGraphBuilder::add_nodes() -- entered";
   MultiHypothesesGraph::ContainedRegionsMap& regions = dest_graph->get(node_regions_in_component());
   MultiHypothesesGraph::TraxelMap& traxel_map = dest_graph->get(node_traxel());
   MultiHypothesesGraph::ConflictSetMap& conflict_sets = dest_graph->get(node_conflict_sets());
@@ -186,7 +186,23 @@ void MultiHypothesesGraphBuilder::add_nodes(const MultiHypothesesTraxelStore& ts
          ++component) {
       const MultiHypothesesGraph::Node& node = dest_graph->add_node(timestep->first);
       std::vector<Traxel>& traxels = regions.get_value(node);
-      traxels.insert(traxels.end(), component->second.begin(), component->second.end());
+
+
+      LOG(logDEBUG4) << "MultiHypothesesGraphBuilder::add_nodes() -- rearranging traxel vector to make "
+                     << "connected component traxel is at the beginning of the vector";
+      std::vector<Traxel>::const_iterator base =
+          std::find(component->second.begin(), component->second.end(), Traxel(component->first, timestep->first));
+      assert(base != component->second.end());
+      traxels.push_back(*base);
+      for (std::vector<Traxel>::const_iterator r = component->second.begin();
+           r != component->second.end();
+           ++r) {
+        // only add traxel if it is not the connected component which is already present in the vector
+        if (r != base) {
+          traxels.push_back(*r);
+        }
+      }
+      
       assert(traxels.size() > 0);
       traxel_map.set(node, traxels[0]);
       assert(ts.conflicts_by_timestep.find(timestep->first) != ts.conflicts_by_timestep.end());
