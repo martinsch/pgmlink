@@ -963,12 +963,12 @@ void CVPR2014ModelBuilder::add_incoming_factors( const MultiHypothesesGraph& hyp
                                                    const MultiHypothesesGraph::Node& n ) const {
   MultiHypothesesGraph::ContainedRegionsMap& regions = hypotheses.get(node_regions_in_component());
   const std::vector<Traxel>& traxels = regions[n];
+  std::vector<Traxel> neighbors;
+  for (MultiHypothesesGraph::InArcIt a(hypotheses, n); a != lemon::INVALID; ++a) {
+    const std::vector<Traxel>& neighbors_at = regions[hypotheses.source(a)];
+    neighbors.insert(neighbors.end(), neighbors_at.begin(), neighbors_at.end());
+  }
   for (std::vector<Traxel>::const_iterator t = traxels.begin(); t != traxels.end(); ++t) {
-    std::vector<Traxel> neighbors;
-    for (MultiHypothesesGraph::InArcIt a(hypotheses, n); a != lemon::INVALID; ++a) {
-      const std::vector<Traxel>& neighbors_at = regions[hypotheses.target(a)];
-      neighbors.insert(neighbors.end(), neighbors_at.begin(), neighbors_at.end());
-    }
     add_incoming_factor(hypotheses, m, n, *t, neighbors);
   }
 
@@ -1225,8 +1225,11 @@ void CVPR2014ModelBuilder::add_incoming_factor(const MultiHypothesesGraph& hypot
   }
 
   // construct factor
-  LOG(logDEBUG2) << "CVPR2014ModelBuilder::add_incoming_factor: constructing factor for "
+  LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_incoming_factor: " << vi.size()
+                 << " - " <<  neighbors.size();
+  LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_incoming_factor: constructing factor for "
   << trax << ": " << std::pow(2., static_cast<int>(vi.size())) << " entries (2^" << vi.size() << ")";
+  assert(vi.size() == neighbors.size() + has_detection_vars() ? 1 : 0);
   const size_t table_dim = vi.size();
   std::vector<size_t> coords(table_dim, 0);
   OpengmExplicitFactor<double> table( vi, forbidden_cost() );
