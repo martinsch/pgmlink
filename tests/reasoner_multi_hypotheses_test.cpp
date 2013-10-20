@@ -25,6 +25,7 @@ typedef MultiHypothesesGraph::Arc Arc;
 
 
 BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp ) {
+  std::cout << "MultiHypothesesGraph_build_hyp" << std::endl;
   std::cout << "Constructing MultiHypothesesGraph" << std::endl;
   std::cout << std::endl;
 
@@ -48,10 +49,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp ) {
   std::vector<Traxel>& t3 = regions.get_value(n3);
 
   feature_array com(3,1.);
-  feature_array count;
-  count.push_back(0.1);
-  count.push_back(0.5);
-  count.push_back(0.2);
+  feature_array count(1, 0.1);
 
   
   t1.push_back(Traxel(1, 0));
@@ -227,6 +225,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp ) {
 
 
 BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp2 ) {
+  std::cout << "MultiHypothesesGraph_build_hyp2" << std::endl;
   // only two descendants allowed per region!
   std::cout << "Constructing MultiHypothesesGraph" << std::endl;
   std::cout << std::endl;
@@ -251,10 +250,10 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp2 ) {
   std::vector<Traxel>& t3 = regions.get_value(n3);
 
   feature_array com(3,1.);
-  feature_array count;
-  count.push_back(0.1);
-  count.push_back(0.5);
-  count.push_back(0.2);
+  feature_array count(1, 0.1);
+  
+  
+  
 
   
   t1.push_back(Traxel(1, 0));
@@ -365,6 +364,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp2 ) {
 }
 
 BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp3 ) {
+  std::cout << "MultiHypothesesGraph_build_hyp3" << std::endl;
   // like 3, but make division too expensive
   std::cout << "Constructing MultiHypothesesGraph" << std::endl;
   std::cout << std::endl;
@@ -389,10 +389,10 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp3 ) {
   std::vector<Traxel>& t3 = regions.get_value(n3);
 
   feature_array com(3,1.);
-  feature_array count;
-  count.push_back(0.1);
-  count.push_back(0.5);
-  count.push_back(0.2);
+  feature_array count(1, 0.1);
+  
+  
+  
 
   
   t1.push_back(Traxel(1, 0));
@@ -512,6 +512,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp3 ) {
 
 
 BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp4 ) {
+  std::cout << "MultiHypothesesGraph_build_hyp4" << std::endl;
   // like 4, but use conflict sets
   std::cout << "Constructing MultiHypothesesGraph" << std::endl;
   std::cout << std::endl;
@@ -543,10 +544,10 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp4 ) {
   std::vector<std::vector<unsigned> >& c3 = conflict_sets.get_value(n3);
 
   feature_array com(3,1.);
-  feature_array count;
-  count.push_back(0.1);
-  count.push_back(0.5);
-  count.push_back(0.2);
+  feature_array count(1, 0.1);
+  
+  
+  
 
   
   t1.push_back(Traxel(1, 0));
@@ -675,6 +676,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp4 ) {
 
 
 BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp5 ) {
+  std::cout << "MultiHypothesesGraph_build_hyp5" << std::endl;
   // like the first test case, but with maximal conflict cliques
   std::cout << "Constructing MultiHypothesesGraph" << std::endl;
   std::cout << std::endl;
@@ -705,10 +707,10 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp5 ) {
   std::vector<std::vector<unsigned> >& c3 = conflict_sets.get_value(n3);
 
   feature_array com(3,1.);
-  feature_array count;
-  count.push_back(0.1);
-  count.push_back(0.5);
-  count.push_back(0.2);
+  feature_array count(1, 0.1);
+  
+  
+  
 
   
   t1.push_back(Traxel(1, 0));
@@ -901,6 +903,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp5 ) {
 
 
 BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp6 ) {
+  std::cout << "MultiHypothesesGraph_build_hyp6" << std::endl;
   // like the first test case, but with maximal conflict cliques
 
   MultiHypothesesTraxelStore ts;
@@ -914,10 +917,10 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp6 ) {
   std::vector<std::vector<unsigned> >& c3 = ts.conflicts_by_timestep[1][2];
 
   feature_array com(3,1.);
-  feature_array count;
-  count.push_back(0.1);
-  count.push_back(0.5);
-  count.push_back(0.2);
+  feature_array count(1, 0.1);
+  
+  
+  
 
   
   t1.push_back(Traxel(1, 0));
