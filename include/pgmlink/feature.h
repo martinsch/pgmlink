@@ -184,6 +184,7 @@ class NegLn {
                       feature_type) const { return value; }
     double operator()(const Traxel&,
                       size_t) { return value; }
+    double operator()(feature_type) { return value; }
    
     double value;
   };
