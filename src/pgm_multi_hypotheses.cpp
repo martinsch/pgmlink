@@ -990,8 +990,7 @@ void CVPR2014ModelBuilder::add_detection_factor( Model& m,
   // table = OpengmExplicitFactor<double>(vi, vi+1, 0);
   LOG(logDEBUG2) << "CVPR2014ModelBuilder::add_detection_factor: for "
                  << trax << ": detection=" << table.get_value(std::vector<size_t>(1,1))
-                 << "/" << detection()(trax, 1) << ", non_detection=" << table.get_value(std::vector<size_t>(1,0))
-                 << "/" << non_detection()(trax, 0);
+                 << ", non_detection=" << table.get_value(std::vector<size_t>(1,0));
   table.add_to( *(m.opengm_model) );
 
 }
