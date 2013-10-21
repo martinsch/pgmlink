@@ -162,9 +162,8 @@ class ModelBuilder {
 
   // classifier priors
   ModelBuilder& with_classifier_priors( function<double (const Traxel&, const Traxel&, feature_type)> move,
-                                        function<double (const Traxel&, const Traxel&, const Traxel&, feature_type)> division );
-  ModelBuilder& without_classifier_priors( function<double (const Traxel&, const Traxel&, feature_type)> move,
-                                           function<double (const Traxel&, const Traxel&, const Traxel&, feature_type)> division );
+                                        function<double (feature_type)> count );
+  ModelBuilder& without_classifier_priors();
   bool has_classifiers() const { return with_classifier_priors_; }
 
   // maximal conflict cliques

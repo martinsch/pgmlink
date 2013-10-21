@@ -197,19 +197,18 @@ ModelBuilder& ModelBuilder::without_divisions() {
 
 
 ModelBuilder& ModelBuilder::with_classifier_priors( function<double (const Traxel&, const Traxel&, feature_type)> move,
-                                                    function<double (const Traxel&, const Traxel&, const Traxel&, feature_type)> division ) {
+                                                    function<double (feature_type)> count ) {
   with_classifier_priors_ = true;
   move_ = move;
-  division_ = division;
+  count = count;
   return *this;
 }
 
 
-ModelBuilder& ModelBuilder::without_classifier_priors( function<double (const Traxel&, const Traxel&, feature_type)> move,
-                                                       function<double (const Traxel&, const Traxel&, const Traxel&, feature_type)> division ) {
+ModelBuilder& ModelBuilder::without_classifier_priors() {
   with_classifier_priors_ = false;
-  move_ = move;
-  division_ = division;
+  move_ = NULL;
+  count_ = NULL;
   return *this;
 }
 
