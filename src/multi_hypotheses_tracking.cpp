@@ -245,6 +245,17 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
             e.traxel_ids.push_back(t->Id);
             events_at.push_back(e);
           }
+          /*}
+      }
+    }
+    // appears in the next timestep
+    for (MultiHypothesesGraph::node_timestep_map::ItemIt n(timesteps, *timestep + 1);
+         n != lemon::INVALID;
+         ++n) {
+      std::vector<Traxel>& traxels = regions.get_value(n);
+      for (std::vector<Traxel>::iterator t = traxels.begin(); t != traxels.end(); ++t) {
+        std::vector<Event>& events_at = *(events->rbegin());
+        if (t->features["active"][0] > 0.) { */
           if (t->features["parent"].size() == 0 && t->Timestep > graph->earliest_timestep()) {
             Event e;
             e.type = Event::Appearance;
