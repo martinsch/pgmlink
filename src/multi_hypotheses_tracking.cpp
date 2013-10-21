@@ -102,7 +102,7 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
 
     boost::shared_ptr<ClassifierStrategy> cnt;
     if (options_.classifier_count_precomputed) {
-      LOG(logINFO) << "MultiHypothesesTracking: detection probability already calculated - using \"lazy\" classifier ";
+      LOG(logINFO) << "MultiHypothesesTracking: count probability already calculated - using \"lazy\" classifier ";
       cnt = boost::shared_ptr<ClassifierStrategy>(new ClassifierLazy);
     } else {
     LOG(logINFO) << "MultiHypothesesTracking: creating count classifier";
