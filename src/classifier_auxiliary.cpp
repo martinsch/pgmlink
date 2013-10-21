@@ -303,6 +303,7 @@ feature_array FeatureExtractor::extract(const Traxel& t1) const {
   FeatureMap::const_iterator f1 = t1.features.find(feature_name_);
   assert(f1 != t1.features.end());
   feature_array features1 = f1->second;
+  LOG(logDEBUG4) << "FeatureExtractor::extract: feature[0] =  " << features1[0];
   return calculator_->calculate(features1);
 }
 
@@ -642,9 +643,14 @@ void ClassifierMoveRF::classify(const std::vector<Traxel>& traxels_out,
       extract_features(*out, *in);
       assert(feature_map[*out][*in].size() == 0);
       rf_.predictProbabilities(features_, probabilities_);
+      LOG(logDEBUG4) << "ClassifierMoveRF::classify() -- features_[0] = " << features_[0];
+
       std::copy(probabilities_.begin(),
                 probabilities_.end(),
                 std::back_insert_iterator<feature_array>(feature_map[*out][*in]));
+      LOG(logDEBUG4) << "ClassifierMoveRF::classify() -- " << *out
+                     << " to " << *in << "probability: "
+                     << probabilities_[0] << ',' << probabilities_[1];
     }
   }
 }
@@ -734,13 +740,18 @@ void ClassifierDetectionRF::classify(std::vector<Traxel>& traxels) {
        ++t) {
     extract_features(*t);
     rf_.predictProbabilities(features_, probabilities_);
-    LOG(logDEBUG4) << "ClassifierDetectionRF::classify() -- adding feature "
-                   << name_ << " to " << *t << ',' << t->Level;
+    LOG(logDEBUG4) << "ClassifierDetectionRF::classify() -- features_[0] = "
+                   << features_[0];
+
     assert(t->features[name_].size() == 0);
     t->features[name_].insert(t->features[name_].end(),
                               probabilities_.begin(),
                               probabilities_.end()
                               );
+    assert(t->features[name_].size() == 2);
+    LOG(logDEBUG4) << "ClassifierDetectionRF::classify() -- adding feature "
+                   << name_ << " to " << *t << ':'
+                   << t->features[name_][0] << ',' << t->features[name_][1];
   }
 }
 
@@ -759,6 +770,8 @@ boost::shared_ptr<ClassifierStrategy> ClassifierStrategyBuilder::build(const Opt
   } else {
     vigra::RandomForest<> rf;
     try {
+      LOG(logINFO) << "ClassifierStrategyBuilder::build() -- loading random forest from "
+                   << options.rf_filename << "/" << options.rf_internal_path;
       vigra::rf_import_HDF5(rf, options.rf_filename, options.rf_internal_path);
     }
     catch (vigra::PreconditionViolation e) {
