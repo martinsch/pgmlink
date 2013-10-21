@@ -1160,13 +1160,16 @@ void CVPR2014ModelBuilder::add_outgoing_factor( const MultiHypothesesGraph& hypo
 
     coords[0] = 1;
     for (size_t i = 1; i < table_dim; ++i) {
+      coords[i] = 1;
       feature_type probability = 0.;
       if (has_classifiers()) {
         probability = hypotheses.get(node_move_features())[node]
             .find(trax)->second
-            .find(arcs[i-1].second)->second[0];
+            .find(arcs[i-1].second)->second[1];
+        LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_outgoing_factor: move using classifier, prob: " << probability
+                       << ", energy: " << move()(trax, arcs[i-1].second, probability);
       }
-      coords[i] = 1;
+     
       table.set_value( coords, move()(trax, arcs[i-1].second, probability) );
       LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_outgoing_factor: move="
                      << table.get_value( coords );
@@ -1180,13 +1183,13 @@ void CVPR2014ModelBuilder::add_outgoing_factor( const MultiHypothesesGraph& hypo
       for (unsigned int i = 1; i < table_dim - 1; ++i) {
         coords[i] = 1;
         for (unsigned int j = i + 1; j < table_dim; ++j) {
+          coords[j] = 1;
           feature_type probability = 0.;
           if (has_classifiers()) {
             probability = hypotheses.get(node_division_features())[node]
                 .find(trax)->second
                 .find(std::make_pair(arcs[i-1].second, arcs[j-1].second))->second[0];
-          }
-          coords[j] = 1;
+          }     
           table.set_value(coords, division()(trax,
                                              arcs[i-1].second,
                                              arcs[j-1].second,
