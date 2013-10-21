@@ -167,9 +167,9 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
   
   if (options_.with_constant_classifiers || options_.with_classifiers) {
     builder
-        .move(NegLnTransition(options_.get_weight("mov")))
-        .count(NegLn(options_.get_weight("count")))
-        ;
+        .with_classifier_priors(NegLnTransition(options_.get_weight("mov")),
+                                NegLn(options_.get_weight("count"))
+                                );
     if (options_.with_detection_vars) {
       builder
           .with_detection_vars(NegLnDetection(options_.get_weight("det")),
