@@ -21,6 +21,7 @@ Doxyfile
 pgmlink_export.h
 *.pkl
 *overseg-merged.h5
+ext_opengm_test_*
 
 
 # Compiled source #
@@ -50,6 +51,8 @@ pgmlink_export.h
 *.log
 *.sql
 *.sqlite
+*.err
+*.out
 
 # OS generated files #
 ######################
@@ -62,6 +65,7 @@ Thumbs.db
 ########
 *.tif
 *.png
+*.h5
 
 /build/
 html
