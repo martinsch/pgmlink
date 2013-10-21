@@ -59,7 +59,7 @@ namespace pgmlink {
   double get_detection_prob(const Traxel& tr, size_t state) {
 	  FeatureMap::const_iterator it = tr.features.find("detProb");
 	  if (it == tr.features.end()) {
-		  throw runtime_error("get_detection_prob(): divProb feature not in traxel");
+		  throw runtime_error("get_detection_prob(): detProb feature not in traxel");
 	  }
 	  double det_prob = it->second[state];
 	  LOG(logDEBUG3) << "get_detection_prob(): " << det_prob;
