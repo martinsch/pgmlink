@@ -461,6 +461,22 @@ void MultiHypothesesTraxelStore::add_conflict_map(int timestep, const ConflictSe
 }
 
 
+void MultiHypothesesTraxelStore::add_signed_conflict_map(int timestep, const SignedConflictSetMap& conflicts) {
+  LOG(logDEBUG2) << "MultiHypothesesTraxelStore::add_signed_conflict_map()";
+  for (SignedConflictSetMap::const_iterator region = conflicts.begin(); region != conflicts.end(); ++region) {
+    for (std::vector<std::vector<int> >::const_iterator conflict = region->second.begin();
+         conflict != region->second.end();
+         ++conflict) {
+      LOG(logDEBUG4) << "MultiHypothesesTraxelStore::add_signed_conflict_map() -- adding set containing "
+                     << conflict->size() << " conflicts @ " << timestep << "," << region->first;
+      conflicts_by_timestep[timestep][region->first].push_back(std::vector<unsigned>());
+      std::vector<unsigned>& new_conflict = *conflicts_by_timestep[timestep][region->first].rbegin();
+      new_conflict.insert(new_conflict.end(), conflict->begin(), conflict->end());
+    }
+  }
+}
+
+
 void MultiHypothesesTraxelStore::start_component(const Traxel& trax) {
   LOG(logDEBUG4) << "MultiHypothesesTraxelStore::start_component: " << trax;
   map[trax.Timestep][trax.Id] = std::vector<Traxel>();

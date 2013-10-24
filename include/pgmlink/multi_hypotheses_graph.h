@@ -59,6 +59,8 @@ typedef std::map<int, std::map<unsigned, std::vector<Traxel> > > TimestepRegionM
 
 typedef std::map<unsigned, std::vector<std::vector<unsigned> > > ConflictSetMap;
 
+typedef std::map<int, std::vector<std::vector<int> > > SignedConflictSetMap;
+
 typedef std::map<int, ConflictSetMap> TimestepConflictSetMap;
 
 template <typename PropertyTag, typename Graph>
@@ -333,6 +335,7 @@ struct MultiHypothesesTraxelStore {
 
   void add(const Traxel& trax, unsigned component_id);
   void add_conflict_map(int timestep, const ConflictSetMap& conflicts);
+  void add_signed_conflict_map(int timestep, const SignedConflictSetMap& conflicts);
   void start_component(const Traxel& trax);
   void make_sane();
   std::string print();

@@ -377,6 +377,7 @@ void export_multi_hypotheses() {
       .def("make_string", &MultiHypothesesTraxelStore::print)
       .def("__str__", &MultiHypothesesTraxelStore::print)
       .def("addConflictMap", &MultiHypothesesTraxelStore::add_conflict_map)
+      .def("addConflictMap", &MultiHypothesesTraxelStore::add_signed_conflict_map)
       .def_pickle(traxelstore_pickle_suite())
       ;
 
