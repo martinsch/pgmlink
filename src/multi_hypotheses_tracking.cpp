@@ -211,10 +211,17 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
   MultiHypothesesGraph::node_timestep_map& timesteps = graph->get(node_timestep());
 
   // CHECK INDICES AT PUSH_BACK!
+  // first timestep should be empty!
+  events->push_back(std::vector<Event>());
   for (MultiHypothesesGraph::node_timestep_map::ValueIt timestep = timesteps.beginValue();
        timestep != timesteps.endValue();
        ++timestep) {
     // iterating over timesteps. current timestep t == *timestep
+    // do nothing in last timestep. there must not be any events there anyway
+    MultiHypothesesGraph::node_timestep_map::ValueIt timestep_check = timestep;
+    if (++timestep_check == timesteps.endValue()) {
+      break;
+    }
     events->push_back(std::vector<Event>());
     for (MultiHypothesesGraph::node_timestep_map::ItemIt n(timesteps, *timestep);
          n!= lemon::INVALID;
@@ -245,7 +252,7 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
             e.traxel_ids.push_back(t->Id);
             events_at.push_back(e);
           }
-          /*}
+        }
       }
     }
     // appears in the next timestep
@@ -255,7 +262,7 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
       std::vector<Traxel>& traxels = regions.get_value(n);
       for (std::vector<Traxel>::iterator t = traxels.begin(); t != traxels.end(); ++t) {
         std::vector<Event>& events_at = *(events->rbegin());
-        if (t->features["active"][0] > 0.) { */
+        if (t->features["active"][0] > 0.) {
           if (t->features["parent"].size() == 0 && t->Timestep > graph->earliest_timestep()) {
             Event e;
             e.type = Event::Appearance;
@@ -266,7 +273,6 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
       }
     }
   }
-
 
 
   std::cout << " -> workflow: return events" << std::endl;
