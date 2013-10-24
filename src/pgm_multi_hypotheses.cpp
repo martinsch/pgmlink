@@ -458,7 +458,7 @@ void ModelBuilder::couple_conflicts( const Model& m,
                                      const MultiHypothesesGraph::Node& node,
                                      const std::vector<Traxel>& traxels,
                                      OpengmLPCplex& cplex) {
-  LOG(logDEBUG1) << "MultiHypotheses::couple_conflicts()";
+  LOG(logDEBUG4) << "MultiHypotheses::couple_conflicts()";
   if (has_maximal_conflict_cliques()) {
     couple_conflicts_maximal_cliques( m,
                                       traxels[0].Timestep,
