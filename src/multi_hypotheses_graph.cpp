@@ -208,14 +208,18 @@ void MultiHypothesesGraphBuilder::add_nodes(const MultiHypothesesTraxelStore& ts
       traxel_map.set(node, traxels[0]);
       assert(ts.conflicts_by_timestep.find(timestep->first) != ts.conflicts_by_timestep.end());
       const ConflictSetMap& conflicts_source = ts.conflicts_by_timestep.find(timestep->first)->second;
-      assert(conflicts_source.find(component->first) != conflicts_source.end());
-      conflict_sets.get_value(node) = conflicts_source.find(component->first)->second;
+      ConflictSetMap::const_iterator conflicts_source_at = conflicts_source.find(component->first);
+      assert(conflicts_source_at != conflicts_source.end());
+      
+      MultiHypothesesGraph::ConflictSetMap::Value& conflicts_target_at = conflict_sets.get_value(node);
+      assert(conflicts_target_at.size() == 0);
+      conflicts_target_at.insert(conflicts_target_at.end(), conflicts_source_at->second.begin(), conflicts_source_at->second.end());
       LOG(logDEBUG4) << "MultiHypothesesGraphBuilder::add_nodes -- "
                      << "added new component " << traxels[0].Id
                      << " at time " << traxels[0].Timestep;
       LOG(logDEBUG4) << "MultiHypothesesGraphBuilder::add_nodes -- "
                      <<  "new component has " << conflict_sets[node].size()
-                     << " conflict sets";
+                     << " conflict sets (" << traxels[0] << " had " << conflicts_source_at->second.size() << " conflicts)";
     }
   }
 }
