@@ -104,6 +104,10 @@ void export_region_adjacency() {
 		  .def(map_indexing_suite<std::map<int, std::vector<std::vector<int> > > >())
 		  ;
 
+  class_<std::map<unsigned, std::vector<std::vector<unsigned> > > >("UnsignedConflictSetsMap")
+		  .def(map_indexing_suite<std::map<unsigned, std::vector<std::vector<unsigned> > > >())
+		  ;
+
 
   // handle function overloading
   void (RegionAdjacencyGraph::*erase1)(const RegionAdjacencyGraph::Node) = &RegionAdjacencyGraph::erase;
