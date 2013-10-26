@@ -214,7 +214,7 @@ ModelBuilder& ModelBuilder::without_classifier_priors() {
 
 
 ModelBuilder& ModelBuilder::with_maximal_conflict_cliques(bool check) {
-  with_maximal_conflit_cliques_ = check;
+  with_maximal_conflict_cliques_ = check;
   return *this;
 }
 
@@ -943,16 +943,16 @@ void CVPR2014ModelBuilder::add_detection_factors( const MultiHypothesesGraph& hy
 }
 
 void ModelBuilder::add_count_factors( const MultiHypothesesGraph& hypotheses, Model& m) {
-	MultiHypothesesGraph::ContainedRegionsMap& regions = hypotheses.get(node_regions_in_component());
-	MultiHypothesesGraph::ConflictSetMap& conflicts = hypotheses.get(node_conflict_sets());
-	for (MultiHypothesesGraph::NodeIt n(hypotheses); n != lemon::INVALID; ++n) {
-		const std::vector<Traxel>& traxels = regions[n];
-		if (has_maximal_conflict_cliques()) {
-			add_count_factor(m, traxels, (conflicts[n]).size());
-		  } else {
-			add_count_factor(m, traxels, traxels.size());
-		  }
-	}
+  MultiHypothesesGraph::ContainedRegionsMap& regions = hypotheses.get(node_regions_in_component());
+  for (MultiHypothesesGraph::NodeIt n(hypotheses); n != lemon::INVALID; ++n) {
+    const std::vector<Traxel>& traxels = regions[n];
+    if (has_maximal_conflict_cliques()) {
+      MultiHypothesesGraph::ConflictSetMap& conflicts = hypotheses.get(node_conflict_sets());
+      add_count_factor(m, traxels, (conflicts[n]).size());
+    } else {
+      add_count_factor(m, traxels, traxels.size());
+    }
+  }
 }
 
 

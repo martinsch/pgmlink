@@ -309,7 +309,9 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp2 ) {
                                                        );
   builder
       .with_detection_vars(det, mis)
-      .with_divisions(div);
+      .with_divisions(div)
+      .with_maximal_conflict_cliques(false)
+      ;
 
   MultiHypotheses reasoner(builder,
                            true, // with_constraints
@@ -1122,7 +1124,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp6 ) {
 
 
 BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hierarchical_count_factor ) {
-  std::cout << "MultiHypothesesGraph_build_hyp6" << std::endl;
+  std::cout << "MultiHypothesesGraph_hierarchical_count_factor" << std::endl;
   // like the first test case, but with maximal conflict cliques
 
   MultiHypothesesTraxelStore ts;

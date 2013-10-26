@@ -112,7 +112,7 @@ class ModelBuilder {
       : with_detection_vars_(false),
     with_divisions_(false),
     with_classifier_priors_(false),
-    with_maximal_conflit_cliques_(false),
+    with_maximal_conflict_cliques_(false),
     with_hierarchical_counting_factor_(false),
     appearance_(appearance),
     disappearance_(disappearance),
@@ -169,7 +169,7 @@ class ModelBuilder {
 
   // maximal conflict cliques
   ModelBuilder& with_maximal_conflict_cliques(bool);
-  bool has_maximal_conflict_cliques() const { return with_maximal_conflit_cliques_; }
+  bool has_maximal_conflict_cliques() const { return with_maximal_conflict_cliques_; }
 
   // build
   virtual boost::shared_ptr<Model> build( const MultiHypothesesGraph& ) = 0;
@@ -239,7 +239,7 @@ class ModelBuilder {
   bool with_detection_vars_;
   bool with_divisions_;
   bool with_classifier_priors_;
-  bool with_maximal_conflit_cliques_;
+  bool with_maximal_conflict_cliques_;
   bool with_hierarchical_counting_factor_;
 
   function<double (const Traxel&, size_t)> detection_;
