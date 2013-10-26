@@ -63,6 +63,9 @@ void MultiHypotheses::formulate( const MultiHypothesesGraph& hypotheses ) {
     LOG(logDEBUG) << "MultiHypotheses::formulate: add hard constraints";
     builder_->add_hard_constraints( *linking_model_, hypotheses, *cplex );
   }
+  if (builder_->has_hierarchical_counting_factor()) {
+	  builder_->add_count_hard_constraints( *linking_model_, hypotheses, *cplex );
+  }
 }
 
 

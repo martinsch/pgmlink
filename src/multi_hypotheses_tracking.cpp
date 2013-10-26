@@ -52,7 +52,8 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
                << "\tcplex timeout: " << options_.weights["timeout"] << '\n'
                << "\tep gap: " << options_.weights["gap"] << '\n'
                << "\tmaximum division level: " << options_.weights["max_div"] << '\n'
-               << "\twith constant classifiers: " << options_.with_constant_classifiers;
+               << "\twith constant classifiers: " << options_.with_constant_classifiers << '\n'
+               << "\twith hierarchical count factor: " << options_.hierarchical_count_factor;
 
   boost::shared_ptr<std::vector<std::vector<Event> > >
       events (new std::vector<std::vector<Event> >);
@@ -156,6 +157,7 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
   );
 
   builder.with_maximal_conflict_cliques(options_.with_maximal_conflict_cliques);
+  builder.with_hierarchical_counting_factor(options_.hierarchical_count_factor);
 
   if (options_.with_detection_vars) {
     builder.with_detection_vars(det, mis);

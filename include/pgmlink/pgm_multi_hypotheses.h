@@ -113,6 +113,7 @@ class ModelBuilder {
     with_divisions_(false),
     with_classifier_priors_(false),
     with_maximal_conflit_cliques_(false),
+    with_hierarchical_counting_factor_(false),
     appearance_(appearance),
     disappearance_(disappearance),
     move_(move),
@@ -171,16 +172,24 @@ class ModelBuilder {
   bool has_maximal_conflict_cliques() const { return with_maximal_conflit_cliques_; }
 
   // build
-  virtual boost::shared_ptr<Model> build( const MultiHypothesesGraph& ) const = 0;
+  virtual boost::shared_ptr<Model> build( const MultiHypothesesGraph& ) = 0;
 
   // refinement
   void add_hard_constraints( const Model&, const MultiHypothesesGraph&, OpengmLPCplex& );
+  void add_count_factors( const MultiHypothesesGraph&, Model&);
 
   // cplex parameters
   void set_cplex_timeout( double seconds );
 
+  // hierarchical counting factor
+  ModelBuilder& with_hierarchical_counting_factor(bool);
+  bool has_hierarchical_counting_factor() const { return with_hierarchical_counting_factor_; }
+  void add_count_hard_constraints(const Model& m,
+  			const MultiHypothesesGraph& hypotheses, OpengmLPCplex& cplex) const;
 
  protected:
+  size_t cplex_id(OpengmLPCplex& cplex, const size_t opengm_id, const size_t state) const;
+  size_t cplex_id(OpengmLPCplex& cplex, const size_t opengm_id) const;
   void add_detection_vars( const MultiHypothesesGraph&, Model& ) const;
   void add_assignment_vars( const MultiHypothesesGraph&, Model& ) const;
 
@@ -199,6 +208,21 @@ class ModelBuilder {
                                                                 const Model&,
                                                                 const MultiHypothesesGraph::Node&,
                                                                 const Traxel&) const;
+  void fill_probabilities(feature_array& probabilities, size_t maximum_active_regions) const;
+	void add_count_factor( Model& m,
+						   const std::vector<Traxel>& traxels,
+						   size_t maximum_active_regions);
+	void add_explicit_count_factor( Model& m,
+							 const std::vector<Traxel>& traxels,
+							 size_t maximum_active_regions ) const;
+	void add_hierarchical_count_factor( Model& m,
+							 const std::vector<Traxel>& traxels,
+							 size_t maximum_active_regions);
+	void add_count_helper( Model& m,
+			std::vector<std::vector<std::pair<size_t, size_t> > >& lower_level, const size_t maximum_active_regions,
+			std::vector<std::vector<std::pair<size_t, size_t> > >& out);
+
+	std::vector<std::vector<std::pair<std::pair<size_t, size_t>, int> > > var_state_coeff_constraints_;
 
  private:
   void couple_outgoing( const Model&, const std::vector<Traxel>&, const std::vector<Traxel>&, OpengmLPCplex& );
@@ -216,6 +240,7 @@ class ModelBuilder {
   bool with_divisions_;
   bool with_classifier_priors_;
   bool with_maximal_conflit_cliques_;
+  bool with_hierarchical_counting_factor_;
 
   function<double (const Traxel&, size_t)> detection_;
   function<double (const Traxel&, size_t)> non_detection_;
@@ -247,7 +272,7 @@ class TrainableModelBuilder : public ModelBuilder {
   virtual boost::shared_ptr<ModelBuilder> clone() const;
   virtual ~TrainableModelBuilder() {}
 
-  virtual boost::shared_ptr<Model> build( const MultiHypothesesGraph& ) const;
+  virtual boost::shared_ptr<Model> build( const MultiHypothesesGraph& );
 
  private:
   void add_detection_factors( const MultiHypothesesGraph&, Model&, const MultiHypothesesGraph::Node& ) const;
@@ -284,17 +309,15 @@ class CVPR2014ModelBuilder : public ModelBuilder {
   virtual boost::shared_ptr<ModelBuilder> clone() const;
   virtual ~CVPR2014ModelBuilder() {}
 
-  virtual boost::shared_ptr<Model> build( const MultiHypothesesGraph& ) const;
+  virtual boost::shared_ptr<Model> build( const MultiHypothesesGraph& );
+
+  void add_outgoing_factors( const MultiHypothesesGraph&, Model&, const MultiHypothesesGraph::Node& ) const;
+  void add_count_factors( const MultiHypothesesGraph& hypotheses, Model& m, OpengmLPCplex& cplex) const;
 
  private:
   void add_detection_factors( const MultiHypothesesGraph&, Model&, const MultiHypothesesGraph::Node& ) const;
-  void add_outgoing_factors( const MultiHypothesesGraph&, Model&, const MultiHypothesesGraph::Node& ) const;
   void add_incoming_factors( const MultiHypothesesGraph&, Model&, const MultiHypothesesGraph::Node& ) const;
-
   void add_detection_factor( Model&, const Traxel& ) const;
-  void add_count_factor( Model& m,
-                         const std::vector<Traxel>& traxels,
-                         size_t maximum_active_regions ) const;
   void add_outgoing_factor( const MultiHypothesesGraph&,
                             Model&,
                             const MultiHypothesesGraph::Node&,

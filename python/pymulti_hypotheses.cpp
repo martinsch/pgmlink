@@ -143,6 +143,10 @@ struct PyTrackingOptions {
     options.constant_classifier_fallback = check;
   }
 
+  void with_hierarchical_count_factor(bool check) {
+    options.hierarchical_count_factor = check;
+  }
+
   std::string sanity_check() {
     return std::string("To be implemented");
   }
