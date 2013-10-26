@@ -7,6 +7,9 @@
 // boost
 #include <boost/assert.hpp>
 
+// omp
+#include <omp.h>
+
 // pgmlink
 #include <pgmlink/multi_hypotheses_graph.h>
 #include <pgmlink/traxels.h>
@@ -66,7 +69,12 @@ void MultiHypothesesGraph::add_classifier_features(ClassifierStrategy* move,
   MoveFeatureMap& move_map = get(node_move_features());
   ContainedRegionsMap& regions = get(node_regions_in_component());
   
-  for (NodeIt n(*this); n != lemon::INVALID; ++n) {
+  std::vector<NodeT> nodes = this->nodes;
+  # pragma omp parallel for
+  for (size_t i = 0; i < nodes.size(); ++i) { // need this for omp
+  	Node n = this->nodeFromId(i);
+  	assert(this->valid(n));
+    //  for (NodeIt n(*this); n != lemon::INVALID; ++n) {
     LOG(logDEBUG1) << "MultiHypothesesGraph::add_classifier_features: classifying region "
                    << get(node_traxel())[n].Id << " at timestep "
                    << get(node_traxel())[n].Timestep;

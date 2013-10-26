@@ -14,6 +14,9 @@
 #include <vigra/random_forest_hdf5_impex.hxx>
 #include <vigra/error.hxx>
 
+// omp
+#include <omp.h>
+
 // pgmlink
 #include "pgmlink/feature.h"
 #include "pgmlink/traxels.h"
@@ -629,7 +632,7 @@ void ClassifierMoveRF::classify(std::vector<Traxel>& traxels_out,
       }
     }
     assert(out->features[name_].size() == 0);
-    out->features[name_].insert(out->features[name_].begin(), max_prob.begin(), max_prob.end());
+	out->features[name_].insert(out->features[name_].begin(), max_prob.begin(), max_prob.end());
     assert(out->features[name_].size() == rf_.class_count());
   }
 }
