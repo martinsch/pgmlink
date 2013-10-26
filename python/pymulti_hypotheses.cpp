@@ -402,6 +402,7 @@ void export_multi_hypotheses() {
       .def("withMaximalConflictCliques", &PyTrackingOptions::with_maximal_conflict_cliques, return_internal_reference<>())
       .def("withConstantClassifierFallback", &PyTrackingOptions::with_constant_classifier_fallback, return_internal_reference<>())
       .def("withClassifierCountPrecomputed", &PyTrackingOptions::with_classifier_count_precomputed, return_internal_reference<>())
+      .def("withHierarchicalCountFactor", &PyTrackingOptions::with_hierarchical_count_factor, return_internal_reference<>())
       .def("forwardBackward", &PyTrackingOptions::forward_backward, return_internal_reference<>())
       .def("sanityCheck", &PyTrackingOptions::sanity_check)
       ;
