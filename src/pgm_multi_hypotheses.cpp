@@ -1039,27 +1039,39 @@ void ModelBuilder::add_hierarchical_count_factor( Model& m,
   	// include the state for all regions deactivated
   	fill_probabilities(probabilities, maximum_active_regions);
 
-  	std::vector<std::vector<std::pair<size_t, size_t> > > lower_level;
-	for (std::vector<Traxel>::const_iterator t = traxels.begin(); t != traxels.end(); ++t) {
+  	// add counter variable
+  	size_t num_states = std::min(traxels.size() + 1, maximum_active_regions + 1);
+  	size_t var_id;
+  	if (num_states > 2) {
+		m.opengm_model->addVariable(num_states);
+		var_id = m.opengm_model->numberOfVariables() - 1;
+		assert(m.opengm_model->numberOfLabels(var_id) == num_states);
+
+		// add helper hard constraints to be added later
+		std::vector<std::pair<std::pair<size_t, size_t>, int> > constraint;
 		std::vector<std::pair<size_t,size_t> > vars;
-		vars.push_back(std::pair<size_t, size_t>(m.var_of_trax(*t), (size_t) 0));
-		vars.push_back(std::pair<size_t, size_t>(m.var_of_trax(*t), (size_t) 1));
-		lower_level.push_back(vars);
-	}
+		for (std::vector<Traxel>::const_iterator t = traxels.begin(); t != traxels.end(); ++t) {
+			std::pair<size_t, size_t> var_state = std::pair<size_t, size_t>(m.var_of_trax(*t), 1);
+			std::pair<std::pair<size_t, size_t>, int> var_coeff(var_state, 1);
+			constraint.push_back(var_coeff);
+		}
+		for (size_t state = 0; state < num_states; ++state) {
+			std::pair<size_t, size_t> var_state = std::pair<size_t, size_t>(var_id, state);
+			std::pair<std::pair<size_t, size_t>, int> var_coeff(var_state, -state);
+			constraint.push_back(var_coeff);
+		}
+		var_state_coeff_constraints_.push_back(constraint);
+  	} else {
+  		var_id = m.var_of_trax(traxels[0]);
+  	}
 
-	std::vector<std::vector<std::pair<size_t, size_t> > > higher_level;
-	do {
-		add_count_helper(m, lower_level, maximum_active_regions, higher_level);
-	} while(higher_level.size() > 1);
 
-	assert(higher_level.size() == 1);
-
-	// add the count prior
-	size_t var_id[] = {m.opengm_model->numberOfVariables() - 1};
-	assert(m.opengm_model->numberOfLabels(var_id[0]) == probabilities.size());
+  	// add the count prior
+	size_t var[] = {var_id};
+	assert(m.opengm_model->numberOfLabels(var[0]) == probabilities.size());
 
 	std::vector<size_t> coords(1, 0);
-	OpengmExplicitFactor<double> table(var_id, var_id+1);
+	OpengmExplicitFactor<double> table(var, var+1);
 
 	for(size_t state = 0; state < probabilities.size(); ++state) {
 		coords[0] = state;
@@ -1067,9 +1079,57 @@ void ModelBuilder::add_hierarchical_count_factor( Model& m,
 	}
 
 	LOG(logDEBUG2) << "ModelBuilder::add_hierarchical_count_factor: "
-	                 << "helper count factor added";
+					 << "helper count factor added";
 	table.add_to( *(m.opengm_model) );
 }
+
+
+//void ModelBuilder::add_hierarchical_count_factor( Model& m,
+//                                               const std::vector<Traxel>& traxels,
+//                                               size_t maximum_active_regions) {
+//	LOG(logDEBUG) << "ModelBuilder::add_hierarchical_count_factor: entered";
+//	assert(has_hierarchical_counting_factor());
+//	assert(traxels.size() > 0);
+//  	assert(traxels[0].features.find("count_prediction") != traxels[0].features.end());
+//
+//  	feature_array probabilities = traxels[0].features.find("count_prediction")->second;
+//  	assert(probabilities.size() > 0);
+//
+//  	// probabilities must have one state more than maximum_active_regions to
+//  	// include the state for all regions deactivated
+//  	fill_probabilities(probabilities, maximum_active_regions);
+//
+//  	std::vector<std::vector<std::pair<size_t, size_t> > > lower_level;
+//	for (std::vector<Traxel>::const_iterator t = traxels.begin(); t != traxels.end(); ++t) {
+//		std::vector<std::pair<size_t,size_t> > vars;
+//		vars.push_back(std::pair<size_t, size_t>(m.var_of_trax(*t), (size_t) 0));
+//		vars.push_back(std::pair<size_t, size_t>(m.var_of_trax(*t), (size_t) 1));
+//		lower_level.push_back(vars);
+//	}
+//
+//	std::vector<std::vector<std::pair<size_t, size_t> > > higher_level;
+//	do {
+//		add_count_helper(m, lower_level, maximum_active_regions, higher_level);
+//	} while(higher_level.size() > 1);
+//
+//	assert(higher_level.size() == 1);
+//
+//	// add the count prior
+//	size_t var_id[] = {m.opengm_model->numberOfVariables() - 1};
+//	assert(m.opengm_model->numberOfLabels(var_id[0]) == probabilities.size());
+//
+//	std::vector<size_t> coords(1, 0);
+//	OpengmExplicitFactor<double> table(var_id, var_id+1);
+//
+//	for(size_t state = 0; state < probabilities.size(); ++state) {
+//		coords[0] = state;
+//		table.set_value( coords, probabilities[state] );
+//	}
+//
+//	LOG(logDEBUG2) << "ModelBuilder::add_hierarchical_count_factor: "
+//	                 << "helper count factor added";
+//	table.add_to( *(m.opengm_model) );
+//}
 
 
 void ModelBuilder::add_count_helper( Model& m,
