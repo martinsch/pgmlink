@@ -77,7 +77,7 @@ Model::var_t Model::var_of_arc(const TraxelArc& e) const {
   if(it!=var_of_arc().end()) {
     return it->second;
   } else {
-    throw std::out_of_range("ChaingraphModel::var_of_arc(): key does not exist");
+    throw std::out_of_range("MultiHypothesesModel::var_of_arc(): key does not exist");
   }
 }
 
@@ -86,7 +86,7 @@ Traxel Model::trax_of_var(var_t e) const {
   if(it!=trax_of_var().end()) {
     return it->second;
   } else {
-    throw std::out_of_range("ChaingraphModel::trax_of_var(): key does not exist");
+    throw std::out_of_range("MultiHypothesesModel::trax_of_var(): key does not exist");
   }
 }
 
@@ -218,10 +218,26 @@ ModelBuilder& ModelBuilder::with_maximal_conflict_cliques(bool check) {
   return *this;
 }
 
+
 ModelBuilder& ModelBuilder::with_hierarchical_counting_factor(bool check) {
 	with_hierarchical_counting_factor_ = check;
 	return *this;
 }
+
+
+ModelBuilder& ModelBuilder::with_maximum_arcs(unsigned maximum_outgoing_arcs, unsigned maximum_incoming_arcs) {
+  maximum_outgoing_arcs_ = maximum_outgoing_arcs;
+  maximum_incoming_arcs_ = maximum_incoming_arcs;
+  with_maximum_arcs_ = true;
+  return *this;
+}
+
+
+ModelBuilder& ModelBuilder::without_maximum_arcs() {
+  with_maximum_arcs_ = false;
+  return *this;
+}
+
 
 size_t ModelBuilder::cplex_id(OpengmLPCplex& cplex, const size_t opengm_id, const size_t state) const {
     return cplex.lpNodeVi(opengm_id, state);
@@ -291,6 +307,7 @@ inline void ModelBuilder::add_detection_vars( const MultiHypothesesGraph& hypoth
 
 
 inline void ModelBuilder::add_assignment_vars( const MultiHypothesesGraph& hypotheses, Model& m ) const {
+  LOG(logINFO) << "add_assignment_vars() -- all neighbors";
   MultiHypothesesGraph::ContainedRegionsMap& regions = hypotheses.get(node_regions_in_component());
   for (MultiHypothesesGraph::ArcIt a(hypotheses); a != lemon::INVALID; ++a) {
     const std::vector<Traxel>& source = regions[hypotheses.source(a)];
@@ -299,6 +316,51 @@ inline void ModelBuilder::add_assignment_vars( const MultiHypothesesGraph& hypot
       for (std::vector<Traxel>::const_iterator d = dest.begin(); d != dest.end(); ++d) {
         m.opengm_model->addVariable(2);
         m.arc_var_.left.insert(Model::arc_var_map::value_type(Model::TraxelArc(*s, *d), m.opengm_model->numberOfVariables() - 1));
+      }
+    }
+  }
+}
+
+
+namespace {
+class TraxelProbabilityPairLessThan {
+ public:
+  bool operator()(const std::pair<Traxel, feature_type>& p1, const std::pair<Traxel, feature_type>& p2) {
+    return p1.second < p2.second;
+  }
+};
+
+
+class TraxelProbabilityPairGreaterThan {
+ public:
+  bool operator()(const std::pair<Traxel, feature_type>& p1, const std::pair<Traxel, feature_type>& p2) {
+    return p1.second > p2.second;
+  }
+};
+} /* namespace */
+
+
+inline void ModelBuilder::add_assignment_vars( const MultiHypothesesGraph& hypotheses, Model& m, const MultiHypothesesGraph::MoveFeatureMap& moves ) const {
+  LOG(logINFO) << "add_assignment_vars() -- " << maximum_outgoing_arcs_ << " best neighbors";
+  MultiHypothesesGraph::ContainedRegionsMap& regions = hypotheses.get(node_regions_in_component());
+  for (MultiHypothesesGraph::ArcIt a(hypotheses); a != lemon::INVALID; ++a) {
+    const std::vector<Traxel>& source = regions[hypotheses.source(a)];
+    const std::vector<Traxel>& dest = regions[hypotheses.target(a)];
+    for (std::vector<Traxel>::const_iterator s = source.begin(); s != source.end(); ++s) {
+      const std::map<Traxel, feature_array>& probabilities = moves[hypotheses.source(a)].find(*s)->second;
+      std::vector<std::pair<Traxel, feature_type> > k_best_probabilities;
+      for (std::map<Traxel, feature_array>::const_iterator it = probabilities.begin();
+           it != probabilities.end();
+           ++it) {
+        k_best_probabilities.push_back(std::make_pair(it->first, it->second[1]));
+        std::sort(k_best_probabilities.begin(), k_best_probabilities.end(), TraxelProbabilityPairGreaterThan());
+        k_best_probabilities.resize(std::min(k_best_probabilities.size(), static_cast<size_t>(maximum_outgoing_arcs_)));
+      }
+      for (std::vector<Traxel>::const_iterator d = dest.begin(); d != dest.end(); ++d) {
+        if (std::find(k_best_probabilities.begin(), k_best_probabilities.end(), *d) != k_best_probabilities.end()) {
+          m.opengm_model->addVariable(2);
+          m.arc_var_.left.insert(Model::arc_var_map::value_type(Model::TraxelArc(*s, *d), m.opengm_model->numberOfVariables() - 1));
+        }
       }
     }
   }
@@ -317,7 +379,11 @@ std::vector<OpengmModel::IndexType> ModelBuilder::vars_for_outgoing_factor( cons
   for (MultiHypothesesGraph::OutArcIt a(hypotheses, node); a != lemon::INVALID; ++a) {
     const std::vector<Traxel>& traxels = regions[hypotheses.target(a)];
     for (std::vector<Traxel>::const_iterator t = traxels.begin(); t != traxels.end(); ++t) {
-      vi.push_back(m.var_of_arc(Model::TraxelArc(trax, *t)));
+      Model::arc_var_map::const_iterator it = m.var_of_arc().find(Model::TraxelArc(trax, *t));
+      if (it != m.var_of_arc().end()) {
+          vi.push_back(it->second);
+      }
+      // vi.push_back(m.var_of_arc(Model::TraxelArc(trax, *t)));
     }
   }
   return vi;
@@ -336,7 +402,11 @@ std::vector<OpengmModel::IndexType> ModelBuilder::vars_for_incoming_factor( cons
   for (MultiHypothesesGraph::InArcIt a(hypotheses, node); a != lemon::INVALID; ++a) {
     const std::vector<Traxel>& traxels = regions[hypotheses.source(a)];
     for (std::vector<Traxel>::const_iterator t = traxels.begin(); t != traxels.end(); ++t) {
-      vi.push_back(m.var_of_arc(Model::TraxelArc(*t, trax)));
+      Model::arc_var_map::const_iterator it = m.var_of_arc().find(Model::TraxelArc(*t, trax));
+      if (it != m.var_of_arc().end()) {
+          vi.push_back(it->second);
+      }
+      // vi.push_back(m.var_of_arc(Model::TraxelArc(*t, trax)));
     }
   }
 
@@ -373,10 +443,13 @@ void ModelBuilder::couple_detections_assignments(const Model& m, const std::vect
   for (std::vector<Traxel>::const_iterator s = source.begin(); s != source.end(); ++s) {
     for (std::vector<Traxel>::const_iterator d = dest.begin(); d != dest.end(); ++d) {
       std::vector<size_t> cplex_idxs;
-      LOG(logDEBUG4) << "MultiHypotheses::couple_detecion_assignments: "
-                     << *s << "," << *d;
-      cplex_idxs.push_back(cplex_id(cplex, m.var_of_trax(*s)));
-      cplex_idxs.push_back(cplex_id(cplex, m.var_of_arc(Model::TraxelArc(*s, *d))));
+      Model::arc_var_map::const_iterator it = m.var_of_arc().find(Model::TraxelArc(*s, *d));
+      if (it != m.var_of_arc().end()) {
+        LOG(logDEBUG4) << "MultiHypotheses::couple_detecion_assignments: "
+                       << *s << "," << *d;
+        cplex_idxs.push_back(cplex_id(cplex, m.var_of_trax(*s)));
+        cplex_idxs.push_back(cplex_id(cplex, it->second));
+      }
       std::vector<int> coeffs;
       coeffs.push_back(1);
       coeffs.push_back(-1);
@@ -394,10 +467,13 @@ void ModelBuilder::couple_detections_assignments_incoming(const Model& m, const 
   for (std::vector<Traxel>::const_iterator d = dest.begin(); d != dest.end(); ++d) {
     for (std::vector<Traxel>::const_iterator s = source.begin(); s != source.end(); ++s) {
       std::vector<size_t> cplex_idxs;
-      LOG(logDEBUG4) << "MultiHypotheses::couple_detecion_assignments_incoming: "
-                     << *s << "," << *d;
-      cplex_idxs.push_back(cplex_id(cplex, m.var_of_trax(*d)));
-      cplex_idxs.push_back(cplex_id(cplex, m.var_of_arc(Model::TraxelArc(*s, *d))));
+      Model::arc_var_map::const_iterator it = m.var_of_arc().find(Model::TraxelArc(*s, *d));
+      if (it != m.var_of_arc().end()) {
+        LOG(logDEBUG4) << "MultiHypotheses::couple_detecion_assignments_incoming: "
+                       << *s << "," << *d;
+        cplex_idxs.push_back(cplex_id(cplex, m.var_of_trax(*d)));
+        cplex_idxs.push_back(cplex_id(cplex, it->second));
+      }
       std::vector<int> coeffs;
       coeffs.push_back(1);
       coeffs.push_back(-1);
@@ -417,7 +493,10 @@ void ModelBuilder::couple_outgoing_assignments(const Model& m, const std::vector
     }
     std::vector<size_t> cplex_idxs;
     for (std::vector<Traxel>::const_iterator d = dest.begin(); d != dest.end(); ++d) {
-      cplex_idxs.push_back(cplex_id(cplex, m.var_of_arc(Model::TraxelArc(*s, *d))));
+      Model::arc_var_map::const_iterator it = m.var_of_arc().find(Model::TraxelArc(*s, *d));
+      if (it != m.var_of_arc().end()) {
+        cplex_idxs.push_back(cplex_id(cplex, it->second));
+      }
     }
     if (cplex_idxs.size() > 0) {
       std::vector<int> coeffs(cplex_idxs.size(), 1);
@@ -434,7 +513,10 @@ void ModelBuilder::couple_incoming_assignments(const Model& m, const std::vector
   for (std::vector<Traxel>::const_iterator d = dest.begin(); d != dest.end(); ++d) {
     std::vector<size_t> cplex_idxs;
     for (std::vector<Traxel>::const_iterator s = source.begin(); s != source.end(); ++s) {
-      cplex_idxs.push_back(cplex_id(cplex, m.var_of_arc(Model::TraxelArc(*s, *d))));
+      Model::arc_var_map::const_iterator it = m.var_of_arc().find(Model::TraxelArc(*s, *d));
+      if (it != m.var_of_arc().end()) {
+        cplex_idxs.push_back(cplex_id(cplex, it->second));
+      }
     }
     if (cplex_idxs.size() > 0) {
       std::vector<int> coeffs(cplex_idxs.size(), 1);
@@ -563,8 +645,6 @@ boost::shared_ptr<Model> TrainableModelBuilder::build(const MultiHypothesesGraph
       add_detection_factors( hypotheses, *model, n );
     }
   }
-
-  add_count_factors(hypotheses, *model);
 
   for (MultiHypothesesGraph::NodeIt n(hypotheses); n != lemon::INVALID; ++n) {
     add_outgoing_factors( hypotheses, *model, n );
@@ -915,13 +995,23 @@ boost::shared_ptr<Model> CVPR2014ModelBuilder::build(const MultiHypothesesGraph&
   if (has_detection_vars()) {
     add_detection_vars( hypotheses, *model );
   }
-  add_assignment_vars( hypotheses, *model );
+  if (has_maximum_arcs()) {
+    if (!has_classifiers()) {
+      // throw std::runtime_error("maximum arcs required without classifiers present!");
+    }
+    const MultiHypothesesGraph::MoveFeatureMap& moves = hypotheses.get(node_move_features());
+    add_assignment_vars( hypotheses, *model, moves );
+  } else {
+    add_assignment_vars( hypotheses, *model );
+  }
 
   if ( has_detection_vars() ) {
     for (MultiHypothesesGraph::NodeIt n(hypotheses); n != lemon::INVALID; ++n) {
       add_detection_factors( hypotheses, *model, n );
     }
   }
+
+  add_count_factors(hypotheses, *model);
 
   for (MultiHypothesesGraph::NodeIt n(hypotheses); n != lemon::INVALID; ++n) {
     add_outgoing_factors( hypotheses, *model, n );
@@ -942,7 +1032,7 @@ void CVPR2014ModelBuilder::add_detection_factors( const MultiHypothesesGraph& hy
   }
 }
 
-void ModelBuilder::add_count_factors( const MultiHypothesesGraph& hypotheses, Model& m) {
+void CVPR2014ModelBuilder::add_count_factors( const MultiHypothesesGraph& hypotheses, Model& m) {
   MultiHypothesesGraph::ContainedRegionsMap& regions = hypotheses.get(node_regions_in_component());
   for (MultiHypothesesGraph::NodeIt n(hypotheses); n != lemon::INVALID; ++n) {
     const std::vector<Traxel>& traxels = regions[n];
@@ -1012,9 +1102,9 @@ void CVPR2014ModelBuilder::add_detection_factor( Model& m,
 }
 
 
-void ModelBuilder::add_count_factor( Model& m,
-                                             const std::vector<Traxel>& traxels,
-                                             size_t maximum_active_regions) {
+void CVPR2014ModelBuilder::add_count_factor( Model& m,
+                                     const std::vector<Traxel>& traxels,
+                                     size_t maximum_active_regions) {
 	LOG(logDEBUG) << "ModelBuilder::add_count_factor: entered";
 
 	if (has_hierarchical_counting_factor()) {
@@ -1024,10 +1114,10 @@ void ModelBuilder::add_count_factor( Model& m,
 	}
 }
 
-void ModelBuilder::add_hierarchical_count_factor( Model& m,
-                                               const std::vector<Traxel>& traxels,
-                                               size_t maximum_active_regions) {
-	LOG(logDEBUG) << "ModelBuilder::add_hierarchical_count_factor: entered";
+void CVPR2014ModelBuilder::add_hierarchical_count_factor( Model& m,
+                                                  const std::vector<Traxel>& traxels,
+                                                  size_t maximum_active_regions) {
+	LOG(logINFO) << "CVPR2014ModelBuilder::add_hierarchical_count_factor: entered";
 	assert(has_hierarchical_counting_factor());
 	assert(traxels.size() > 0);
   	assert(traxels[0].features.find("count_prediction") != traxels[0].features.end());
@@ -1071,16 +1161,19 @@ void ModelBuilder::add_hierarchical_count_factor( Model& m,
 	assert(m.opengm_model->numberOfLabels(var[0]) == probabilities.size());
 
 	std::vector<size_t> coords(1, 0);
-	OpengmExplicitFactor<double> table(var, var+1);
+	OpengmExplicitFactor<double> table(var, var+1, 0, probabilities.size());
 
 	for(size_t state = 0; state < probabilities.size(); ++state) {
 		coords[0] = state;
+                LOG(logINFO) << "LOOPING LOUIE!" << state << ',' << probabilities.size();
 		table.set_value( coords, probabilities[state] );
+                LOG(logINFO) << "ROLLERCOASTER!";
 	}
 
-	LOG(logDEBUG2) << "ModelBuilder::add_hierarchical_count_factor: "
+	LOG(logINFO) << "CVPR2014ModelBuilder::add_hierarchical_count_factor: "
 					 << "helper count factor added";
 	table.add_to( *(m.opengm_model) );
+        LOG(logINFO) << "NEVER ASSERT AGAIN";
 }
 
 
@@ -1132,9 +1225,9 @@ void ModelBuilder::add_hierarchical_count_factor( Model& m,
 //}
 
 
-void ModelBuilder::add_count_helper( Model& m,
-		std::vector<std::vector<std::pair<size_t, size_t> > >& lower_level, const size_t maximum_active_regions,
-		std::vector<std::vector<std::pair<size_t, size_t> > >& higher_level) {
+void CVPR2014ModelBuilder::add_count_helper( Model& m,
+                                     std::vector<std::vector<std::pair<size_t, size_t> > >& lower_level, const size_t maximum_active_regions,
+                                     std::vector<std::vector<std::pair<size_t, size_t> > >& higher_level) {
 
 	LOG(logDEBUG1) << "add_count_helper: entered";
 
@@ -1176,26 +1269,26 @@ void ModelBuilder::add_count_helper( Model& m,
 }
 
 void ModelBuilder::add_count_hard_constraints(const Model& m,
-		const MultiHypothesesGraph& hypotheses, OpengmLPCplex& cplex) const {
-	for(std::vector<std::vector<std::pair<std::pair<size_t, size_t>, int> > >::const_iterator constraint_it =
-			var_state_coeff_constraints_.begin(); constraint_it != var_state_coeff_constraints_.end();
-			++constraint_it) {
-		std::vector<size_t> cplex_idxs;
-		std::vector<int> coeffs;
-		for (std::vector<std::pair<std::pair<size_t, size_t>, int> >::const_iterator it = constraint_it->begin();
-			it != constraint_it->end(); ++it) {
-			cplex_idxs.push_back(cplex_id(cplex, it->first.first, it->first.second));
-			coeffs.push_back(it->second);
-		}
-		cplex.addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0, 0);
+                                                      const MultiHypothesesGraph& hypotheses, OpengmLPCplex& cplex) const {
+  for(std::vector<std::vector<std::pair<std::pair<size_t, size_t>, int> > >::const_iterator constraint_it =
+          var_state_coeff_constraints_.begin(); constraint_it != var_state_coeff_constraints_.end();
+      ++constraint_it) {
+    std::vector<size_t> cplex_idxs;
+    std::vector<int> coeffs;
+    for (std::vector<std::pair<std::pair<size_t, size_t>, int> >::const_iterator it = constraint_it->begin();
+         it != constraint_it->end(); ++it) {
+      cplex_idxs.push_back(cplex_id(cplex, it->first.first, it->first.second));
+      coeffs.push_back(it->second);
+    }
+    cplex.addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0, 0);
 	}
 }
 
 
 
-void ModelBuilder::add_explicit_count_factor( Model& m,
-                                               const std::vector<Traxel>& traxels,
-                                               size_t maximum_active_regions) const {
+void CVPR2014ModelBuilder::add_explicit_count_factor( Model& m,
+                                              const std::vector<Traxel>& traxels,
+                                              size_t maximum_active_regions ) const {
   LOG(logDEBUG) << "CVPR2014ModelBuilder::add_explicit_count_factor: entered";
   assert(not has_hierarchical_counting_factor());
   assert(traxels.size() > 0);
@@ -1233,7 +1326,7 @@ void ModelBuilder::add_explicit_count_factor( Model& m,
     table.add_to( *m.opengm_model );
 }
 
-void ModelBuilder::fill_probabilities(feature_array& probabilities, size_t maximum_active_regions) const {
+void CVPR2014ModelBuilder::fill_probabilities(feature_array& probabilities, size_t maximum_active_regions) const {
   if (probabilities.size() < maximum_active_regions + 1) {
     // fill the missing states with copies of the last state
     probabilities.insert(probabilities.end(),
@@ -1293,7 +1386,7 @@ void CVPR2014ModelBuilder::add_outgoing_factor( const MultiHypothesesGraph& hypo
   }
 
   size_t table_dim = vi.size();
-  assert(table_dim == neighbors.size() + 1);
+  assert(table_dim <= neighbors.size() + 1);
 
   // construct factor
   // only one detection var no outgoing arcs
@@ -1435,7 +1528,7 @@ void CVPR2014ModelBuilder::add_incoming_factor(const MultiHypothesesGraph& hypot
                  << " - " <<  neighbors.size();
   LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_incoming_factor: constructing factor for "
   << trax << ": " << std::pow(2., static_cast<int>(vi.size())) << " entries (2^" << vi.size() << ")";
-  assert(vi.size() == neighbors.size() + has_detection_vars() ? 1 : 0);
+  assert(vi.size() <= neighbors.size() + has_detection_vars() ? 1 : 0);
   const size_t table_dim = vi.size();
   std::vector<size_t> coords(table_dim, 0);
   OpengmExplicitFactor<double> table( vi, forbidden_cost() );

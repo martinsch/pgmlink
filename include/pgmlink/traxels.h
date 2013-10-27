@@ -247,6 +247,11 @@ class PGMLINK_EXPORT IntmaxposLocator : public Locator {
  PGMLINK_EXPORT size_t filter_by_fov( const TraxelStore& in, TraxelStore& out, const FieldOfView& );
 
 
+// comparison operator:
+bool operator==(const std::pair<Traxel, feature_type>& p, const Traxel& t);
+bool operator==(const Traxel& t, const std::pair<Traxel, feature_type>& p);
+
+
 
 /**/
 /* implementation */

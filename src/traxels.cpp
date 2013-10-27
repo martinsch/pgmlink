@@ -248,5 +248,14 @@ namespace pgmlink {
     }
     return n;
   }
+
+// comparison operator
+  bool operator==(const std::pair<Traxel, feature_type>& p, const Traxel& t) {
+    return p.first == t;
+  }
+
+  bool operator==(const Traxel& t, const std::pair<Traxel, feature_type>& p) {
+    return p == t;
+  }
 } /* namespace pgmlink */
 
