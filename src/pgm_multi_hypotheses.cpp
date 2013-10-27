@@ -1117,7 +1117,7 @@ void CVPR2014ModelBuilder::add_count_factor( Model& m,
 void CVPR2014ModelBuilder::add_hierarchical_count_factor( Model& m,
                                                   const std::vector<Traxel>& traxels,
                                                   size_t maximum_active_regions) {
-	LOG(logINFO) << "CVPR2014ModelBuilder::add_hierarchical_count_factor: entered";
+	LOG(logDEBUG3) << "CVPR2014ModelBuilder::add_hierarchical_count_factor: entered";
 	assert(has_hierarchical_counting_factor());
 	assert(traxels.size() > 0);
   	assert(traxels[0].features.find("count_prediction") != traxels[0].features.end());
@@ -1165,15 +1165,12 @@ void CVPR2014ModelBuilder::add_hierarchical_count_factor( Model& m,
 
 	for(size_t state = 0; state < probabilities.size(); ++state) {
 		coords[0] = state;
-                LOG(logINFO) << "LOOPING LOUIE!" << state << ',' << probabilities.size();
 		table.set_value( coords, probabilities[state] );
-                LOG(logINFO) << "ROLLERCOASTER!";
 	}
 
-	LOG(logINFO) << "CVPR2014ModelBuilder::add_hierarchical_count_factor: "
-					 << "helper count factor added";
+	LOG(logDEBUG3) << "CVPR2014ModelBuilder::add_hierarchical_count_factor: "
+                      << "helper count factor added";
 	table.add_to( *(m.opengm_model) );
-        LOG(logINFO) << "NEVER ASSERT AGAIN";
 }
 
 
