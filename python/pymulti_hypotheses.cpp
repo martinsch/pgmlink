@@ -89,6 +89,7 @@ struct PyTrackingOptions {
     options.weights["opportunity"] = 1000;
 
     options.forward_backward = true;
+    options.with_maximum_arcs = false;
   }
   
   void set(const std::string& name, double value) {
@@ -146,6 +147,12 @@ struct PyTrackingOptions {
   void with_hierarchical_count_factor(bool check) {
     options.hierarchical_count_factor = check;
   }
+
+  void limit_outgoing_arcs(unsigned limit) {
+    options.with_maximum_arcs = true;
+    options.weights["arc_limit"] = limit;
+  }
+
 
   std::string sanity_check() {
     return std::string("To be implemented");
@@ -405,6 +412,7 @@ void export_multi_hypotheses() {
       .def("withHierarchicalCountFactor", &PyTrackingOptions::with_hierarchical_count_factor, return_internal_reference<>())
       .def("forwardBackward", &PyTrackingOptions::forward_backward, return_internal_reference<>())
       .def("sanityCheck", &PyTrackingOptions::sanity_check)
+      .def("limitOutgoingArcs", &PyTrackingOptions::limit_outgoing_arcs)
       ;
 
 
