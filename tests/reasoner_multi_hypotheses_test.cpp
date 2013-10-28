@@ -1430,7 +1430,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_only_with_k_nearest ) {
       .with_detection_vars(det, mis)
       .with_divisions(div)
       .with_maximal_conflict_cliques(true)
-      .with_maximum_arcs(1, 1);
+      .with_maximum_arcs(1);
   ;
 
   MultiHypotheses reasoner(builder,

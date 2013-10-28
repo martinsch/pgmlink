@@ -225,9 +225,8 @@ ModelBuilder& ModelBuilder::with_hierarchical_counting_factor(bool check) {
 }
 
 
-ModelBuilder& ModelBuilder::with_maximum_arcs(unsigned maximum_outgoing_arcs, unsigned maximum_incoming_arcs) {
+ModelBuilder& ModelBuilder::with_maximum_arcs(unsigned maximum_outgoing_arcs) {
   maximum_outgoing_arcs_ = maximum_outgoing_arcs;
-  maximum_incoming_arcs_ = maximum_incoming_arcs;
   with_maximum_arcs_ = true;
   return *this;
 }

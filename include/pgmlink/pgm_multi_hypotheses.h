@@ -126,8 +126,7 @@ class ModelBuilder {
     cplex_timeout_(1e+75),
     max_division_level_(max_division_level),
     max_count_(max_count),
-    maximum_outgoing_arcs_(0),
-    maximum_incoming_arcs_(0) {}
+    maximum_outgoing_arcs_(0) {}
 
   virtual boost::shared_ptr<ModelBuilder> clone() const = 0;
   virtual ~ModelBuilder() {}
@@ -192,7 +191,7 @@ class ModelBuilder {
                                   const MultiHypothesesGraph& hypotheses, OpengmLPCplex& cplex) const;
 
   // maximum outgoing, incoming arcs
-  ModelBuilder& with_maximum_arcs(unsigned, unsigned);
+  ModelBuilder& with_maximum_arcs(unsigned);
   ModelBuilder& without_maximum_arcs();
   bool has_maximum_arcs() const { return with_maximum_arcs_; }
   
@@ -255,7 +254,6 @@ class ModelBuilder {
   unsigned max_division_level_;
   unsigned max_count_;  
   int maximum_outgoing_arcs_;
-  int maximum_incoming_arcs_;  
 };
 
 
