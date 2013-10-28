@@ -441,20 +441,20 @@ void ModelBuilder::couple_detections_assignments(const Model& m, const std::vect
                  << source.size() << " source(s) and "
                  << dest.size() << " target(s)";
   for (std::vector<Traxel>::const_iterator s = source.begin(); s != source.end(); ++s) {
-    for (std::vector<Traxel>::const_iterator d = dest.begin(); d != dest.end(); ++d) {
-      std::vector<size_t> cplex_idxs;
+    for (std::vector<Traxel>::const_iterator d = dest.begin(); d != dest.end(); ++d) { 
       Model::arc_var_map::const_iterator it = m.var_of_arc().find(Model::TraxelArc(*s, *d));
       if (it != m.var_of_arc().end()) {
+        std::vector<size_t> cplex_idxs;
         LOG(logDEBUG4) << "MultiHypotheses::couple_detecion_assignments: "
                        << *s << "," << *d;
         cplex_idxs.push_back(cplex_id(cplex, m.var_of_trax(*s)));
         cplex_idxs.push_back(cplex_id(cplex, it->second));
+        std::vector<int> coeffs;
+        coeffs.push_back(1);
+        coeffs.push_back(-1);
+        // 0 <= 1*detection - 1*transition <= 1
+        cplex.addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0, 1);
       }
-      std::vector<int> coeffs;
-      coeffs.push_back(1);
-      coeffs.push_back(-1);
-      // 0 <= 1*detection - 1*transition <= 1
-      cplex.addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0, 1);
     }
   }
 }
@@ -466,19 +466,19 @@ void ModelBuilder::couple_detections_assignments_incoming(const Model& m, const 
                  << dest.size() << " target(s)";
   for (std::vector<Traxel>::const_iterator d = dest.begin(); d != dest.end(); ++d) {
     for (std::vector<Traxel>::const_iterator s = source.begin(); s != source.end(); ++s) {
-      std::vector<size_t> cplex_idxs;
       Model::arc_var_map::const_iterator it = m.var_of_arc().find(Model::TraxelArc(*s, *d));
       if (it != m.var_of_arc().end()) {
+        std::vector<size_t> cplex_idxs;
         LOG(logDEBUG4) << "MultiHypotheses::couple_detecion_assignments_incoming: "
                        << *s << "," << *d;
         cplex_idxs.push_back(cplex_id(cplex, m.var_of_trax(*d)));
         cplex_idxs.push_back(cplex_id(cplex, it->second));
+        std::vector<int> coeffs;
+        coeffs.push_back(1);
+        coeffs.push_back(-1);
+        // 0 <= 1*detection - 1*transition <= 1
+        cplex.addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0, 1);
       }
-      std::vector<int> coeffs;
-      coeffs.push_back(1);
-      coeffs.push_back(-1);
-      // 0 <= 1*detection - 1*transition <= 1
-      cplex.addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0, 1);
     }
   }
 }
