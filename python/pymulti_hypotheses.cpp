@@ -153,6 +153,9 @@ struct PyTrackingOptions {
     options.weights["arc_limit"] = limit;
   }
 
+  void with_counting_incoming_factor(bool check) {
+      options.counting_incoming_factor = check;
+    }
 
   std::string sanity_check() {
     return std::string("To be implemented");
@@ -410,6 +413,7 @@ void export_multi_hypotheses() {
       .def("withConstantClassifierFallback", &PyTrackingOptions::with_constant_classifier_fallback, return_internal_reference<>())
       .def("withClassifierCountPrecomputed", &PyTrackingOptions::with_classifier_count_precomputed, return_internal_reference<>())
       .def("withHierarchicalCountFactor", &PyTrackingOptions::with_hierarchical_count_factor, return_internal_reference<>())
+      .def("withCountingIncomingFactor", &PyTrackingOptions::with_counting_incoming_factor, return_internal_reference<>())
       .def("forwardBackward", &PyTrackingOptions::forward_backward, return_internal_reference<>())
       .def("sanityCheck", &PyTrackingOptions::sanity_check)
       .def("limitOutgoingArcs", &PyTrackingOptions::limit_outgoing_arcs)

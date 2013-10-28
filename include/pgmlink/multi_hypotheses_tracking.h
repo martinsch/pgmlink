@@ -47,6 +47,7 @@ public:
     bool forward_backward;
     bool constant_classifier_fallback;
     bool hierarchical_count_factor;
+    bool counting_incoming_factor;
     bool classifier_count_precomputed;
     bool with_maximum_arcs;
   };

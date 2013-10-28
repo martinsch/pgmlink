@@ -116,6 +116,7 @@ class ModelBuilder {
     with_classifier_priors_(false),
     with_maximal_conflict_cliques_(false),
     with_hierarchical_counting_factor_(false),
+    with_counting_incoming_factor_(false),
     with_maximum_arcs_(false),
     appearance_(appearance),
     disappearance_(disappearance),
@@ -190,6 +191,10 @@ class ModelBuilder {
   void add_count_hard_constraints(const Model& m,
                                   const MultiHypothesesGraph& hypotheses, OpengmLPCplex& cplex) const;
 
+  // counter variable for incoming assignments
+  ModelBuilder& with_counting_incoming_factor(bool);
+  bool has_counting_incoming_factor() const { return with_counting_incoming_factor_; }
+
   // maximum outgoing, incoming arcs
   ModelBuilder& with_maximum_arcs(unsigned);
   ModelBuilder& without_maximum_arcs();
@@ -239,6 +244,7 @@ class ModelBuilder {
   bool with_classifier_priors_;
   bool with_maximal_conflict_cliques_;
   bool with_hierarchical_counting_factor_;
+  bool with_counting_incoming_factor_;
   bool with_maximum_arcs_;
 
   function<double (const Traxel&, size_t)> detection_;
@@ -316,7 +322,7 @@ class CVPR2014ModelBuilder : public ModelBuilder {
 
  private:
   void add_detection_factors( const MultiHypothesesGraph&, Model&, const MultiHypothesesGraph::Node& ) const;
-  void add_incoming_factors( const MultiHypothesesGraph&, Model&, const MultiHypothesesGraph::Node& ) const;
+  void add_incoming_factors( const MultiHypothesesGraph&, Model&, const MultiHypothesesGraph::Node& );
   void add_detection_factor( Model&, const Traxel& ) const;
   void add_outgoing_factor( const MultiHypothesesGraph&,
                             Model&,
@@ -327,7 +333,7 @@ class CVPR2014ModelBuilder : public ModelBuilder {
                             Model&,
                             const MultiHypothesesGraph::Node&,
                             const Traxel&,
-                            const std::vector<Traxel>& ) const;
+                            const std::vector<Traxel>& );
   void fill_probabilities(feature_array& probabilities, size_t maximum_active_regions ) const;
   void add_count_factor( Model& m,
                          const std::vector<Traxel>& traxels,

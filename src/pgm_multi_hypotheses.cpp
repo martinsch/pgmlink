@@ -224,6 +224,10 @@ ModelBuilder& ModelBuilder::with_hierarchical_counting_factor(bool check) {
 	return *this;
 }
 
+ModelBuilder& ModelBuilder::with_counting_incoming_factor(bool check) {
+	with_counting_incoming_factor_ = check;
+	return *this;
+}
 
 ModelBuilder& ModelBuilder::with_maximum_arcs(unsigned maximum_outgoing_arcs) {
   maximum_outgoing_arcs_ = maximum_outgoing_arcs;
@@ -1064,7 +1068,7 @@ void CVPR2014ModelBuilder::add_outgoing_factors( const MultiHypothesesGraph& hyp
 
 void CVPR2014ModelBuilder::add_incoming_factors( const MultiHypothesesGraph& hypotheses,
                                                    Model& m,
-                                                   const MultiHypothesesGraph::Node& n ) const {
+                                                   const MultiHypothesesGraph::Node& n ) {
   MultiHypothesesGraph::ContainedRegionsMap& regions = hypotheses.get(node_regions_in_component());
   const std::vector<Traxel>& traxels = regions[n];
   std::vector<Traxel> neighbors;
@@ -1509,9 +1513,8 @@ void CVPR2014ModelBuilder::add_incoming_factor(const MultiHypothesesGraph& hypot
                                                 Model& m,
                                                 const MultiHypothesesGraph::Node& node,
                                                 const Traxel& trax,
-                                                const std::vector<Traxel>& neighbors) const {
-  // LOG(logDEBUG2) << "CVPR2014ModelBuilder::add_incoming_factor(): entered for " << trax;
-  // LOG(logDEBUG1) << "CVPR2014ModelBuilder::add_incoming_factor(): entered";
+                                                const std::vector<Traxel>& neighbors) {
+  LOG(logDEBUG2) << "CVPR2014ModelBuilder::add_incoming_factor(): entered for " << trax;
   const std::vector<size_t> vi = vars_for_incoming_factor(hypotheses, m, node, trax);
   if (vi.size() == 0) {
     // nothing to be done here
@@ -1522,41 +1525,96 @@ void CVPR2014ModelBuilder::add_incoming_factor(const MultiHypothesesGraph& hypot
   // construct factor
   LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_incoming_factor: " << vi.size()
                  << " - " <<  neighbors.size();
-  LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_incoming_factor: constructing factor for "
-  << trax << ": " << std::pow(2., static_cast<int>(vi.size())) << " entries (2^" << vi.size() << ")";
+
   assert(vi.size() <= neighbors.size() + has_detection_vars() ? 1 : 0);
-  const size_t table_dim = vi.size();
-  std::vector<size_t> coords(table_dim, 0);
-  OpengmExplicitFactor<double> table( vi, forbidden_cost() );
 
-  // opportunity?
-  table.set_value( coords, 0 );
+  if (has_counting_incoming_factor()) {
+	  // create one variable representing the sum of all incoming variables, then
+	  // the pairwise factor between this counter and the detection variable is much cheaper
+	  LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_incoming_factor: constructing count-helper";
 
-  // appearance
-  if (trax.Timestep > hypotheses.earliest_timestep()) {
-    coords[0] = 1;
-    table.set_value( coords, appearance()(trax));
-    assert(table.get_value( coords ) == appearance()(trax) );
-    LOG(logDEBUG2) << "CVPR2014ModelBuilder::add_incoming_factor: appearance="
-                   << table.get_value( coords );
-    coords[0] = 0;
+	  vector<size_t> vi_pairwise;
+	  vi_pairwise.push_back(vi[0]);
+	  if (vi.size() > 2) {
+		  m.opengm_model->addVariable(2); // add a binary counting variable (count can only be 0 or 1 for incomings)
+		  size_t vi_from = m.opengm_model->numberOfVariables() - 1;
+
+		  // add hard constraints assuring the counting (to be added later)
+	      std::vector<std::pair<std::pair<size_t, size_t>, int> > constraint;
+		  std::vector<std::pair<size_t,size_t> > vars;
+		  for (size_t i = 1; i < vi.size(); ++i) {
+				std::pair<size_t, size_t> var_state = std::pair<size_t, size_t>(vi[i], 1);
+				std::pair<std::pair<size_t, size_t>, int> var_coeff(var_state, 1);
+				constraint.push_back(var_coeff);
+		  }
+		  std::pair<size_t, size_t> var_state = std::pair<size_t, size_t>(vi_from, 1);
+		  std::pair<std::pair<size_t, size_t>, int> var_coeff(var_state, -1);
+		  constraint.push_back(var_coeff);
+		  var_state_coeff_constraints_.push_back(constraint);
+		  vi_pairwise.push_back(vi_from);
+	  } else if (vi.size() == 2) {
+		  size_t vi_from = vi[1]; // the only incoming variable
+		  vi_pairwise.push_back(vi_from);
+	  } else if (vi.size() == 1) {
+		  // do nothing
+	  } else { // vi.size() == 0
+		  assert(false); // cannot happen, it is already returned earlier in this function
+	  }
+
+	  // create a table for a pairwise factor
+	  assert(vi_pairwise.size() <= 2);
+	  assert(vi_pairwise.size() > 0);
+	  const size_t table_dim = vi_pairwise.size();
+	  std::vector<size_t> coords(table_dim, 0);
+	  OpengmExplicitFactor<double> table( vi_pairwise, 0 );
+
+	  // appearance
+	  if (trax.Timestep > hypotheses.earliest_timestep()) {
+		  coords[0] = 1;
+		  table.set_value( coords, appearance()(trax) );
+		  assert(table.get_value( coords ) == appearance()(trax) );
+		  LOG(logDEBUG2) << "CVPR2014ModelBuilder::add_incoming_factor: appearance="
+							   << table.get_value( coords );
+
+		  table.add_to( *m.opengm_model );
+		  LOG(logDEBUG2) << "CVPR2014ModelBuilder::add_incoming_factor: done";
+	  }
+  } else { // create a table with 2^n rows
+	  LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_incoming_factor: constructing factor for "
+	  << trax << ": " << std::pow(2., static_cast<int>(vi.size())) << " entries (2^" << vi.size() << ")";
+	  const size_t table_dim = vi.size();
+	  std::vector<size_t> coords(table_dim, 0);
+	  OpengmExplicitFactor<double> table( vi, forbidden_cost() );
+
+	  // opportunity?
+	  table.set_value( coords, 0 );
+
+	  // appearance
+	  if (trax.Timestep > hypotheses.earliest_timestep()) {
+		coords[0] = 1;
+		table.set_value( coords, appearance()(trax));
+		assert(table.get_value( coords ) == appearance()(trax) );
+		LOG(logDEBUG2) << "CVPR2014ModelBuilder::add_incoming_factor: appearance="
+					   << table.get_value( coords );
+		coords[0] = 0;
+	  }
+
+	  // move
+	  // move cost already included in outgoing factor
+	  coords[0] = 1;
+	  for (size_t i = 1; i < table_dim; ++i) {
+		coords[i] = 1;
+		table.set_value( coords, 0 );
+		LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_incoming_factor: move="
+					   << table.get_value( coords );
+		coords[i] = 0;
+	  }
+	  coords[0] = 0;
+
+	  // table = OpengmExplicitFactor<double>( vi, 999999 );
+	  table.add_to( *m.opengm_model );
+	  LOG(logDEBUG2) << "CVPR2014ModelBuilder::add_incoming_factor: done";
   }
-
-  // move
-  // move cost already included in outgoing factor
-  coords[0] = 1;
-  for (size_t i = 1; i < table_dim; ++i) {
-    coords[i] = 1;
-    table.set_value( coords, 0 );
-    LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_incoming_factor: move="
-                   << table.get_value( coords );
-    coords[i] = 0;
-  }
-  coords[0] = 0;
-
-  // table = OpengmExplicitFactor<double>( vi, 999999 );
-  table.add_to( *m.opengm_model );
-  LOG(logDEBUG2) << "CVPR2014ModelBuilder::add_incoming_factor: done";
 }
 
 
