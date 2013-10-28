@@ -159,6 +159,10 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
   builder.with_maximal_conflict_cliques(options_.with_maximal_conflict_cliques);
   builder.with_hierarchical_counting_factor(options_.hierarchical_count_factor);
 
+  if (options_.with_maximum_arcs) {
+    builder.with_maximum_arcs(options_.weights["arc_limit"]);
+  }
+
   if (options_.with_detection_vars) {
     builder.with_detection_vars(det, mis);
   }
