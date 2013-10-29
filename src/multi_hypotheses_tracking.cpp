@@ -53,7 +53,10 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
                << "\tep gap: " << options_.weights["gap"] << '\n'
                << "\tmaximum division level: " << options_.weights["max_div"] << '\n'
                << "\twith constant classifiers: " << options_.with_constant_classifiers << '\n'
-               << "\twith hierarchical count factor: " << options_.hierarchical_count_factor;
+               << "\twith hierarchical count factor: " << options_.hierarchical_count_factor << '\n'
+               << "\twith counting incoming factor:" << options_.counting_incoming_factor << '\n'
+               << "\twith maximum arcs:" << options_.with_maximum_arcs << '\n'
+               << "\tmaximum arcs:" << options_.weights["arc"];
 
   boost::shared_ptr<std::vector<std::vector<Event> > >
       events (new std::vector<std::vector<Event> >);
