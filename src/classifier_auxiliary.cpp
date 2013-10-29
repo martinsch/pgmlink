@@ -714,7 +714,6 @@ void ClassifierDivisionRF::classify(const std::vector<Traxel>& traxels_out,
       for (std::vector<Traxel>::const_iterator child2 = child1 + 1; child2 != traxels_in.end(); ++child2) {
         if (with_predict) {
         	extract_features(*out, *child1, *child2);
-        	        assert(feature_map[*out][std::make_pair(*child1, *child2)].size() == 0);
         	rf_.predictProbabilities(features_, probabilities_);
         	if (feature_map[*out][std::make_pair(*child1, *child2)].size() == 0) {
 				  LOG(logDEBUG4) << "ClassifierDivisionRF::classify() -- the feature map has not been initialized yet, doing that now.";
@@ -724,6 +723,7 @@ void ClassifierDivisionRF::classify(const std::vector<Traxel>& traxels_out,
                   probabilities_.end(),
                   feature_map[*out][std::make_pair(*child1, *child2)].begin());
         } else {
+        	assert(feature_map[*out][std::make_pair(*child1, *child2)].size() == 0);
         	feature_map[*out][std::make_pair(*child1, *child2)] = feature_array(probabilities_.shape()[1]);
         }
       }
