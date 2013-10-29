@@ -70,6 +70,33 @@ void MultiHypothesesGraph::add_classifier_features(ClassifierStrategy* move,
   ContainedRegionsMap& regions = get(node_regions_in_component());
   
   std::vector<NodeT> nodes = this->nodes;
+
+  // allocate space for results before going parallel
+  for (size_t i = 0; i < nodes.size(); ++i) { // need this for omp
+    	Node n = this->nodeFromId(i);
+    	assert(this->valid(n));
+      //  for (NodeIt n(*this); n != lemon::INVALID; ++n) {
+      LOG(logDEBUG1) << "MultiHypothesesGraph::add_classifier_features: classifying region "
+                     << get(node_traxel())[n].Id << " at timestep "
+                     << get(node_traxel())[n].Timestep;
+      std::vector<Traxel>& sources = regions.get_value(n);
+      std::vector<Traxel> targets;
+      for (OutArcIt a(*this, n); a != lemon::INVALID; ++a) {
+        const std::vector<Traxel>& target = regions[this->target(a)];
+        LOG(logDEBUG4) << "MultiHypothesesGraph::add_classifier_features: added "
+                       << target.size() << " regions to target";
+        targets.insert(targets.end(), target.begin(), target.end());
+      }
+      LOG(logDEBUG3) << "MultiHypothesesGraph::add_classifier_features: initializing moves";
+      move->classify(sources, targets, move_map.get_value(n), false); // with_predict = false
+      LOG(logDEBUG3) << "MultiHypothesesGraph::add_classifier_features: initializing divisions";
+      division->classify(sources, targets, division_map.get_value(n), false); // with_predict = false
+      LOG(logDEBUG3) << "MultiHypothesesGraph::add_classifier_features: initializing detections";
+      detection->classify(sources, false); // with_predict = false
+    }
+
+
+  // doing the actual predictions in parallel
   # pragma omp parallel for
   for (size_t i = 0; i < nodes.size(); ++i) { // need this for omp
   	Node n = this->nodeFromId(i);
@@ -87,11 +114,11 @@ void MultiHypothesesGraph::add_classifier_features(ClassifierStrategy* move,
       targets.insert(targets.end(), target.begin(), target.end());
     }
     LOG(logDEBUG3) << "MultiHypothesesGraph::add_classifier_features: classifying moves";
-    move->classify(sources, targets, move_map.get_value(n));
+    move->classify(sources, targets, move_map.get_value(n), true); // with_predict = true
     LOG(logDEBUG3) << "MultiHypothesesGraph::add_classifier_features: classifying divisions";
-    division->classify(sources, targets, division_map.get_value(n));
+    division->classify(sources, targets, division_map.get_value(n), true); // with_predict = true
     LOG(logDEBUG3) << "MultiHypothesesGraph::add_classifier_features: classifying detections";
-    detection->classify(sources);
+    detection->classify(sources, true); // with_predict = true
     LOG(logDEBUG3) << "MultiHypothesesGraph::add_classifier_features: classifying count";
     count->classify(sources);
   }
