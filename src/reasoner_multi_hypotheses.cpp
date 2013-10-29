@@ -112,8 +112,8 @@ void MultiHypotheses::conclude( MultiHypothesesGraph& g ) {
              neighbor != neighbors.end();
              ++neighbor) {
           arc_var_map::const_iterator it = linking_model_->var_of_arc().find(pgm::multihypotheses::Model::TraxelArc(*t, *neighbor));
-          assert(it != linking_model_->var_of_arc().end());
-          if (solution[it->second] == 1) {
+          // assert(it != linking_model_->var_of_arc().end());
+          if (it != linking_model_->var_of_arc().end() && solution[it->second] == 1) {
             t->features["outgoing"].push_back(neighbor->Id);
           }
         }
@@ -127,8 +127,8 @@ void MultiHypotheses::conclude( MultiHypothesesGraph& g ) {
              neighbor != neighbors.end();
              ++neighbor) {
           arc_var_map::const_iterator it = linking_model_->var_of_arc().find(pgm::multihypotheses::Model::TraxelArc(*neighbor, *t));
-          assert(it != linking_model_->var_of_arc().end());
-          if (solution[it->second] == 1) {
+          // assert(it != linking_model_->var_of_arc().end());
+          if (it != linking_model_->var_of_arc().end() && solution[it->second] == 1) {
             t->features["parent"].push_back(neighbor->Id);
           }
         }
