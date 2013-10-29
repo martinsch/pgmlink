@@ -565,6 +565,13 @@ void ClassifierRF::classify(const std::vector<Traxel>& traxels_out,
 
 
 void ClassifierRF::extract_features(const Traxel& t) {
+  extract_features(t, features_, probabilities_);
+}
+
+
+void ClassifierRF::extract_features(const Traxel& t,
+                                    vigra::MultiArrayView<2, feature_type> features,
+                                    vigra::MultiArrayView<2, feature_type> probabilities) {
   size_t starting_index = 0;
   for (std::vector<FeatureExtractor>::const_iterator it = feature_extractors_.begin();
        it != feature_extractors_.end();
@@ -572,46 +579,63 @@ void ClassifierRF::extract_features(const Traxel& t) {
     LOG(logDEBUG4) << "ClassifierRF: extracting " << it->name();
     feature_array feats = it->extract(t);
     LOG(logDEBUG4) << "ClassifierRF: current feats.size(): " << feats.size()
-                   << ", features_.shape(): " << features_.shape();
-    assert(starting_index + feats.size() <= features_.shape()[1]);
-    std::copy(feats.begin(), feats.end(), features_.begin() + starting_index);
+                   << ", features.shape(): " << features.shape();
+    assert(starting_index + feats.size() <= features.shape()[1]);
+    std::copy(feats.begin(), feats.end(), features.begin() + starting_index);
     starting_index += feats.size();
   }
-  if (starting_index != features_.shape()[1]) {
+  if (starting_index != features.shape()[1]) {
     throw std::runtime_error("ClassifierRF -- extracted features size does not match random forest feature size");
   }
 }
 
 
 void ClassifierRF::extract_features(const Traxel& t1, const Traxel& t2) {
+  extract_features(t1, t2, features_, probabilities_);
+}
+
+
+void ClassifierRF::extract_features(const Traxel& t1,
+                                    const Traxel& t2,
+                                    vigra::MultiArrayView<2, feature_type> features,
+                                    vigra::MultiArrayView<2, feature_type> probabilities) {
   size_t starting_index = 0;
   for (std::vector<FeatureExtractor>::const_iterator it = feature_extractors_.begin();
        it != feature_extractors_.end();
        ++it) {
     LOG(logDEBUG4) << "ClassifierRF: extracting " << it->name();
     feature_array feats = it->extract(t1, t2);
-    assert(starting_index + feats.size() <= features_.shape()[1]);
-    std::copy(feats.begin(), feats.end(), features_.begin() + starting_index);
+    assert(starting_index + feats.size() <= features.shape()[1]);
+    std::copy(feats.begin(), feats.end(), features.begin() + starting_index);
     starting_index += feats.size();
   }
-  if (starting_index != features_.shape()[1]) {
+  if (starting_index != features.shape()[1]) {
     throw std::runtime_error("ClassifierRF -- extracted features size does not match random forest feature size");
   }
 }
 
 
 void ClassifierRF::extract_features(const Traxel& parent, const Traxel& child1, const Traxel& child2) {
+  extract_features(parent, child1, child2, features_, probabilities_);
+}
+
+
+void ClassifierRF::extract_features(const Traxel& parent,
+                                    const Traxel& child1,
+                                    const Traxel& child2,
+                                    vigra::MultiArrayView<2, feature_type> features,
+                                    vigra::MultiArrayView<2, feature_type> probabilities) {
   size_t starting_index = 0;
   for (std::vector<FeatureExtractor>::const_iterator it = feature_extractors_.begin();
        it != feature_extractors_.end();
        ++it) {
     LOG(logDEBUG4) << "ClassifierRF:extract_features() -- extracting " << it->name();
     feature_array feats = it->extract(parent, child1, child2);
-    assert(starting_index + feats.size() <= features_.shape()[1]);
-    std::copy(feats.begin(), feats.end(), features_.begin() + starting_index);
+    assert(starting_index + feats.size() <= features.shape()[1]);
+    std::copy(feats.begin(), feats.end(), features.begin() + starting_index);
     starting_index += feats.size();
   }
-  if (starting_index != features_.shape()[1]) {
+  if (starting_index != features.shape()[1]) {
     throw std::runtime_error("ClassifierRF::extract_features() -- extracted features size does not match random forest feature size");
   }
 }
@@ -648,26 +672,28 @@ void ClassifierMoveRF::classify(const std::vector<Traxel>& traxels_out,
                                 const std::vector<Traxel>& traxels_in,
                                 std::map<Traxel, std::map<Traxel, feature_array> >& feature_map,
                                 bool with_predict) {
+  vigra::MultiArray<2, feature_type> features(features_.shape());
+  vigra::MultiArray<2, feature_type> probabilities(probabilities_.shape());
   for (std::vector<Traxel>::const_iterator out = traxels_out.begin(); out != traxels_out.end(); ++out) {
     for (std::vector<Traxel>::const_iterator in = traxels_in.begin(); in != traxels_in.end(); ++in) {
       if (with_predict) {
-    	  extract_features(*out, *in);
-    	  rf_.predictProbabilities(features_, probabilities_);
-    	  LOG(logDEBUG4) << "ClassifierMoveRF::classify() -- features_[0] = " << features_[0];
+        extract_features(*out, *in, features, probabilities);
+        rf_.predictProbabilities(features, probabilities);
+        LOG(logDEBUG4) << "ClassifierMoveRF::classify() -- features[0] = " << features[0];
 
-    	  if (feature_map[*out][*in].size() == 0) {
-    		  LOG(logDEBUG4) << "ClassifierMoveRF::classify() -- the feature map has not been initialized yet, doing that now.";
-    		  feature_map[*out][*in] = feature_array(probabilities_.shape()[1]);
-    	  }
-		  std::copy(probabilities_.begin(),
-				  probabilities_.end(),
-				  feature_map[*out][*in].begin());
-		  LOG(logDEBUG4) << "ClassifierMoveRF::classify() -- " << *out
-					   << " to " << *in << "probability: "
-					   << probabilities_[0] << ',' << probabilities_[1];
+        if (feature_map[*out][*in].size() == 0) {
+          LOG(logDEBUG4) << "ClassifierMoveRF::classify() -- the feature map has not been initialized yet, doing that now.";
+          feature_map[*out][*in] = feature_array(probabilities.shape()[1]);
+        }
+        std::copy(probabilities.begin(),
+                  probabilities.end(),
+                  feature_map[*out][*in].begin());
+        LOG(logDEBUG4) << "ClassifierMoveRF::classify() -- " << *out
+                       << " to " << *in << "probability: "
+                       << probabilities[0] << ',' << probabilities[1];
       } else {
-    	  assert(feature_map[*out][*in].size() == 0);
-    	  feature_map[*out][*in] = feature_array(probabilities_.shape()[1]);
+        assert(feature_map[*out][*in].size() == 0);
+        feature_map[*out][*in] = feature_array(probabilities.shape()[1], 0.);
       }
 
     }
@@ -709,22 +735,24 @@ void ClassifierDivisionRF::classify(const std::vector<Traxel>& traxels_out,
                                     const std::vector<Traxel>& traxels_in,
                                     std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_array> >& feature_map,
                                     bool with_predict) {
+  vigra::MultiArray<2, feature_type> features(features_.shape());
+  vigra::MultiArray<2, feature_type> probabilities(probabilities_.shape());
   for (std::vector<Traxel>::const_iterator out = traxels_out.begin(); out != traxels_out.end(); ++out) {
     for (std::vector<Traxel>::const_iterator child1 = traxels_in.begin(); child1 != traxels_in.end(); ++child1) {
       for (std::vector<Traxel>::const_iterator child2 = child1 + 1; child2 != traxels_in.end(); ++child2) {
         if (with_predict) {
-        	extract_features(*out, *child1, *child2);
-        	rf_.predictProbabilities(features_, probabilities_);
+          extract_features(*out, *child1, *child2, features, probabilities);
+        	rf_.predictProbabilities(features, probabilities);
         	if (feature_map[*out][std::make_pair(*child1, *child2)].size() == 0) {
 				  LOG(logDEBUG4) << "ClassifierDivisionRF::classify() -- the feature map has not been initialized yet, doing that now.";
-				  feature_map[*out][std::make_pair(*child1, *child2)] = feature_array(probabilities_.shape()[1]);
+				  feature_map[*out][std::make_pair(*child1, *child2)] = feature_array(probabilities.shape()[1]);
 		    }
-        	std::copy(probabilities_.begin(),
-                  probabilities_.end(),
+        	std::copy(probabilities.begin(),
+                  probabilities.end(),
                   feature_map[*out][std::make_pair(*child1, *child2)].begin());
         } else {
         	assert(feature_map[*out][std::make_pair(*child1, *child2)].size() == 0);
-        	feature_map[*out][std::make_pair(*child1, *child2)] = feature_array(probabilities_.shape()[1]);
+        	feature_map[*out][std::make_pair(*child1, *child2)] = feature_array(probabilities.shape()[1], 0.);
         }
       }
     }
@@ -764,40 +792,41 @@ ClassifierDetectionRF::~ClassifierDetectionRF() {}
 
 
 void ClassifierDetectionRF::classify(std::vector<Traxel>& traxels, bool with_predict) {
+  vigra::MultiArray<2, feature_type> features(features_.shape());
+  vigra::MultiArray<2, feature_type> probabilities(probabilities_.shape());
   for (std::vector<Traxel>::iterator t = traxels.begin();
        t != traxels.end();
        ++t) {
-	if (with_predict) {
-		extract_features(*t);
-		rf_.predictProbabilities(features_, probabilities_);
-		LOG(logDEBUG4) << "ClassifierDetectionRF::classify() -- features_[0] = "
-                   << features_[0];
+    if (with_predict) {
+      extract_features(*t, features, probabilities);
+      rf_.predictProbabilities(features, probabilities);
+      LOG(logDEBUG4) << "ClassifierDetectionRF::classify() -- features[0] = "
+                     << features[0];
 
-		if (t->features[name_].size() == 0) {
-			LOG(logDEBUG4) << "ClassifierDetectionRF::classify() -- the feature map has not been initialized yet, doing that now.";
-			t->features[name_].insert(t->features[name_].end(),
-										  probabilities_.begin(),
-										  probabilities_.end()
-										  );
-			assert(t->features[name_].size() == 2);
-		}
+      if (t->features[name_].size() == 0) {
+        LOG(logDEBUG4) << "ClassifierDetectionRF::classify() -- the feature map has not been initialized yet, doing that now.";
+        t->features[name_].insert(t->features[name_].end(),
+                                  probabilities.begin(),
+                                  probabilities.end()
+                                  );
+        assert(t->features[name_].size() == 2);
+      } else {
 
-		std::copy(probabilities_.begin(),
-				  probabilities_.end(),
-				  t->features[name_].begin());
-		assert(t->features[name_].size() == 2);
-		LOG(logDEBUG4) << "ClassifierDetectionRF::classify() -- adding feature "
-					   << name_ << " to " << *t << ':'
-					   << t->features[name_][0] << ',' << t->features[name_][1];
-	} else {
-		assert(t->features[name_].size() == 0);
-		t->features[name_].insert(t->features[name_].end(),
-		                              probabilities_.begin(),
-		                              probabilities_.end()
-		                              );
-		assert(t->features[name_].size() == 2);
-	}
+        std::copy(probabilities.begin(),
+                  probabilities.end(),
+                  t->features[name_].begin());
+        assert(t->features[name_].size() == 2);
+        LOG(logDEBUG4) << "ClassifierDetectionRF::classify() -- adding feature "
+                       << name_ << " to " << *t << ':'
+                       << *(probabilities.begin()) << ',' << *(probabilities.begin()+1) << '\n'
+                   << t->features[name_][0] << ',' << t->features[name_][1];
+      }
+    } else {
+    assert(t->features[name_].size() == 0);
+    t->features[name_].resize(probabilities.shape()[1], 0.);
+    assert(t->features[name_].size() == 2);
   }
+}
 }
 
 

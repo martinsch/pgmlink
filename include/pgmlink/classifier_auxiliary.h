@@ -339,8 +339,20 @@ class ClassifierRF : public ClassifierStrategy {
                         bool with_predict);
  protected:
   virtual void extract_features(const Traxel& t);
+  virtual void extract_features(const Traxel& t,
+                                vigra::MultiArrayView<2, feature_type>,
+                                vigra::MultiArrayView<2, feature_type>);
   virtual void extract_features(const Traxel& t1, const Traxel& t2);
+  virtual void extract_features(const Traxel& t1,
+                                const Traxel& t2,
+                                vigra::MultiArrayView<2, feature_type>,
+                                vigra::MultiArrayView<2, feature_type>);
   virtual void extract_features(const Traxel& parent, const Traxel& child1, const Traxel& child2);
+  virtual void extract_features(const Traxel& parent,
+                                const Traxel& child1,
+                                const Traxel& child2,
+                                vigra::MultiArrayView<2, feature_type>,
+                                vigra::MultiArrayView<2, feature_type>);
   
   vigra::RandomForest<> rf_;
   const std::vector<FeatureExtractor> feature_extractors_;
