@@ -652,7 +652,6 @@ void ClassifierMoveRF::classify(const std::vector<Traxel>& traxels_out,
     for (std::vector<Traxel>::const_iterator in = traxels_in.begin(); in != traxels_in.end(); ++in) {
       if (with_predict) {
     	  extract_features(*out, *in);
-		  assert(feature_map[*out][*in].size() == 0);
     	  rf_.predictProbabilities(features_, probabilities_);
     	  LOG(logDEBUG4) << "ClassifierMoveRF::classify() -- features_[0] = " << features_[0];
 
@@ -667,6 +666,7 @@ void ClassifierMoveRF::classify(const std::vector<Traxel>& traxels_out,
 					   << " to " << *in << "probability: "
 					   << probabilities_[0] << ',' << probabilities_[1];
       } else {
+    	  assert(feature_map[*out][*in].size() == 0);
     	  feature_map[*out][*in] = feature_array(probabilities_.shape()[1]);
       }
 
