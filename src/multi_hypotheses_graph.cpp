@@ -69,7 +69,7 @@ void MultiHypothesesGraph::add_classifier_features(ClassifierStrategy* move,
   MoveFeatureMap& move_map = get(node_move_features());
   ContainedRegionsMap& regions = get(node_regions_in_component());
   
-  std::vector<NodeT> nodes = this->nodes;
+  const std::vector<NodeT>& nodes = this->nodes;
 
   // allocate space for results before going parallel
   for (size_t i = 0; i < nodes.size(); ++i) { // need this for omp
