@@ -254,6 +254,8 @@ namespace pgmlink {
     node_timestep_map::Value earliest_timestep() const;
     node_timestep_map::Value latest_timestep() const;
     
+  protected:
+    std::set<node_timestep_map::Value> timesteps_;
   private:
     // boost serialize
     friend class boost::serialization::access;
@@ -262,8 +264,6 @@ namespace pgmlink {
     template< typename Archive >
       void load( Archive&, const unsigned int /*version*/ );
     BOOST_SERIALIZATION_SPLIT_MEMBER()
-
-    std::set<node_timestep_map::Value> timesteps_;      
   };
 
   void generateTrackletGraph(const HypothesesGraph& traxel_graph, HypothesesGraph& tracklet_graph);

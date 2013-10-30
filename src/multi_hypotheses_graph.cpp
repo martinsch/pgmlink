@@ -6,6 +6,15 @@
 
 // boost
 #include <boost/assert.hpp>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/tuple/tuple.hpp>
+#include <boost/serialization/utility.hpp>
+#include <boost/serialization/list.hpp>
+
+// lemon
+#include <lemon/lgf_reader.h>
+#include <lemon/lgf_writer.h>
 
 // omp
 #include <omp.h>
@@ -52,7 +61,174 @@ namespace pgmlink {
 MultiHypothesesGraph::MultiHypothesesGraph() {
   add(node_traxel());
   add(node_regions_in_component());
+
+
+  add(node_timestep());
+  add(node_move_features());
+  add(node_division_features());
+  add(node_count_features());
+  add(node_conflict_sets());
+  add(arc_from_timestep());
+  add(arc_to_timestep());
 }
+
+
+  //
+  // write_lgf()
+  //
+  namespace {
+    struct TraxelToStrConverter {
+      std::string operator()(const Traxel& t) {
+		stringstream ss;
+		boost::archive::text_oarchive oa(ss);
+		oa & BOOST_SERIALIZATION_NVP(t);
+		return ss.str();
+      }
+    };
+    struct VectorTraxelToStrConverter { // vector<Traxel>
+	   std::string operator()(const std::vector<Traxel>& t) {
+			stringstream ss;
+			boost::archive::text_oarchive oa(ss);
+			oa & BOOST_SERIALIZATION_NVP(t);
+			return ss.str();
+		  }
+    };
+    struct MoveFeaturesToStrConverter { // std::map<Traxel, std::map<Traxel, feature_array> >
+    	   std::string operator()(const std::map<Traxel, std::map<Traxel, feature_array> >& t) {
+    			stringstream ss;
+    			boost::archive::text_oarchive oa(ss);
+    			oa & BOOST_SERIALIZATION_NVP(t);
+    			return ss.str();
+		  }
+	};
+    struct DivisionFeaturesToStrConverter { // std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_array> > >
+		   std::string operator()(const std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_array> >& t) {
+				stringstream ss;
+				boost::archive::text_oarchive oa(ss);
+				oa & BOOST_SERIALIZATION_NVP(t);
+				return ss.str();
+		  }
+	};
+    struct CountFeaturesToStrConverter { //std::vector<float>
+		   std::string operator()(const float& t) {
+				stringstream ss;
+				boost::archive::text_oarchive oa(ss);
+				oa & BOOST_SERIALIZATION_NVP(t);
+				return ss.str();
+		  }
+	};
+    struct ConflictSetsToStrConverter { //std::vector<std::vector<unsigned> >
+		   std::string operator()(const std::vector<std::vector<unsigned> >& t) {
+				stringstream ss;
+				boost::archive::text_oarchive oa(ss);
+				oa & BOOST_SERIALIZATION_NVP(t);
+				return ss.str();
+		  }
+	};
+  }
+
+  void write_lgf( const MultiHypothesesGraph& g, std::ostream& os, bool with_n_traxel ) {
+	LOG(logDEBUG) << "MultiHypothesesGraph::write_lgf entered";
+    lemon::DigraphWriter<HypothesesGraph> writer( g, os );
+    writer.
+      nodeMap("node_timestep", g.get(node_timestep())).
+      nodeMap("node_regions_in_component", g.get(node_regions_in_component()), VectorTraxelToStrConverter()).
+      nodeMap("node_move_features", g.get(node_move_features()), MoveFeaturesToStrConverter()).
+      nodeMap("node_division_features", g.get(node_division_features()), DivisionFeaturesToStrConverter()).
+      nodeMap("node_count_features", g.get(node_count_features()), CountFeaturesToStrConverter()).
+      nodeMap("node_conflict_sets", g.get(node_conflict_sets()), ConflictSetsToStrConverter()).
+      arcMap("arc_from_timestep", g.get(arc_from_timestep())).
+      arcMap("arc_to_timestep", g.get(arc_to_timestep())).
+    //if(with_n_traxel) {
+      nodeMap("node_traxel", g.get(node_traxel()), TraxelToStrConverter());
+    //}
+    writer.run();
+  }
+
+
+
+//
+// read_lgf()
+//
+namespace {
+struct StrToTraxelConverter {
+	Traxel operator()(const std::string& s) {
+		stringstream ss(s);
+		boost::archive::text_iarchive ia(ss);
+		Traxel t;
+		ia >> t;
+		return t;
+	}
+};
+
+struct StrToVectorTraxelConverter {
+	std::vector<Traxel> operator()(const std::string& s) {
+		stringstream ss(s);
+		boost::archive::text_iarchive ia(ss);
+		std::vector<Traxel> t;
+		ia >> BOOST_SERIALIZATION_NVP(t);
+		return t;
+	}
+};
+struct StrToMoveFeaturesConverter {
+	std::map<Traxel, std::map<Traxel, feature_array> > operator()(
+			const std::string& s) {
+		stringstream ss(s);
+		boost::archive::text_iarchive ia(ss);
+		std::map<Traxel, std::map<Traxel, feature_array> > t;
+		ia >> BOOST_SERIALIZATION_NVP(t);
+		return t;
+	}
+};
+struct StrToDivisionFeaturesConverter {
+	std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_array> > operator()(const std::string& s) {
+		stringstream ss(s);
+		boost::archive::text_iarchive ia(ss);
+		std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_array> > t;
+		ia >> BOOST_SERIALIZATION_NVP(t);
+		return t;
+	}
+};
+struct StrToCountFeaturesConverter {
+	float operator()(const std::string& s) {
+		stringstream ss(s);
+		boost::archive::text_iarchive ia(ss);
+		float t;
+		ia >> BOOST_SERIALIZATION_NVP(t);
+		return t;
+	}
+};
+struct StrToConflictSetsConverter {
+	std::vector<std::vector<unsigned> > operator()(const std::string& s) {
+		stringstream ss(s);
+		boost::archive::text_iarchive ia(ss);
+		std::vector<std::vector<unsigned> >  t;
+		ia >> BOOST_SERIALIZATION_NVP(t);
+		return t;
+	}
+};
+}
+
+void read_lgf( MultiHypothesesGraph& g, std::istream& is, bool with_n_traxel ) {
+	LOG(logDEBUG) << "MultiHypothesesGraph::read_lgf entered";
+  lemon::DigraphReader<MultiHypothesesGraph> reader( g, is );
+  reader.
+      nodeMap("node_timestep", g.get(node_timestep())).
+  	  nodeMap("node_regions_in_component", g.get(node_regions_in_component()),StrToVectorTraxelConverter()).
+      nodeMap("node_move_features", g.get(node_move_features()),StrToMoveFeaturesConverter()).
+      nodeMap("node_division_features", g.get(node_division_features()), StrToDivisionFeaturesConverter()).
+      nodeMap("node_count_features", g.get(node_count_features()), StrToCountFeaturesConverter()).
+      nodeMap("node_conflict_sets", g.get(node_conflict_sets()), StrToConflictSetsConverter()).
+      arcMap("arc_from_timestep", g.get(arc_from_timestep())).
+      arcMap("arc_to_timestep", g.get(arc_to_timestep())).
+  	  nodeMap("node_traxel", g.get(node_traxel()), StrToTraxelConverter());
+//  if( with_n_traxel ) {
+//    g.add(node_traxel());
+//    reader.nodeMap("node_traxel", g.get(node_traxel()), StrToTraxelConverter());
+//  }
+  reader.run();
+}
+
 
 
 void MultiHypothesesGraph::add_classifier_features(ClassifierStrategy* move,
