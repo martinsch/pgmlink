@@ -25,6 +25,7 @@
 #include "pgmlink/classifier_auxiliary.h"
 #include "pgmlink/feature.h"
 #include "pgmlink/log.h"
+#include "pgmlink/multi_hypotheses_evaluation.h"
 
 // temp
 #include "pgmlink/pgm_multi_hypotheses.h"
@@ -351,6 +352,22 @@ vigra::NumpyArray<2, feature_type> calculate_3n(const std::vector<boost::shared_
 
 
 
+// evaluation
+template <int N, typename T, typename U>
+typename IntersectCountMap<T, U>::type py_get_intersect_count(vigra::NumpyArray<N, T> image1, vigra::NumpyArray<N, U> image2) {
+  return get_intersect_count<N, T, U>(image1, image2);
+}
+
+
+template <typename T, typename U>
+std::pair<IntersectCountType, IntersectCountType> py_calculate_intersect_union(const typename IntersectCountMap<T,U>::type& intersect_counts,
+                                                                               T region1_label,
+                                                                               U region2_label,
+                                                                               IntersectCountType region1_count,
+                                                                               IntersectCountType region2_count) {
+  return calculate_intersect_union(intersect_counts, region1_label, region2_label, region1_count, region2_count);
+}
+
 
 void export_multi_hypotheses() {
   IterableValueMap_ValueIterator<MultiHypothesesGraph::ContainedRegionsMap>::wrap("ContainedRegionsMap_ValueIt");
@@ -457,7 +474,26 @@ void export_multi_hypotheses() {
   def("calculateFeature", &calculate_3n);
   def("calculateFeature", &calculate_2f);
   def("calculateFeature", &calculate_3f); */
-  
+
+
+  ////
+  //// Evaluation
+  ////
+  class_<std::pair<IntersectCountType, IntersectCountType> >("CountPair")
+      .def_readwrite("first", &std::pair<IntersectCountType, IntersectCountType>::first)
+      .def_readwrite("second", &std::pair<IntersectCountType, IntersectCountType>::second)
+      ;
+
+  class_<IntersectCountMap<> >("IntersectCountMap");
+
+  def("getIntersectCount", &py_get_intersect_count<2, LabelType, LabelType>);
+  def("getIntersectCount", &py_get_intersect_count<3, LabelType, LabelType>);
+  def("getIntersectCount", &py_get_intersect_count<4, LabelType, LabelType>);
+
+  def("calculateIntersectUnion", &py_calculate_intersect_union<LabelType, LabelType>);
+
 }
+  
+
 
 
