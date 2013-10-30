@@ -12,9 +12,12 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/map.hpp>
+#include <boost/serialization/set.hpp>
+#include <boost/serialization/export.hpp>
 
 // lemon
 #include <lemon/list_graph.h>
+#include <lemon/maps.h>
 
 // pgmlink
 #include "pgmlink/graph.h"
@@ -240,8 +243,64 @@ class MultiHypothesesGraph : public HypothesesGraph {
 
   
  private:
+  // boost serialize
+  friend class boost::serialization::access;
+  template< typename Archive >
+	void save( Archive&, const unsigned int /*version*/ ) const;
+  template< typename Archive >
+	void load( Archive&, const unsigned int /*version*/ );
+  BOOST_SERIALIZATION_SPLIT_MEMBER()
+
   unsigned maximum_timestep_;
 };
+
+// lemon graph format (lgf) serialization
+  PGMLINK_EXPORT void write_lgf( const MultiHypothesesGraph&, std::ostream& os=std::cout,
+		  bool with_n_traxel=false );
+  PGMLINK_EXPORT void read_lgf( MultiHypothesesGraph&, std::istream& is=std::cin,
+		 bool with_n_traxel=false);
+
+
+  template< typename Archive >
+    void MultiHypothesesGraph::save( Archive& ar, const unsigned int /*version*/ ) const {
+	LOG(logDEBUG) << "MultiHypothesesGraph::save entered";
+    ar & maximum_timestep_;
+    ar & timesteps_;
+
+    bool with_n_traxel = false;
+    try {
+      this->get(node_traxel());
+      with_n_traxel = true;
+    } catch( std::runtime_error& e ) {}
+
+    ar & with_n_traxel;
+
+    std::string lgf;
+    {
+      std::stringstream ss;
+      write_lgf(*this, ss, with_n_traxel);
+      lgf = ss.str();
+    }
+    ar & lgf;
+  }
+
+  template< typename Archive >
+    void MultiHypothesesGraph::load( Archive& ar, const unsigned int /*version*/ ) {
+	  LOG(logDEBUG) << "MultiHypothesesGraph::load entered";
+    ar & maximum_timestep_;
+    ar & timesteps_;
+
+    bool with_n_traxel;
+    ar & with_n_traxel;
+
+    std::string lgf;
+    ar & lgf;
+    {
+      std::stringstream ss(lgf);
+      read_lgf(*this, ss, with_n_traxel);
+    }
+   }
+
 
 
 class MultiHypothesesGraphBuilder {
@@ -355,6 +414,7 @@ void MultiHypothesesTraxelStore::serialize( Archive& ar, const unsigned int /*ve
    ar & map;
    ar & conflicts_by_timestep;
 }
+
 
 ////
 //// class MultiHypothesesTraxelStoreBuilder

@@ -154,6 +154,10 @@ namespace pgmlink {
     return !(t2 < t1) && !(t1 < t2);
   }
 
+  bool operator!=(const Traxel& t1, const Traxel& t2) {
+	  return !(t1==t2);
+  }
+
 
   //
   // type TraxelStore

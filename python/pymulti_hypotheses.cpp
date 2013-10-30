@@ -174,6 +174,14 @@ class PyMultiHypothesesTracking {
     std::vector<std::vector<Event> > ret = *tracker_(ts);
     return ret;
   }
+  std::vector<std::vector<Event> > track_from_file(std::string deserialize_from_ts) {
+	  std::vector<std::vector<Event> > ret = *tracker_(deserialize_from_ts);
+	  return ret;
+  }
+  std::vector<std::vector<Event> > track_and_serialize(MultiHypothesesTraxelStore& ts, std::string serialize_to_fn) {
+  	  std::vector<std::vector<Event> > ret = *tracker_(ts, serialize_to_fn);
+  	  return ret;
+  }
  private:
   MultiHypothesesTracking tracker_;
 };
@@ -444,6 +452,8 @@ void export_multi_hypotheses() {
                                                         init<const PyTrackingOptions&>()[with_custodian_and_ward<1, 2>()]
                                                         )
       .def("track", &PyMultiHypothesesTracking::operator())
+      .def("track", &PyMultiHypothesesTracking::track_from_file)
+      .def("track", &PyMultiHypothesesTracking::track_and_serialize)
       .def("__call__", &PyMultiHypothesesTracking::operator())
       ;
 

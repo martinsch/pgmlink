@@ -786,6 +786,7 @@ void addArcsToGraph(const HypothesesGraph& traxel_graph, HypothesesGraph& trackl
   }
 
   void write_lgf( const HypothesesGraph& g, std::ostream& os, bool with_n_traxel ) {
+	  LOG(logDEBUG) << "HypothesesGraph::write_lgf entered";
     lemon::DigraphWriter<HypothesesGraph> writer( g, os );
     writer.
       nodeMap("timestep", g.get(node_timestep())).
@@ -815,6 +816,7 @@ void addArcsToGraph(const HypothesesGraph& traxel_graph, HypothesesGraph& trackl
   }
 
 void read_lgf( HypothesesGraph& g, std::istream& is, bool with_n_traxel ) {
+	LOG(logDEBUG) << "HypothesesGraph::read_lgf entered";
     lemon::DigraphReader<HypothesesGraph> reader( g, is );
     reader.
       nodeMap("timestep", g.get(node_timestep())).

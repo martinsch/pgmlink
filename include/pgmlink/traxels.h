@@ -128,7 +128,7 @@ class PGMLINK_EXPORT IntmaxposLocator : public Locator {
    //takes ownership of locator pointer
    Traxel(unsigned int id = 0, int timestep = 0, int level = 0, FeatureMap fmap = FeatureMap(), Locator* l = new ComLocator(),
           ComCorrLocator* lc = new ComCorrLocator()) :
-       Id(id), Timestep(timestep), Level(level), features(fmap), locator_(l), corr_locator_(lc) {};
+       Id(id), Timestep(timestep), Level(level), features(fmap), locator_(l), corr_locator_(lc) {  };
    Traxel(const Traxel& other);
    Traxel& operator=(const Traxel& other);
    ~Traxel() { delete locator_; };
@@ -171,6 +171,7 @@ class PGMLINK_EXPORT IntmaxposLocator : public Locator {
  PGMLINK_EXPORT bool operator<(const Traxel& t1, const Traxel& t2);
  PGMLINK_EXPORT bool operator>(const Traxel& t1, const Traxel& t2);
  PGMLINK_EXPORT bool operator==(const Traxel& t1, const Traxel& t2);
+ PGMLINK_EXPORT bool operator!=(const Traxel& t1, const Traxel& t2);
 
 
 
@@ -246,10 +247,9 @@ class PGMLINK_EXPORT IntmaxposLocator : public Locator {
  class FieldOfView;
  PGMLINK_EXPORT size_t filter_by_fov( const TraxelStore& in, TraxelStore& out, const FieldOfView& );
 
-
-// comparison operator:
-bool operator==(const std::pair<Traxel, feature_type>& p, const Traxel& t);
-bool operator==(const Traxel& t, const std::pair<Traxel, feature_type>& p);
+ // comparison operator:
+ bool operator==(const std::pair<Traxel, feature_type>& p, const Traxel& t);
+ bool operator==(const Traxel& t, const std::pair<Traxel, feature_type>& p);
 
 
 
@@ -283,6 +283,7 @@ void Traxel::serialize( Archive& ar, const unsigned int /*version*/ ) {
   ar & Level;
   ar & features;
   ar & locator_;
+
 }
 
 template<typename InputIterator>
