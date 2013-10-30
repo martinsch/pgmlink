@@ -20,6 +20,12 @@
 #include "pgmlink/multi_hypotheses_tracking.h"
 #include "pgmlink/classifier_auxiliary.h"
 
+// serialization
+
+#include <fstream>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+
 
 namespace pgmlink {
 
@@ -34,29 +40,34 @@ double MultiHypothesesTracking::Options::get_weight(const std::string& name) con
   return ret->second;
 }
 
+void MultiHypothesesTracking::print_info() {
+  LOG(logINFO) << "Calling multihypotheses tracking with the following parameters:\n"
+			   << "\tappearance: " << options_.weights["app"] << '\n'
+			   << "\tdisapparance: " << options_.weights["dis"] << '\n'
+			   << "\tdetection: " << options_.weights["det"] << '\n'
+			   << "\tmisdetection: " << options_.weights["mis"] << '\n'
+			   << "\tdvision: " << options_.weights["div"] << '\n'
+			   << "\tforbidden cost: " << options_.weights["forbidden"] << '\n'
+			   << "\twith constraints: " << options_.with_constraints << '\n'
+			   << "\twith divisions: " << options_.with_divisions << '\n'
+			   << "\twith detection variables: " << options_.with_detection_vars << '\n'
+			   << "\tnumber of neighbors: " << options_.weights["neighbors"] << '\n'
+			   << "\tmaximum neighbor distance: " << options_.weights["distance"] << '\n'
+			   << "\tcplex timeout: " << options_.weights["timeout"] << '\n'
+			   << "\tep gap: " << options_.weights["gap"] << '\n'
+			   << "\tmaximum division level: " << options_.weights["max_div"] << '\n'
+			   << "\twith constant classifiers: " << options_.with_constant_classifiers << '\n'
+			   << "\twith hierarchical count factor: " << options_.hierarchical_count_factor << '\n'
+			   << "\twith counting incoming factor:" << options_.counting_incoming_factor << '\n'
+			   << "\twith maximum arcs:" << options_.with_maximum_arcs << '\n'
+			   << "\tmaximum arcs:" << options_.weights["arc"];
+}
+
 
 boost::shared_ptr<std::vector<std::vector<Event> > >
-MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
-  LOG(logINFO) << "Calling multihypotheses tracking with the following parameters:\n"
-               << "\tappearance: " << options_.weights["app"] << '\n'
-               << "\tdisapparance: " << options_.weights["dis"] << '\n'
-               << "\tdetection: " << options_.weights["det"] << '\n'
-               << "\tmisdetection: " << options_.weights["mis"] << '\n'
-               << "\tdvision: " << options_.weights["div"] << '\n'
-               << "\tforbidden cost: " << options_.weights["forbidden"] << '\n'
-               << "\twith constraints: " << options_.with_constraints << '\n'
-               << "\twith divisions: " << options_.with_divisions << '\n'
-               << "\twith detection variables: " << options_.with_detection_vars << '\n'
-               << "\tnumber of neighbors: " << options_.weights["neighbors"] << '\n'
-               << "\tmaximum neighbor distance: " << options_.weights["distance"] << '\n'
-               << "\tcplex timeout: " << options_.weights["timeout"] << '\n'
-               << "\tep gap: " << options_.weights["gap"] << '\n'
-               << "\tmaximum division level: " << options_.weights["max_div"] << '\n'
-               << "\twith constant classifiers: " << options_.with_constant_classifiers << '\n'
-               << "\twith hierarchical count factor: " << options_.hierarchical_count_factor << '\n'
-               << "\twith counting incoming factor:" << options_.counting_incoming_factor << '\n'
-               << "\twith maximum arcs:" << options_.with_maximum_arcs << '\n'
-               << "\tmaximum arcs:" << options_.weights["arc"];
+MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts, std::string serialize_to_fn) {
+
+  print_info();
 
   boost::shared_ptr<std::vector<std::vector<Event> > >
       events (new std::vector<std::vector<Event> >);
@@ -134,8 +145,54 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
     graph->add_classifier_features(mov.get(), div.get(), cnt.get(), det.get());
   }
 
+  if (serialize_to_fn.length() != 0) {
+	  // create and open a character archive for output
+	  std::ofstream ofs(serialize_to_fn.c_str());
+
+	  // save data to archive
+	  {
+		  boost::archive::text_oarchive oa(ofs);
+		  // write class instance to archive
+		  oa << *graph;
+		// archive and stream closed when destructors are called
+	  }
+  }
+
+  track(*graph, events);
+
+  return events;
+}
+
+
+boost::shared_ptr<std::vector<std::vector<Event> > >
+MultiHypothesesTracking::operator()(std::string deserialize_from_fn) {
+
+  print_info();
+
+  boost::shared_ptr<std::vector<std::vector<Event> > >
+      events (new std::vector<std::vector<Event> >);
+
+  std::cout << " -> workflow: deserialize graph" << std::endl;
+
+  MultiHypothesesGraph graph;
+  	{
+	    // create and open an archive for input
+	  	std::ifstream ifs(deserialize_from_fn.c_str());
+	  	// read class state from archive
+  		boost::archive::text_iarchive ia(ifs);
+  		ia >> graph;
+  		// archive and stream closed when destructors are called
+  	}
+
+  track(graph, events);
+  return events;
+}
+
+void MultiHypothesesTracking::track(MultiHypothesesGraph& g, boost::shared_ptr<std::vector<std::vector<Event> > >& events) {
   std::cout << " -> workflow: initializing builder" << std::endl;
   
+  MultiHypothesesGraph* graph = &g;
+
   // IMPORTANT FIXME!
   // FIXME: Build proper cost functions!
 
@@ -146,8 +203,6 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
   ConstantFeature div(options_.get_weight("div"));  // division
   ConstantFeature count(options_.get_weight("count")); // count
   SquaredDistance mov; // move
-
-   
 
   pgm::multihypotheses::CVPR2014ModelBuilder builder( app, // appearance
                                                       dis, // disappearance,
@@ -286,7 +341,7 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts) {
 
 
   std::cout << " -> workflow: return events" << std::endl;
-  return events;
+
 }
 
 

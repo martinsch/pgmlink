@@ -52,8 +52,11 @@ public:
     bool with_maximum_arcs;
   };
   MultiHypothesesTracking(const Options& options) : options_(options) {}
-  boost::shared_ptr<std::vector<std::vector<Event> > > operator()(MultiHypothesesTraxelStore& ts);
+  boost::shared_ptr<std::vector<std::vector<Event> > > operator()(MultiHypothesesTraxelStore& ts, std::string serialize_to_fn="");
+  boost::shared_ptr<std::vector<std::vector<Event> > > operator()(std::string deserialize_from_fn);
 private:
+  void print_info();
+  void track(MultiHypothesesGraph& graph, boost::shared_ptr<std::vector<std::vector<Event> > >& events);
   Options options_;
 };
 }
