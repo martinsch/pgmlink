@@ -39,7 +39,8 @@ typename IntersectCountMap<T, U>::type get_intersect_count(vigra::MultiArrayView
   typedef typename vigra::CoupledIteratorType<N, T, U>::type Iterator;
   Iterator start = vigra::createCoupledIterator(image1, image2);
   Iterator end = start.getEndIterator();
-  for (Iterator it = start; it != end; ++start) {
+  for (Iterator it = start; it != end; ++it) {
+    LOG(logDEBUG4) << "get_intersect_count() -- " << it.get<0>();
     if (it.get<1>() != T()) {
       if(it.get<2>() != U()) {
         counts[it.get<1>()][it.get<2>()] += 1;
