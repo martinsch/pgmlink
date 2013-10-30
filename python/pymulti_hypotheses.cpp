@@ -484,7 +484,7 @@ void export_multi_hypotheses() {
       .def_readwrite("second", &std::pair<IntersectCountType, IntersectCountType>::second)
       ;
 
-  class_<IntersectCountMap<> >("IntersectCountMap");
+  class_<IntersectCountMap<>::type >("IntersectCountMap");
 
   def("getIntersectCount", &py_get_intersect_count<2, LabelType, LabelType>);
   def("getIntersectCount", &py_get_intersect_count<3, LabelType, LabelType>);
