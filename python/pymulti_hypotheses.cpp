@@ -489,6 +489,15 @@ void export_multi_hypotheses() {
   def("getIntersectCount", &py_get_intersect_count<2, LabelType, LabelType>);
   def("getIntersectCount", &py_get_intersect_count<3, LabelType, LabelType>);
   def("getIntersectCount", &py_get_intersect_count<4, LabelType, LabelType>);
+  def("getIntersectCount", &py_get_intersect_count<2, int, int>);
+  def("getIntersectCount", &py_get_intersect_count<3, int, int>);
+  def("getIntersectCount", &py_get_intersect_count<4, int, int>);
+  def("getIntersectCount", &py_get_intersect_count<2, long, long>);
+  def("getIntersectCount", &py_get_intersect_count<3, long, long>);
+  def("getIntersectCount", &py_get_intersect_count<4, long, long>);
+  def("getIntersectCount", &py_get_intersect_count<2, short, short>);
+  def("getIntersectCount", &py_get_intersect_count<3, short, short>);
+  def("getIntersectCount", &py_get_intersect_count<4, short, short>);
 
   def("calculateIntersectUnion", &py_calculate_intersect_union<LabelType, LabelType>);
 
