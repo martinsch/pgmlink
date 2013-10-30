@@ -118,6 +118,7 @@ class ModelBuilder {
     with_hierarchical_counting_factor_(false),
     with_counting_incoming_factor_(false),
     with_maximum_arcs_(false),
+    with_timestep_range_(false),
     appearance_(appearance),
     disappearance_(disappearance),
     move_(move),
@@ -199,7 +200,13 @@ class ModelBuilder {
   ModelBuilder& with_maximum_arcs(unsigned);
   ModelBuilder& without_maximum_arcs();
   bool has_maximum_arcs() const { return with_maximum_arcs_; }
-  
+
+  // with timestep range specified
+  ModelBuilder& with_timestep_range(int, int);
+  ModelBuilder& without_timestep_range();
+  bool timestep_range_specified() const { return with_timestep_range_; }
+  int first_timestep() const { return first_timestep_; }
+  int last_timestep() const { return last_timestep_; }
 
  protected:
   size_t cplex_id(OpengmLPCplex& cplex, const size_t opengm_id, const size_t state) const;
@@ -246,6 +253,7 @@ class ModelBuilder {
   bool with_hierarchical_counting_factor_;
   bool with_counting_incoming_factor_;
   bool with_maximum_arcs_;
+  bool with_timestep_range_;
 
   function<double (const Traxel&, size_t)> detection_;
   function<double (const Traxel&, size_t)> non_detection_;
@@ -260,6 +268,8 @@ class ModelBuilder {
   unsigned max_division_level_;
   unsigned max_count_;  
   int maximum_outgoing_arcs_;
+  int first_timestep_;
+  int last_timestep_;
 };
 
 

@@ -242,6 +242,22 @@ ModelBuilder& ModelBuilder::without_maximum_arcs() {
 }
 
 
+ModelBuilder& ModelBuilder::with_timestep_range(int first, int last) {
+  if (last < first) {
+    throw std::runtime_error("Last timestep must not be smaller than first!");
+  }
+  first_timestep_ = first;
+  last_timestep_ = last;
+  with_timestep_range_ = true;
+  return *this;
+}
+
+
+ModelBuilder& ModelBuilder::without_timestep_range() {
+  with_timestep_range_ = false;
+}
+
+
 size_t ModelBuilder::cplex_id(OpengmLPCplex& cplex, const size_t opengm_id, const size_t state) const {
     return cplex.lpNodeVi(opengm_id, state);
 }
@@ -254,9 +270,14 @@ size_t ModelBuilder::cplex_id(OpengmLPCplex& cplex, const size_t opengm_id) cons
 void ModelBuilder::add_hard_constraints(const Model& m, const MultiHypothesesGraph& hypotheses, OpengmLPCplex& cplex) {
   LOG(logDEBUG) << "MultiHypotheses::add_hard_constraints: entered";
   MultiHypothesesGraph::ContainedRegionsMap& regions = hypotheses.get(node_regions_in_component());
+  MultiHypothesesGraph::node_timestep_map& timesteps = hypotheses.get(node_timestep());
 
   
   for (MultiHypothesesGraph::NodeIt n(hypotheses); n != lemon::INVALID; ++n) {
+    if (timestep_range_specified() &&
+        (timesteps[n] < first_timestep() || timesteps[n] > last_timestep())) {
+      continue;
+    }
     LOG(logDEBUG1) << "MultiHypotheses::add_hard_constraints: outgoing transitions";
     const std::vector<Traxel>& traxels = regions[n];
     std::vector<Traxel> traxels_dest;
@@ -297,11 +318,18 @@ inline void ModelBuilder::add_detection_vars( const MultiHypothesesGraph& hypoth
   }
   LOG(logDEBUG) << "ModelBuilder::add_detection_vars: entered";
   MultiHypothesesGraph::ContainedRegionsMap& regions = hypotheses.get(node_regions_in_component());
+  MultiHypothesesGraph::node_timestep_map& timesteps = hypotheses.get(node_timestep());
   for (MultiHypothesesGraph::NodeIt n(hypotheses); n != lemon::INVALID; ++n) {
     const std::vector<Traxel>& traxels = regions[n];
+    const MultiHypothesesGraph::node_timestep_map::Value& timestep = timesteps[n];
     for (std::vector<Traxel>::const_iterator t = traxels.begin(); t != traxels.end(); ++t) {
+      if (timestep_range_specified() &&
+          (timestep < first_timestep() || timestep > last_timestep())) {
+        continue;
+      }
       m.opengm_model->addVariable(2);
       m.trax_var_.left.insert(Model::trax_var_map::value_type(*t, m.opengm_model->numberOfVariables() - 1));
+      LOG(logDEBUG4) << timestep << ',' << first_timestep() << ',' << last_timestep();
       LOG(logDEBUG4) << "ModelBuilder::add_detection_vars: added var " << m.opengm_model->numberOfVariables() - 1
                      << " for " << m.trax_of_var(m.opengm_model->numberOfVariables() - 1);
     }
@@ -312,9 +340,16 @@ inline void ModelBuilder::add_detection_vars( const MultiHypothesesGraph& hypoth
 inline void ModelBuilder::add_assignment_vars( const MultiHypothesesGraph& hypotheses, Model& m ) const {
   LOG(logINFO) << "add_assignment_vars() -- all neighbors";
   MultiHypothesesGraph::ContainedRegionsMap& regions = hypotheses.get(node_regions_in_component());
+  MultiHypothesesGraph::node_timestep_map& timesteps = hypotheses.get(node_timestep());
   for (MultiHypothesesGraph::ArcIt a(hypotheses); a != lemon::INVALID; ++a) {
-    const std::vector<Traxel>& source = regions[hypotheses.source(a)];
-    const std::vector<Traxel>& dest = regions[hypotheses.target(a)];
+    const MultiHypothesesGraph::Node& source_node = hypotheses.source(a);
+    const MultiHypothesesGraph::Node& dest_node = hypotheses.target(a);
+    if (timestep_range_specified() &&
+        (timesteps[source_node] < first_timestep() || timesteps[dest_node] > last_timestep())) {
+      continue;
+    }
+    const std::vector<Traxel>& source = regions[source_node];
+    const std::vector<Traxel>& dest = regions[dest_node];
     for (std::vector<Traxel>::const_iterator s = source.begin(); s != source.end(); ++s) {
       for (std::vector<Traxel>::const_iterator d = dest.begin(); d != dest.end(); ++d) {
         m.opengm_model->addVariable(2);
@@ -346,9 +381,18 @@ class TraxelProbabilityPairGreaterThan {
 inline void ModelBuilder::add_assignment_vars( const MultiHypothesesGraph& hypotheses, Model& m, const MultiHypothesesGraph::MoveFeatureMap& moves ) const {
   LOG(logINFO) << "add_assignment_vars() -- " << maximum_outgoing_arcs_ << " best neighbors";
   MultiHypothesesGraph::ContainedRegionsMap& regions = hypotheses.get(node_regions_in_component());
+  MultiHypothesesGraph::node_timestep_map& timesteps = hypotheses.get(node_timestep());
   for (MultiHypothesesGraph::ArcIt a(hypotheses); a != lemon::INVALID; ++a) {
-    const std::vector<Traxel>& source = regions[hypotheses.source(a)];
-    const std::vector<Traxel>& dest = regions[hypotheses.target(a)];
+    const MultiHypothesesGraph::Node& source_node = hypotheses.source(a);
+    const MultiHypothesesGraph::Node& dest_node = hypotheses.target(a);
+    LOG(logDEBUG4) << "add_assignment_vars() -- " << timesteps[source_node] << ',' << first_timestep() << ',' << timesteps[dest_node] << ',' << last_timestep();
+    if (timestep_range_specified() &&
+        (timesteps[source_node] < first_timestep() || timesteps[dest_node] > last_timestep())) {
+      continue;
+    }
+    LOG(logDEBUG4) << "AFTER CONTINUE";
+    const std::vector<Traxel>& source = regions[source_node];
+    const std::vector<Traxel>& dest = regions[dest_node];
     for (std::vector<Traxel>::const_iterator s = source.begin(); s != source.end(); ++s) {
       const std::map<Traxel, feature_array>& probabilities = moves[hypotheses.source(a)].find(*s)->second;
       std::vector<std::pair<Traxel, feature_type> > k_best_probabilities;
@@ -367,6 +411,7 @@ inline void ModelBuilder::add_assignment_vars( const MultiHypothesesGraph& hypot
       }
     }
   }
+  LOG(logINFO) << "add_assignment_vars() -- finished";
 }
 
 
@@ -374,6 +419,7 @@ std::vector<OpengmModel::IndexType> ModelBuilder::vars_for_outgoing_factor( cons
                                                                             const Model& m,
                                                                             const MultiHypothesesGraph::Node& node,
                                                                             const Traxel& trax) const {
+  LOG(logDEBUG2) << "ModelBuilder::vars_for_outgoing_factor() -- entered";
   std::vector<OpengmModel::IndexType> vi; // opengm variable indices; may be empty if no det vars
   if (has_detection_vars()) {
     vi.push_back(m.var_of_trax(trax)); // first detection var, the others will be assignment vars
@@ -397,6 +443,7 @@ std::vector<OpengmModel::IndexType> ModelBuilder::vars_for_incoming_factor( cons
                                                                             const Model& m,
                                                                             const MultiHypothesesGraph::Node& node,
                                                                             const Traxel& trax) const {
+  LOG(logDEBUG2) << "ModelBuilder::vars_for_incoming_factor() -- entered";
   std::vector<OpengmModel::IndexType> vi; // opengm variable indices; may be empty if no det vars
   if (has_detection_vars()) {
     vi.push_back(m.var_of_trax(trax)); // first detection var, the others will be assignment vars
@@ -621,6 +668,11 @@ boost::shared_ptr<ModelBuilder> TrainableModelBuilder::clone() const {
 
 
 boost::shared_ptr<Model> TrainableModelBuilder::build(const MultiHypothesesGraph& hypotheses) {
+
+  if ( timestep_range_specified() ) {
+    throw std::runtime_error("TrainableModelBuilder not compatible with restricted timestep range!");
+  }
+
   boost::shared_ptr<Model> model(new Model);
   assert(model->opengm_model->numberOfWeights() == 0);
   model->opengm_model->increaseNumberOfWeights(3);
@@ -986,12 +1038,12 @@ boost::shared_ptr<ModelBuilder> CVPR2014ModelBuilder::clone() const {
 
 
 boost::shared_ptr<Model> CVPR2014ModelBuilder::build(const MultiHypothesesGraph& hypotheses) {
+  LOG(logDEBUG) << "CVPR2014ModelBuilder::build() -- entered";
 
   if( !has_detection_vars() ) {
     throw std::runtime_error("CVPR2014ModelBuilder::build(): option without detection vars not yet implemented");
   }
 
-  
   boost::shared_ptr<Model> model(new Model);
 
 
@@ -1008,8 +1060,13 @@ boost::shared_ptr<Model> CVPR2014ModelBuilder::build(const MultiHypothesesGraph&
     add_assignment_vars( hypotheses, *model );
   }
 
+  MultiHypothesesGraph::node_timestep_map& timesteps = hypotheses.get(node_timestep());
   if ( has_detection_vars() ) {
     for (MultiHypothesesGraph::NodeIt n(hypotheses); n != lemon::INVALID; ++n) {
+      if (timestep_range_specified() &&
+          (timesteps[n] < first_timestep() || timesteps[n] > last_timestep())) {
+        continue;
+      }
       add_detection_factors( hypotheses, *model, n );
     }
   }
@@ -1017,6 +1074,10 @@ boost::shared_ptr<Model> CVPR2014ModelBuilder::build(const MultiHypothesesGraph&
   add_count_factors(hypotheses, *model);
 
   for (MultiHypothesesGraph::NodeIt n(hypotheses); n != lemon::INVALID; ++n) {
+    if (timestep_range_specified() &&
+        (timesteps[n] < first_timestep() || timesteps[n] > last_timestep())) {
+      continue;
+    }
     add_outgoing_factors( hypotheses, *model, n );
     add_incoming_factors( hypotheses, *model, n );
   }
@@ -1037,7 +1098,12 @@ void CVPR2014ModelBuilder::add_detection_factors( const MultiHypothesesGraph& hy
 
 void CVPR2014ModelBuilder::add_count_factors( const MultiHypothesesGraph& hypotheses, Model& m) {
   MultiHypothesesGraph::ContainedRegionsMap& regions = hypotheses.get(node_regions_in_component());
+  MultiHypothesesGraph::node_timestep_map& timesteps = hypotheses.get(node_timestep());
   for (MultiHypothesesGraph::NodeIt n(hypotheses); n != lemon::INVALID; ++n) {
+    if (timestep_range_specified() &&
+        (timesteps[n] < first_timestep() || timesteps[n] > last_timestep())) {
+      continue;
+    }
     const std::vector<Traxel>& traxels = regions[n];
     if (has_maximal_conflict_cliques()) {
       MultiHypothesesGraph::ConflictSetMap& conflicts = hypotheses.get(node_conflict_sets());
@@ -1085,7 +1151,7 @@ void CVPR2014ModelBuilder::add_incoming_factors( const MultiHypothesesGraph& hyp
 
 void CVPR2014ModelBuilder::add_detection_factor( Model& m,
                                                  const Traxel& trax) const {
-  
+  LOG(logDEBUG3) << "CVPR2014ModelBuilder::add_detection_factor() -- entered";
   size_t vi[] = {m.var_of_trax(trax)};
   std::vector<size_t> coords(1, 0);
   OpengmExplicitFactor<double> table(vi, vi+1);
@@ -1097,7 +1163,7 @@ void CVPR2014ModelBuilder::add_detection_factor( Model& m,
   table.set_value( coords, detection()(trax, 1) );
 
   // table = OpengmExplicitFactor<double>(vi, vi+1, 0);
-  LOG(logDEBUG2) << "CVPR2014ModelBuilder::add_detection_factor: for "
+  LOG(logDEBUG3) << "CVPR2014ModelBuilder::add_detection_factor: for "
                  << trax << ": detection=" << table.get_value(std::vector<size_t>(1,1))
                  << ", non_detection=" << table.get_value(std::vector<size_t>(1,0));
   table.add_to( *(m.opengm_model) );
