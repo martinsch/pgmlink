@@ -253,6 +253,8 @@ void MultiHypothesesTracking::track(MultiHypothesesGraph& g, boost::shared_ptr<s
 
   if (options_.restrict_timestep_range) {
     builder.with_timestep_range(options_.get_weight("first_timestep"), options_.get_weight("last_timestep"));
+    LOG(logINFO) << "MultiHypothesesTracking: restricting timestep range to ["
+                 << builder.first_timestep() << ',' << builder.last_timestep() << "] (inclusive)";
   }
   
   if (options_.with_constant_classifiers || options_.with_classifiers) {
@@ -313,6 +315,10 @@ void MultiHypothesesTracking::track(MultiHypothesesGraph& g, boost::shared_ptr<s
       break;
     }
     events->push_back(std::vector<Event>());
+    if (options_.restrict_timestep_range &&
+        (*timestep < options_.get_weight("first_timestep") || *timestep > options_.get_weight("last_timestep"))) {
+      continue;
+    }
     for (MultiHypothesesGraph::node_timestep_map::ItemIt n(timesteps, *timestep);
          n!= lemon::INVALID;
          ++n) {
@@ -345,10 +351,18 @@ void MultiHypothesesTracking::track(MultiHypothesesGraph& g, boost::shared_ptr<s
         }
       }
     }
+    if (options_.restrict_timestep_range &&
+          (*timestep_check < options_.get_weight("first_timestep") || *timestep_check > options_.get_weight("last_timestep"))) {
+      continue;
+    }
     // appears in the next timestep
     for (MultiHypothesesGraph::node_timestep_map::ItemIt n(timesteps, *timestep + 1);
          n != lemon::INVALID;
          ++n) {
+      if (options_.restrict_timestep_range &&
+          (timesteps[n] < options_.get_weight("first_timestep") || timesteps[n] > options_.get_weight("last_timestep"))) {
+        continue;
+      }
       std::vector<Traxel>& traxels = regions.get_value(n);
       for (std::vector<Traxel>::iterator t = traxels.begin(); t != traxels.end(); ++t) {
         std::vector<Event>& events_at = *(events->rbegin());
