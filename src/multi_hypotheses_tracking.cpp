@@ -198,7 +198,7 @@ MultiHypothesesTracking::operator()(std::string deserialize_from_fn) {
   MultiHypothesesGraph graph;
   	{
 	    // create and open an archive for input
-	  	std::ifstream ifs(deserialize_from_fn.c_str());
+	  	std::ifstream ifs(deserialize_from_fn.c_str(), std::fstream::binary | std::fstream::in);
 	  	// read class state from archive
   		boost::archive::text_iarchive ia(ifs);
   		ia >> graph;
