@@ -155,8 +155,14 @@ struct PyTrackingOptions {
   }
 
   void with_counting_incoming_factor(bool check) {
-      options.counting_incoming_factor = check;
-    }
+    options.counting_incoming_factor = check;
+  }
+
+  void with_restricted_timestep_range(double first, double last) {
+    options.restrict_timestep_range = true;
+    options.weights["first_timestep"] = first;
+    options.weights["last_timestep"] = last;
+  }
 
   std::string sanity_check() {
     return std::string("To be implemented");
@@ -442,6 +448,7 @@ void export_multi_hypotheses() {
       .def("forwardBackward", &PyTrackingOptions::forward_backward, return_internal_reference<>())
       .def("sanityCheck", &PyTrackingOptions::sanity_check)
       .def("limitOutgoingArcs", &PyTrackingOptions::limit_outgoing_arcs)
+      .def("withRestrictedTimestepRange", &PyTrackingOptions::with_restricted_timestep_range)
       ;
 
 

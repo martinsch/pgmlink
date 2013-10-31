@@ -33,6 +33,7 @@ namespace pgmlink {
 class PGMLINK_EXPORT MultiHypothesesTracking {
 public:
   struct Options {
+    Options();
     double get_weight(const std::string& name) const;
     std::map<std::string, double> weights;
     std::map<std::string, vigra::RandomForest<> > classifiers;
@@ -50,6 +51,7 @@ public:
     bool counting_incoming_factor;
     bool classifier_count_precomputed;
     bool with_maximum_arcs;
+    bool restrict_timestep_range;
   };
   MultiHypothesesTracking(const Options& options) : options_(options) {}
   boost::shared_ptr<std::vector<std::vector<Event> > > operator()(MultiHypothesesTraxelStore& ts, std::string serialize_to_fn="");

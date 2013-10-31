@@ -32,6 +32,27 @@ namespace pgmlink {
 ////
 //// class MultiHypothesesTracking
 ////
+MultiHypothesesTracking::Options::Options() :
+    weights(),
+    classifiers(),
+    paths(),
+    feature_lists(),
+    with_divisions(false),
+    with_constraints(false),
+    with_detection_vars(false),
+    with_classifiers(false),
+    with_constant_classifiers(false),
+    with_maximal_conflict_cliques(false),
+    forward_backward(false),
+    constant_classifier_fallback(false),
+    hierarchical_count_factor(false),
+    counting_incoming_factor(false),
+    classifier_count_precomputed(false),
+    with_maximum_arcs(false),
+  restrict_timestep_range(false) {
+
+}
+
 double MultiHypothesesTracking::Options::get_weight(const std::string& name) const {
   std::map<std::string, double>::const_iterator ret = weights.find(name);
   if (ret == weights.end()) {
@@ -225,10 +246,14 @@ void MultiHypothesesTracking::track(MultiHypothesesGraph& g, boost::shared_ptr<s
   if (options_.with_detection_vars) {
     builder.with_detection_vars(det, mis);
   }
+  
   if (options_.with_divisions) {
     builder.with_divisions(div);
   }
 
+  if (options_.restrict_timestep_range) {
+    builder.with_timestep_range(options_.get_weight("first_timestep"), options_.get_weight("last_timestep"));
+  }
   
   if (options_.with_constant_classifiers || options_.with_classifiers) {
     builder
