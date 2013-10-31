@@ -168,7 +168,7 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts, std::string 
 
   if (serialize_to_fn.length() != 0) {
 	  // create and open a character archive for output
-	  std::ofstream ofs(serialize_to_fn.c_str());
+	  std::ofstream ofs(serialize_to_fn.c_str(), std::fstream::out | std::fstream::binary);
 
 	  // save data to archive
 	  {
