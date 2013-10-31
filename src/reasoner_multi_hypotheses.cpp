@@ -87,8 +87,13 @@ void MultiHypotheses::conclude( MultiHypothesesGraph& g ) {
   }
 
   MultiHypothesesGraph::ContainedRegionsMap& regions = g.get(node_regions_in_component());
+  MultiHypothesesGraph::node_timestep_map& timesteps = g.get(node_timestep());
   for (MultiHypothesesGraph::NodeIt n(g); n != lemon::INVALID; ++n) {
     std::vector<Traxel>& traxels = regions.get_value(n);
+    if (builder_->timestep_range_specified() &&
+        (timesteps[n] < builder_->first_timestep() || timesteps[n] > builder_->last_timestep())) {
+      continue;
+    }
     for (std::vector<Traxel>::iterator t = traxels.begin(); t != traxels.end(); ++t) {
 
       // set traxels active
@@ -107,6 +112,10 @@ void MultiHypotheses::conclude( MultiHypothesesGraph& g ) {
 
       // add edges lists
       for (MultiHypothesesGraph::OutArcIt a(g, n); a != lemon::INVALID; ++a) {
+        if (builder_->timestep_range_specified() &&
+            (timesteps[g.target(a)] > builder_->last_timestep())) {
+          continue;
+        }
         const std::vector<Traxel>& neighbors = regions[g.target(a)];
         for (std::vector<Traxel>::const_iterator neighbor = neighbors.begin();
              neighbor != neighbors.end();
@@ -122,6 +131,10 @@ void MultiHypotheses::conclude( MultiHypothesesGraph& g ) {
 
       // add parent if any
       for (MultiHypothesesGraph::InArcIt a(g, n); a != lemon::INVALID; ++a) {
+        if (builder_->timestep_range_specified() &&
+            (timesteps[g.source(a)] < builder_->first_timestep())) {
+          continue;
+        }
         const std::vector<Traxel>& neighbors = regions[g.source(a)];
         for (std::vector<Traxel>::const_iterator neighbor = neighbors.begin();
              neighbor != neighbors.end();
