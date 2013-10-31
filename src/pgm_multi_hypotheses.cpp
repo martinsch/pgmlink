@@ -1506,13 +1506,14 @@ void CVPR2014ModelBuilder::add_outgoing_factor( const MultiHypothesesGraph& hypo
     OpengmExplicitFactor<double> table( vi, forbidden_cost() );
 
     // opportunity?
-    table.set_value( coords, 0 );
+    LOG(logDEBUG3) << "CVPR2014ModelBuilder::add_outgoing_factor: Added opportunity_cost=" << opportunity_cost();
+    table.set_value( coords, opportunity_cost() );
 
     // disappearance configuration
     if (trax.Timestep < hypotheses.latest_timestep()) {
       coords[0] = 1;
       table.set_value( coords, disappearance()(trax) );
-      LOG(logDEBUG2) << "CVPR2014ModelBuilder::add_outgoing_factor: at least two outgoing arcs: "
+      LOG(logDEBUG3) << "CVPR2014ModelBuilder::add_outgoing_factor: at least two outgoing arcs: "
                      << "forbidden=" << forbidden_cost() << ", disappearance=" << table.get_value(coords);
       coords[0] = 0;
     }

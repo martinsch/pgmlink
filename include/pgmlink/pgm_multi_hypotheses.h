@@ -108,7 +108,7 @@ class ModelBuilder {
                boost::function<double (const Traxel&, const Traxel&, feature_type)> move = SquaredDistance(),
                boost::function<double (feature_type)> count = ConstantFeature(100),
                double forbidden_cost = 1000000,
-               double opportunity_cost = 1000,
+               double opportunity_cost = 0,
                unsigned max_division_level=0,
                unsigned max_count=2)
       : with_detection_vars_(false),

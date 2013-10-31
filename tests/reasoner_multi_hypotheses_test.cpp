@@ -305,6 +305,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp2 ) {
                                                        SquaredDistance(), // move
                                                        ConstantFeature(0), // count
                                                        0, // forbidden_cost
+                                                       0, // opportunity
                                                        50, // max_division_level
                                                        3 // max_count
                                                        );
@@ -446,6 +447,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp3 ) {
                                                            SquaredDistance(), // move
                                                            ConstantFeature(0), // count
                                                            0, // forbidden_cost
+                                                           0, // opportunity
                                                            50, // max_division_level
                                                            3 // max_count
                                                            );
@@ -455,6 +457,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp3 ) {
                                                       SquaredDistance(), // move
                                                       ConstantFeature(0), // count
                                                       0, // forbidden_cost
+                                                      0, // opportunity
                                                       50, // max_division_level
                                                       3 // max_count
                                                       );
@@ -609,6 +612,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp4 ) {
                                                            SquaredDistance(), // move
                                                            ConstantFeature(0), // count
                                                            0, // forbidden_cost
+                                                           0, // opportunity_cost                                                           
                                                            50, // max_division_level
                                                            3 // max_count
                                                            );
@@ -618,6 +622,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp4 ) {
                                                       SquaredDistance(), // move
                                                       ConstantFeature(0), // count
                                                       0, // forbidden_cost
+                                                      0, // opportunity
                                                       50, // max_division_level
                                                       3 // max_count
                                                       );
