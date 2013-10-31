@@ -390,7 +390,6 @@ inline void ModelBuilder::add_assignment_vars( const MultiHypothesesGraph& hypot
         (timesteps[source_node] < first_timestep() || timesteps[dest_node] > last_timestep())) {
       continue;
     }
-    LOG(logDEBUG4) << "AFTER CONTINUE";
     const std::vector<Traxel>& source = regions[source_node];
     const std::vector<Traxel>& dest = regions[dest_node];
     for (std::vector<Traxel>::const_iterator s = source.begin(); s != source.end(); ++s) {
