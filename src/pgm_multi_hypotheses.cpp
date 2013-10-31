@@ -1233,7 +1233,11 @@ void CVPR2014ModelBuilder::add_hierarchical_count_factor( Model& m,
 
 	for(size_t state = 0; state < probabilities.size(); ++state) {
 		coords[0] = state;
-		table.set_value( coords, probabilities[state] );
+                if (state == 0) {
+                  table.set_value( coords, count()(probabilities[state]) + opportunity_cost() );
+                } else {
+                  table.set_value( coords, count()(probabilities[state]) );
+                }
 	}
 
 	LOG(logDEBUG3) << "CVPR2014ModelBuilder::add_hierarchical_count_factor: "
@@ -1384,7 +1388,11 @@ void CVPR2014ModelBuilder::add_explicit_count_factor( Model& m,
 
       size_t active_count = std::accumulate(coords.begin(), coords.end(), 0);
       if (active_count <= maximum_active_regions) {
-        table.set_value(coords, count()(probabilities[active_count]));
+        if (active_count == 0) {
+          table.set_value(coords, count()(probabilities[active_count]) + opportunity_cost());
+        } else {
+          table.set_value(coords, count()(probabilities[active_count]));
+        }
       }
       coords = std::vector<size_t>(table_dim, 0);
     }
@@ -1506,8 +1514,7 @@ void CVPR2014ModelBuilder::add_outgoing_factor( const MultiHypothesesGraph& hypo
     OpengmExplicitFactor<double> table( vi, forbidden_cost() );
 
     // opportunity?
-    LOG(logDEBUG3) << "CVPR2014ModelBuilder::add_outgoing_factor: Added opportunity_cost=" << opportunity_cost();
-    table.set_value( coords, opportunity_cost() );
+    table.set_value( coords, 0 );
 
     // disappearance configuration
     if (trax.Timestep < hypotheses.latest_timestep()) {
