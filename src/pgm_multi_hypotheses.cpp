@@ -200,7 +200,7 @@ ModelBuilder& ModelBuilder::with_classifier_priors( function<double (const Traxe
                                                     function<double (feature_type)> count ) {
   with_classifier_priors_ = true;
   move_ = move;
-  count = count;
+  count_ = count;
   return *this;
 }
 
