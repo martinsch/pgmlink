@@ -49,8 +49,9 @@ MultiHypothesesTracking::Options::Options() :
     counting_incoming_factor(false),
     classifier_count_precomputed(false),
     with_maximum_arcs(false),
-  restrict_timestep_range(false),
-  with_one_active_constraint(false)
+    restrict_timestep_range(false),
+  with_one_active_constraint(false),
+  with_conflict_factors(false)
   {
 
 }
@@ -270,9 +271,14 @@ void MultiHypothesesTracking::track(MultiHypothesesGraph& g, boost::shared_ptr<s
                                 NegLn(options_.get_weight("count"))
                                 );
     if (options_.with_detection_vars) {
-      builder
-          .with_detection_vars(NegLnDetection(options_.get_weight("det")),
-                               NegLnDetection(options_.get_weight("det")));
+      if (options_.with_conflict_factors) {
+       builder
+           .with_conflict_factors(NegLnCardinalityDetection(options_.get_weight("det")));
+      } else {
+        builder
+            .with_detection_vars(NegLnDetection(options_.get_weight("det")),
+                                 NegLnDetection(options_.get_weight("det")));
+      }
     }
     if (options_.with_divisions) {
       builder.with_divisions(NegLnDivision(options_.get_weight("div"), options_.get_weight("max_div")));
