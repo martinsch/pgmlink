@@ -302,6 +302,32 @@ void MultiHypothesesGraph::add_classifier_features(ClassifierStrategy* move,
 }
 
 
+void MultiHypothesesGraph::add_cardinalities(const Node& n) {
+  int timestep = get(node_timestep())[n];
+  std::vector<Traxel>& traxels = get(node_regions_in_component()).get_value(n);
+  LOG(logDEBUG4) << "MultiHypothesesGraph::add_cardinalities() -- adding cardinalities "
+                 << "for connected component " << traxels[0];
+  for (std::vector<Traxel>::iterator t = traxels.begin(); t != traxels.end(); ++t) {
+    t->features["cardinality"] = feature_array(1, 0.);
+  }
+  const std::vector<std::vector<unsigned> >& conflict_sets = get(node_conflict_sets())[n];
+  for (std::vector<std::vector<unsigned> >::const_iterator set = conflict_sets.begin();
+       set != conflict_sets.end();
+       ++set) {
+    for (std::vector<unsigned>::const_iterator id = set->begin(); id != set->end(); ++id) {
+      std::vector<Traxel>::iterator t
+          = std::find(traxels.begin(), traxels.end(), Traxel(*id, timestep));
+      if (t == traxels.end()) {
+        throw std::runtime_error(std::string("MultiHypothesesGraph::add_cardinalities() -- ") +
+                                 std::string("Disagreement between traxels and conflict sets in ") +
+                                 std::string("connected component"));
+      }
+      t->features["cardinality"][0] += 1;
+    }
+  }
+}
+
+
 ////
 //// MultiHypothesesGraphBuilder
 ////

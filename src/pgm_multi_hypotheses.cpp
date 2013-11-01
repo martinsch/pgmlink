@@ -1159,6 +1159,7 @@ void CVPR2014ModelBuilder::add_detection_factor( Model& m,
   table.set_value( coords, non_detection()(trax, 0) );
   // table.set_value( coords, 0. );
 
+
   coords[0] = 1;
   table.set_value( coords, detection()(trax, 1) );
 
