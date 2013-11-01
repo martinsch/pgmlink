@@ -252,6 +252,7 @@ ModelBuilder& ModelBuilder::with_conflict_factors( function<double (const Traxel
   }
   with_detection_vars();
   detection_ = detection;
+  with_conflict_factors_ = true;
   return *this;
 }
 
