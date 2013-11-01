@@ -250,9 +250,7 @@ ModelBuilder& ModelBuilder::with_conflict_factors( function<double (const Traxel
   if (!detection) {
     throw std::invalid_argument("MultiHypothesesModelBuilder::with_conflict_factors(): empty function");
   }
-  if (!has_detection_vars()) {
-    throw std::runtime_error("MultiHypothesesModelBuilder::with_conflict_factors(): does not make sense without detection_vars");
-  }
+  with_detection_vars();
   detection_ = detection;
   return *this;
 }
