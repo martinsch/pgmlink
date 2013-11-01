@@ -168,6 +168,10 @@ struct PyTrackingOptions {
     options.weights["last_timestep"] = last;
   }
 
+  void with_conflict_factors(bool check) {
+    options.with_conflict_factors = check;
+  }
+
   std::string sanity_check() {
     return std::string("To be implemented");
   }
@@ -454,6 +458,7 @@ void export_multi_hypotheses() {
       .def("limitOutgoingArcs", &PyTrackingOptions::limit_outgoing_arcs)
       .def("withRestrictedTimestepRange", &PyTrackingOptions::with_restricted_timestep_range)
       .def("withOneActiveRegionPerComponent", &PyTrackingOptions::with_one_active_constraint)
+      .def("withConflictFactors", &PyTrackingOptions:: with_conflict_factors)
       ;
 
 
