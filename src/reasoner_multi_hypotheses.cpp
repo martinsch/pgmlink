@@ -105,7 +105,7 @@ void MultiHypotheses::conclude( MultiHypothesesGraph& g ) {
           state = 1.;
         }
         t->features["active"] = feature_array(1, state);
-        
+        LOG(logDEBUG4) << "conclude: " << t << ": state = " << state;
       } else {
         t->features["active"] = feature_array(1, 1.);
       }
