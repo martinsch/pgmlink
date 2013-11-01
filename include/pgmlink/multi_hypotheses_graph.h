@@ -60,7 +60,11 @@ typedef boost::shared_ptr<MultiHypothesesGraph> MultiHypothesesGraphPtr;
 
 typedef std::map<int, std::map<unsigned, std::vector<Traxel> > > TimestepRegionMap;
 
-typedef std::map<unsigned, std::vector<std::vector<unsigned> > > ConflictSetMap;
+typedef std::vector<unsigned> ConflictSet;
+
+typedef std::vector<ConflictSet> ConflictSets;
+
+typedef std::map<unsigned, ConflictSets> ConflictSetMap;
 
 typedef std::map<int, std::vector<std::vector<int> > > SignedConflictSetMap;
 
