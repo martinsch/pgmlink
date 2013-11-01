@@ -114,6 +114,14 @@ class NegLn {
   double w_;
 };
 
+class NegLnCardinalityDetection {
+ public:
+  NegLnCardinalityDetection(double weight) : w_(weight) {}
+  double operator()( const Traxel& t, size_t state) const;
+ private:
+  double w_;
+};
+
   /**
      @brief Zero near temporal border, else 1.
   */

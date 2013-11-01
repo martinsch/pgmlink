@@ -76,6 +76,14 @@ namespace pgmlink {
 	  return div_prob;
   }
 
+  double get_cardinality(const Traxel& tr) {
+    FeatureMap::const_iterator it = tr.features.find("cardinality");
+    if (it == tr.features.end()) {
+      throw runtime_error("get_cardinality(): cardinality feature not in traxel");
+    }
+    return it->second[0];
+  }
+
   }
 
 
@@ -161,6 +169,20 @@ double NegLnConstant::operator ()(size_t state) const {
 	return w_*-1*log(arg);
 }
 
+
+////
+//// class NegLnCardinalityDetection
+////
+double NegLnCardinalityDetection::operator()( const Traxel& tr, size_t state) const {
+  double arg = get_detection_prob(tr, state);
+  double cardinality = get_cardinality(tr);
+  if(arg < 0.0000000001) arg = 0.0000000001;
+  if (state == 0) {
+    return w_*-1*log(arg)/cardinality;
+  } else {
+    return cardinality*w_*-1*log(arg);
+  }
+}
 
 
   ////
