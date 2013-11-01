@@ -119,6 +119,7 @@ class ModelBuilder {
     with_counting_incoming_factor_(false),
     with_maximum_arcs_(false),
     with_timestep_range_(false),
+    with_one_active_per_component_constraint_(false),
     appearance_(appearance),
     disappearance_(disappearance),
     move_(move),
@@ -196,6 +197,10 @@ class ModelBuilder {
   ModelBuilder& with_counting_incoming_factor(bool);
   bool has_counting_incoming_factor() const { return with_counting_incoming_factor_; }
 
+  // hard constraint to set exactly one region per connected component active
+  ModelBuilder& with_one_active_per_component_constraint(bool);
+  bool has_one_active_per_component_constraint() const { return with_one_active_per_component_constraint_; }
+
   // maximum outgoing, incoming arcs
   ModelBuilder& with_maximum_arcs(unsigned);
   ModelBuilder& without_maximum_arcs();
@@ -254,6 +259,7 @@ class ModelBuilder {
   bool with_counting_incoming_factor_;
   bool with_maximum_arcs_;
   bool with_timestep_range_;
+  bool with_one_active_per_component_constraint_;
 
   function<double (const Traxel&, size_t)> detection_;
   function<double (const Traxel&, size_t)> non_detection_;

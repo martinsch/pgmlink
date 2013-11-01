@@ -52,6 +52,7 @@ public:
     bool classifier_count_precomputed;
     bool with_maximum_arcs;
     bool restrict_timestep_range;
+    bool with_one_active_constraint;
   };
   MultiHypothesesTracking(const Options& options) : options_(options) {}
   boost::shared_ptr<std::vector<std::vector<Event> > > operator()(MultiHypothesesTraxelStore& ts, std::string serialize_to_fn="");

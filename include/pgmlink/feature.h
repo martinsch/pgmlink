@@ -90,11 +90,12 @@ private:
 
 class NegLnDivision {
 public:
-	NegLnDivision(double weight) : w_(weight) {}
+	NegLnDivision(double weight, int max_div_level=2) : w_(weight), max_div_level_(max_div_level) {}
 	double operator()( const Traxel&, const size_t state ) const;
         double operator()( const Traxel&, const Traxel&, const Traxel&, feature_type ) const;
 private:
 	double w_;
+    int max_div_level_;
 };
 
 class NegLnTransition {

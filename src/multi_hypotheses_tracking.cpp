@@ -49,7 +49,9 @@ MultiHypothesesTracking::Options::Options() :
     counting_incoming_factor(false),
     classifier_count_precomputed(false),
     with_maximum_arcs(false),
-  restrict_timestep_range(false) {
+  restrict_timestep_range(false),
+  with_one_active_constraint(false)
+  {
 
 }
 
@@ -81,7 +83,8 @@ void MultiHypothesesTracking::print_info() {
 			   << "\twith hierarchical count factor: " << options_.hierarchical_count_factor << '\n'
 			   << "\twith counting incoming factor:" << options_.counting_incoming_factor << '\n'
 			   << "\twith maximum arcs:" << options_.with_maximum_arcs << '\n'
-			   << "\tmaximum arcs:" << options_.weights["arc"];
+			   << "\tmaximum arcs:" << options_.weights["arc"] << '\n'
+			   << "\twith one active region per component constraint:" << options_.with_one_active_constraint;
 }
 
 
@@ -251,6 +254,10 @@ void MultiHypothesesTracking::track(MultiHypothesesGraph& g, boost::shared_ptr<s
     builder.with_divisions(div);
   }
 
+  if (options_.with_one_active_constraint) {
+    builder.with_one_active_per_component_constraint(true);
+  }
+
   if (options_.restrict_timestep_range) {
     builder.with_timestep_range(options_.get_weight("first_timestep"), options_.get_weight("last_timestep"));
     LOG(logINFO) << "MultiHypothesesTracking: restricting timestep range to ["
@@ -268,7 +275,7 @@ void MultiHypothesesTracking::track(MultiHypothesesGraph& g, boost::shared_ptr<s
                                NegLnDetection(options_.get_weight("det")));
     }
     if (options_.with_divisions) {
-      builder.with_divisions(NegLnDivision(options_.get_weight("div")));
+      builder.with_divisions(NegLnDivision(options_.get_weight("div"), options_.get_weight("max_div")));
     }
   }
 
