@@ -274,8 +274,9 @@ void MultiHypothesesTracking::track(MultiHypothesesGraph& g, boost::shared_ptr<s
                                 );
     if (options_.with_detection_vars) {
       if (options_.with_conflict_factors) {
-       builder
-           .with_conflict_factors(NegLnCardinalityDetection(options_.get_weight("det")));
+        LOG(logINFO) << "MultiHypothesesTracking: using conflict factors";
+        builder
+            .with_conflict_factors(NegLnCardinalityDetection(options_.get_weight("det")));
       } else {
         builder
             .with_detection_vars(NegLnDetection(options_.get_weight("det")),
