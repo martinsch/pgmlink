@@ -1081,7 +1081,7 @@ boost::shared_ptr<Model> CVPR2014ModelBuilder::build(const MultiHypothesesGraph&
           (timesteps[n] < first_timestep() || timesteps[n] > last_timestep())) {
         continue;
       }
-      if (has_maximal_conflict_cliques()) {
+      if (has_maximal_conflict_cliques() && has_conflict_factors()) {
         add_conflict_factors( hypotheses, *model, n );
       } else {
         add_detection_factors( hypotheses, *model, n );
