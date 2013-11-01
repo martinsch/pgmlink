@@ -328,7 +328,13 @@ class CVPR2014ModelBuilder : public ModelBuilder {
 
   void add_outgoing_factors( const MultiHypothesesGraph&, Model&, const MultiHypothesesGraph::Node& ) const;
   void add_count_factors( const MultiHypothesesGraph&, Model&);
-  void add_count_factors( const MultiHypothesesGraph& hypotheses, Model& m, OpengmLPCplex& cplex) const;
+  void add_count_factors( const MultiHypothesesGraph& hypotheses, Model& m, OpengmLPCplex& cplex ) const;
+  void add_conflict_factors( const MultiHypothesesGraph& hypotheses, Model& m, const MultiHypothesesGraph::Node& n ) const;
+  void add_conflict_factor( const MultiHypothesesGraph& hypotheses,
+                            Model& m,
+                            const MultiHypothesesGraph::Node& n,
+                            const ConflictSet& conflict,
+                            int timestep ) const;
 
  private:
   void add_detection_factors( const MultiHypothesesGraph&, Model&, const MultiHypothesesGraph::Node& ) const;

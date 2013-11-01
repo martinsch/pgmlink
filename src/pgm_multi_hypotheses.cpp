@@ -1066,7 +1066,11 @@ boost::shared_ptr<Model> CVPR2014ModelBuilder::build(const MultiHypothesesGraph&
           (timesteps[n] < first_timestep() || timesteps[n] > last_timestep())) {
         continue;
       }
-      add_detection_factors( hypotheses, *model, n );
+      if (has_maximal_conflict_cliques()) {
+        add_conflict_factors( hypotheses, *model, n );
+      } else {
+        add_detection_factors( hypotheses, *model, n );
+      }
     }
   }
 
@@ -1113,6 +1117,44 @@ void CVPR2014ModelBuilder::add_count_factors( const MultiHypothesesGraph& hypoth
   }
 }
 
+
+void CVPR2014ModelBuilder::add_conflict_factors( const MultiHypothesesGraph& hypotheses, Model& m, const MultiHypothesesGraph::Node& n ) const {
+  LOG(logDEBUG3) << "CVPR2014ModelBuilder::add_conflict_factor() -- add factors for conflict sets";
+  const ConflictSets& conflicts = hypotheses.get(node_conflict_sets())[n];
+  int timestep = hypotheses.get(node_timestep())[n];
+  for (ConflictSets::const_iterator conflict = conflicts.begin(); conflict != conflicts.end(); ++conflict) {
+    add_conflict_factor( hypotheses, m, n, *conflict, timestep);
+  }
+}
+
+void CVPR2014ModelBuilder::add_conflict_factor( const MultiHypothesesGraph& hypotheses,
+                                                Model& m,
+                                                const MultiHypothesesGraph::Node& n,
+                                                const ConflictSet& conflict,
+                                                int timestep ) const {
+  // MultiHypothesesGraph::ContainedRegionsMap& regions = hypotheses.get(node_regions_in_component());
+  const std::vector<Traxel>& traxels_in_component = hypotheses.get(node_regions_in_component())[n];
+  std::vector<size_t> vi;
+  std::vector<Traxel> traxels;
+  for (ConflictSet::const_iterator id = conflict.begin(); id != conflict.end(); ++id) {
+    traxels.push_back(*std::find(traxels_in_component.begin(), traxels_in_component.end(), Traxel(*id, timestep)));
+    vi.push_back(m.var_of_trax(*traxels.rbegin()));
+  }
+  size_t table_dim = vi.size();
+  std::vector<size_t> coords(table_dim, 0);
+  OpengmExplicitFactor<double> table(vi);
+  double deactivated_sum = 0.0;
+  for (std::vector<Traxel>::const_iterator t = traxels.begin(); t != traxels.end(); ++t) {
+    deactivated_sum += detection()(*t, 0);
+  }
+  table.set_value( coords, deactivated_sum );
+
+  for (size_t i = 0; i < table_dim; ++i) {
+    coords[i] = 1;
+    table.set_value( coords, detection()(traxels[i], 1 ));
+    coords[i] = 0;
+  }
+}
 
 void CVPR2014ModelBuilder::add_outgoing_factors( const MultiHypothesesGraph& hypotheses,
                                                   Model& m,
