@@ -178,6 +178,10 @@ ModelBuilder& ModelBuilder::without_detection_vars() {
   return *this;
 }
 
+ModelBuilder& ModelBuilder::with_one_active_per_component_constraint(bool check) {
+   with_one_active_per_component_constraint_ = check;
+   return *this;
+}
 
 ModelBuilder& ModelBuilder::with_divisions( function<double (const Traxel&, const Traxel&, const Traxel&, feature_type)> division ) {
   if (!division) {
@@ -628,7 +632,7 @@ void ModelBuilder::couple_conflicts_pairwise( const Model& m,
       
       std::vector<int> coeffs(cplex_idxs.size(), 1);
       // 0 <= 1*detection + 1*detection <= 1
-      cplex.addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0, 1);
+      cplex.addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), int(has_one_active_per_component_constraint()), 1);
       
     }
   }  

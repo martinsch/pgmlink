@@ -113,6 +113,10 @@ struct PyTrackingOptions {
     options.with_divisions = check;
   }
 
+  void with_one_active_constraint(bool check) {
+    options.with_one_active_constraint = check;
+  }
+
   void with_constraints(bool check) {
     options.with_constraints = check;
   }
@@ -449,6 +453,7 @@ void export_multi_hypotheses() {
       .def("sanityCheck", &PyTrackingOptions::sanity_check)
       .def("limitOutgoingArcs", &PyTrackingOptions::limit_outgoing_arcs)
       .def("withRestrictedTimestepRange", &PyTrackingOptions::with_restricted_timestep_range)
+      .def("withOneActiveRegionPerComponent", &PyTrackingOptions::with_one_active_constraint)
       ;
 
 
