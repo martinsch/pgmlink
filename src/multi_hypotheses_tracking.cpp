@@ -268,7 +268,7 @@ void MultiHypothesesTracking::track(MultiHypothesesGraph& g, boost::shared_ptr<s
                                NegLnDetection(options_.get_weight("det")));
     }
     if (options_.with_divisions) {
-      builder.with_divisions(NegLnDivision(options_.get_weight("div")));
+      builder.with_divisions(NegLnDivision(options_.get_weight("div"), options_.get_weight("max_div")));
     }
   }
 

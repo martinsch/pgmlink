@@ -320,7 +320,8 @@ inline void ModelBuilder::add_detection_vars( const MultiHypothesesGraph& hypoth
   MultiHypothesesGraph::ContainedRegionsMap& regions = hypotheses.get(node_regions_in_component());
   MultiHypothesesGraph::node_timestep_map& timesteps = hypotheses.get(node_timestep());
   for (MultiHypothesesGraph::NodeIt n(hypotheses); n != lemon::INVALID; ++n) {
-    const std::vector<Traxel>& traxels = regions[n];
+    std::vector<Traxel>& traxels = regions.get_value(n);
+    traxels[0].Level = 1;
     const MultiHypothesesGraph::node_timestep_map::Value& timestep = timesteps[n];
     for (std::vector<Traxel>::const_iterator t = traxels.begin(); t != traxels.end(); ++t) {
       if (timestep_range_specified() &&
@@ -537,9 +538,9 @@ void ModelBuilder::couple_outgoing_assignments(const Model& m, const std::vector
   LOG(logDEBUG1) << "MultiHypotheses::couple_outgoing_assignments()";
   for (std::vector<Traxel>::const_iterator s = source.begin(); s != source.end(); ++s) {
     MAX_OUTGOING_ARCS max_outgoing_arcs = DIVISION;
-    if (s->Level > max_division_level_) {
-      max_outgoing_arcs = TRANSITION;
-    }
+    //if (s->Level > max_division_level_) {
+    //  max_outgoing_arcs = TRANSITION;
+    //}
     std::vector<size_t> cplex_idxs;
     for (std::vector<Traxel>::const_iterator d = dest.begin(); d != dest.end(); ++d) {
       Model::arc_var_map::const_iterator it = m.var_of_arc().find(Model::TraxelArc(*s, *d));
