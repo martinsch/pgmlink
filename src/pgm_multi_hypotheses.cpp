@@ -1134,7 +1134,7 @@ void CVPR2014ModelBuilder::add_count_factors( const MultiHypothesesGraph& hypoth
 
 
 void CVPR2014ModelBuilder::add_conflict_factors( const MultiHypothesesGraph& hypotheses, Model& m, const MultiHypothesesGraph::Node& n ) const {
-  LOG(logDEBUG3) << "CVPR2014ModelBuilder::add_conflict_factor() -- add factors for conflict sets";
+  LOG(logDEBUG3) << "CVPR2014ModelBuilder::add_conflict_factors() -- add factors for conflict sets";
   const ConflictSets& conflicts = hypotheses.get(node_conflict_sets())[n];
   int timestep = hypotheses.get(node_timestep())[n];
   for (ConflictSets::const_iterator conflict = conflicts.begin(); conflict != conflicts.end(); ++conflict) {
@@ -1147,6 +1147,7 @@ void CVPR2014ModelBuilder::add_conflict_factor( const MultiHypothesesGraph& hypo
                                                 const MultiHypothesesGraph::Node& n,
                                                 const ConflictSet& conflict,
                                                 int timestep ) const {
+  LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_conflict_factor() -- add factor for conflict sets";
   // MultiHypothesesGraph::ContainedRegionsMap& regions = hypotheses.get(node_regions_in_component());
   const std::vector<Traxel>& traxels_in_component = hypotheses.get(node_regions_in_component())[n];
   std::vector<size_t> vi;
