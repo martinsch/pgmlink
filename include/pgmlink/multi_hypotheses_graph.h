@@ -241,6 +241,8 @@ class MultiHypothesesGraph : public HypothesesGraph {
                                ClassifierStrategy* count,
                                ClassifierStrategy* detection);
 
+  void add_cardinalities(const Node& n);
+
   
  private:
   // boost serialize
