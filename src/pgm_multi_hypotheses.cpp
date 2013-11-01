@@ -246,6 +246,18 @@ ModelBuilder& ModelBuilder::without_maximum_arcs() {
 }
 
 
+ModelBuilder& ModelBuilder::with_conflict_factors( function<double (const Traxel&, size_t)> detection) {
+  if (!detection) {
+    throw std::invalid_argument("MultiHypothesesModelBuilder::with_conflict_factors(): empty function");
+  }
+  if (!has_detection_vars()) {
+    throw std::runtime_error("MultiHypothesesModelBuilder::with_conflict_factors(): does not make sense without detection_vars");
+  }
+  detection_ = detection;
+  return *this;
+}
+
+
 ModelBuilder& ModelBuilder::with_timestep_range(int first, int last) {
   if (last < first) {
     throw std::runtime_error("Last timestep must not be smaller than first!");

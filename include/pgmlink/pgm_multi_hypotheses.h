@@ -120,6 +120,7 @@ class ModelBuilder {
     with_maximum_arcs_(false),
     with_timestep_range_(false),
     with_one_active_per_component_constraint_(false),
+    with_conflict_factors_(false),
     appearance_(appearance),
     disappearance_(disappearance),
     move_(move),
@@ -206,6 +207,10 @@ class ModelBuilder {
   ModelBuilder& without_maximum_arcs();
   bool has_maximum_arcs() const { return with_maximum_arcs_; }
 
+  // conflict factors
+  ModelBuilder& with_conflict_factors( function<double (const Traxel&, size_t)> detection);
+  bool has_conflict_factors() const { return with_conflict_factors_; }
+
   // with timestep range specified
   ModelBuilder& with_timestep_range(int, int);
   ModelBuilder& without_timestep_range();
@@ -260,6 +265,7 @@ class ModelBuilder {
   bool with_maximum_arcs_;
   bool with_timestep_range_;
   bool with_one_active_per_component_constraint_;
+  bool with_conflict_factors_;
 
   function<double (const Traxel&, size_t)> detection_;
   function<double (const Traxel&, size_t)> non_detection_;
