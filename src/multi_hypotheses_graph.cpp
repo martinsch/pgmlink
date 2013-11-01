@@ -457,6 +457,9 @@ void MultiHypothesesGraphBuilder::add_nodes(const MultiHypothesesTraxelStore& ts
       LOG(logDEBUG4) << "MultiHypothesesGraphBuilder::add_nodes -- "
                      <<  "new component has " << conflict_sets[node].size()
                      << " conflict sets (" << traxels[0] << " had " << conflicts_source_at->second.size() << " conflicts)";
+      dest_graph->add_cardinalities(node);
+      LOG(logDEBUG4) << "MultiHypothesesGraphBuilder::add_nodes -- "
+                     << " added cardinalities";
     }
   }
 }
