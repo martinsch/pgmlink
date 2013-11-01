@@ -66,26 +66,28 @@ double MultiHypothesesTracking::Options::get_weight(const std::string& name) con
 
 void MultiHypothesesTracking::print_info() {
   LOG(logINFO) << "Calling multihypotheses tracking with the following parameters:\n"
-			   << "\tappearance: " << options_.weights["app"] << '\n'
-			   << "\tdisapparance: " << options_.weights["dis"] << '\n'
-			   << "\tdetection: " << options_.weights["det"] << '\n'
-			   << "\tmisdetection: " << options_.weights["mis"] << '\n'
-			   << "\tdvision: " << options_.weights["div"] << '\n'
-			   << "\tforbidden cost: " << options_.weights["forbidden"] << '\n'
-			   << "\twith constraints: " << options_.with_constraints << '\n'
-			   << "\twith divisions: " << options_.with_divisions << '\n'
-			   << "\twith detection variables: " << options_.with_detection_vars << '\n'
-			   << "\tnumber of neighbors: " << options_.weights["neighbors"] << '\n'
-			   << "\tmaximum neighbor distance: " << options_.weights["distance"] << '\n'
-			   << "\tcplex timeout: " << options_.weights["timeout"] << '\n'
-			   << "\tep gap: " << options_.weights["gap"] << '\n'
-			   << "\tmaximum division level: " << options_.weights["max_div"] << '\n'
-			   << "\twith constant classifiers: " << options_.with_constant_classifiers << '\n'
-			   << "\twith hierarchical count factor: " << options_.hierarchical_count_factor << '\n'
-			   << "\twith counting incoming factor:" << options_.counting_incoming_factor << '\n'
-			   << "\twith maximum arcs:" << options_.with_maximum_arcs << '\n'
-			   << "\tmaximum arcs:" << options_.weights["arc"] << '\n'
-			   << "\twith one active region per component constraint:" << options_.with_one_active_constraint;
+               << "\tappearance: " << options_.weights["app"] << '\n'
+               << "\tdisapparance: " << options_.weights["dis"] << '\n'
+               << "\tdetection: " << options_.weights["det"] << '\n'
+               << "\tmisdetection: " << options_.weights["mis"] << '\n'
+               << "\tdvision: " << options_.weights["div"] << '\n'
+               << "\tforbidden cost: " << options_.weights["forbidden"] << '\n'
+               << "\twith constraints: " << options_.with_constraints << '\n'
+               << "\twith divisions: " << options_.with_divisions << '\n'
+               << "\twith detection variables: " << options_.with_detection_vars << '\n'
+               << "\tnumber of neighbors: " << options_.weights["neighbors"] << '\n'
+               << "\tmaximum neighbor distance: " << options_.weights["distance"] << '\n'
+               << "\tcplex timeout: " << options_.weights["timeout"] << '\n'
+               << "\tep gap: " << options_.weights["gap"] << '\n'
+               << "\tmaximum division level: " << options_.weights["max_div"] << '\n'
+               << "\twith constant classifiers: " << options_.with_constant_classifiers << '\n'
+               << "\twith hierarchical count factor: " << options_.hierarchical_count_factor << '\n'
+               << "\twith counting incoming factor:" << options_.counting_incoming_factor << '\n'
+               << "\twith maximum arcs:" << options_.with_maximum_arcs << '\n'
+               << "\tmaximum arcs:" << options_.weights["arc"] << '\n'
+               << "\twith one active region per component constraint:" << options_.with_one_active_constraint  << '\n'    
+               << "\twith conflict factors:" << options_.with_conflict_factors
+      ;
 }
 
 
