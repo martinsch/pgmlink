@@ -44,13 +44,21 @@ This installer bug happens when the installer is called from a shell with a modi
 #### CPLEX shared libraries
 
 
-The CPLEX package does not provide shared versions of all required libraries, but only static variants (luckily with PIC). You can link your own shared libraries using the following commands:
+The CPLEX package does not provide shared versions of all required libraries, but only static variants (luckily with PIC). You can link your own shared libraries using the following commands
 
 ```
 g++ -fpic -shared -Wl,-whole-archive libcplex.a -Wl,-no-whole-archive -o libcplex.so
 g++ -fpic -shared -Wl,-whole-archive libilocplex.a -Wl,-no-whole-archive -o libilocplex.so
 g++ -fpic -shared -Wl,-whole-archive libconcert.a -Wl,-no-whole-archive -o libconcert.so
 ```
+on Linux and
+
+```
+g++ -fpic -shared -Wl,-all_load libcplex.a -Wl,-noall_load -o libcplex.dylib
+g++ -fpic -shared -Wl,-all_load libilocplex.a -Wl,-noall_load -o libilocplex.dylib
+g++ -fpic -shared -Wl,-all_load libconcert.a -Wl,-noall_load -o libconcert.dylib
+```
+on Mac respectively.
 
 ## How to Build
 pgmLink is built with [cmake](www.cmake.org):
