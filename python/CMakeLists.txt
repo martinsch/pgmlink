@@ -23,7 +23,8 @@ else()
   find_package( PythonLibs REQUIRED )
 endif()
 
-include_directories( ${Boost_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS}/python2.7 )
+# include external headers as system includes so we do not have to cope with their warnings
+include_directories( SYSTEM ${Boost_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS}/python2.7 )
 
 # pypgmlink
 set(PYPGMLINK_SRCS
