@@ -1160,11 +1160,14 @@ void CVPR2014ModelBuilder::add_conflict_factor( const MultiHypothesesGraph& hypo
   size_t table_dim = vi.size();
   std::vector<size_t> coords(table_dim, 0);
   OpengmExplicitFactor<double> table(vi);
-  double deactivated_sum = 0.0;
+  double deactivated_energy_max = detection()(conflict[0], 0);
   for (std::vector<Traxel>::const_iterator t = traxels.begin(); t != traxels.end(); ++t) {
-    deactivated_sum += detection()(*t, 0);
+    double deactivated_energy_curr = detection()(*t, 0);
+    if (deactivated_energy_curr > deactivated_energy_max) {
+        deactivated_energy_max = deactivated_energy_curr;
+    }
   }
-  table.set_value( coords, deactivated_sum  + opportunity_cost() );
+  table.set_value( coords, deactivated_energy_max  + opportunity_cost() );
 
   for (size_t i = 0; i < table_dim; ++i) {
     coords[i] = 1;
