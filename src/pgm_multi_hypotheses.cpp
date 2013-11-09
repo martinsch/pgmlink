@@ -1157,10 +1157,11 @@ void CVPR2014ModelBuilder::add_conflict_factor( const MultiHypothesesGraph& hypo
     traxels.push_back(*std::find(traxels_in_component.begin(), traxels_in_component.end(), Traxel(*id, timestep)));
     vi.push_back(m.var_of_trax(*traxels.rbegin()));
   }
+  
   size_t table_dim = vi.size();
   std::vector<size_t> coords(table_dim, 0);
   OpengmExplicitFactor<double> table(vi);
-  double deactivated_energy_max = detection()(conflict[0], 0);
+  double deactivated_energy_max = detection()(traxels[0], 0);
   for (std::vector<Traxel>::const_iterator t = traxels.begin(); t != traxels.end(); ++t) {
     double deactivated_energy_curr = detection()(*t, 0);
     if (deactivated_energy_curr > deactivated_energy_max) {
