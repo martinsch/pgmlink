@@ -362,7 +362,8 @@ class CVPR2014ModelBuilder : public ModelBuilder {
                             Model&,
                             const MultiHypothesesGraph::Node&,
                             const Traxel&,
-                            const std::vector<Traxel>& );
+                            const std::vector<Traxel>&,
+                            feature_type );
   void fill_probabilities(feature_array& probabilities, size_t maximum_active_regions ) const;
   void add_count_factor( Model& m,
                          const std::vector<Traxel>& traxels,
