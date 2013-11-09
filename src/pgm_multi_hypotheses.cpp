@@ -1148,7 +1148,8 @@ void CVPR2014ModelBuilder::add_conflict_factor( const MultiHypothesesGraph& hypo
                                                 const MultiHypothesesGraph::Node& n,
                                                 const ConflictSet& conflict,
                                                 int timestep ) const {
-  LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_conflict_factor() -- add factor for conflict sets";
+  LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_conflict_factor() -- add factor for conflict set "
+                 << conflict[0] << " at time " << timestep;
   // MultiHypothesesGraph::ContainedRegionsMap& regions = hypotheses.get(node_regions_in_component());
   const std::vector<Traxel>& traxels_in_component = hypotheses.get(node_regions_in_component())[n];
   std::vector<size_t> vi;
@@ -1169,6 +1170,8 @@ void CVPR2014ModelBuilder::add_conflict_factor( const MultiHypothesesGraph& hypo
     }
   }
   table.set_value( coords, deactivated_energy_max  + opportunity_cost() );
+  LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_conflict_factor() -- maximum deactivation energy: "
+                 << deactivated_energy_max;
 
   for (size_t i = 0; i < table_dim; ++i) {
     coords[i] = 1;
@@ -1205,7 +1208,7 @@ void CVPR2014ModelBuilder::add_incoming_factors( const MultiHypothesesGraph& hyp
     neighbors.insert(neighbors.end(), neighbors_at.begin(), neighbors_at.end());
   }
   for (std::vector<Traxel>::const_iterator t = traxels.begin(); t != traxels.end(); ++t) {
-    add_incoming_factor(hypotheses, m, n, *t, neighbors);
+    add_incoming_factor(hypotheses, m, n, *t, neighbors, traxels[0].features.find("cardinality")->second[0]);
   }
 
 }
@@ -1595,12 +1598,15 @@ void CVPR2014ModelBuilder::add_outgoing_factor( const MultiHypothesesGraph& hypo
       coords[0] = 1;
       table.set_value( coords,
                        trax.features.find("cardinality")->second[0]/maximum_cardinality*(disappearance()(trax) +
-                                                                         std::min(minimum_move_energy, minimum_division_energy))
+                                                                                         std::min(minimum_move_energy, minimum_division_energy))
                        );
       LOG(logDEBUG3) << "CVPR2014ModelBuilder::add_outgoing_factor: at least two outgoing arcs: "
                      << "forbidden=" << forbidden_cost() << ", disappearance=" << table.get_value(coords);
       coords[0] = 0;
     }
+
+    LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_outgoing_factor: Minimum energy for at least one outgoing arc active: "
+                   << std::min(minimum_move_energy, minimum_division_energy);
 
     
     // table = OpengmExplicitFactor<double>( vi, 999999 );
@@ -1612,10 +1618,11 @@ void CVPR2014ModelBuilder::add_outgoing_factor( const MultiHypothesesGraph& hypo
 
 
 void CVPR2014ModelBuilder::add_incoming_factor(const MultiHypothesesGraph& hypotheses,
-                                                Model& m,
-                                                const MultiHypothesesGraph::Node& node,
-                                                const Traxel& trax,
-                                                const std::vector<Traxel>& neighbors) {
+                                               Model& m,
+                                               const MultiHypothesesGraph::Node& node,
+                                               const Traxel& trax,
+                                               const std::vector<Traxel>& neighbors,
+                                               feature_type maximum_cardinality ) {
   LOG(logDEBUG2) << "CVPR2014ModelBuilder::add_incoming_factor(): entered for " << trax;
   const std::vector<size_t> vi = vars_for_incoming_factor(hypotheses, m, node, trax);
   if (vi.size() == 0) {
@@ -1673,8 +1680,8 @@ void CVPR2014ModelBuilder::add_incoming_factor(const MultiHypothesesGraph& hypot
 	  // appearance
 	  if (trax.Timestep > hypotheses.earliest_timestep()) {
 		  coords[0] = 1;
-		  table.set_value( coords, appearance()(trax) );
-		  assert(table.get_value( coords ) == appearance()(trax) );
+		  table.set_value( coords, trax.features.find("cardinality")->second[0]/maximum_cardinality*appearance()(trax) );
+		  assert(table.get_value( coords ) == trax.features.find("cardinality")->second[0]/maximum_cardinality*appearance()(trax) );
 		  LOG(logDEBUG2) << "CVPR2014ModelBuilder::add_incoming_factor: appearance="
 							   << table.get_value( coords );
 
@@ -1695,7 +1702,7 @@ void CVPR2014ModelBuilder::add_incoming_factor(const MultiHypothesesGraph& hypot
 	  if (trax.Timestep > hypotheses.earliest_timestep()) {
 		coords[0] = 1;
 		table.set_value( coords, appearance()(trax));
-		assert(table.get_value( coords ) == appearance()(trax) );
+		assert(table.get_value( coords ) == trax.features.find("cardinality")->second[0]/maximum_cardinality*appearance()(trax) );
 		LOG(logDEBUG2) << "CVPR2014ModelBuilder::add_incoming_factor: appearance="
 					   << table.get_value( coords );
 		coords[0] = 0;
