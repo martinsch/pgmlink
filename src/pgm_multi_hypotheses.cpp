@@ -1529,36 +1529,42 @@ void CVPR2014ModelBuilder::add_outgoing_factor( const MultiHypothesesGraph& hypo
 
   size_t table_dim = vi.size();
   assert(table_dim <= neighbors.size() + 1);
+  LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_outgoing_factor(): table_dim=" << table_dim;
 
     
-    std::vector<size_t> coords(table_dim, 0);
-    OpengmExplicitFactor<double> table( vi, forbidden_cost() );
+  std::vector<size_t> coords(table_dim, 0);
+  OpengmExplicitFactor<double> table( vi, forbidden_cost() );
+  
+  // opportunity?
+  table.set_value( coords, 0 );
+  
+  
+  LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_outgoing_factor(): initializing minimum energies";
 
-    // opportunity?
-    table.set_value( coords, 0 );
+  // if no arcs, then initialize energy to zero
+  // double minimum_move_energy = (arcs.size() > 0 ? move()(trax, arcs[0].second, 0.) : 0.);
+  // double minimum_division_energy = (arcs.size() > 1 ? division()(trax, arcs[0].second, arcs[1].second, 0.) : 0.);
 
 
-    double minimum_move_energy = move()(trax, arcs[0].second, 0.);
-    double minimum_division_energy = division()(trax, arcs[0].second, arcs[1].second, 0.);
-
-    // move configuration
-
-    coords[0] = 1;
-    for (size_t i = 1; i < table_dim; ++i) {
-      coords[i] = 1;
-      feature_type probability = 0.;
-      if (has_classifiers()) {
-        probability = hypotheses.get(node_move_features())[node]
-            .find(trax)->second
-            .find(arcs[i-1].second)->second[1];
-        LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_outgoing_factor: move using classifier, prob: " << probability
-                       << ", energy: " << move()(trax, arcs[i-1].second, probability);
-      }
+  
+  // move configuration
+  
+  coords[0] = 1;
+  for (size_t i = 1; i < table_dim; ++i) {
+    coords[i] = 1;
+    feature_type probability = 0.;
+    if (has_classifiers()) {
+      probability = hypotheses.get(node_move_features())[node]
+          .find(trax)->second
+          .find(arcs[i-1].second)->second[1];
+      LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_outgoing_factor: move using classifier, prob: " << probability
+                     << ", energy: " << move()(trax, arcs[i-1].second, probability);
+    }
 
       double move_energy = move()(trax, arcs[i-1].second, probability);
-      if (move_energy < minimum_move_energy) {
-        minimum_move_energy = move_energy;
-      }
+      // if (move_energy < minimum_move_energy) {
+      //   minimum_move_energy = move_energy;
+      // }
       table.set_value( coords,  trax.features.find("cardinality")->second[0]/maximum_cardinality*move_energy);
       LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_outgoing_factor: move="
                      << table.get_value( coords );
@@ -1580,9 +1586,9 @@ void CVPR2014ModelBuilder::add_outgoing_factor( const MultiHypothesesGraph& hypo
                 .find(std::make_pair(arcs[i-1].second, arcs[j-1].second))->second[0];
           }
           double division_energy = division()(trax, arcs[i-1].second, arcs[j-1].second, probability);
-          if (division_energy < minimum_division_energy) {
-            minimum_division_energy = division_energy;
-          }
+          // if (division_energy < minimum_division_energy) {
+          //   minimum_division_energy = division_energy;
+          // }
           table.set_value(coords, trax.features.find("cardinality")->second[0]/maximum_cardinality*division_energy);
           LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_outgoing_factor: division="
                          << table.get_value( coords );
@@ -1597,16 +1603,16 @@ void CVPR2014ModelBuilder::add_outgoing_factor( const MultiHypothesesGraph& hypo
     if (trax.Timestep < hypotheses.latest_timestep()) {
       coords[0] = 1;
       table.set_value( coords,
-                       trax.features.find("cardinality")->second[0]/maximum_cardinality*(disappearance()(trax) +
-                                                                                         std::min(minimum_move_energy, minimum_division_energy))
+                       trax.features.find("cardinality")->second[0]/maximum_cardinality*(disappearance()(trax)) // +
+                       // std::min(minimum_move_energy, minimum_division_energy))
                        );
       LOG(logDEBUG3) << "CVPR2014ModelBuilder::add_outgoing_factor: at least two outgoing arcs: "
                      << "forbidden=" << forbidden_cost() << ", disappearance=" << table.get_value(coords);
       coords[0] = 0;
     }
 
-    LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_outgoing_factor: Minimum energy for at least one outgoing arc active: "
-                   << std::min(minimum_move_energy, minimum_division_energy);
+    // LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_outgoing_factor: Minimum energy for at least one outgoing arc active: "
+    //                << std::min(minimum_move_energy, minimum_division_energy);
 
     
     // table = OpengmExplicitFactor<double>( vi, 999999 );
