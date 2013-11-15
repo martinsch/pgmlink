@@ -5,6 +5,7 @@
 #include <cassert>
 #include <stdexcept>
 #include <cmath>
+#include <fstream>
 
 // boost
 #include <boost/shared_ptr.hpp>
@@ -449,6 +450,31 @@ void ClassifierLazy::classify(const std::vector<Traxel>& traxels_out,
 
 }
 
+namespace {
+
+void append_to_file(const std::string& filename, const Traxel& trx1, double number) {
+  std::ofstream log_file;
+  log_file.open(filename.c_str(), std::ios::out | std::ios::app);
+  log_file << trx1 << " " << number << '\n';
+  log_file.close();
+}
+
+void append_to_file(const std::string& filename, const Traxel& trx1, const Traxel& trx2, double number) {
+  std::ofstream log_file;
+  log_file.open(filename.c_str(), std::ios::out | std::ios::app);
+  log_file << trx1 << ',' << trx2 << " " << number << '\n';
+  log_file.close();
+}
+
+void append_to_file(const std::string& filename, const Traxel& trx1, const Traxel& trx2, const Traxel& trx3, double number) {
+  std::ofstream log_file;
+  log_file.open(filename.c_str(), std::ios::out | std::ios::app);
+  log_file << trx1 << ',' << trx2 << ',' << trx3 << " " << number << '\n';
+  log_file.close();
+}
+
+}
+
 
 ////
 //// ClassifierConstant
@@ -691,6 +717,7 @@ void ClassifierMoveRF::classify(const std::vector<Traxel>& traxels_out,
         LOG(logDEBUG4) << "ClassifierMoveRF::classify() -- " << *out
                        << " to " << *in << "probability: "
                        << probabilities[0] << ',' << probabilities[1];
+        append_to_file("classifier_move.log", *out, *in, probabilities[1]);
       } else {
         assert(feature_map[*out][*in].size() == 0);
         feature_map[*out][*in] = feature_array(probabilities.shape()[1], 0.);
@@ -749,7 +776,8 @@ void ClassifierDivisionRF::classify(const std::vector<Traxel>& traxels_out,
 		    }
         	std::copy(probabilities.begin(),
                   probabilities.end(),
-                  feature_map[*out][std::make_pair(*child1, *child2)].begin());
+                          feature_map[*out][std::make_pair(*child1, *child2)].begin());
+                append_to_file("classifier_division.log", *out, *child1, *child2, probabilities[1]);
         } else {
         	assert(feature_map[*out][std::make_pair(*child1, *child2)].size() == 0);
         	feature_map[*out][std::make_pair(*child1, *child2)] = feature_array(probabilities.shape()[1], 0.);
@@ -800,6 +828,7 @@ void ClassifierDetectionRF::classify(std::vector<Traxel>& traxels, bool with_pre
     if (with_predict) {
       extract_features(*t, features, probabilities);
       rf_.predictProbabilities(features, probabilities);
+      append_to_file("classifier_detection.log", *t, probabilities[1]);
       LOG(logDEBUG4) << "ClassifierDetectionRF::classify() -- features[0] = "
                      << features[0];
 

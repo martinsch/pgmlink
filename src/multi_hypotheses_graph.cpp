@@ -3,6 +3,7 @@
 #include <set>
 #include <vector>
 #include <cassert>
+#include <fstream>
 
 // boost
 #include <boost/assert.hpp>
@@ -229,7 +230,14 @@ void read_lgf( MultiHypothesesGraph& g, std::istream& is, bool with_n_traxel ) {
   reader.run();
 }
 
+namespace {
+void clear_file(const std::string& filename) {
+  std::ofstream file;
+  file.open(filename.c_str(), std::ios::trunc);
+  file.close();
+}
 
+}
 
 void MultiHypothesesGraph::add_classifier_features(ClassifierStrategy* move,
                                                    ClassifierStrategy* division,
@@ -240,6 +248,10 @@ void MultiHypothesesGraph::add_classifier_features(ClassifierStrategy* move,
   add(node_division_features());
   add(node_count_features());
 
+  clear_file("classifier_move.log");
+  clear_file("classifier_division.log");
+  clear_file("classifier_detection.log");
+  
   DivisionFeatureMap& division_map = get(node_division_features());
   CountFeatureMap& count_map = get(node_count_features());
   MoveFeatureMap& move_map = get(node_move_features());
