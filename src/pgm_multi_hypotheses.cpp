@@ -270,6 +270,7 @@ ModelBuilder& ModelBuilder::with_timestep_range(int first, int last) {
 
 ModelBuilder& ModelBuilder::without_timestep_range() {
   with_timestep_range_ = false;
+  return *this;
 }
 
 
@@ -352,6 +353,62 @@ inline void ModelBuilder::add_detection_vars( const MultiHypothesesGraph& hypoth
   }
 }
 
+namespace {
+
+void get_segments( const ConflictSets& conflicts, const std::vector<Traxel>& traxels, std::vector<std::pair<Traxel, std::vector<unsigned> > >& segments ) {
+  assert(segments.size() == 0 && "Segments vector should be empty!");
+  int timestep = traxels[0].Timestep;
+  for (ConflictSets::const_iterator it = conflicts.begin(); it != conflicts.end(); ++it) {
+    unsigned segment = *(std::min_element(it->begin(), it->end()));
+    assert(std::find(traxels.begin(), traxels.end(), Traxel(segment, timestep)) != traxels.end() &&
+           "Segment must also be in traxel vector");
+    const Traxel& trax = *std::find(traxels.begin(), traxels.end(), Traxel(segment, timestep));
+    segments.push_back(std::make_pair(trax, *it));
+  }
+}
+
+void get_nearest_segments(const std::vector<std::pair<Traxel, std::vector<unsigned> > >& source,
+                          const std::vector<std::pair<Traxel, std::vector<unsigned> > >& dest,
+                          std::map<std::vector<unsigned>, std::pair<double, std::vector<unsigned> > >& distances) {
+  for (std::vector<std::pair<Traxel, std::vector<unsigned> > >::const_iterator s = source.begin(); s != source.end(); ++s) {
+    std::pair<double, std::vector<unsigned> >& pair = distances[s->second];
+    pair.first = s->first.distance_to(dest[0].first);
+    pair.second = dest[0].second;
+    for (std::vector<std::pair<Traxel, std::vector<unsigned> > >::const_iterator d = dest.begin(); d != dest.end(); ++d) {
+      double curr_dist = s->first.distance_to(d->first);
+      if (curr_dist < pair.first) {
+        pair.first = curr_dist;
+        pair.second = d->second;
+      }
+    }
+  }
+}
+
+} // namespace
+
+inline void ModelBuilder::add_vars( const std::map<std::vector<unsigned>, std::pair<double, std::vector<unsigned> > >& distances,
+              int timestep,
+              int direction,
+              Model& m ) const {
+  for (std::map<std::vector<unsigned>, std::pair<double, std::vector<unsigned> > >::const_iterator it = distances.begin();
+       it != distances.end();
+       ++it) {
+    for (std::vector<unsigned>::const_iterator it_src = it->first.begin(); it_src != it->first.end(); ++it_src) {
+      for (std::vector<unsigned>::const_iterator it_dest = it->second.second.begin(); it_dest != it->second.second.end(); ++it_dest) {
+        Model::TraxelArc arc(Traxel(*it_src, timestep), Traxel(*it_dest, timestep+direction));
+        if (m.arc_var_.left.count(arc) == 0) {
+          m.opengm_model->addVariable(2);
+          m.arc_var_.left.insert(Model::arc_var_map::value_type(arc, m.opengm_model->numberOfVariables() - 1));
+        } else {
+          continue;
+        }
+      }
+    }
+  }
+}
+
+
+
 
 inline void ModelBuilder::add_assignment_vars( const MultiHypothesesGraph& hypotheses, Model& m ) const {
   LOG(logINFO) << "add_assignment_vars() -- all neighbors";
@@ -372,6 +429,36 @@ inline void ModelBuilder::add_assignment_vars( const MultiHypothesesGraph& hypot
         m.arc_var_.left.insert(Model::arc_var_map::value_type(Model::TraxelArc(*s, *d), m.opengm_model->numberOfVariables() - 1));
       }
     }
+  }
+}
+
+
+inline void ModelBuilder::add_assignment_vars_based_on_conflict_sets( const MultiHypothesesGraph& hypotheses, Model& m ) const {
+  LOG(logINFO) << "add_assignment_vars_based_on_conflict_sets() -- pruned by nearest neighbor based on conflict sets";
+  MultiHypothesesGraph::ConflictSetMap& conflict_sets = hypotheses.get(node_conflict_sets());
+  MultiHypothesesGraph::ContainedRegionsMap& regions = hypotheses.get(node_regions_in_component());
+  MultiHypothesesGraph::node_timestep_map& timesteps = hypotheses.get(node_timestep());
+  for (MultiHypothesesGraph::ArcIt a(hypotheses); a != lemon::INVALID; ++a) {
+    const MultiHypothesesGraph::Node& source_node = hypotheses.source(a);
+    const MultiHypothesesGraph::Node& dest_node = hypotheses.target(a);
+    if (timestep_range_specified() &&
+        (timesteps[source_node] < first_timestep() || timesteps[dest_node] > last_timestep())) {
+      continue;
+    }
+    const ConflictSets& source_conflicts = conflict_sets[source_node];
+    const ConflictSets& dest_conflicts = conflict_sets[dest_node];
+    const std::vector<Traxel>& source = regions[source_node];
+    const std::vector<Traxel>& dest = regions[dest_node];
+    std::vector<std::pair<Traxel, std::vector<unsigned> > > source_segments;
+    std::vector<std::pair<Traxel, std::vector<unsigned> > > dest_segments;
+    std::map<std::vector<unsigned>, std::pair<double, std::vector<unsigned> > > distances_forward;
+    std::map<std::vector<unsigned>, std::pair<double, std::vector<unsigned> > > distances_backward;
+    get_segments(source_conflicts, source, source_segments);
+    get_segments(dest_conflicts, dest, dest_segments);
+    get_nearest_segments(source_segments, dest_segments, distances_forward);
+    get_nearest_segments(dest_segments, source_segments, distances_backward);
+    add_vars(distances_forward, source[0].Timestep, 1, m);
+    add_vars(distances_backward, dest[0].Timestep, -1, m);
   }
 }
 
@@ -1072,7 +1159,11 @@ boost::shared_ptr<Model> CVPR2014ModelBuilder::build(const MultiHypothesesGraph&
     const MultiHypothesesGraph::MoveFeatureMap& moves = hypotheses.get(node_move_features());
     add_assignment_vars( hypotheses, *model, moves );
   } else {
-    add_assignment_vars( hypotheses, *model );
+    if (true) {
+      add_assignment_vars_based_on_conflict_sets( hypotheses, *model );
+    } else {
+      add_assignment_vars( hypotheses, *model );
+    }
   }
 
   MultiHypothesesGraph::node_timestep_map& timesteps = hypotheses.get(node_timestep());

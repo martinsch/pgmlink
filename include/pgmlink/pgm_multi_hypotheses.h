@@ -224,6 +224,11 @@ class ModelBuilder {
   void add_detection_vars( const MultiHypothesesGraph&, Model& ) const;
   void add_assignment_vars( const MultiHypothesesGraph&, Model& ) const;
   void add_assignment_vars( const MultiHypothesesGraph&, Model&, const MultiHypothesesGraph::MoveFeatureMap& ) const;
+  void add_assignment_vars_based_on_conflict_sets( const MultiHypothesesGraph& hypotheses, Model& m ) const;
+  void add_vars( const std::map<std::vector<unsigned>, std::pair<double, std::vector<unsigned> > >& distances,
+                 int timestep,
+                 int direction,
+                 Model& m ) const;
 
   vector<OpengmModel::IndexType> vars_for_outgoing_factor( const MultiHypothesesGraph&,
                                                            const Model&,
