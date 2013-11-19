@@ -435,7 +435,7 @@ void MultiHypothesesGraphBuilder::add_nodes(const MultiHypothesesTraxelStore& ts
          ++component) {
       const MultiHypothesesGraph::Node& node = dest_graph->add_node(timestep->first);
       std::vector<Traxel>& traxels = regions.get_value(node);
-
+      assert(traxels.size() == 0 && "traxels must be an empty vector");
 
       LOG(logDEBUG4) << "MultiHypothesesGraphBuilder::add_nodes() -- rearranging traxel vector to make "
                      << "connected component traxel is at the beginning of the vector";
