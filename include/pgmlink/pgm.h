@@ -97,11 +97,14 @@ namespace pgmlink {
       OpengmExplicitFactor( const std::vector<size_t>& ogm_var_indices, VALUE init=0, size_t states_per_var=2 );
       template <typename ITER>
 	OpengmExplicitFactor( ITER first_ogm_idx, ITER last_ogm_idx, VALUE init=0, size_t states_per_var=2 );  
+      template <typename ITER>
+      OpengmExplicitFactor( ITER first_ogm_idx, ITER last_ogm_idx, VALUE init, std::vector<size_t> states_vars );
   
       void set_value( std::vector<size_t> coords, VALUE v);
   
     private:
       void init_( VALUE init, size_t states_per_var );
+      void init_( VALUE init, std::vector<size_t> states_vars );
     };    
  
     template <typename VALUE>
@@ -221,6 +224,12 @@ namespace pgmlink {
    : OpengmFactor<opengm::ExplicitFunction<VALUE> >(opengm::ExplicitFunction<VALUE>(),first_ogm_idx, last_ogm_idx) {
   init_( init, states_per_var );
  }
+ template <typename VALUE>
+    template< typename ITER >
+    OpengmExplicitFactor<VALUE>::OpengmExplicitFactor( ITER first_ogm_idx, ITER last_ogm_idx, VALUE init, std::vector<size_t> states_vars )
+    : OpengmFactor<opengm::ExplicitFunction<VALUE> >(opengm::ExplicitFunction<VALUE>(),first_ogm_idx, last_ogm_idx) {
+   init_( init, states_vars );
+  }
 
  template <typename VALUE>  
    void OpengmExplicitFactor<VALUE>::set_value( std::vector<size_t> coords, VALUE v) {
@@ -240,6 +249,11 @@ namespace pgmlink {
    std::vector<size_t> shape( this->vi_.size(), states_per_var );
    this->ogmfunction_ = opengm::ExplicitFunction<VALUE>( shape.begin(), shape.end(), init );
  }
+
+ template <typename VALUE>
+    void OpengmExplicitFactor<VALUE>::init_( VALUE init, std::vector<size_t> states_vars ) {
+    this->ogmfunction_ = opengm::ExplicitFunction<VALUE>( states_vars.begin(), states_vars.end(), init );
+  }
 
 
 
