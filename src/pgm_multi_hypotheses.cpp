@@ -360,25 +360,30 @@ void get_segments( const ConflictSets& conflicts, const std::vector<Traxel>& tra
   int timestep = traxels[0].Timestep;
   for (ConflictSets::const_iterator it = conflicts.begin(); it != conflicts.end(); ++it) {
     unsigned segment = *(std::min_element(it->begin(), it->end()));
-    assert(std::find(traxels.begin(), traxels.end(), Traxel(segment, timestep)) != traxels.end() &&
+    std::vector<Traxel>::const_iterator trax_it = std::find(traxels.begin(), traxels.end(), Traxel(segment, timestep));
+    assert(trax_it != traxels.end() &&
            "Segment must also be in traxel vector");
-    const Traxel& trax = *std::find(traxels.begin(), traxels.end(), Traxel(segment, timestep));
+    const Traxel& trax = *trax_it;
     segments.push_back(std::make_pair(trax, *it));
   }
 }
 
 void get_nearest_segments(const std::vector<std::pair<Traxel, std::vector<unsigned> > >& source,
                           const std::vector<std::pair<Traxel, std::vector<unsigned> > >& dest,
-                          std::map<std::vector<unsigned>, std::pair<double, std::vector<unsigned> > >& distances) {
+                          std::map<std::vector<unsigned>, std::pair<double, std::vector<unsigned> > >& distances_src) {
+  // std::map<std::vector<unsigned>, std::pair<double, std::vector<unsigned> > >& distances_dest) {
   for (std::vector<std::pair<Traxel, std::vector<unsigned> > >::const_iterator s = source.begin(); s != source.end(); ++s) {
-    std::pair<double, std::vector<unsigned> >& pair = distances[s->second];
-    pair.first = s->first.distance_to(dest[0].first);
-    pair.second = dest[0].second;
+    std::pair<double, std::vector<unsigned> >& pair_src = distances_src[s->second];
+    pair_src.first = s->first.distance_to(dest[0].first);
+    pair_src.second = dest[0].second;
+    // std::pair<double, std::vector<unsigned> >& pair_dest = distances_dest[s->second];
+    // pair_dest.first = s->first.distance_to(dest[0].first);
+    // pair_dest.second = dest[0].second;
     for (std::vector<std::pair<Traxel, std::vector<unsigned> > >::const_iterator d = dest.begin(); d != dest.end(); ++d) {
       double curr_dist = s->first.distance_to(d->first);
-      if (curr_dist < pair.first) {
-        pair.first = curr_dist;
-        pair.second = d->second;
+      if (curr_dist < pair_src.first) {
+        pair_src.first = curr_dist;
+        pair_src.second = d->second;
       }
     }
   }
@@ -435,6 +440,7 @@ inline void ModelBuilder::add_assignment_vars( const MultiHypothesesGraph& hypot
 
 inline void ModelBuilder::add_assignment_vars_based_on_conflict_sets( const MultiHypothesesGraph& hypotheses, Model& m ) const {
   LOG(logINFO) << "add_assignment_vars_based_on_conflict_sets() -- pruned by nearest neighbor based on conflict sets";
+  LOG(logWARNING) << "PRUNINING BY IDENTIFYING SEGMENTS AS REGIONS WITH SMALLES IDS IN CONFLICT SETS!!!!!";
   MultiHypothesesGraph::ConflictSetMap& conflict_sets = hypotheses.get(node_conflict_sets());
   MultiHypothesesGraph::ContainedRegionsMap& regions = hypotheses.get(node_regions_in_component());
   MultiHypothesesGraph::node_timestep_map& timesteps = hypotheses.get(node_timestep());
