@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include <opengm/inference/lpcplex.hxx>
 #include <opengm/datastructures/marray/marray.hxx>
+#include <opengm/graphicalmodel/graphicalmodel_hdf5.hxx>
 
 #include "pgmlink/hypotheses.h"
 #include "pgmlink/log.h"
@@ -80,6 +81,10 @@ void ConservationTracking::formulate(const HypothesesGraph& hypotheses) {
 }
 
 void ConservationTracking::infer() {
+	if (!with_constraints_) {
+		opengm::hdf5::save(optimizer_->graphicalModel(), "./conservationTracking.h5", "conservationTracking");
+		throw std::runtime_error("GraphicalModel::infer(): inference with soft constraints is not implemented yet. The conservation tracking factor graph has been saved to file");
+	}
     opengm::InferenceTermination status = optimizer_->infer();
     if (status != opengm::NORMAL) {
         throw std::runtime_error("GraphicalModel::infer(): optimizer terminated abnormally");
@@ -352,7 +357,7 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
         // convert vector to array
         vector<size_t> coords(num_vars, 0); // number of variables
         // ITER first_ogm_idx, ITER last_ogm_idx, VALUE init, size_t states_per_var
-        pgm::OpengmExplicitFactor<double> table(vi.begin(), vi.end(), 0, (max_number_objects_ + 1));
+        pgm::OpengmExplicitFactor<double> table(vi.begin(), vi.end(), forbidden_cost_, (max_number_objects_ + 1));
         for (size_t state = 0; state <= max_number_objects_; ++state) {
             double energy = 0;
             if (with_tracklets_) {
@@ -411,7 +416,7 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
         size_t vi[] = { arc_map_[a] };
         vector<size_t> coords(1, 0); // number of variables
         // ITER first_ogm_idx, ITER last_ogm_idx, VALUE init, size_t states_per_var
-        pgm::OpengmExplicitFactor<double> table(vi, vi + 1, 0, (max_number_objects_ + 1));
+        pgm::OpengmExplicitFactor<double> table(vi, vi + 1, forbidden_cost_, (max_number_objects_ + 1));
         for (size_t state = 0; state <= max_number_objects_; ++state) {
             double energy = transition_(get_transition_prob(arc_distances[a], state, transition_parameter_));
             LOG(logDEBUG2) << "ConservationTracking::add_finite_factors: transition[" << state
@@ -435,7 +440,7 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
             size_t vi[] = { div_node_map_[n] };
             vector<size_t> coords(1, 0); // number of variables
             // ITER first_ogm_idx, ITER last_ogm_idx, VALUE init, size_t states_per_var
-            pgm::OpengmExplicitFactor<double> table(vi, vi + 1, 0, 2);
+            pgm::OpengmExplicitFactor<double> table(vi, vi + 1, forbidden_cost_, 2);
             for (size_t state = 0; state <= 1; ++state) {
                 double energy = 0;
                 if (with_tracklets_) {
@@ -451,6 +456,87 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
             }
             table.add_to(*(pgm_->Model()));
         }
+    }
+
+
+    if (!with_constraints_) {
+    	for (HypothesesGraph::NodeIt n(g); n != lemon::INVALID; ++n) {
+			LOG(logDEBUG) << "ConservationTracking::add_finite_factors: add soft-constraints for outgoing";
+
+			// collect and count outgoing arcs
+			  std::vector<HypothesesGraph::Arc> arcs;
+			  std::vector<size_t> vi;
+			  std::vector<size_t> states_vars;
+			  states_vars.push_back(max_number_objects_+1);
+			  vi.push_back(app_node_map_[n]); // first detection node, remaining will be transition nodes
+			  bool has_div_node = false;
+			  if (with_divisions_ && div_node_map_.count(n) != 0) {
+				  vi.push_back(div_node_map_[n]);
+				  has_div_node = true;
+				  states_vars.push_back(2);
+			  }
+
+			  int count = 0;
+			  int trans_idx = vi.size();
+			  for(HypothesesGraph::OutArcIt a(g, n); a != lemon::INVALID; ++a) {
+				  arcs.push_back(a);
+				  vi.push_back(arc_map_[a]);
+				  states_vars.push_back(max_number_objects_+1);
+				  ++count;
+			  }
+
+			  // construct factor
+			  // build value table
+			  if (count != 0) {
+				  size_t table_dim = count + 1 + int(has_div_node); 		// n * transition var + detection var (+ division var)
+				  std::vector<size_t> coords;
+				  // ITER first_ogm_idx, ITER last_ogm_idx, VALUE init, size_t states_vars
+				  pgm::OpengmExplicitFactor<double> table( vi.begin(), vi.end(), 0, states_vars);
+
+				  assert(table_dim - trans_idx == count);
+
+				  ////
+				  //// TODO: set the forbidden configurations to infinity or the allowed to zero
+				  /////
+
+				  table.add_to(*(pgm_->Model()));
+			  }
+
+
+
+			  LOG(logDEBUG) << "ConservationTracking::add_finite_factors: add soft-constraints for incomfing";
+			  // collect and count incoming arcs
+			  arcs.clear();
+			  vi.clear();
+			  states_vars.clear();
+			  states_vars.push_back(max_number_objects_+1);
+			  vi.push_back(dis_node_map_[n]); // first detection node, remaining will be transition nodes
+
+			  count = 0;
+			  for(HypothesesGraph::InArcIt a(g, n); a != lemon::INVALID; ++a) {
+				  arcs.push_back(a);
+				  vi.push_back(arc_map_[a]);
+				  states_vars.push_back(max_number_objects_+1);
+				  ++count;
+			  }
+			  if (count != 0) {
+				  // construct factor
+				  // build value table
+				  size_t table_dim = count + 1; 		// n * transition var + detection var
+				  std::vector<size_t> coords;
+				  // ITER first_ogm_idx, ITER last_ogm_idx, VALUE init, size_t states_vars
+				  pgm::OpengmExplicitFactor<double> table( vi.begin(), vi.end(), 0, states_vars);
+
+				  assert(table_dim - trans_idx == count);
+
+				  ////
+				  //// TODO: set the forbidden configurations to infinity or the allowed to zero
+				  /////
+
+				  table.add_to(*(pgm_->Model()));
+			  }
+    	}
+
     }
 }
 
