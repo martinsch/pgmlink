@@ -1658,7 +1658,6 @@ void CVPR2014ModelBuilder::add_outgoing_factor( const MultiHypothesesGraph& hypo
 
   
   // move configuration
-  property_map<arc_distance, HypothesesGraph::base_graph>::type& arc_distances = hypotheses.get(arc_distance());
   coords[0] = 1;
   for (size_t i = 1; i < table_dim; ++i) {
     coords[i] = 1;
