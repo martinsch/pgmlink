@@ -183,6 +183,10 @@ ModelBuilder& ModelBuilder::with_one_active_per_component_constraint(bool check)
    return *this;
 }
 
+ModelBuilder& ModelBuilder::with_transition_parameter(int alpha) {
+   transition_parameter_ = alpha;
+}
+
 ModelBuilder& ModelBuilder::with_divisions( function<double (const Traxel&, const Traxel&, const Traxel&, feature_type)> division ) {
   if (!division) {
     throw std::invalid_argument("MultiHypothesesModelBuilder::with_divisions(): empty function");
@@ -1597,6 +1601,15 @@ void CVPR2014ModelBuilder::fill_probabilities(feature_array& probabilities, size
   
 }
 
+namespace {
+double get_transition_prob(double distance, size_t state, double alpha) {
+    double prob = exp(-distance / alpha);
+    if (state == 0) {
+        return 1 - prob;
+    }
+    return prob;
+}
+}
 
 
 void CVPR2014ModelBuilder::add_outgoing_factor( const MultiHypothesesGraph& hypotheses,
@@ -1645,18 +1658,19 @@ void CVPR2014ModelBuilder::add_outgoing_factor( const MultiHypothesesGraph& hypo
 
   
   // move configuration
-  
   coords[0] = 1;
   for (size_t i = 1; i < table_dim; ++i) {
     coords[i] = 1;
     feature_type probability = 0.;
-    if (has_classifiers()) {
+    if (has_classifiers() && transition_alpha_ == 0) {
       probability = hypotheses.get(node_move_features())[node]
           .find(trax)->second
           .find(arcs[i-1].second)->second[1];
       LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_outgoing_factor: move using classifier, prob: " << probability
                      << ", energy: " << move()(trax, arcs[i-1].second, probability);
-    }
+    } else if (transition_alpha_ != 0) {
+      probability = (double) get_transition_prob(hypotheses.get(arc_distance())[arcs[i-1]], 1, transition_alpha_) {
+    
 
       double move_energy = move()(trax, arcs[i-1].second, probability);
       // if (move_energy < minimum_move_energy) {

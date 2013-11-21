@@ -162,6 +162,10 @@ struct PyTrackingOptions {
     options.counting_incoming_factor = check;
   }
 
+  void with_transition_parameter(int alpha) {
+     options.transition_parameter = alpha;
+  }
+
   void with_restricted_timestep_range(double first, double last) {
     options.restrict_timestep_range = true;
     options.weights["first_timestep"] = first;
@@ -458,7 +462,8 @@ void export_multi_hypotheses() {
       .def("limitOutgoingArcs", &PyTrackingOptions::limit_outgoing_arcs)
       .def("withRestrictedTimestepRange", &PyTrackingOptions::with_restricted_timestep_range)
       .def("withOneActiveRegionPerComponent", &PyTrackingOptions::with_one_active_constraint)
-      .def("withConflictFactors", &PyTrackingOptions:: with_conflict_factors)
+      .def("withConflictFactors", &PyTrackingOptions::with_conflict_factors)
+      .def("withTransitionParameter", &PyTrackingOptions::with_transition_parameter)
       ;
 
 

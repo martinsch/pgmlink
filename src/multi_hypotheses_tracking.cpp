@@ -51,7 +51,8 @@ MultiHypothesesTracking::Options::Options() :
     with_maximum_arcs(false),
     restrict_timestep_range(false),
   with_one_active_constraint(false),
-  with_conflict_factors(false)
+  with_conflict_factors(false),
+  transition_parameter(0)
   {
 
 }
@@ -82,11 +83,12 @@ void MultiHypothesesTracking::print_info() {
                << "\tmaximum division level: " << options_.weights["max_div"] << '\n'
                << "\twith constant classifiers: " << options_.with_constant_classifiers << '\n'
                << "\twith hierarchical count factor: " << options_.hierarchical_count_factor << '\n'
-               << "\twith counting incoming factor:" << options_.counting_incoming_factor << '\n'
-               << "\twith maximum arcs:" << options_.with_maximum_arcs << '\n'
-               << "\tmaximum arcs:" << options_.weights["arc"] << '\n'
-               << "\twith one active region per component constraint:" << options_.with_one_active_constraint  << '\n'    
-               << "\twith conflict factors:" << options_.with_conflict_factors
+               << "\twith counting incoming factor: " << options_.counting_incoming_factor << '\n'
+               << "\twith maximum arcs: " << options_.with_maximum_arcs << '\n'
+               << "\tmaximum arcs: " << options_.weights["arc"] << '\n'
+               << "\twith one active region per component constraint: " << options_.with_one_active_constraint  << '\n'    
+               << "\twith conflict factors: " << options_.with_conflict_factors << '\n'
+               << "\twith transition parameter: " << options_.transition_parameter
       ;
 }
 
@@ -286,6 +288,9 @@ void MultiHypothesesTracking::track(MultiHypothesesGraph& g, boost::shared_ptr<s
     if (options_.with_divisions) {
       builder.with_divisions(NegLnDivision(options_.get_weight("div"), options_.get_weight("max_div")));
     }
+  }
+  if (options_.transition_parameter != 0) {
+     builder.with_transition_parameter(options_.transition_parameter);
   }
 
   std::cout << " -> workflow: initializing reasoner" << std::endl;

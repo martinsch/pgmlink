@@ -488,12 +488,12 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
 			  // construct factor
 			  // build value table
 			  if (count != 0) {
-				  size_t table_dim = count + 1 + int(has_div_node); 		// n * transition var + detection var (+ division var)
-				  std::vector<size_t> coords;
+				  //size_t table_dim = count + 1 + int(has_div_node); 		// n * transition var + detection var (+ division var)
+				  //std::vector<size_t> coords;
 				  // ITER first_ogm_idx, ITER last_ogm_idx, VALUE init, size_t states_vars
 				  pgm::OpengmExplicitFactor<double> table( vi.begin(), vi.end(), 0, states_vars);
 
-				  //assert(table_dim - trans_idx == count);
+//				  assert(table_dim - trans_idx == count);
 
 				  ////
 				  //// TODO: set the forbidden configurations to infinity or the allowed to zero
@@ -509,8 +509,8 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
 			  arcs.clear();
 			  vi.clear();
 			  states_vars.clear();
-			  states_vars.push_back(max_number_objects_+1);
 			  vi.push_back(dis_node_map_[n]); // first detection node, remaining will be transition nodes
+			  states_vars.push_back(max_number_objects_+1);
 
 			  count = 0;
 			  for(HypothesesGraph::InArcIt a(g, n); a != lemon::INVALID; ++a) {
@@ -522,12 +522,12 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
 			  if (count != 0) {
 				  // construct factor
 				  // build value table
-				  size_t table_dim = count + 1; 		// n * transition var + detection var
-				  std::vector<size_t> coords;
+				  //size_t table_dim = count + 1; 		// n * transition var + detection var
+				  //std::vector<size_t> coords;
 				  // ITER first_ogm_idx, ITER last_ogm_idx, VALUE init, size_t states_vars
 				  pgm::OpengmExplicitFactor<double> table( vi.begin(), vi.end(), 0, states_vars);
 
-				  //assert(table_dim - trans_idx == count);
+//				  assert(table_dim - trans_idx == count);
 
 				  ////
 				  //// TODO: set the forbidden configurations to infinity or the allowed to zero

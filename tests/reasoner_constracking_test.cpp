@@ -95,7 +95,8 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Merger ) {
 				  3, //n_dim
 				  5, //transition_parameter
 				  0, //border_width for app/disapp costs
-	              fov
+	              fov,
+                  false // with_constraints
 		  	      );
 
 
@@ -194,7 +195,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Division ) {
 				  3, //n_dim
 				  5, //transition_parameter
 				  0, //border_width for app/disapp costs
-				  fov
+				  fov, false
 				  );
 
 	std::cout << "Run Conservation tracking" << std::endl;
@@ -278,7 +279,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_SimpleMove ) {
 				  3, //n_dim
 				  5, //transition_parameter
 				  0, //border_width for app/disapp costs
-				  fov
+				  fov, false
 				  );
 
 	std::cout << "Run Conservation tracking" << std::endl;
@@ -367,7 +368,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Merger_Volume ) {
 				  3, //n_dim
 				  5, //transition_parameter
 				  0, //border_width for app/disapp costs
-				  fov
+				  fov, false
 				  );
 
 	std::cout << "Run Conservation tracking" << std::endl;
@@ -461,7 +462,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Disappearance ) {
 				  3, //n_dim
 				  5, //transition_parameter
 				  0, //border_width for app/disapp costs
-				  fov
+				  fov, false
 				  );
 
 	std::cout << "Run Conservation tracking" << std::endl;
@@ -557,7 +558,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_AppearanceAndDisappearance )
 				  3, //n_dim
 				  5, //transition_parameter
 				  0, //border_width for app/disapp costs
-				  fov
+				  fov, false
 				  );
 
 	std::cout << "Run Conservation tracking" << std::endl;
@@ -686,7 +687,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Appearance ) {
 				  3, //n_dim
 				  5, //transition_parameter
 				  0, //border_width for app/disapp costs
-				  fov
+				  fov, false
 				  );
 
 	std::cout << "Run Conservation tracking" << std::endl;
@@ -789,7 +790,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_AppearanceSimple ) {
 				  3, //n_dim
 				  5, //transition_parameter
 				  0, //border_width for app/disapp costs
-				  fov
+				  fov, false
 				  );
 
 	std::cout << "Run Conservation tracking" << std::endl;
@@ -908,7 +909,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Tracklets ) {
 				  3, //n_dim
 				  5, //transition_parameter
 				  0, //border_width for app/disapp costs
-				  fov
+				  fov, false
 				  );
 
 	std::cout << "Run Conservation tracking" << std::endl;
@@ -1065,7 +1066,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Merger3 ) {
 			  2, //n_dim
 			  5, //transition_parameter
 			  0, //border_width for app/disapp costs
-              fov
+              fov, false
 	  	      );
 
 	std::cout << "Run Conservation tracking" << std::endl;
@@ -1245,7 +1246,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_TranslationVector_Traxels ) 
 			  2, //n_dim
 			  5, //transition_parameter
 			  0, //border_width for app/disapp costs
-              fov
+              fov, false
 	  	      );
 
 	std::cout << "Run Conservation tracking" << std::endl;
@@ -1394,7 +1395,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_TranslationVector_Tracklets 
 			  2, //n_dim
 			  5, //transition_parameter
 			  0, //border_width for app/disapp costs
-              fov
+              fov, false
 	  	      );
 
 	std::cout << "Run Conservation tracking" << std::endl;
@@ -1521,7 +1522,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Merger4 ) {
 			  2, //n_dim
 			  5, //transition_parameter
 			  0, //border_width for app/disapp costs
-              fov
+              fov, false
 	  	      );
 
 	std::cout << "Run Conservation tracking" << std::endl;
@@ -1661,7 +1662,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_MergerResolvingDivision ) {
 			  2, //n_dim
 			  5, //transition_parameter
 			  0, //border_width for app/disapp costs
-              fov
+              fov, false
 	  	      );
 
 	std::cout << "Run Conservation tracking" << std::endl;
@@ -1799,7 +1800,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_TranslationVector2 ) {
 			  2, //n_dim
 			  5, //transition_parameter
 			  0, //border_width for app/disapp costs
-              fov
+              fov, false
 	  	      );
 
 	std::cout << "Run Conservation tracking" << std::endl;

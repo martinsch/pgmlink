@@ -130,7 +130,8 @@ class ModelBuilder {
     cplex_timeout_(1e+75),
     max_division_level_(max_division_level),
     max_count_(max_count),
-    maximum_outgoing_arcs_(0) {}
+    maximum_outgoing_arcs_(0),
+    transition_parameter_(0) {}
 
   virtual boost::shared_ptr<ModelBuilder> clone() const = 0;
   virtual ~ModelBuilder() {}
@@ -218,6 +219,9 @@ class ModelBuilder {
   int first_timestep() const { return first_timestep_; }
   int last_timestep() const { return last_timestep_; }
 
+  // with squared-distance transition instead of classifier
+  ModelBuilder& with_transition_parameter(int);
+
  protected:
   size_t cplex_id(OpengmLPCplex& cplex, const size_t opengm_id, const size_t state) const;
   size_t cplex_id(OpengmLPCplex& cplex, const size_t opengm_id) const;
@@ -287,6 +291,7 @@ class ModelBuilder {
   int maximum_outgoing_arcs_;
   int first_timestep_;
   int last_timestep_;
+  int transition_parameter_;
 };
 
 
