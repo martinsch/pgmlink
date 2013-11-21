@@ -131,7 +131,7 @@ double NegLnDivision::operator ()(const Traxel& tr, size_t state) const {
 
 
 double NegLnDivision::operator()(const Traxel&, const Traxel& t2, const Traxel& t3, feature_type probability) const {
-  if (probability < 0.0000000001 || t2.Level < max_div_level_ || t3.Level < max_div_level_) probability = 0.0000000001;
+  if (probability < 0.0000000001 || (t2.Level > max_div_level_ && t3.Level > max_div_level_)) probability = 0.0000000001;
   return w_*-1*log(probability);
 }
 
