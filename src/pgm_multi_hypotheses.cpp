@@ -1658,19 +1658,20 @@ void CVPR2014ModelBuilder::add_outgoing_factor( const MultiHypothesesGraph& hypo
 
   
   // move configuration
+  property_map<arc_distance, HypothesesGraph::base_graph>::type& arc_distances = hypotheses.get(arc_distance());
   coords[0] = 1;
   for (size_t i = 1; i < table_dim; ++i) {
     coords[i] = 1;
     feature_type probability = 0.;
-    if (has_classifiers() && transition_alpha_ == 0) {
+    if (has_classifiers() && transition_parameter() == 0) {
       probability = hypotheses.get(node_move_features())[node]
           .find(trax)->second
           .find(arcs[i-1].second)->second[1];
       LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_outgoing_factor: move using classifier, prob: " << probability
                      << ", energy: " << move()(trax, arcs[i-1].second, probability);
-    } else if (transition_alpha_ != 0) {
-      probability = (double) get_transition_prob(hypotheses.get(arc_distance())[arcs[i-1]], 1, transition_alpha_) {
-    
+    } else if (transition_parameter() != 0) {
+      probability = (double) get_transition_prob(trax.distance_to(arcs[i-1].second), /* state */ 1, transition_parameter());
+    }
 
       double move_energy = move()(trax, arcs[i-1].second, probability);
       // if (move_energy < minimum_move_energy) {

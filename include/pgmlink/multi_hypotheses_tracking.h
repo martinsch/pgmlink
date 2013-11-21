@@ -54,6 +54,7 @@ public:
     bool restrict_timestep_range;
     bool with_one_active_constraint;
     bool with_conflict_factors;
+    int transition_parameter;
   };
   MultiHypothesesTracking(const Options& options) : options_(options) {}
   boost::shared_ptr<std::vector<std::vector<Event> > > operator()(MultiHypothesesTraxelStore& ts, std::string serialize_to_fn="");

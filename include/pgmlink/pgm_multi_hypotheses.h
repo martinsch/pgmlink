@@ -221,6 +221,7 @@ class ModelBuilder {
 
   // with squared-distance transition instead of classifier
   ModelBuilder& with_transition_parameter(int);
+  int transition_parameter() const { return transition_parameter_; }
 
  protected:
   size_t cplex_id(OpengmLPCplex& cplex, const size_t opengm_id, const size_t state) const;
