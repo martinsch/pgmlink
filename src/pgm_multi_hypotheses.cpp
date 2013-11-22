@@ -1666,8 +1666,8 @@ void CVPR2014ModelBuilder::add_outgoing_factor( const MultiHypothesesGraph& hypo
       probability = hypotheses.get(node_move_features())[node]
           .find(trax)->second
           .find(arcs[i-1].second)->second[1];
-      LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_outgoing_factor: move using classifier, prob: " << probability
-                     << ", energy: " << move()(trax, arcs[i-1].second, probability);
+      // LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_outgoing_factor: move using classifier, prob: " << probability
+      // << ", energy: " << move()(trax, arcs[i-1].second, probability);
     } else if (transition_parameter() != 0) {
       probability = (double) get_transition_prob(trax.distance_to(arcs[i-1].second), /* state */ 1, transition_parameter());
     }
@@ -1676,9 +1676,12 @@ void CVPR2014ModelBuilder::add_outgoing_factor( const MultiHypothesesGraph& hypo
       // if (move_energy < minimum_move_energy) {
       //   minimum_move_energy = move_energy;
       // }
+      LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_outgoing_factor: move energy: " << move_energy;
       table.set_value( coords,  trax.features.find("cardinality")->second[0]/maximum_cardinality*move_energy);
-      LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_outgoing_factor: move="
-                     << table.get_value( coords );
+      LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_outgoing_factor: probability = "
+                     << probability << ", move=" << table.get_value( coords );
+      LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_outgoing_factor: cardinality =" << trax.features.find("cardinality")->second[0]
+                     << ", maximum_cardinality=" <<  maximum_cardinality;
       coords[i] = 0;
     }
     coords[0] = 0;
