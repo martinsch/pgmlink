@@ -112,6 +112,32 @@ namespace pgmlink {
   };
 
 
+class GMMWithInitialized : public ClusteringMlpackBase {
+  private:
+    GMMWithInitialized();
+    int k_;
+    int n_;
+    const feature_array& data_;
+  const std::vector<arma::vec>& means_;
+  const std::vector<arma::mat>& covs_;
+  const arma::vec& weights_;
+    double score_;
+    int n_trials_;
+  public:
+    // constructor needs to specify number of dimensions
+    // for 2D data, ilastik provides coordinates with 3rd dimension 0
+    // which will cause singular covariance matrix
+    // therefore add option for dimensionality
+  GMMWithInitialized(int k, int n, const feature_array& data, int n_trials,
+                     const std::vector<arma::vec>& means, const std::vector<arma::mat>& covs, const arma::vec& weights) :
+      k_(k), n_(n), data_(data), score_(0.0), n_trials_(n_trials), means_(means), covs_(covs), weights_(weights) {}
+
+    virtual feature_array operator()();
+    double score() const;
+    
+  };
+
+
   class GMMInitializeArma : public ClusteringMlpackBase {
   private:
     GMMInitializeArma();
@@ -468,6 +494,9 @@ namespace pgmlink {
   void merge_split_divisions(const HypothesesGraph& graph,
                              std::map<HypothesesGraph::Node, HypothesesGraph::Node>& division_splits,
                              std::map<HypothesesGraph::Arc, HypothesesGraph::Arc>& arc_cross_reference);
+
+
+void calculate_gmm_beforehand(HypothesesGraph& g, int n_trials, int n_dimensions);
 
 
 
