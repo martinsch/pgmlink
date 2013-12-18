@@ -10,10 +10,31 @@
 #include "pgmlink/hypotheses.h"
 #include "pgmlink/reasoner.h"
 #include "pgmlink/feature.h"
+#include "opengm/opengm.hxx"
+#include "opengm/graphicalmodel/graphicalmodel.hxx"
+#include "opengm/functions/modelviewfunction.hxx"
+#include "opengm/functions/view.hxx"
 
-namespace pgmlink {
+namespace pgmlink {	
+
+typedef double ValueType;
+typedef pgm::OpengmModelDeprecated::ogmGraphicalModel::OperatorType OperatorType;
+typedef pgm::OpengmModelDeprecated::ogmGraphicalModel::LabelType LabelType;
+typedef pgm::OpengmModelDeprecated::ogmGraphicalModel::IndexType IndexType;
+
+
+typedef opengm::GraphicalModel
+		<ValueType, OperatorType,  typename opengm::meta::TypeListGenerator
+		<opengm::ModelViewFunction<pgm::OpengmModelDeprecated::ogmGraphicalModel, marray::Marray<ValueType> > >::type, 
+		opengm::DiscreteSpace<IndexType,LabelType> > 
+		SubGmType;
+
+typedef opengm::LPCplex
+	<	SubGmType,
+			pgm::OpengmModelDeprecated::ogmAccumulator		>
+    cplex_optimizer;
+
 class Traxel;
-
 
 class ConservationTracking : public Reasoner {
     public:
@@ -60,7 +81,7 @@ class ConservationTracking : public Reasoner {
     virtual void formulate( const HypothesesGraph& );
     virtual void infer();
     virtual void conclude( HypothesesGraph& );
-
+    
     double forbidden_cost() const;
     bool with_constraints() const;
 
@@ -86,18 +107,19 @@ class ConservationTracking : public Reasoner {
 
     private:
     // copy and assingment have to be implemented, yet
+    
     ConservationTracking(const ConservationTracking&) {};
     ConservationTracking& operator=(const ConservationTracking&) { return *this;};
 
     void reset();
-    void add_constraints( const HypothesesGraph& );
+    void add_constraints(SubGmType& );
     void add_detection_nodes( const HypothesesGraph& );
     void add_appearance_nodes( const HypothesesGraph& );
     void add_disappearance_nodes( const HypothesesGraph& );
     void add_transition_nodes( const HypothesesGraph& );
     void add_division_nodes(const HypothesesGraph& );
     void add_finite_factors( const HypothesesGraph& );
-
+    void perturbedInference( const HypothesesGraph&);
     // helper
     size_t cplex_id(size_t opengm_id, size_t state);
 
@@ -112,7 +134,8 @@ class ConservationTracking : public Reasoner {
     double forbidden_cost_;
     
     shared_ptr<pgm::OpengmModelDeprecated> pgm_;
-    opengm::LPCplex<pgm::OpengmModelDeprecated::ogmGraphicalModel, pgm::OpengmModelDeprecated::ogmAccumulator>* optimizer_;
+    //opengm::LPCplex<pgm::OpengmModelDeprecated::ogmGraphicalModel, pgm::OpengmModelDeprecated::ogmAccumulator>* optimizer_;
+	cplex_optimizer* optimizer_;
 
     std::map<HypothesesGraph::Node, size_t> div_node_map_;
     std::map<HypothesesGraph::Node, size_t> app_node_map_;

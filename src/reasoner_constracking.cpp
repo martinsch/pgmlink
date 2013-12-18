@@ -4,16 +4,32 @@
 #include <opengm/inference/lpcplex.hxx>
 #include <opengm/datastructures/marray/marray.hxx>
 #include <opengm/graphicalmodel/graphicalmodel_hdf5.hxx>
+//#include <random>
 
 #include "pgmlink/hypotheses.h"
 #include "pgmlink/log.h"
 #include "pgmlink/reasoner_constracking.h"
 #include "pgmlink/traxels.h"
+//added for view-support
+#include "opengm/opengm.hxx"
+#include "opengm/graphicalmodel/graphicalmodel.hxx"
+#include "opengm/functions/modelviewfunction.hxx"
+#include "opengm/functions/view.hxx"
 
 using namespace std;
 
 namespace pgmlink {
-ConservationTracking::~ConservationTracking() {
+
+typedef opengm::ModelViewFunction
+	<pgm::OpengmModelDeprecated::ogmGraphicalModel, marray::Marray<ValueType> >
+	ViewFunctionType;
+
+/*typedef opengm::LPCplex
+	<	pgm::OpengmModelDeprecated::ogmGraphicalModel,
+			pgm::OpengmModelDeprecated::ogmAccumulator		>
+    cplex_optimizer;*/
+
+//ConservationTracking::~CelViewConservationTracking() {
     //	if (pgm_ != NULL) {
     //		delete pgm_;
     //		pgm_ = NULL;
@@ -22,25 +38,102 @@ ConservationTracking::~ConservationTracking() {
     //      delete optimizer_;
     //      optimizer_ = NULL;
     //   }
-}
+//}
 
 double ConservationTracking::forbidden_cost() const {
     return forbidden_cost_;
 }
 
+/*
+ModelView ConservationTracking::getPerturbedView(const HypothesesGraph& hypotheses){
+
+
+  //std::default_random_engine generator;
+  //std::normal_distribution<double> distribution(5.0,2.0);
+   
+      typedef opengm::GraphicalModel
+      <
+         ValueType, //value type (should be float double or long double)
+         opengm::Multiplier //operator (something like Adder or Multiplier)
+      >
+      GraphicalModelType;
+      int dim = gm[0].numberOfVariables();
+      marray::Marray<ValurType> offset(dim);
+      
+  for (int i=0; i<100; ++i) {
+    //double number = distribution(generator);
+   }
+   ModelView pertuhypo(hypotheses,0,1.0,&offset);
+   return pertuhypo;
+}*/
+
+
+void ConservationTracking::perturbedInference(const HypothesesGraph& hypotheses){
+
+	HypothesesGraph const *graph;
+	if (with_tracklets_) {
+        LOG(logINFO) << "ConservationTracking::perturbedInference: generating tracklet graph";
+        tracklet2traxel_node_map_ = generateTrackletGraph2(hypotheses, tracklet_graph_);
+        graph = &tracklet_graph_;
+    } else {
+        graph = &hypotheses;
+    }
+	
+	formulate(*graph);
+	
+	
+	//std::random_device rd;
+	//std::mt19937 gen(rd());
+	//std::normal_distribution<double> d(0.0,1.0);//to do: implement parameters for distribution
+	
+	for (int i=0;i<10;i++){
+		
+
+		cplex_optimizer::Parameter param;
+		param.verbose_ = true;
+		param.integerConstraint_ = true;
+		param.epGap_ = ep_gap_;
+		LOG(logDEBUG) << "ConservationTracking::perturbedInference: ep_gap = " << param.epGap_;
+
+		pgm::OpengmModelDeprecated::ogmGraphicalModel* model = pgm_->Model();
+		
+		int dim = model[0].numberOfVariables();
+		
+		//std::normal_distribution<double> d(0.0,1.0);//to do: implement parameters for distribution
+	
+		marray::Marray<ValueType> offset(dim); 
+	    ViewFunctionType view(*model,0,1.0,&offset);
+		
+		SubGmType PertMod;
+		PertMod = SubGmType();
+		PertMod.addFunction(view);
+		
+		optimizer_ = new cplex_optimizer(PertMod, param);
+		
+		LOG(logDEBUG) << "ConservationTracking::perturbedInference: add_constraints";
+		if (with_constraints_) {
+			add_constraints(PertMod);
+		}
+
+		infer();
+		//conclude_SubGmType(PertMod);
+	}
+	//calculateUncertainty();
+	}
+
 void ConservationTracking::formulate(const HypothesesGraph& hypotheses) {
     LOG(logDEBUG) << "ConservationTracking::formulate: entered";
     reset();
     pgm_ = boost::shared_ptr < pgm::OpengmModelDeprecated > (new pgm::OpengmModelDeprecated());
-
-    HypothesesGraph const *graph;
+	HypothesesGraph const *graph = &hypotheses;
+    /*HypothesesGraph const *graph;
     if (with_tracklets_) {
         LOG(logINFO) << "ConservationTracking::formulate: generating tracklet graph";
         tracklet2traxel_node_map_ = generateTrackletGraph2(hypotheses, tracklet_graph_);
         graph = &tracklet_graph_;
     } else {
         graph = &hypotheses;
-    }
+    }*/
 
     LOG(logDEBUG) << "ConservationTracking::formulate: add_transition_nodes";
     add_transition_nodes(*graph);
@@ -53,12 +146,12 @@ void ConservationTracking::formulate(const HypothesesGraph& hypotheses) {
     if (with_divisions_) {
         add_division_nodes(*graph);
     }
-    pgm::OpengmModelDeprecated::ogmGraphicalModel* model = pgm_->Model();
-
+    /*pgm::OpengmModelDeprecated::ogmGraphicalModel* model = pgm_->Model();
+	*/
     LOG(logDEBUG) << "ConservationTracking::formulate: add_finite_factors";
     add_finite_factors(*graph);
     LOG(logDEBUG) << "ConservationTracking::formulate: finished add_finite_factors";
-    typedef opengm::LPCplex<pgm::OpengmModelDeprecated::ogmGraphicalModel,
+    /*typedef opengm::LPCplex<pgm::OpengmModelDeprecated::ogmGraphicalModel,
             pgm::OpengmModelDeprecated::ogmAccumulator> cplex_optimizer;
     cplex_optimizer::Parameter param;
     param.verbose_ = true;
@@ -71,7 +164,7 @@ void ConservationTracking::formulate(const HypothesesGraph& hypotheses) {
     LOG(logDEBUG) << "ConservationTracking::formulate: add_constraints";
     if (with_constraints_) {
         add_constraints(*graph);
-    }
+    }*/
 
     LOG(logINFO) << "number_of_transition_nodes_ = " << number_of_transition_nodes_;
     LOG(logINFO) << "number_of_appearance_nodes_ = " << number_of_appearance_nodes_;
@@ -91,7 +184,7 @@ void ConservationTracking::infer() {
     }
 }
 
-void ConservationTracking::conclude(HypothesesGraph& g) {
+void ConservationTracking::conclude( HypothesisGraph& g) {
     // extract solution from optimizer
     vector<pgm::OpengmModelDeprecated::ogmInference::LabelType> solution;
     opengm::InferenceTermination status = optimizer_->arg(solution);
@@ -547,7 +640,8 @@ size_t ConservationTracking::cplex_id(size_t opengm_id, size_t state) {
     return optimizer_->lpNodeVi(opengm_id, state);
 }
 
-void ConservationTracking::add_constraints(const HypothesesGraph& g) {
+//set up optimizer from constraints by reading from formulated gm
+void ConservationTracking::add_constraints(const SubGmType& g) {
     size_t counter = 0;
     LOG(logDEBUG) << "ConservationTracking::add_constraints: entered";
     //typedef opengm::LPCplex<pgm::OpengmModelDeprecated::ogmGraphicalModel,
