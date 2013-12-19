@@ -1270,9 +1270,12 @@ void CVPR2014ModelBuilder::add_conflict_factor( const MultiHypothesesGraph& hypo
         deactivated_energy_max = deactivated_energy_curr;
     }
   }
-  table.set_value( coords, deactivated_energy_max  + opportunity_cost() );
+  table.set_value( coords, deactivated_energy_max  + 1000.0 ); // opportunity_cost() );
   LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_conflict_factor() -- maximum deactivation energy: "
                  << deactivated_energy_max;
+  LOG(logINFO) << "CVPR2014ModelBuilder::add_conflict_factor() -- maximum deactivation energy for conflict set " << conflict[0]
+               << " at time " << timestep << " with associated maximum deactivated energy deactivated_energy_max " << deactivated_energy_max
+               << " and opportunity_cost " << opportunity_cost() << "; value in table: " << table.get_value( coords );
 
   for (size_t i = 0; i < table_dim; ++i) {
     coords[i] = 1;
@@ -1652,8 +1655,8 @@ void CVPR2014ModelBuilder::add_outgoing_factor( const MultiHypothesesGraph& hypo
   LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_outgoing_factor(): initializing minimum energies";
 
   // if no arcs, then initialize energy to zero
-  // double minimum_move_energy = (arcs.size() > 0 ? move()(trax, arcs[0].second, 0.) : 0.);
-  // double minimum_division_energy = (arcs.size() > 1 ? division()(trax, arcs[0].second, arcs[1].second, 0.) : 0.);
+  double minimum_move_energy = (arcs.size() > 0 ? move()(trax, arcs[0].second, 0.) : 0.);
+  double minimum_division_energy = (arcs.size() > 1 ? division()(trax, arcs[0].second, arcs[1].second, 0.) : 0.);
 
 
   
@@ -1673,11 +1676,11 @@ void CVPR2014ModelBuilder::add_outgoing_factor( const MultiHypothesesGraph& hypo
     }
 
       double move_energy = move()(trax, arcs[i-1].second, probability);
-      // if (move_energy < minimum_move_energy) {
-      //   minimum_move_energy = move_energy;
-      // }
+      if (move_energy < minimum_move_energy) {
+        minimum_move_energy = move_energy;
+      }
       LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_outgoing_factor: move energy: " << move_energy;
-      table.set_value( coords,  trax.features.find("cardinality")->second[0]/maximum_cardinality*move_energy);
+      table.set_value( coords,  (trax.features.find("cardinality")->second[0]/maximum_cardinality+1.5)*move_energy);
       LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_outgoing_factor: probability = "
                      << probability << ", move=" << table.get_value( coords );
       LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_outgoing_factor: cardinality =" << trax.features.find("cardinality")->second[0]
@@ -1700,10 +1703,10 @@ void CVPR2014ModelBuilder::add_outgoing_factor( const MultiHypothesesGraph& hypo
                 .find(std::make_pair(arcs[i-1].second, arcs[j-1].second))->second[0];
           }
           double division_energy = division()(trax, arcs[i-1].second, arcs[j-1].second, probability);
-          // if (division_energy < minimum_division_energy) {
-          //   minimum_division_energy = division_energy;
-          // }
-          table.set_value(coords, trax.features.find("cardinality")->second[0]/maximum_cardinality*division_energy);
+          if (division_energy < minimum_division_energy) {
+            minimum_division_energy = division_energy;
+          }
+          table.set_value(coords, (trax.features.find("cardinality")->second[0]/maximum_cardinality+1.5)*division_energy);
           LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_outgoing_factor: division="
                          << table.get_value( coords );
           coords[j] = 0;
@@ -1717,8 +1720,8 @@ void CVPR2014ModelBuilder::add_outgoing_factor( const MultiHypothesesGraph& hypo
     if (trax.Timestep < hypotheses.latest_timestep()) {
       coords[0] = 1;
       table.set_value( coords,
-                       trax.features.find("cardinality")->second[0]/maximum_cardinality*(disappearance()(trax)) // +
-                       // std::min(minimum_move_energy, minimum_division_energy))
+                       (trax.features.find("cardinality")->second[0]/maximum_cardinality+1.5)*(disappearance()(trax)) +
+                       std::min(minimum_move_energy, minimum_division_energy)
                        );
       LOG(logDEBUG3) << "CVPR2014ModelBuilder::add_outgoing_factor: at least two outgoing arcs: "
                      << "forbidden=" << forbidden_cost() << ", disappearance=" << table.get_value(coords);
@@ -1800,8 +1803,8 @@ void CVPR2014ModelBuilder::add_incoming_factor(const MultiHypothesesGraph& hypot
 	  // appearance
 	  if (trax.Timestep > hypotheses.earliest_timestep()) {
 		  coords[0] = 1;
-		  table.set_value( coords, trax.features.find("cardinality")->second[0]/maximum_cardinality*appearance()(trax) );
-		  assert(table.get_value( coords ) == trax.features.find("cardinality")->second[0]/maximum_cardinality*appearance()(trax) );
+		  table.set_value( coords, (trax.features.find("cardinality")->second[0]/maximum_cardinality+1.5)*appearance()(trax) );
+		  // assert(table.get_value( coords ) == trax.features.find("cardinality")->second[0]/maximum_cardinality*appearance()(trax) );
 		  LOG(logDEBUG2) << "CVPR2014ModelBuilder::add_incoming_factor: appearance="
 							   << table.get_value( coords );
 
@@ -1821,8 +1824,8 @@ void CVPR2014ModelBuilder::add_incoming_factor(const MultiHypothesesGraph& hypot
 	  // appearance
 	  if (trax.Timestep > hypotheses.earliest_timestep()) {
 		coords[0] = 1;
-		table.set_value( coords, appearance()(trax));
-		assert(table.get_value( coords ) == trax.features.find("cardinality")->second[0]/maximum_cardinality*appearance()(trax) );
+		table.set_value( coords, (trax.features.find("cardinality")->second[0]/maximum_cardinality+1.5)*appearance()(trax) );
+		// assert(table.get_value( coords ) == (trax.features.find("cardinality")->second[0]/maximum_cardinality+1.5)*appearance()(trax) );
 		LOG(logDEBUG2) << "CVPR2014ModelBuilder::add_incoming_factor: appearance="
 					   << table.get_value( coords );
 		coords[0] = 0;

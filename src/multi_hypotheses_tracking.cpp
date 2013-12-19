@@ -88,7 +88,8 @@ void MultiHypothesesTracking::print_info() {
                << "\tmaximum arcs: " << options_.weights["arc"] << '\n'
                << "\twith one active region per component constraint: " << options_.with_one_active_constraint  << '\n'    
                << "\twith conflict factors: " << options_.with_conflict_factors << '\n'
-               << "\twith transition parameter: " << options_.transition_parameter
+               << "\twith transition parameter: " << options_.transition_parameter << '\n'
+               << "\topporunity cost: " << options_.get_weight("opportunity")
       ;
 }
 
