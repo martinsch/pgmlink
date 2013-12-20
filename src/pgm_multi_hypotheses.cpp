@@ -1273,7 +1273,7 @@ void CVPR2014ModelBuilder::add_conflict_factor( const MultiHypothesesGraph& hypo
   table.set_value( coords, deactivated_energy_max  + 1000.0 ); // opportunity_cost() );
   LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_conflict_factor() -- maximum deactivation energy: "
                  << deactivated_energy_max;
-  LOG(logINFO) << "CVPR2014ModelBuilder::add_conflict_factor() -- maximum deactivation energy for conflict set " << conflict[0]
+  LOG(logDEBUG3) << "CVPR2014ModelBuilder::add_conflict_factor() -- maximum deactivation energy for conflict set " << conflict[0]
                << " at time " << timestep << " with associated maximum deactivated energy deactivated_energy_max " << deactivated_energy_max
                << " and opportunity_cost " << opportunity_cost() << "; value in table: " << table.get_value( coords );
 
