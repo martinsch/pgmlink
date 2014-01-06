@@ -717,6 +717,7 @@ void ClassifierMoveRF::classify(const std::vector<Traxel>& traxels_out,
         LOG(logDEBUG4) << "ClassifierMoveRF::classify() -- " << *out
                        << " to " << *in << "probability: "
                        << probabilities[0] << ',' << probabilities[1];
+        LOG(logDEBUG4) << "move_prior,id=" << out->Id << ",prob=" << probabilities[1] << ",id=" << in->Id;
         append_to_file("classifier_move.log", *out, *in, probabilities[1]);
       } else {
         assert(feature_map[*out][*in].size() == 0);
@@ -771,12 +772,14 @@ void ClassifierDivisionRF::classify(const std::vector<Traxel>& traxels_out,
           extract_features(*out, *child1, *child2, features, probabilities);
         	rf_.predictProbabilities(features, probabilities);
         	if (feature_map[*out][std::make_pair(*child1, *child2)].size() == 0) {
-				  LOG(logDEBUG4) << "ClassifierDivisionRF::classify() -- the feature map has not been initialized yet, doing that now.";
+                  LOG(logDEBUG4) << "ClassifierDivisionRF::classify() -- the feature map has not been initialized yet, doing that now.";
 				  feature_map[*out][std::make_pair(*child1, *child2)] = feature_array(probabilities.shape()[1]);
-		    }
+                }
         	std::copy(probabilities.begin(),
-                  probabilities.end(),
+                          probabilities.end(),
                           feature_map[*out][std::make_pair(*child1, *child2)].begin());
+                LOG(logDEBUG4) << "division_prior,id=" << out->Id << ",prob=" << probabilities[1] << ",id=" << child1->Id
+                               <<",id=child2->Id";
                 append_to_file("classifier_division.log", *out, *child1, *child2, probabilities[1]);
         } else {
         	assert(feature_map[*out][std::make_pair(*child1, *child2)].size() == 0);
@@ -831,6 +834,7 @@ void ClassifierDetectionRF::classify(std::vector<Traxel>& traxels, bool with_pre
       append_to_file("classifier_detection.log", *t, probabilities[1]);
       LOG(logDEBUG4) << "ClassifierDetectionRF::classify() -- features[0] = "
                      << features[0];
+      LOG(logDEBUG4) << "detection_prior,id=" << t->Id << ",prob=" << probabilities[1];
 
       if (t->features[name_].size() == 0) {
         LOG(logDEBUG4) << "ClassifierDetectionRF::classify() -- the feature map has not been initialized yet, doing that now.";
