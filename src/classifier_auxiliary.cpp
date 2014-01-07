@@ -834,7 +834,7 @@ void ClassifierDetectionRF::classify(std::vector<Traxel>& traxels, bool with_pre
       append_to_file("classifier_detection.log", *t, probabilities[1]);
       LOG(logDEBUG4) << "ClassifierDetectionRF::classify() -- features[0] = "
                      << features[0];
-      LOG(logDEBUG4) << "detection_prior,t=" << t->Timestep << "id=" << t->Id << ",prob=" << probabilities[1];
+      LOG(logDEBUG4) << "detection_prior,t=" << t->Timestep << ",id=" << t->Id << ",prob=" << probabilities[1];
 
       if (t->features[name_].size() == 0) {
         LOG(logDEBUG4) << "ClassifierDetectionRF::classify() -- the feature map has not been initialized yet, doing that now.";
