@@ -7,6 +7,7 @@
 #include <utility>
 #include <iterator>
 #include <functional>
+#include <sstream>
 
 // boost
 #include <boost/shared_ptr.hpp>
@@ -1364,6 +1365,11 @@ void CVPR2014ModelBuilder::add_hierarchical_count_factor( Model& m,
 
   	feature_array probabilities = traxels[0].features.find("count_prediction")->second;
   	assert(probabilities.size() > 0);
+        std::stringstream ss;
+        for (feature_array::const_iterator it = probabilities.begin(); it != probabilities.end(); ++it) {
+          ss << ",prob=" << *it;
+        }
+        LOG(logDEBUG4) << "count_prior,t=" << traxels[0].Timestep << ",id=" << traxels[0].Id << ss.str();
 
   	// probabilities must have one state more than maximum_active_regions to
   	// include the state for all regions deactivated
