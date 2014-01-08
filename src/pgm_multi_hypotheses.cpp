@@ -1272,7 +1272,7 @@ void CVPR2014ModelBuilder::add_conflict_factor( const MultiHypothesesGraph& hypo
         deactivated_energy_max = deactivated_energy_curr;
     }
   }
-  table.set_value( coords, deactivated_energy_max  + opportunity_cost() ); // opportunity_cost() );
+  table.set_value( coords, deactivated_energy_max + opportunity_cost() );
   LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_conflict_factor() -- maximum deactivation energy: "
                  << deactivated_energy_max;
   LOG(logDEBUG3) << "CVPR2014ModelBuilder::add_conflict_factor() -- maximum deactivation energy for conflict set " << conflict[0]
@@ -1284,6 +1284,8 @@ void CVPR2014ModelBuilder::add_conflict_factor( const MultiHypothesesGraph& hypo
     table.set_value( coords, detection()(traxels[i], 1 ));
     coords[i] = 0;
   }
+
+  table.add_to( *(m.opengm_model) );
 }
 
 void CVPR2014ModelBuilder::add_outgoing_factors( const MultiHypothesesGraph& hypotheses,
@@ -1687,7 +1689,7 @@ void CVPR2014ModelBuilder::add_outgoing_factor( const MultiHypothesesGraph& hypo
         minimum_move_energy = move_energy;
       }
       LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_outgoing_factor: move energy: " << move_energy;
-      table.set_value( coords,  (trax.features.find("cardinality")->second[0]/maximum_cardinality+1.5)*move_energy);
+      table.set_value( coords,  (trax.features.find("cardinality")->second[0]/maximum_cardinality)*move_energy);
       LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_outgoing_factor: probability = "
                      << probability << ", move=" << table.get_value( coords );
       LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_outgoing_factor: cardinality =" << trax.features.find("cardinality")->second[0]
@@ -1713,7 +1715,7 @@ void CVPR2014ModelBuilder::add_outgoing_factor( const MultiHypothesesGraph& hypo
           if (division_energy < minimum_division_energy) {
             minimum_division_energy = division_energy;
           }
-          table.set_value(coords, (trax.features.find("cardinality")->second[0]/maximum_cardinality+1.5)*division_energy);
+          table.set_value(coords, (trax.features.find("cardinality")->second[0]/maximum_cardinality)*division_energy);
           LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_outgoing_factor: division="
                          << table.get_value( coords );
           coords[j] = 0;
@@ -1727,7 +1729,7 @@ void CVPR2014ModelBuilder::add_outgoing_factor( const MultiHypothesesGraph& hypo
     if (trax.Timestep < hypotheses.latest_timestep()) {
       coords[0] = 1;
       table.set_value( coords,
-                       (trax.features.find("cardinality")->second[0]/maximum_cardinality+1.5)*(disappearance()(trax)) +
+                       (trax.features.find("cardinality")->second[0]/maximum_cardinality)*(disappearance()(trax)) +
                        std::min(minimum_move_energy, minimum_division_energy)
                        );
       LOG(logDEBUG3) << "CVPR2014ModelBuilder::add_outgoing_factor: at least two outgoing arcs: "
@@ -1810,7 +1812,7 @@ void CVPR2014ModelBuilder::add_incoming_factor(const MultiHypothesesGraph& hypot
 	  // appearance
 	  if (trax.Timestep > hypotheses.earliest_timestep()) {
 		  coords[0] = 1;
-		  table.set_value( coords, (trax.features.find("cardinality")->second[0]/maximum_cardinality+1.5)*appearance()(trax) );
+		  table.set_value( coords, (trax.features.find("cardinality")->second[0]/maximum_cardinality)*appearance()(trax) );
 		  // assert(table.get_value( coords ) == trax.features.find("cardinality")->second[0]/maximum_cardinality*appearance()(trax) );
 		  LOG(logDEBUG2) << "CVPR2014ModelBuilder::add_incoming_factor: appearance="
 							   << table.get_value( coords );
@@ -1831,7 +1833,7 @@ void CVPR2014ModelBuilder::add_incoming_factor(const MultiHypothesesGraph& hypot
 	  // appearance
 	  if (trax.Timestep > hypotheses.earliest_timestep()) {
 		coords[0] = 1;
-		table.set_value( coords, (trax.features.find("cardinality")->second[0]/maximum_cardinality+1.5)*appearance()(trax) );
+		table.set_value( coords, (trax.features.find("cardinality")->second[0]/maximum_cardinality)*appearance()(trax) );
 		// assert(table.get_value( coords ) == (trax.features.find("cardinality")->second[0]/maximum_cardinality+1.5)*appearance()(trax) );
 		LOG(logDEBUG2) << "CVPR2014ModelBuilder::add_incoming_factor: appearance="
 					   << table.get_value( coords );
