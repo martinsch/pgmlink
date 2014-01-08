@@ -186,6 +186,7 @@ ModelBuilder& ModelBuilder::with_one_active_per_component_constraint(bool check)
 
 ModelBuilder& ModelBuilder::with_transition_parameter(int alpha) {
    transition_parameter_ = alpha;
+   return *this;
 }
 
 ModelBuilder& ModelBuilder::with_divisions( function<double (const Traxel&, const Traxel&, const Traxel&, feature_type)> division ) {
