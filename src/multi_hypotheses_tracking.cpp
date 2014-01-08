@@ -224,7 +224,8 @@ void MultiHypothesesTracking::track(MultiHypothesesGraph& g, boost::shared_ptr<s
   MultiHypothesesGraph* graph = &g;
 
   // IMPORTANT FIXME!
-  // FIXME: Build proper cost functions!
+  // FIXME: Build proper cost functions for the cases where no classifier priors are available
+  // If classifiers are present, the appropriate cost functions will be included in lines 273-295
 
   ConstantFeature app(options_.get_weight("app"));  // appearance
   ConstantFeature dis(options_.get_weight("dis"));  // disappearance
