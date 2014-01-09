@@ -1664,8 +1664,8 @@ void CVPR2014ModelBuilder::add_outgoing_factor( const MultiHypothesesGraph& hypo
   LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_outgoing_factor(): initializing minimum energies";
 
   // if no arcs, then initialize energy to zero
-  double maximum_non_move_energy = (arcs.size() > 0 ? move()(trax, arcs[0].second, 1.) : 0.);
-  double maximum_non_division_energy = (arcs.size() > 1 ? division()(trax, arcs[0].second, arcs[1].second, 1.) : 0.);
+  double maximum_non_move_energy = 0.;
+  double maximum_non_division_energy = 0.;
 
   
   // move configuration
