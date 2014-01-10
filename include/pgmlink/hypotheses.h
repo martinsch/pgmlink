@@ -81,7 +81,17 @@ namespace pgmlink {
 	};
 	template <typename Graph>
 	  const std::string property_map<tracklet_intern_arc_ids,Graph>::name = "tracklet_intern_arc_ids";
-
+	
+  // node_active_count
+  struct arc_active_count {};
+  template <typename Graph>
+    struct property_map<arc_active_count, Graph> {
+    typedef lemon::IterableIntMap< Graph, typename Graph::Node> type;
+    static const std::string name;
+  };
+  template <typename Graph>
+    const std::string property_map<node_active_count,Graph>::name = "arc_active_count";	
+	
   // node_active
   struct node_active {};
   template <typename Graph>

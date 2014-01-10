@@ -28,6 +28,8 @@ typedef opengm::GraphicalModel
 		<opengm::ModelViewFunction<pgm::OpengmModelDeprecated::ogmGraphicalModel, marray::Marray<ValueType> > >::type, 
 		opengm::DiscreteSpace<IndexType,LabelType> > 
 		SubGmType;
+		
+//typedef pgm::OpengmModelDeprecated::ogmGraphicalModel SubGmType;
 
 typedef opengm::LPCplex
 	<	SubGmType,
@@ -112,14 +114,16 @@ class ConservationTracking : public Reasoner {
     ConservationTracking& operator=(const ConservationTracking&) { return *this;};
 
     void reset();
-    void add_constraints(SubGmType& );
+    void add_constraints(const HypothesesGraph& );
     void add_detection_nodes( const HypothesesGraph& );
     void add_appearance_nodes( const HypothesesGraph& );
     void add_disappearance_nodes( const HypothesesGraph& );
     void add_transition_nodes( const HypothesesGraph& );
     void add_division_nodes(const HypothesesGraph& );
     void add_finite_factors( const HypothesesGraph& );
-    void perturbedInference( const HypothesesGraph&);
+    void perturbedInference( HypothesesGraph&);
+    void writeUncertanties( HypothesesGraph&, SubGmType);
+    
     // helper
     size_t cplex_id(size_t opengm_id, size_t state);
 
@@ -136,7 +140,7 @@ class ConservationTracking : public Reasoner {
     shared_ptr<pgm::OpengmModelDeprecated> pgm_;
     //opengm::LPCplex<pgm::OpengmModelDeprecated::ogmGraphicalModel, pgm::OpengmModelDeprecated::ogmAccumulator>* optimizer_;
 	cplex_optimizer* optimizer_;
-
+	//here: dimaps!
     std::map<HypothesesGraph::Node, size_t> div_node_map_;
     std::map<HypothesesGraph::Node, size_t> app_node_map_;
     std::map<HypothesesGraph::Node, size_t> dis_node_map_;
