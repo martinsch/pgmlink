@@ -406,6 +406,7 @@ inline void ModelBuilder::add_vars( const std::map<std::vector<unsigned>, std::p
        ++it) {
     for (std::vector<unsigned>::const_iterator it_src = it->first.begin(); it_src != it->first.end(); ++it_src) {
       for (std::vector<unsigned>::const_iterator it_dest = it->second.second.begin(); it_dest != it->second.second.end(); ++it_dest) {
+    	  // TODO: do not construct new traxels but reference old ones (fine for now, since only the ids of these traxels are used
         Model::TraxelArc arc(Traxel(*it_src, timestep), Traxel(*it_dest, timestep+direction));
         if (m.arc_var_.left.count(arc) == 0) {
           m.opengm_model->addVariable(2);
@@ -437,7 +438,11 @@ inline void ModelBuilder::add_assignment_vars( const MultiHypothesesGraph& hypot
     for (std::vector<Traxel>::const_iterator s = source.begin(); s != source.end(); ++s) {
       for (std::vector<Traxel>::const_iterator d = dest.begin(); d != dest.end(); ++d) {
         m.opengm_model->addVariable(2);
+        assert(s->features.count("com") > 0);
+        assert(d->features.count("com") > 0);
         m.arc_var_.left.insert(Model::arc_var_map::value_type(Model::TraxelArc(*s, *d), m.opengm_model->numberOfVariables() - 1));
+        assert(m.arc_of_var(m.opengm_model->numberOfVariables() - 1).first.features.count("com") > 0);
+        assert(m.arc_of_var(m.opengm_model->numberOfVariables() - 1).second.features.count("com") > 0);
       }
     }
   }
@@ -508,6 +513,7 @@ inline void ModelBuilder::add_assignment_vars( const MultiHypothesesGraph& hypot
     const std::vector<Traxel>& source = regions[source_node];
     const std::vector<Traxel>& dest = regions[dest_node];
     for (std::vector<Traxel>::const_iterator s = source.begin(); s != source.end(); ++s) {
+      assert(has_classifiers());
       const std::map<Traxel, feature_array>& probabilities = moves[hypotheses.source(a)].find(*s)->second;
       std::vector<std::pair<Traxel, feature_type> > k_best_probabilities;
       for (std::map<Traxel, feature_array>::const_iterator it = probabilities.begin();
@@ -1166,12 +1172,12 @@ boost::shared_ptr<Model> CVPR2014ModelBuilder::build(const MultiHypothesesGraph&
   }
   if (has_maximum_arcs()) {
     if (!has_classifiers()) {
-      // throw std::runtime_error("maximum arcs required without classifiers present!");
+       throw std::runtime_error("maximum arcs required without classifiers present!");
     }
     const MultiHypothesesGraph::MoveFeatureMap& moves = hypotheses.get(node_move_features());
     add_assignment_vars( hypotheses, *model, moves );
   } else {
-    if (true) {
+    if (false) {
       add_assignment_vars_based_on_conflict_sets( hypotheses, *model );
     } else {
       add_assignment_vars( hypotheses, *model );
@@ -1683,7 +1689,9 @@ void CVPR2014ModelBuilder::add_outgoing_factor( const MultiHypothesesGraph& hypo
       probability = (double) get_transition_prob(trax.distance_to(arcs[i-1].second), /* state */ 1, transition_parameter());
     }
 
-      double move_energy = move()(trax, arcs[i-1].second, probability);
+    assert(trax.features.count("com") > 0);
+
+    double move_energy = move()(trax, arcs[i-1].second, probability);
       double non_move_energy = move()(trax, arcs[i-1].second, 1.-probability);
 
       if (non_move_energy > maximum_non_move_energy) {
