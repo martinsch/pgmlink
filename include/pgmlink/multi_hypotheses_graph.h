@@ -240,6 +240,8 @@ class MultiHypothesesGraph : public HypothesesGraph {
   typename PropertyValueVectorPtr<PropertyTag, base_graph>::type
   get_properties_at(int timestep);
 
+  void remove_traxel_features();
+
   void add_classifier_features(ClassifierStrategy* move,
                                ClassifierStrategy* division,
                                ClassifierStrategy* count,

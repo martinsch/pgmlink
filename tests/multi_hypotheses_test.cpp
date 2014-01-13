@@ -36,6 +36,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_serialize ) {
 
 	feature_array com(3, 1.);
 	feature_array count(1, 0.1);
+	feature_array var(1, 0.1);
 
 	t1.push_back(Traxel(1, 0));
 	float conflict_arr11[] = { 2., 3., 4., 5. };
@@ -44,6 +45,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_serialize ) {
 	(t1.end() - 1)->features["level"].push_back(0.);
 	(t1.end() - 1)->features["com"] = com;
 	(t1.end() - 1)->features["count_prediction"] = count;
+	(t1.end() - 1)->features["Variance"] = var; // add a feature which will be removed while serialization
 
 	c1.push_back(std::vector<unsigned>());
 	c1.rbegin()->push_back(1);
@@ -57,6 +59,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_serialize ) {
 	(t2.end() - 1)->features["level"].push_back(0.);
 	(t2.end() - 1)->features["com"] = com;
 	(t2.end() - 1)->features["count_prediction"] = count;
+	(t2.end() - 1)->features["Variance"] = count; // add a feature which will be removed while serialization
 
 	t2.push_back(Traxel(3, 1));
 	float conflict_arr23[] = { 1. };
@@ -160,6 +163,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_serialize ) {
 //	c_t1.push_back(1);
 //	conflict_sets.insert(conflict_sets.end(), c_t1.begin(), c_t1.end());
 
+	graph->remove_traxel_features();
 
 	// save to string
 	string s;
@@ -208,6 +212,7 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_serialize ) {
 	BOOST_CHECK_EQUAL_COLLECTIONS(loaded_traxels_n1.front().features[name].begin(), loaded_traxels_n1.front().features[name].end(), t1.front().features[name].begin(), t1.front().features[name].end());
 	name = "count_prediction";
 	BOOST_CHECK_EQUAL_COLLECTIONS(loaded_traxels_n1.front().features[name].begin(), loaded_traxels_n1.front().features[name].end(), t1.front().features[name].begin(), t1.front().features[name].end());
+	BOOST_CHECK(loaded_traxels_n1.front().features.find("Variance") == loaded_traxels_n1.front().features.end());
 
 	MultiHypothesesGraph::MoveFeatureMap& loaded_moves = loaded.get(node_move_features());
 	std::map<Traxel, feature_array>& loaded_move_probs = loaded_moves.get_value(n1)[t1[0]];

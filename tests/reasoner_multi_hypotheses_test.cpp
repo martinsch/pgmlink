@@ -135,7 +135,8 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp2 ) {
 
 
   std::cout << " -> workflow: infer" << std::endl;
-  double objective = reasoner.infer();
+//  double objective = reasoner.infer();
+  reasoner.infer();
 
 
 //  BOOST_CHECK_CLOSE(objective, 2035., 0.0001);
@@ -312,7 +313,8 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp4 ) {
 
 
   std::cout << " -> workflow: infer" << std::endl;
-  double objective = reasoner.infer();
+//  double objective = reasoner.infer();
+  reasoner.infer();
 
 //  BOOST_CHECK_CLOSE(objective, 3021.4142, 0.0001);
 
@@ -760,7 +762,8 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hyp6 ) {
 
 
   std::cout << " -> workflow: infer" << std::endl;
-  double objective = reasoner.infer();
+//  double objective = reasoner.infer();
+  reasoner.infer();
 
 //  BOOST_CHECK_CLOSE(objective, 4075., 0.0001);
 
@@ -966,7 +969,8 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_hierarchical_count_factor ) {
 
 
   std::cout << " -> workflow: infer" << std::endl;
-  double objective = reasoner.infer();
+//  double objective = reasoner.infer();
+  reasoner.infer();
 
 //  BOOST_CHECK_CLOSE(objective, 4075., 0.0001);
   // need to figure out objective deviation!
@@ -1497,7 +1501,8 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_build_incoming_counting_factor ) {
 
 
   std::cout << " -> workflow: infer" << std::endl;
-  double objective = reasoner.infer();
+//  double objective = reasoner.infer();
+  reasoner.infer();
 
 //  BOOST_CHECK_CLOSE(objective, 4075., 0.0001);
 

@@ -128,7 +128,7 @@ MultiHypothesesGraph::MultiHypothesesGraph() {
 	};
   }
 
-  void write_lgf( const MultiHypothesesGraph& g, std::ostream& os, bool with_n_traxel ) {
+  void write_lgf( const MultiHypothesesGraph& g, std::ostream& os, bool /*with_n_traxel*/ ) {
 	LOG(logDEBUG) << "MultiHypothesesGraph::write_lgf entered";
     lemon::DigraphWriter<HypothesesGraph> writer( g, os );
     writer.
@@ -210,7 +210,7 @@ struct StrToConflictSetsConverter {
 };
 }
 
-void read_lgf( MultiHypothesesGraph& g, std::istream& is, bool with_n_traxel ) {
+void read_lgf( MultiHypothesesGraph& g, std::istream& is, bool /*with_n_traxel*/ ) {
 	LOG(logDEBUG) << "MultiHypothesesGraph::read_lgf entered";
   lemon::DigraphReader<MultiHypothesesGraph> reader( g, is );
   reader.
@@ -253,7 +253,6 @@ void MultiHypothesesGraph::add_classifier_features(ClassifierStrategy* move,
   clear_file("classifier_detection.log");
   
   DivisionFeatureMap& division_map = get(node_division_features());
-  CountFeatureMap& count_map = get(node_count_features());
   MoveFeatureMap& move_map = get(node_move_features());
   ContainedRegionsMap& regions = get(node_regions_in_component());
   
@@ -311,6 +310,43 @@ void MultiHypothesesGraph::add_classifier_features(ClassifierStrategy* move,
     count->classify(sources);
   }
   
+}
+
+
+void MultiHypothesesGraph::remove_traxel_features() {
+	static const string keep_names[] = {"com", "conflicts", "count_prediction", "cardinality", "detProb"};
+	ContainedRegionsMap& regions = get(node_regions_in_component());
+	const std::vector<NodeT>& nodes = this->nodes;
+
+	for (std::size_t i = 0; i < nodes.size(); ++i) {
+		Node n = this->nodeFromId(i);
+		assert(this->valid(n));
+		LOG(logDEBUG1)
+				<< "MultiHypothesesGraph::remove_traxel_features "
+				<< get(node_traxel())[n].Id << " at timestep "
+				<< get(node_traxel())[n].Timestep;
+		std::vector<Traxel>& traxels = regions.get_value(n);
+
+		for(std::vector<Traxel>::iterator trax_it = traxels.begin(); trax_it != traxels.end(); ++trax_it) {
+			FeatureMap& feats_old = trax_it->features;
+			FeatureMap feats_new;
+			for(std::size_t i = 0; i < sizeof(keep_names)/sizeof(keep_names[0]); ++i) {
+				FeatureMap::iterator feats_old_it = feats_old.find(keep_names[i]);
+				if( feats_old_it != feats_old.end() ) {
+					LOG(logDEBUG4) << "keep_names[i]: " << keep_names[i];
+					feats_new[keep_names[i]] = feature_array(feats_old_it->second);
+				}
+			}
+
+			feats_old.clear();
+
+			for(FeatureMap::const_iterator feat_it = feats_new.begin(); feat_it != feats_new.end(); ++feat_it) {
+				LOG(logDEBUG4) << feat_it->first << ": " << feat_it->second.size();
+				feats_old[feat_it->first] = feat_it->second;
+			}
+		}
+	}
+
 }
 
 
@@ -678,28 +714,28 @@ void MultiHypothesesGraphBuilder::create_events_for_component(const Traxel& trax
 }
 
 
-void MultiHypothesesGraphBuilder::add_move_events(const Traxel& trax,
-                                                  std::map<unsigned, double>& neighbors,
-                                                  MultiHypothesesGraphPtr graph) {
+void MultiHypothesesGraphBuilder::add_move_events(const Traxel&,
+                                                  std::map<unsigned, double>&,
+                                                  MultiHypothesesGraphPtr) {
   
 }
 
 
-void MultiHypothesesGraphBuilder::add_division_events(const Traxel& trax,
-                                                      std::map<unsigned, double>& neighbors,
-                                                      MultiHypothesesGraphPtr graph) {
+void MultiHypothesesGraphBuilder::add_division_events(const Traxel& ,
+                                                      std::map<unsigned, double>& ,
+                                                      MultiHypothesesGraphPtr ) {
 
 }
 
 
-void MultiHypothesesGraphBuilder::add_appearance_events(const Traxel& trax,
-                                                        MultiHypothesesGraphPtr graph) {
+void MultiHypothesesGraphBuilder::add_appearance_events(const Traxel& ,
+                                                        MultiHypothesesGraphPtr ) {
 
 }
 
 
-void MultiHypothesesGraphBuilder::add_disappearance_events(const Traxel& trax,
-                                                           MultiHypothesesGraphPtr graph) {
+void MultiHypothesesGraphBuilder::add_disappearance_events(const Traxel& ,
+                                                           MultiHypothesesGraphPtr ) {
 
 }
 
