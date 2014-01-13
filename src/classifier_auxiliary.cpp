@@ -526,8 +526,8 @@ void ClassifierConstant::classify(const std::vector<Traxel>& traxels_out,
     for (std::vector<Traxel>::const_iterator in = traxels_in.begin(); in != traxels_in.end(); ++in) {
       LOG(logDEBUG4) << "ClassifierConstant::classify() -- " << *out << " -> " << *in;
       // assert(feature_map[*out][*in].size() == 0);
-      feature_map[*out][*in].push_back(probability_);
       feature_map[*out][*in].push_back(1-probability_);
+      feature_map[*out][*in].push_back(probability_);
     }
   }
 }
@@ -540,8 +540,8 @@ void ClassifierConstant::classify(const std::vector<Traxel>& traxels_out,
     for (std::vector<Traxel>::const_iterator child1 = traxels_in.begin(); child1 != traxels_in.end(); ++child1) {
       for (std::vector<Traxel>::const_iterator child2 = child1 + 1; child2 != traxels_in.end(); ++child2) {
         assert(feature_map[*out][std::make_pair(*child1, *child2)].size() == 0);
-        feature_map[*out][std::make_pair(*child1, *child2)].push_back(probability_);
         feature_map[*out][std::make_pair(*child1, *child2)].push_back(1-probability_);
+        feature_map[*out][std::make_pair(*child1, *child2)].push_back(probability_);
       }
     }
   }
