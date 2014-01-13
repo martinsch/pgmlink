@@ -28,6 +28,7 @@ namespace pgmlink {
 	      * Returns (traxel id, distance*distance) map.
 	      */
 	    std::map<unsigned int, double> knn_in_range( const Traxel& query, double radius, unsigned int knn, const bool reverse = false );
+            std::map<unsigned int, double> knn( const Traxel& query, unsigned int knn, const bool reverse = false );
 	    unsigned int count_in_range( const Traxel& query, double radius, const bool reverse = false );
 
 	private:

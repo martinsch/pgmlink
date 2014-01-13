@@ -22,6 +22,7 @@
 #include "pgmlink/traxels.h"
 #include "pgmlink/pgm_multi_hypotheses.h"
 #include "pgmlink/multi_hypotheses_graph.h"
+#include "pgmlink/nearest_neighbors.h"
 
 //#include <ostream>
 
@@ -479,6 +480,39 @@ inline void ModelBuilder::add_assignment_vars_based_on_conflict_sets( const Mult
   }
 }
 
+inline void ModelBuilder::add_assignment_vars_limited_squared_distance( const MultiHypothesesGraph& hypotheses, Model& m ) const {
+  LOG(logINFO) << "add_assignment_vars_limited_squared_distance() -- prune by nearest neighbor";
+  MultiHypothesesGraph::ContainedRegionsMap& regions = hypotheses.get(node_regions_in_component());
+  MultiHypothesesGraph::node_timestep_map& timesteps = hypotheses.get(node_timestep());
+  for (MultiHypothesesGraph::ArcIt a(hypotheses); a != lemon::INVALID; ++a) {
+    const MultiHypothesesGraph::Node& source_node = hypotheses.source(a);
+    const MultiHypothesesGraph::Node& dest_node = hypotheses.target(a);
+    LOG(logDEBUG3) << "add_assignment_vars_limited_squared_distance() -- " << timesteps[source_node]
+                   << ',' << first_timestep() << ',' << timesteps[dest_node] << ',' << last_timestep();
+    if (timestep_range_specified() &&
+        (timesteps[source_node] < first_timestep() || timesteps[dest_node] > last_timestep())) {
+      continue;
+    }
+    const std::vector<Traxel>& source = regions[source_node];
+    const std::vector<Traxel>& dest = regions[dest_node];
+    NearestNeighborSearch nearest_neighbor_search(dest.begin(), dest.end());
+    for (std::vector<Traxel>::const_iterator s = source.begin(); s != source.end(); ++s) {
+      LOG(logDEBUG4) << "add_assignment_vars_limited_squared_distance() -- searching nearest neighbors for " << *s;
+      std::map<unsigned, double> nearest_neighbors =
+          nearest_neighbor_search.knn(*s, std::min(size_t(maximum_outgoing_arcs_), dest.size()));
+      for (std::map<unsigned, double>::const_iterator neighbor = nearest_neighbors.begin();
+           neighbor != nearest_neighbors.end();
+           ++neighbor) {
+        m.opengm_model->addVariable(2);
+        std::vector<Traxel>::const_iterator d = std::find(dest.begin(), dest.end(), Traxel(neighbor->first, dest[0].Timestep));
+        assert(d != dest.end());
+        m.arc_var_.left.insert(Model::arc_var_map::value_type(Model::TraxelArc(*s, *d), m.opengm_model->numberOfVariables() - 1));
+      }
+    }
+  }
+  LOG(logINFO) << "add_assignment_vars_limited_squared_distance() -- done";
+}
+
 
 namespace {
 class TraxelProbabilityPairLessThan {
@@ -498,7 +532,10 @@ class TraxelProbabilityPairGreaterThan {
 } /* namespace */
 
 
-inline void ModelBuilder::add_assignment_vars( const MultiHypothesesGraph& hypotheses, Model& m, const MultiHypothesesGraph::MoveFeatureMap& moves ) const {
+inline void ModelBuilder::add_assignment_vars( const MultiHypothesesGraph& hypotheses,
+                                               Model& m,
+                                               const MultiHypothesesGraph::MoveFeatureMap& moves,
+                                               const MultiHypothesesGraph::DivisionFeatureMap& divisions) const {
   LOG(logINFO) << "add_assignment_vars() -- " << maximum_outgoing_arcs_ << " best neighbors";
   MultiHypothesesGraph::ContainedRegionsMap& regions = hypotheses.get(node_regions_in_component());
   MultiHypothesesGraph::node_timestep_map& timesteps = hypotheses.get(node_timestep());
@@ -523,9 +560,22 @@ inline void ModelBuilder::add_assignment_vars( const MultiHypothesesGraph& hypot
         std::sort(k_best_probabilities.begin(), k_best_probabilities.end(), TraxelProbabilityPairGreaterThan());
         k_best_probabilities.resize(std::min(k_best_probabilities.size(), static_cast<size_t>(maximum_outgoing_arcs_)));
       }
+      double threshold = 0.5;
+      std::vector<Traxel> divisions_above_threshold;
+      const std::map<std::pair<Traxel, Traxel>, feature_array>& division_probabilities = divisions[hypotheses.source(a)].find(*s)->second;
+      for (std::map<std::pair<Traxel, Traxel>, feature_array>::const_iterator div_it = division_probabilities.begin();
+           div_it != division_probabilities.end();
+           ++div_it) {
+        if (div_it->second[1] > threshold) {
+          divisions_above_threshold.push_back(div_it->first.first);
+          divisions_above_threshold.push_back(div_it->first.second);
+        }
+      }
       for (std::vector<Traxel>::const_iterator d = dest.begin(); d != dest.end(); ++d) {
         if (std::find(k_best_probabilities.begin(), k_best_probabilities.end(), *d) != k_best_probabilities.end()) {
           m.opengm_model->addVariable(2);
+          m.arc_var_.left.insert(Model::arc_var_map::value_type(Model::TraxelArc(*s, *d), m.opengm_model->numberOfVariables() - 1));
+        } else if (std::find(divisions_above_threshold.begin(), divisions_above_threshold.end(), *d) != divisions_above_threshold.end()) {
           m.arc_var_.left.insert(Model::arc_var_map::value_type(Model::TraxelArc(*s, *d), m.opengm_model->numberOfVariables() - 1));
         }
       }
@@ -1171,17 +1221,15 @@ boost::shared_ptr<Model> CVPR2014ModelBuilder::build(const MultiHypothesesGraph&
     add_detection_vars( hypotheses, *model );
   }
   if (has_maximum_arcs()) {
-    if (!has_classifiers()) {
-       throw std::runtime_error("maximum arcs required without classifiers present!");
-    }
-    const MultiHypothesesGraph::MoveFeatureMap& moves = hypotheses.get(node_move_features());
-    add_assignment_vars( hypotheses, *model, moves );
-  } else {
-    if (false) {
-      add_assignment_vars_based_on_conflict_sets( hypotheses, *model );
+    if (has_classifiers()) {
+      const MultiHypothesesGraph::MoveFeatureMap& moves = hypotheses.get(node_move_features());
+      const MultiHypothesesGraph::DivisionFeatureMap& divisions = hypotheses.get(node_division_features());
+      add_assignment_vars( hypotheses, *model, moves, divisions );
     } else {
-      add_assignment_vars( hypotheses, *model );
+      add_assignment_vars_limited_squared_distance( hypotheses, *model );
     }
+  } else {
+    add_assignment_vars( hypotheses, *model );
   }
 
   MultiHypothesesGraph::node_timestep_map& timesteps = hypotheses.get(node_timestep());
@@ -1297,17 +1345,20 @@ void CVPR2014ModelBuilder::add_conflict_factor( const MultiHypothesesGraph& hypo
 void CVPR2014ModelBuilder::add_outgoing_factors( const MultiHypothesesGraph& hypotheses,
                                                   Model& m,
                                                   const MultiHypothesesGraph::Node& n ) const {
+  LOG(logDEBUG) << "CVPR2014ModelBuilder::add_outgoing_factors() -- entered";
   MultiHypothesesGraph::ContainedRegionsMap& regions = hypotheses.get(node_regions_in_component());
   const std::vector<Traxel>& traxels = regions[n];
   for (std::vector<Traxel>::const_iterator t = traxels.begin(); t != traxels.end(); ++t) {
+    LOG(logDEBUG3) << "CVPR2014ModelBuilder::add_outgoing_factors() -- collecting neighbors for " << *t;
     std::vector<Traxel> neighbors;
     for (MultiHypothesesGraph::OutArcIt a(hypotheses, n); a != lemon::INVALID; ++a) {
       const std::vector<Traxel>& neighbors_at = regions[hypotheses.target(a)];
       neighbors.insert(neighbors.end(), neighbors_at.begin(), neighbors_at.end());      
     }
+    LOG(logDEBUG3) << "CVPR2014ModelBuilder::add_outgoing_factors() -- adding outgoing factor for " << *t;
     add_outgoing_factor(hypotheses, m, n, *t, neighbors, traxels[0].features.find("cardinality")->second[0]);
   }
-
+  LOG(logDEBUG) << "CVPR2014ModelBuilder::add_outgoing_factors() -- done";
 }
 
 
@@ -1584,6 +1635,7 @@ void CVPR2014ModelBuilder::add_explicit_count_factor( Model& m,
       coords = std::vector<size_t>(table_dim, 0);
     }
     table.add_to( *m.opengm_model );
+    LOG(logDEBUG) << "CVPR2014ModelBuilder::add_explicit_count_factor: done";
 }
 
 void CVPR2014ModelBuilder::fill_probabilities(feature_array& probabilities, size_t maximum_active_regions) const {

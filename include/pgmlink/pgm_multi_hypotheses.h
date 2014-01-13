@@ -228,8 +228,12 @@ class ModelBuilder {
   size_t cplex_id(OpengmLPCplex& cplex, const size_t opengm_id) const;
   void add_detection_vars( const MultiHypothesesGraph&, Model& ) const;
   void add_assignment_vars( const MultiHypothesesGraph&, Model& ) const;
-  void add_assignment_vars( const MultiHypothesesGraph&, Model&, const MultiHypothesesGraph::MoveFeatureMap& ) const;
+  void add_assignment_vars( const MultiHypothesesGraph&,
+                            Model&,
+                            const MultiHypothesesGraph::MoveFeatureMap&,
+                            const MultiHypothesesGraph::DivisionFeatureMap& ) const;
   void add_assignment_vars_based_on_conflict_sets( const MultiHypothesesGraph& hypotheses, Model& m ) const;
+  void add_assignment_vars_limited_squared_distance( const MultiHypothesesGraph& hypotheses, Model& m ) const;
   void add_vars( const std::map<std::vector<unsigned>, std::pair<double, std::vector<unsigned> > >& distances,
                  int timestep,
                  int direction,

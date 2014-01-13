@@ -75,6 +75,51 @@ map<unsigned int, double> NearestNeighborSearch::knn_in_range( const Traxel& que
 }
 
 
+std::map<unsigned int, double> NearestNeighborSearch::knn( const Traxel& query, unsigned int knn, const bool reverse ) {
+   map<unsigned int, double> return_value;
+
+    // empty search space?
+    if(points_ == NULL && kd_tree_.get() == NULL) {
+      return return_value;
+    }
+
+    // allocate
+    ANNpoint query_point( NULL );
+    query_point = this->point_from_traxel(query, reverse);
+    if( query_point == NULL ) {
+	throw "query point allocation failure";
+    }
+
+    // search
+    try {
+	scoped_array<ANNidx> nn_indices( new ANNidx[knn] );
+	scoped_array<ANNdist> nn_distances( new ANNdist[knn] );
+
+	kd_tree_->annkSearch( query_point, knn,
+                              nn_indices.get(), nn_distances.get());
+
+	// construct return value
+	
+	// there may be less points in range, than nearest neighbors demanded
+	for( ANNidx i = 0; i < knn; ++i) {
+	    return_value[ point_idx2traxel_id_[nn_indices[i]] ] = nn_distances[i];
+	}
+    } catch(...) {
+	if( query_point != NULL) {
+	    annDeallocPt( query_point );
+	}
+	throw;
+    }
+
+    // clean up
+    if( query_point != NULL) {
+	annDeallocPt( query_point );
+    }
+
+    return return_value;
+}
+
+
 
 unsigned int NearestNeighborSearch::count_in_range( const Traxel& query, double radius , const bool reverse) {
     if( radius < 0 ) {

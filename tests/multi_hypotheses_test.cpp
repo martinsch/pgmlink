@@ -16,6 +16,8 @@
 
 #include "pgmlink/multi_hypotheses_graph.h"
 #include "pgmlink/traxels.h"
+#include "pgmlink/pgm_multi_hypotheses.h"
+#include "pgmlink/reasoner_multi_hypotheses.h"
 
 using namespace pgmlink;
 using namespace std;
@@ -23,6 +25,8 @@ using namespace boost;
 
 typedef MultiHypothesesGraph::Node Node;
 typedef MultiHypothesesGraph::Arc Arc;
+typedef pgm::multihypotheses::Model Model;
+typedef Model::TraxelArc TraxelArc;
 
 BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_serialize ) {
 
@@ -437,6 +441,156 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_serialize_to_file ) {
 	name = "count_prediction";
 	BOOST_CHECK_EQUAL_COLLECTIONS(loaded_traxels_n2.front().features[name].begin(), loaded_traxels_n2.front().features[name].end(), t2.front().features[name].begin(), t2.front().features[name].end());
 */
+}
+
+BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_pruning_nearest_neighbor ) {
+  std::cout << "MultiHypothesesGraph_pruning_nearest_neighbor" << std::endl;
+  MultiHypothesesGraph g;
+  MultiHypothesesGraph::ContainedRegionsMap& regions = g.get(node_regions_in_component());
+
+  const Node& n1 = g.add_node(1);
+  const Node& n2 = g.add_node(1);
+  const Node& n3 = g.add_node(2);
+  const Node& n4 = g.add_node(2);
+
+  g.addArc(n1, n3);
+  g.addArc(n1, n4);
+  g.addArc(n2, n3);
+  g.addArc(n2, n4);
+
+  feature_type com1[] = {2., 0., 0.};
+  feature_type com2[] = {1., 0., 0.};
+  feature_type com3[] = {3., 0., 0.};
+  feature_type com4[] = {6., 0., 0.};
+  feature_type com5[] = {5., 0., 0.};
+  feature_type com6[] = {7., 0., 0.};
+
+  feature_type count[] = {0.2, 0.7, 0.1};
+
+  std::vector<Traxel>& t1 = regions.get_value(n1);
+  std::vector<Traxel>& t2 = regions.get_value(n2);
+  std::vector<Traxel>& t3 = regions.get_value(n3);
+  std::vector<Traxel>& t4 = regions.get_value(n4);
+
+  // generate traxels
+  // t = 1
+  t1.push_back(Traxel(1, 1));
+  t1.rbegin()->features["com"] = feature_array(com1, com1 + 3);
+  t1.rbegin()->features["count_prediction"] = feature_array(count, count + 3);
+  t1.rbegin()->features["cardinality"] = feature_array(1, 2.);
+  t1.push_back(Traxel(3, 1));
+  t1.rbegin()->features["com"] = feature_array(com2, com2 + 3);
+  t1.rbegin()->features["cardinality"] = feature_array(1, 1.);
+  t1.push_back(Traxel(4, 1));
+  t1.rbegin()->features["com"] = feature_array(com3, com3 + 3);
+  t1.rbegin()->features["cardinality"] = feature_array(1, 1.);
+
+  t2.push_back(Traxel(2, 1));
+  t2.rbegin()->features["com"] = feature_array(com4, com4 + 3);
+  t2.rbegin()->features["count_prediction"] = feature_array(count, count + 3);
+  t2.rbegin()->features["cardinality"] = feature_array(1, 2.);
+  t2.push_back(Traxel(5, 1));
+  t2.rbegin()->features["com"] = feature_array(com5, com5 + 3);
+  t2.rbegin()->features["cardinality"] = feature_array(1, 1.);
+  t2.push_back(Traxel(6, 1));
+  t2.rbegin()->features["com"] = feature_array(com6, com6 + 3);
+  t2.rbegin()->features["cardinality"] = feature_array(1, 1.);
+
+  // t = 2
+  t3.push_back(Traxel(1, 2));
+  t3.rbegin()->features["com"] = feature_array(com1, com1 + 3);
+  t3.rbegin()->features["count_prediction"] = feature_array(count, count + 3);
+  t3.rbegin()->features["cardinality"] = feature_array(1, 2.);
+  t3.push_back(Traxel(3, 2));
+  t3.rbegin()->features["com"] = feature_array(com2, com2 + 3);
+  t3.rbegin()->features["cardinality"] = feature_array(1, 1.);
+  t3.push_back(Traxel(4, 2));
+  t3.rbegin()->features["com"] = feature_array(com3, com3 + 3);
+  t3.rbegin()->features["cardinality"] = feature_array(1, 1.);
+
+  t4.push_back(Traxel(2, 2));
+  t4.rbegin()->features["com"] = feature_array(com4, com4 + 3);
+  t4.rbegin()->features["count_prediction"] = feature_array(count, count + 3);
+  t4.rbegin()->features["cardinality"] = feature_array(1, 2.);
+  t4.push_back(Traxel(5, 2));
+  t4.rbegin()->features["com"] = feature_array(com5, com5 + 3);
+  t4.rbegin()->features["cardinality"] = feature_array(1, 1.);
+  t4.push_back(Traxel(6, 2));
+  t4.rbegin()->features["com"] = feature_array(com6, com6 + 3);
+  t4.rbegin()->features["cardinality"] = feature_array(1, 1.);
+
+  // arcs after pruning
+  std::vector<TraxelArc> arcs;
+  arcs.push_back(TraxelArc(Traxel(1,1), Traxel(1,2)));
+  arcs.push_back(TraxelArc(Traxel(1,1), Traxel(5,2)));
+
+  arcs.push_back(TraxelArc(Traxel(3,1), Traxel(3,2)));
+  arcs.push_back(TraxelArc(Traxel(3,1), Traxel(5,2)));
+
+  arcs.push_back(TraxelArc(Traxel(4,1), Traxel(4,2)));
+  arcs.push_back(TraxelArc(Traxel(4,1), Traxel(5,2)));
+
+  arcs.push_back(TraxelArc(Traxel(2,1), Traxel(2,2)));
+  arcs.push_back(TraxelArc(Traxel(2,1), Traxel(4,2)));
+
+  arcs.push_back(TraxelArc(Traxel(5,1), Traxel(5,2)));
+  arcs.push_back(TraxelArc(Traxel(5,1), Traxel(4,2)));
+
+  arcs.push_back(TraxelArc(Traxel(6,1), Traxel(6,2)));
+  arcs.push_back(TraxelArc(Traxel(6,1), Traxel(4,2)));
+
+  std::vector<bool> checks(arcs.size());
+
+  ConstantFeature det(10);
+  ConstantFeature mis(1000);
+  ConstantFeature div(2000);
+  pgm::multihypotheses::CVPR2014ModelBuilder builder( ConstantFeature(1000), // appearance
+                                                      ConstantFeature(1000), // disappearance
+                                                      SquaredDistance(), // move
+                                                      ConstantFeature(0), // count
+                                                      0, // forbidden_cost
+                                                      0, // opportunity
+                                                      50, // max_division_level
+                                                      3 // max_count
+                                                      );
+  builder
+      .with_detection_vars(det, mis)
+      .with_divisions(div)
+      .with_maximal_conflict_cliques(true)
+      .with_maximum_arcs(1);
+      ;
+
+  MultiHypotheses reasoner(builder,
+                           true, // with_constraints
+                           0. // ep_gap
+                           );
+
+  std::cout << " -> workflow: formulating model" << std::endl;
+  reasoner.formulate( g );
+  const pgm::OpengmModel* model = reasoner.get_graphical_model();
+  std::cout << "Checking the topology of the graphical model...\n";
+  std::cout << "Number of variables: " << model->numberOfVariables() << '\n';
+  BOOST_CHECK_EQUAL(model->numberOfVariables(), 24);
+
+  const Model::arc_var_map& arc_var = reasoner.get_arc_map();
+  size_t position;
+  for (Model::arc_var_map::const_iterator it = arc_var.begin(); it != arc_var.end(); ++it) {
+    size_t idx = 0;
+    for (std::vector<TraxelArc>::const_iterator a = arcs.begin(); a != arcs.end(); ++a, ++idx) {
+      if (it->first.first == a->first && it->first.second == a->second) {
+        break;
+      }
+    }
+    // the required arc exists
+    BOOST_REQUIRE(idx < checks.size());
+    // the required arc has not been checked yet
+    BOOST_REQUIRE(checks[idx] == false);
+    checks[idx] = true;
+  }
+  // all arcs have been matched
+  for (std::vector<bool>::const_iterator c = checks.begin(); c != checks.end(); ++c) {
+    BOOST_CHECK(*c == true);
+  }
 }
 
 
