@@ -1075,7 +1075,7 @@ void TrainableModelBuilder::add_incoming_factor(const MultiHypothesesGraph& hypo
                                                 Model& m,
                                                 const MultiHypothesesGraph::Node& node,
                                                 const Traxel& trax,
-                                                const std::vector<Traxel>& neighbors) const {
+                                                const std::vector<Traxel>& /*neighbors*/) const {
   // LOG(logDEBUG2) << "TrainableModelBuilder::add_incoming_factor(): entered for " << trax;
   // LOG(logDEBUG1) << "TrainableModelBuilder::add_incoming_factor(): entered";
   const std::vector<size_t> vi = vars_for_incoming_factor(hypotheses, m, node, trax);
@@ -1524,8 +1524,8 @@ void CVPR2014ModelBuilder::add_count_helper( Model& m,
 	return;
 }
 
-void ModelBuilder::add_count_hard_constraints(const Model& m,
-                                                      const MultiHypothesesGraph& hypotheses, OpengmLPCplex& cplex) const {
+void ModelBuilder::add_count_hard_constraints(const Model& /*m*/,
+                                                      const MultiHypothesesGraph& /*hypotheses*/, OpengmLPCplex& cplex) const {
   for(std::vector<std::vector<std::pair<std::pair<size_t, size_t>, int> > >::const_iterator constraint_it =
           var_state_coeff_constraints_.begin(); constraint_it != var_state_coeff_constraints_.end();
       ++constraint_it) {
