@@ -16,17 +16,19 @@ void export_cross_correlation();
 void export_gmm();
 void export_multi_hypotheses();
 void export_region_adjacency();
+void export_auxiliary();
 
 
 BOOST_PYTHON_MODULE( pgmlink )
 {
 	vigra::import_vigranumpy();
-    export_field_of_view();
-    export_hypotheses();
-    export_track();
-    export_traxels();
-    export_cross_correlation();
-    export_gmm();
-    export_multi_hypotheses();
-    export_region_adjacency();
+        export_field_of_view();
+        export_hypotheses();
+        export_track();
+        export_traxels();
+        export_cross_correlation();
+        export_gmm();
+        export_multi_hypotheses();
+        export_region_adjacency();
+        export_auxiliary();
 }
