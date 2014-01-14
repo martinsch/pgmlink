@@ -72,3 +72,4 @@ html
 doc/html
 
 TAGS
+/tests/serializationTest.dat
