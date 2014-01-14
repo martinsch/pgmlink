@@ -401,6 +401,7 @@ struct MultiHypothesesTraxelStore {
 	  map(map), conflicts_by_timestep(conflicts_by_timestep) {}
 
   void add(const Traxel& trax, unsigned component_id);
+  const Traxel& get(int timestep, unsigned component_id, unsigned traxel_id) const;
   void add_conflict_map(int timestep, const ConflictSetMap& conflicts);
   void add_signed_conflict_map(int timestep, const SignedConflictSetMap& conflicts);
   void start_component(const Traxel& trax);

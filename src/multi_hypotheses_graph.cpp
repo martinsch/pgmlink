@@ -747,6 +747,26 @@ void MultiHypothesesTraxelStore::add(const Traxel& trax, unsigned component_id) 
   map[trax.Timestep][component_id].push_back(trax);
 }
 
+const Traxel& MultiHypothesesTraxelStore::get(int timestep, unsigned component_id, unsigned traxel_id) const {
+  TimestepRegionMap::const_iterator ts = map.find(timestep);
+  if (ts == map.end()) {
+    throw std::runtime_error("Timestep not present in traxelstore");
+  } else {
+    std::map<unsigned, std::vector<Traxel> >::const_iterator cc = ts->second.find(component_id);
+    if (cc == ts->second.end()) {
+      throw std::runtime_error("Connected component not present at timestep");
+    } else {
+      std::vector<Traxel>::const_iterator trax =
+          std::find(cc->second.begin(), cc->second.end(), Traxel(traxel_id, timestep));
+      if (trax == cc->second.end()) {
+        throw std::runtime_error("Traxel not present in connected component");
+      } else {
+        return *trax;
+      }
+    }
+  }
+}
+
 
 void MultiHypothesesTraxelStore::add_conflict_map(int timestep, const ConflictSetMap& conflicts) {
   conflicts_by_timestep[timestep] = conflicts;

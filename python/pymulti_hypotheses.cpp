@@ -429,6 +429,8 @@ void export_multi_hypotheses() {
   class_<MultiHypothesesTraxelStore>("MultiHypothesesTraxelStore")
       .def("add", &MultiHypothesesTraxelStore::add,
            return_internal_reference<>())
+      .def("get", &MultiHypothesesTraxelStore::get,
+           return_internal_reference<>())
       .def("startComponent", &MultiHypothesesTraxelStore::start_component,
            return_internal_reference<>())
       .def("make_string", &MultiHypothesesTraxelStore::print)
