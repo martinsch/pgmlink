@@ -49,7 +49,7 @@ class IntersectsDictionary {
     }
   }
 
-  void add_to_traxel(unsigned label, Traxel& trax) {
+  void add_to_traxel(Traxel& trax, unsigned label) {
     feature_array& indices = trax.features["intersect_indices"];
     feature_array& intersects = trax.features["intersects"];
     if (indices.size() != intersects.size()) {
