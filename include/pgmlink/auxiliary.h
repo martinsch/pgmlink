@@ -9,6 +9,7 @@
 
 // pgmlink
 #include <pgmlink/traxels.h> // pgmlink::feature_array
+#include <pgmlink/log.h> // LOG
 
 namespace pgmlink {
 template <int N, typename T>
@@ -19,12 +20,14 @@ void extract_intersects( const vigra::MultiArrayView<N, T> arr1,
 
 }
 
+// --------- IMPLEMENTATION  --------- //
 
 namespace pgmlink {
 template <int N, typename T>
 void extract_intersects( const vigra::MultiArrayView<N, T> arr1,
                          const vigra::MultiArrayView<N, T> arr2,
                          std::map<T, std::map<T, unsigned> >& intersects) {
+  LOG(logDEBUG) << "extract_intersects() -- entered";
   typedef typename vigra::CoupledIteratorType<N, T, T>::type CoupledIterator;
   CoupledIterator start = vigra::createCoupledIterator(arr1, arr2);
   CoupledIterator end = start.getEndIterator();
