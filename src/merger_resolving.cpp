@@ -12,7 +12,7 @@
 #include <mlpack/core.hpp>
 #include <mlpack/methods/kmeans/kmeans.hpp>
 #include <mlpack/methods/gmm/gmm.hpp>
-#include <omp.h>
+
 
 
 // pgmlink headers
