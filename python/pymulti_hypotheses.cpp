@@ -239,17 +239,22 @@ class FeatureExtractorCollection {
   
 
   void add_to_vector(std::string calculator_name, std::string feature_name) {
-    std::map<std::string, boost::shared_ptr<FeatureCalculator> >::const_iterator it = name_calculator_mapping_.find(calculator_name);
-    if (it == name_calculator_mapping_.end()) {
-      throw std::runtime_error("Calculator \"" + calculator_name + "\" not available!");
+    if (calculator_name == "IntersectionUnionRatio") {
+      extractors_.push_back(boost::shared_ptr<FeatureExtractorSelective>(new FeatureExtractorSelective(name_calculator_mapping_.find("Identity")->second, "IntersectionUnionRatio")));
+      calculators_.push_back((*extractors_.rbegin())->calculator());
     } else {
-      extractors_.push_back(FeatureExtractor(it->second, feature_name));
-      calculators_.push_back(it->second);
+      std::map<std::string, boost::shared_ptr<FeatureCalculator> >::const_iterator it = name_calculator_mapping_.find(calculator_name);
+      if (it == name_calculator_mapping_.end()) {
+        throw std::runtime_error("Calculator \"" + calculator_name + "\" not available!");
+      } else {
+        extractors_.push_back(boost::shared_ptr<FeatureExtractor>(new FeatureExtractor(it->second, feature_name)));
+        calculators_.push_back(it->second);
+      }
     }
   }
 
 
-  std::vector<FeatureExtractor> get_extractors() {
+  std::vector<boost::shared_ptr<FeatureExtractor> > get_extractors() {
     return extractors_;
   }
 
@@ -261,7 +266,7 @@ class FeatureExtractorCollection {
   
  private:
   const std::map<std::string, boost::shared_ptr<FeatureCalculator> >& name_calculator_mapping_;
-  std::vector<FeatureExtractor> extractors_;
+  std::vector<boost::shared_ptr<FeatureExtractor> > extractors_;
   std::vector<boost::shared_ptr<FeatureCalculator> > calculators_;
 };
 
