@@ -302,6 +302,11 @@ FeatureExtractor::FeatureExtractor(boost::shared_ptr<FeatureCalculator> calculat
 }
 
 
+FeatureExtractor::~FeatureExtractor() {
+
+}
+
+
 feature_array FeatureExtractor::extract(const Traxel& t1) const {
   LOG(logDEBUG4) << "FeatureExtractor::extract: feature " << feature_name_;
   FeatureMap::const_iterator f1 = t1.features.find(feature_name_);
@@ -345,6 +350,48 @@ boost::shared_ptr<FeatureCalculator> FeatureExtractor::calculator() const {
 std::string FeatureExtractor::name() const {
   return calculator_->name() + "<" + feature_name_ + ">";
 }
+
+
+////
+//// class FeatureExtractorSelective
+////
+FeatureExtractorSelective::FeatureExtractorSelective(boost::shared_ptr<FeatureCalculator> calculator, const std::string& feature_name) :
+    FeatureExtractor(calculator, feature_name) {
+
+}
+
+
+FeatureExtractorSelective::~FeatureExtractorSelective() {
+  
+}
+
+
+feature_array FeatureExtractorSelective::extract(const Traxel& t1, const Traxel& t2) const {
+   LOG(logDEBUG4) << "FeatureExtractorSelective::extract: feature " << feature_name_;
+   FeatureMap::const_iterator indices = t1.features.find("intersect_indices");
+   FeatureMap::const_iterator intersects = t1.features.find("intersects");
+   FeatureMap::const_iterator count1 = t1.features.find("Count");
+   FeatureMap::const_iterator count2 = t2.features.find("Count");
+
+   assert(indices != t1.features.end());
+   assert(intersects != t1.features.end());
+   assert(count1 != t1.features.end());
+   assert(count2 != t2.features.end());
+
+   feature_array::const_iterator index = std::find(indices->second.begin(), indices->second.end(), t2.Id);
+   size_t offset = index - indices->second.begin();
+   float res = 0.0;
+   if (index != indices->second.end()) {
+     res = intersects->second[offset]/(count1->second[0] + count2->second[0] - intersects->second[offset]);
+   }
+   return feature_array(1, res);
+}
+
+
+std::string FeatureExtractorSelective::name() const {
+  return feature_name_;
+}
+
 
 namespace {
 std::map<std::string, boost::shared_ptr<FeatureCalculator> > define_features() {
@@ -552,7 +599,7 @@ void ClassifierConstant::classify(const std::vector<Traxel>& traxels_out,
 //// ClassifierRF
 ////
 ClassifierRF::ClassifierRF(vigra::RandomForest<> rf,
-                           const std::vector<FeatureExtractor>& feature_extractors,
+                           const std::vector<boost::shared_ptr<FeatureExtractor> >& feature_extractors,
                            const std::string& name) :
     ClassifierStrategy(name),
     rf_(rf),
@@ -599,11 +646,11 @@ void ClassifierRF::extract_features(const Traxel& t,
                                     vigra::MultiArrayView<2, feature_type> features,
                                     vigra::MultiArrayView<2, feature_type> probabilities) {
   size_t starting_index = 0;
-  for (std::vector<FeatureExtractor>::const_iterator it = feature_extractors_.begin();
+  for (std::vector<boost::shared_ptr<FeatureExtractor> >::const_iterator it = feature_extractors_.begin();
        it != feature_extractors_.end();
        ++it) {
-    LOG(logDEBUG4) << "ClassifierRF: extracting " << it->name();
-    feature_array feats = it->extract(t);
+    LOG(logDEBUG4) << "ClassifierRF: extracting " << (*it)->name();
+    feature_array feats = (*it)->extract(t);
     LOG(logDEBUG4) << "ClassifierRF: current feats.size(): " << feats.size()
                    << ", features.shape(): " << features.shape();
     assert(starting_index + feats.size() <= features.shape()[1]);
@@ -626,11 +673,11 @@ void ClassifierRF::extract_features(const Traxel& t1,
                                     vigra::MultiArrayView<2, feature_type> features,
                                     vigra::MultiArrayView<2, feature_type> probabilities) {
   size_t starting_index = 0;
-  for (std::vector<FeatureExtractor>::const_iterator it = feature_extractors_.begin();
+  for (std::vector<boost::shared_ptr<FeatureExtractor> >::const_iterator it = feature_extractors_.begin();
        it != feature_extractors_.end();
        ++it) {
-    LOG(logDEBUG4) << "ClassifierRF: extracting " << it->name();
-    feature_array feats = it->extract(t1, t2);
+    LOG(logDEBUG4) << "ClassifierRF: extracting " << (*it)->name();
+    feature_array feats = (*it)->extract(t1, t2);
     assert(starting_index + feats.size() <= features.shape()[1]);
     std::copy(feats.begin(), feats.end(), features.begin() + starting_index);
     starting_index += feats.size();
@@ -652,11 +699,11 @@ void ClassifierRF::extract_features(const Traxel& parent,
                                     vigra::MultiArrayView<2, feature_type> features,
                                     vigra::MultiArrayView<2, feature_type> probabilities) {
   size_t starting_index = 0;
-  for (std::vector<FeatureExtractor>::const_iterator it = feature_extractors_.begin();
+  for (std::vector<boost::shared_ptr<FeatureExtractor> >::const_iterator it = feature_extractors_.begin();
        it != feature_extractors_.end();
        ++it) {
-    LOG(logDEBUG4) << "ClassifierRF:extract_features() -- extracting " << it->name();
-    feature_array feats = it->extract(parent, child1, child2);
+    LOG(logDEBUG4) << "ClassifierRF:extract_features() -- extracting " << (*it)->name();
+    feature_array feats = (*it)->extract(parent, child1, child2);
     assert(starting_index + feats.size() <= features.shape()[1]);
     std::copy(feats.begin(), feats.end(), features.begin() + starting_index);
     starting_index += feats.size();
@@ -668,7 +715,7 @@ void ClassifierRF::extract_features(const Traxel& parent,
 
 
 ClassifierMoveRF::ClassifierMoveRF(vigra::RandomForest<> rf, 
-                                   const std::vector<FeatureExtractor>& feature_extractors,
+                                   const std::vector<boost::shared_ptr<FeatureExtractor> >& feature_extractors,
                                    const std::string& name) :
     ClassifierRF(rf, feature_extractors, name) {}
 
@@ -730,7 +777,7 @@ void ClassifierMoveRF::classify(const std::vector<Traxel>& traxels_out,
 
 
 ClassifierDivisionRF::ClassifierDivisionRF(vigra::RandomForest<> rf, 
-                                           const std::vector<FeatureExtractor>& feature_extractors,
+                                           const std::vector<boost::shared_ptr<FeatureExtractor> >& feature_extractors,
                                            const std::string& name) :
     ClassifierRF(rf, feature_extractors, name) {}
 
@@ -792,7 +839,7 @@ void ClassifierDivisionRF::classify(const std::vector<Traxel>& traxels_out,
 
 
 ClassifierCountRF::ClassifierCountRF(vigra::RandomForest<> rf,
-                                     const std::vector<FeatureExtractor>& feature_extractors,
+                                     const std::vector<boost::shared_ptr<FeatureExtractor> >& feature_extractors,
                                      const std::string& name) :
     ClassifierRF(rf, feature_extractors, name) {}
 
@@ -814,7 +861,7 @@ void ClassifierCountRF::classify(std::vector<Traxel>& traxels, bool with_predict
 
 
 ClassifierDetectionRF::ClassifierDetectionRF(vigra::RandomForest<> rf,
-                                             const std::vector<FeatureExtractor>& feature_extractors,
+                                             const std::vector<boost::shared_ptr<FeatureExtractor> >& feature_extractors,
                                              const std::string& name) :
     ClassifierRF(rf, feature_extractors, name) {}
 
@@ -895,18 +942,22 @@ boost::shared_ptr<ClassifierStrategy> ClassifierStrategyBuilder::build(const Opt
       }
     }
     
-    std::vector<FeatureExtractor> extractors;
+    std::vector<boost::shared_ptr<FeatureExtractor> > extractors;
     const std::map<std::string, boost::shared_ptr<FeatureCalculator> >& cmap = AvailableCalculators::get();
     for (std::vector<std::pair<std::string, std::string> >::const_iterator feature = options.feature_list.begin();
          feature != options.feature_list.end();
          ++feature) {
-      std::map<std::string, boost::shared_ptr<FeatureCalculator> >::const_iterator c = cmap.find(feature->first);
-      if (c == cmap.end()) {
-        throw std::runtime_error("Calculator \"" + feature->first + "\" not available!");
+      if (feature->first == "IntersectionUnionRatio") {
+        extractors.push_back(boost::shared_ptr<FeatureExtractorSelective>(new FeatureExtractorSelective(cmap.find("Identity")->second, "IntersectionUnionRatio")));
       } else {
-        extractors.push_back(FeatureExtractor(c->second, feature->second));
-        LOG(logDEBUG4) << "ClassifierStrategyBuilder::builder() -- Created Feature Extractor " << extractors.rbegin()->name();
+        std::map<std::string, boost::shared_ptr<FeatureCalculator> >::const_iterator c = cmap.find(feature->first);
+        if (c == cmap.end()) {
+          throw std::runtime_error("Calculator \"" + feature->first + "\" not available!");
+        } else {
+          extractors.push_back(boost::shared_ptr<FeatureExtractor>(new FeatureExtractor(c->second, feature->second)));
+        }
       }
+      LOG(logDEBUG4) << "ClassifierStrategyBuilder::builder() -- Created Feature Extractor " << (*extractors.rbegin())->name();
     }
 
     

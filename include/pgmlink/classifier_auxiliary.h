@@ -179,6 +179,7 @@ typedef ParentSquaredDifferences<Mean> MeanParentSquaredDifference;
 
 ////
 //// class RatioParentSquaredDifference
+////
 class Ratio {
  public:
   feature_type operator()(feature_array::const_iterator begin, feature_array::const_iterator end) {
@@ -193,6 +194,13 @@ class Ratio {
 };
 typedef ParentSquaredDifferences<Ratio> RatioParentSquaredDifference;
 
+
+////
+//// class IntersectionUnionRatio
+////
+class IntersectionUnionRatio {
+ public:
+};
 
 
 
@@ -226,15 +234,24 @@ typedef ParentSquaredDifferences<Ratio> RatioParentSquaredDifference;
 class FeatureExtractor {
  public:
   FeatureExtractor(boost::shared_ptr<FeatureCalculator> calculator, const std::string& feature_name);
-  feature_array extract(const Traxel& t1) const;
-  feature_array extract(const Traxel& t1, const Traxel& t2) const;
-  feature_array extract(const Traxel& t1, const Traxel& t2, const Traxel& t3) const;
+  virtual ~FeatureExtractor();
+  virtual feature_array extract(const Traxel& t1) const;
+  virtual feature_array extract(const Traxel& t1, const Traxel& t2) const;
+  virtual feature_array extract(const Traxel& t1, const Traxel& t2, const Traxel& t3) const;
   boost::shared_ptr<FeatureCalculator> calculator() const;
-  std::string name() const;
+  virtual std::string name() const;
 
- private:
+ protected:
   boost::shared_ptr<FeatureCalculator> calculator_;
   std::string feature_name_;
+};
+
+class FeatureExtractorSelective : public FeatureExtractor {
+ public:
+  FeatureExtractorSelective(boost::shared_ptr<FeatureCalculator> calculator, const std::string& feature_name);
+  virtual ~FeatureExtractorSelective();
+  virtual feature_array extract(const Traxel& t1, const Traxel& t2) const;
+  virtual std::string name() const;
 };
 
 
@@ -321,7 +338,7 @@ class ClassifierConstant : public ClassifierStrategy {
 class ClassifierRF : public ClassifierStrategy {
  public:
   ClassifierRF(vigra::RandomForest<> rf,
-               const std::vector<FeatureExtractor>& extractor_list,
+               const std::vector<boost::shared_ptr<FeatureExtractor> >& extractor_list,
                const std::string& name = "");
   virtual ~ClassifierRF();
   virtual void classify(std::vector<Traxel>& traxels,
@@ -355,7 +372,7 @@ class ClassifierRF : public ClassifierStrategy {
                                 vigra::MultiArrayView<2, feature_type>);
   
   vigra::RandomForest<> rf_;
-  const std::vector<FeatureExtractor> feature_extractors_;
+  const std::vector<boost::shared_ptr<FeatureExtractor> > feature_extractors_;
   vigra::MultiArray<2, feature_type> features_;
   vigra::MultiArray<2, feature_type> probabilities_;
 };
@@ -364,7 +381,7 @@ class ClassifierRF : public ClassifierStrategy {
 class ClassifierMoveRF : public ClassifierRF {
  public:
   ClassifierMoveRF(vigra::RandomForest<> rf, 
-                   const std::vector<FeatureExtractor>& extractor_list,
+                   const std::vector<boost::shared_ptr<FeatureExtractor> >& extractor_list,
                    const std::string& name = "");
   virtual ~ClassifierMoveRF();
   virtual void classify(std::vector<Traxel>& traxels_out,
@@ -381,7 +398,7 @@ class ClassifierMoveRF : public ClassifierRF {
 class ClassifierDivisionRF : public ClassifierRF {
  public:
   ClassifierDivisionRF(vigra::RandomForest<> rf, 
-                       const std::vector<FeatureExtractor>& extractor_list,
+                       const std::vector<boost::shared_ptr<FeatureExtractor> >& extractor_list,
                        const std::string& name = "");
   virtual ~ClassifierDivisionRF();
   virtual void classify(std::vector<Traxel>& traxels_out,
@@ -397,7 +414,7 @@ class ClassifierDivisionRF : public ClassifierRF {
 class ClassifierCountRF : public ClassifierRF {
  public:
   ClassifierCountRF(vigra::RandomForest<> rf, 
-                    const std::vector<FeatureExtractor>& extractor_list,
+                    const std::vector<boost::shared_ptr<FeatureExtractor> >& extractor_list,
                     const std::string& name = "");
   ~ClassifierCountRF();
   virtual void classify(std::vector<Traxel>& traxels, bool with_predict);
@@ -407,7 +424,7 @@ class ClassifierCountRF : public ClassifierRF {
 class ClassifierDetectionRF : public ClassifierRF {
  public:
   ClassifierDetectionRF(vigra::RandomForest<> rf, 
-                        const std::vector<FeatureExtractor>& extractor_list,
+                        const std::vector<boost::shared_ptr<FeatureExtractor> >& extractor_list,
                         const std::string& name = "");
   ~ClassifierDetectionRF();
   virtual void classify(std::vector<Traxel>& traxels, bool with_predict);
