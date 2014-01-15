@@ -300,43 +300,6 @@ class ModelBuilder {
 };
 
 
-class TrainableModelBuilder : public ModelBuilder {
- public:
-  TrainableModelBuilder(boost::function<double (const Traxel&)> appearance = ConstantFeature(1000),
-                        boost::function<double (const Traxel&)> disappearance = ConstantFeature(1000),
-                        boost::function<double (const Traxel&, const Traxel&, feature_type)> move = SquaredDistance(),
-                        boost::function<double (feature_type)> count = ConstantFeature(100),
-                        double forbidden_cost = 1000000,
-                        double opportunity_cost = 1000,
-                        unsigned max_division_level=0,
-                        unsigned max_count=2) :
-  ModelBuilder(appearance, disappearance, move, count, forbidden_cost, opportunity_cost, max_division_level, max_count) {}
-  virtual boost::shared_ptr<ModelBuilder> clone() const;
-  virtual ~TrainableModelBuilder() {}
-
-  virtual boost::shared_ptr<Model> build( const MultiHypothesesGraph& );
-
- private:
-  void add_detection_factors( const MultiHypothesesGraph&, Model&, const MultiHypothesesGraph::Node& ) const;
-  void add_outgoing_factors( const MultiHypothesesGraph&, Model&, const MultiHypothesesGraph::Node& ) const;
-  void add_incoming_factors( const MultiHypothesesGraph&, Model&, const MultiHypothesesGraph::Node& ) const;
-
-  void add_detection_factor( Model&, const Traxel& ) const;
-  void add_outgoing_factor( const MultiHypothesesGraph&,
-                            Model&,
-                            const MultiHypothesesGraph::Node&,
-                            const Traxel&,
-                            const std::vector<Traxel>& ) const;
-  void add_incoming_factor( const MultiHypothesesGraph&,
-                            Model&,
-                            const MultiHypothesesGraph::Node&,
-                            const Traxel&,
-                            const std::vector<Traxel>& ) const;
-  
-
-};
-
-
 class CVPR2014ModelBuilder : public ModelBuilder {
  public:
   CVPR2014ModelBuilder(boost::function<double (const Traxel&)> appearance = ConstantFeature(1000),

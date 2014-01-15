@@ -46,7 +46,7 @@ class MultiHypotheses { // : public Reasoner {
         fixed_detections_(fixed_detections),
         ep_gap_(ep_gap),
         cplex_timeout_(cplex_timeout),
-        builder_(new pgm::multihypotheses::TrainableModelBuilder())
+        builder_(new pgm::multihypotheses::CVPR2014ModelBuilder())
   {(*builder_).with_detection_vars().with_divisions(); }
     
 
