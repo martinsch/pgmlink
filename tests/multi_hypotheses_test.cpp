@@ -573,7 +573,6 @@ BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_pruning_nearest_neighbor ) {
   BOOST_CHECK_EQUAL(model->numberOfVariables(), 24);
 
   const Model::arc_var_map& arc_var = reasoner.get_arc_map();
-  size_t position;
   for (Model::arc_var_map::const_iterator it = arc_var.begin(); it != arc_var.end(); ++it) {
     size_t idx = 0;
     for (std::vector<TraxelArc>::const_iterator a = arcs.begin(); a != arcs.end(); ++a, ++idx) {

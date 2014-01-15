@@ -39,19 +39,19 @@ FeatureCalculator::~FeatureCalculator() {
 }
 
 
-feature_array FeatureCalculator::calculate(const feature_array& f1) const {
+feature_array FeatureCalculator::calculate(const feature_array& ) const {
   throw std::runtime_error("FeatureCalculator \"" + name() + "\" does not take one feature array");
   return feature_array();
 }
 
 
-feature_array FeatureCalculator::calculate(const feature_array& f1, const feature_array& f2) const {
+feature_array FeatureCalculator::calculate(const feature_array&, const feature_array& ) const {
   throw std::runtime_error("FeatureCalculator \"" + name() + "\" does not take two feature arrays");
   return feature_array();
 }
 
 
-feature_array FeatureCalculator::calculate(const feature_array& f1, const feature_array& f2, const feature_array& f3) const {
+feature_array FeatureCalculator::calculate(const feature_array&, const feature_array&, const feature_array& ) const {
   throw std::runtime_error("FeatureCalculator \"" + name() + "\" does not take three feature arrays");
   return feature_array();
 }
@@ -471,29 +471,29 @@ ClassifierLazy::ClassifierLazy() :
 ClassifierLazy::~ClassifierLazy() {}
 
 
-void ClassifierLazy::classify(std::vector<Traxel>& traxels, bool with_predict) {
+void ClassifierLazy::classify(std::vector<Traxel>&, bool) {
 
 }
 
 
-void ClassifierLazy::classify(std::vector<Traxel>& traxels_out,
-              const std::vector<Traxel>& traxels_in, bool with_predict) {
+void ClassifierLazy::classify(std::vector<Traxel>& ,
+              const std::vector<Traxel>& , bool ) {
 
 }
 
 
-void ClassifierLazy::classify(const std::vector<Traxel>& traxels_out,
-              const std::vector<Traxel>& traxels_in,
-              std::map<Traxel, std::map<Traxel, feature_array> >& feature_map,
-              bool with_predict) {
+void ClassifierLazy::classify(const std::vector<Traxel>& ,
+              const std::vector<Traxel>& ,
+              std::map<Traxel, std::map<Traxel, feature_array> >& ,
+              bool ) {
 
 }
 
 
-void ClassifierLazy::classify(const std::vector<Traxel>& traxels_out,
-              const std::vector<Traxel>& traxels_in,
-              std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_array> >& feature_map,
-              bool with_predict) {
+void ClassifierLazy::classify(const std::vector<Traxel>&,
+              const std::vector<Traxel>&,
+              std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_array> >&,
+              bool) {
 
 }
 
@@ -541,7 +541,7 @@ ClassifierConstant::ClassifierConstant(double probability, const std::string& na
 ClassifierConstant::~ClassifierConstant() {}
 
 
-void ClassifierConstant::classify(std::vector<Traxel>& traxels, bool with_predict) {
+void ClassifierConstant::classify(std::vector<Traxel>& traxels, bool /*with_predict*/) {
   for (std::vector<Traxel>::iterator t = traxels.begin();
        t != traxels.end();
        ++t) {
@@ -554,7 +554,7 @@ void ClassifierConstant::classify(std::vector<Traxel>& traxels, bool with_predic
 
 
 void ClassifierConstant::classify(std::vector<Traxel>& traxels_out,
-                                  const std::vector<Traxel>&, bool with_predict) {
+                                  const std::vector<Traxel>&, bool /*with_predict*/) {
   LOG(logDEBUG3) << "ClassifierConstant::classify() -- entered";
   for (std::vector<Traxel>::iterator out = traxels_out.begin(); out != traxels_out.end(); ++out) {
     out->features[name_].push_back(1-probability_);
@@ -567,7 +567,7 @@ void ClassifierConstant::classify(std::vector<Traxel>& traxels_out,
 void ClassifierConstant::classify(const std::vector<Traxel>& traxels_out,
                                   const std::vector<Traxel>& traxels_in,
                                   std::map<Traxel, std::map<Traxel, feature_array> >& feature_map,
-                                  bool with_predict) {
+                                  bool /*with_predict*/) {
   LOG(logDEBUG3) << "ClassifierConstant::classify() -- entered";
   for (std::vector<Traxel>::const_iterator out = traxels_out.begin(); out != traxels_out.end(); ++out) {
     for (std::vector<Traxel>::const_iterator in = traxels_in.begin(); in != traxels_in.end(); ++in) {
@@ -582,7 +582,7 @@ void ClassifierConstant::classify(const std::vector<Traxel>& traxels_out,
 void ClassifierConstant::classify(const std::vector<Traxel>& traxels_out,
                                   const std::vector<Traxel>& traxels_in,
                                   std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_array> >& feature_map,
-                                  bool with_predict) {
+                                  bool /*with_predict*/) {
   for (std::vector<Traxel>::const_iterator out = traxels_out.begin(); out != traxels_out.end(); ++out) {
     for (std::vector<Traxel>::const_iterator child1 = traxels_in.begin(); child1 != traxels_in.end(); ++child1) {
       for (std::vector<Traxel>::const_iterator child2 = child1 + 1; child2 != traxels_in.end(); ++child2) {
@@ -618,23 +618,23 @@ ClassifierRF::~ClassifierRF() {}
 
 
 // ClassifierRF is not doing anything. Create derived class if you want to take action.
-void ClassifierRF::classify(std::vector<Traxel>& traxels, bool with_predict) {}
+void ClassifierRF::classify(std::vector<Traxel>&, bool) {}
 
 
-void ClassifierRF::classify(std::vector<Traxel>& traxels_out,
-                            const std::vector<Traxel>& traxels_in, bool with_predict) {}
+void ClassifierRF::classify(std::vector<Traxel>&,
+                            const std::vector<Traxel>&, bool) {}
 
 
-void ClassifierRF::classify(const std::vector<Traxel>& traxels_out,
-                            const std::vector<Traxel>& traxels_in,
-                            std::map<Traxel, std::map<Traxel, feature_array> >& feature_map,
-                            bool with_predict) {}
+void ClassifierRF::classify(const std::vector<Traxel>&,
+                            const std::vector<Traxel>&,
+                            std::map<Traxel, std::map<Traxel, feature_array> >&,
+                            bool) {}
 
 
-void ClassifierRF::classify(const std::vector<Traxel>& traxels_out,
-                            const std::vector<Traxel>& traxels_in,
-                            std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_array> >& feature_map,
-                            bool with_predict) {}
+void ClassifierRF::classify(const std::vector<Traxel>&,
+                            const std::vector<Traxel>&,
+                            std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_array> >&,
+                            bool) {}
 
 
 void ClassifierRF::extract_features(const Traxel& t) {
@@ -644,7 +644,7 @@ void ClassifierRF::extract_features(const Traxel& t) {
 
 void ClassifierRF::extract_features(const Traxel& t,
                                     vigra::MultiArrayView<2, feature_type> features,
-                                    vigra::MultiArrayView<2, feature_type> probabilities) {
+                                    vigra::MultiArrayView<2, feature_type> /*probabilities*/) {
   size_t starting_index = 0;
   for (std::vector<boost::shared_ptr<FeatureExtractor> >::const_iterator it = feature_extractors_.begin();
        it != feature_extractors_.end();
@@ -671,7 +671,7 @@ void ClassifierRF::extract_features(const Traxel& t1, const Traxel& t2) {
 void ClassifierRF::extract_features(const Traxel& t1,
                                     const Traxel& t2,
                                     vigra::MultiArrayView<2, feature_type> features,
-                                    vigra::MultiArrayView<2, feature_type> probabilities) {
+                                    vigra::MultiArrayView<2, feature_type> /*probabilities*/) {
   size_t starting_index = 0;
   for (std::vector<boost::shared_ptr<FeatureExtractor> >::const_iterator it = feature_extractors_.begin();
        it != feature_extractors_.end();
@@ -697,7 +697,7 @@ void ClassifierRF::extract_features(const Traxel& parent,
                                     const Traxel& child1,
                                     const Traxel& child2,
                                     vigra::MultiArrayView<2, feature_type> features,
-                                    vigra::MultiArrayView<2, feature_type> probabilities) {
+                                    vigra::MultiArrayView<2, feature_type> /*probabilities*/) {
   size_t starting_index = 0;
   for (std::vector<boost::shared_ptr<FeatureExtractor> >::const_iterator it = feature_extractors_.begin();
        it != feature_extractors_.end();
@@ -724,7 +724,7 @@ ClassifierMoveRF::~ClassifierMoveRF() {}
 
 
 void ClassifierMoveRF::classify(std::vector<Traxel>& traxels_out,
-                                const std::vector<Traxel>& traxels_in, bool with_predict) {
+                                const std::vector<Traxel>& traxels_in, bool /*with_predict*/) {
   for (std::vector<Traxel>::iterator out = traxels_out.begin(); out != traxels_out.end(); ++out) {
     vigra::MultiArray<2, feature_type> max_prob(vigra::Shape2(1, rf_.class_count()), 0.);
     for (std::vector<Traxel>::const_iterator in = traxels_in.begin(); in != traxels_in.end(); ++in) {
@@ -787,7 +787,7 @@ ClassifierDivisionRF::~ClassifierDivisionRF() {}
 
 void ClassifierDivisionRF::classify(std::vector<Traxel>& traxels_out,
                                     const std::vector<Traxel>& traxels_in,
-                                    bool with_predict) {
+                                    bool /*with_predict*/) {
   for (std::vector<Traxel>::iterator out = traxels_out.begin(); out != traxels_out.end(); ++out) {
     vigra::MultiArray<2, feature_type> max_prob(vigra::Shape2(1, rf_.class_count()), 0.);
     for (std::vector<Traxel>::const_iterator child1 = traxels_in.begin(); child1 != traxels_in.end(); ++child1) {
@@ -847,7 +847,7 @@ ClassifierCountRF::ClassifierCountRF(vigra::RandomForest<> rf,
 ClassifierCountRF::~ClassifierCountRF() {}
 
 
-void ClassifierCountRF::classify(std::vector<Traxel>& traxels, bool with_predict) {
+void ClassifierCountRF::classify(std::vector<Traxel>& traxels, bool /*with_predict*/) {
   extract_features(traxels[0]);
   rf_.predictProbabilities(features_, probabilities_);
   LOG(logDEBUG4) << "ClassifierCountRF::classify() -- adding feature "
