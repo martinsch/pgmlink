@@ -228,7 +228,7 @@ void RegionAdjacencyGraph::contract_nodes(RegionAdjacencyGraph::Node a, RegionAd
 	this->contract(a,b,remove_loops); // a and b are contracted to a
 }
 
-void RegionAdjacencyGraph::merge_nodes_threshold(double threshold, bool greedy) {
+void RegionAdjacencyGraph::merge_nodes_threshold(double threshold, bool /*greedy*/) {
 	LOG(logDEBUG) << "merge_nodes_threshold entered";
 	// remove connected components
 	std::vector<RegionAdjacencyGraph::Node> nodes_to_remove;
