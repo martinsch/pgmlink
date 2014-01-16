@@ -562,13 +562,18 @@ inline void ModelBuilder::add_assignment_vars( const MultiHypothesesGraph& hypot
       }
       double threshold = 0.5;
       std::vector<Traxel> divisions_above_threshold;
-      const std::map<std::pair<Traxel, Traxel>, feature_array>& division_probabilities = divisions[hypotheses.source(a)].find(*s)->second;
-      for (std::map<std::pair<Traxel, Traxel>, feature_array>::const_iterator div_it = division_probabilities.begin();
-           div_it != division_probabilities.end();
-           ++div_it) {
-        if (div_it->second[1] > threshold) {
-          divisions_above_threshold.push_back(div_it->first.first);
-          divisions_above_threshold.push_back(div_it->first.second);
+      
+      MultiHypothesesGraph::DivisionFeatureMap::Value::const_iterator division_probabilities_it 
+          = divisions[hypotheses.source(a)].find(*s);
+      if (division_probabilities_it != divisions[hypotheses.source(a)].end()) {
+        const std::map<std::pair<Traxel, Traxel>, feature_array>& division_probabilities = division_probabilities_it->second;
+        for (std::map<std::pair<Traxel, Traxel>, feature_array>::const_iterator div_it = division_probabilities.begin();
+             div_it != division_probabilities.end();
+             ++div_it) {
+          if (div_it->second[1] > threshold) {
+            divisions_above_threshold.push_back(div_it->first.first);
+            divisions_above_threshold.push_back(div_it->first.second);
+          }
         }
       }
       for (std::vector<Traxel>::const_iterator d = dest.begin(); d != dest.end(); ++d) {
