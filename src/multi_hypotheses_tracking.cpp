@@ -175,9 +175,10 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts, std::string 
     graph->add_classifier_features(mov.get(), div.get(), cnt.get(), det.get());
   }
 
+  graph->remove_traxel_features();
+
   if (serialize_to_fn.length() != 0) {
 	  // get rid of all the traxel features which are not longer needed
-	  graph->remove_traxel_features();
 
 	  // create and open a character archive for output
 	  std::ofstream ofs(serialize_to_fn.c_str(), std::fstream::out | std::fstream::binary);
