@@ -557,10 +557,11 @@ inline void ModelBuilder::add_assignment_vars( const MultiHypothesesGraph& hypot
            it != probabilities.end();
            ++it) {
         k_best_probabilities.push_back(std::make_pair(it->first, it->second[1]));
-        std::sort(k_best_probabilities.begin(), k_best_probabilities.end(), TraxelProbabilityPairGreaterThan());
-        k_best_probabilities.resize(std::min(k_best_probabilities.size(), static_cast<size_t>(maximum_outgoing_arcs_)));
       }
-      double threshold = 0.5;
+      std::sort(k_best_probabilities.begin(), k_best_probabilities.end(), TraxelProbabilityPairGreaterThan());
+      k_best_probabilities.resize(std::min(k_best_probabilities.size(), static_cast<size_t>(maximum_outgoing_arcs_)));
+      // todo: threshold option and not hard coded!
+      double threshold = 0.9;
       std::vector<Traxel> divisions_above_threshold;
       
       MultiHypothesesGraph::DivisionFeatureMap::Value::const_iterator division_probabilities_it 
@@ -581,6 +582,7 @@ inline void ModelBuilder::add_assignment_vars( const MultiHypothesesGraph& hypot
           m.opengm_model->addVariable(2);
           m.arc_var_.left.insert(Model::arc_var_map::value_type(Model::TraxelArc(*s, *d), m.opengm_model->numberOfVariables() - 1));
         } else if (std::find(divisions_above_threshold.begin(), divisions_above_threshold.end(), *d) != divisions_above_threshold.end()) {
+          m.opengm_model->addVariable(2);
           m.arc_var_.left.insert(Model::arc_var_map::value_type(Model::TraxelArc(*s, *d), m.opengm_model->numberOfVariables() - 1));
         }
       }
