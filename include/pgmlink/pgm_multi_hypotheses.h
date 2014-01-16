@@ -132,7 +132,6 @@ class ModelBuilder {
     max_count_(max_count),
     maximum_outgoing_arcs_(0),
     transition_parameter_(0) {}
-
   virtual boost::shared_ptr<ModelBuilder> clone() const = 0;
   virtual ~ModelBuilder() {}
 
@@ -258,6 +257,10 @@ class ModelBuilder {
   
   std::vector<std::vector<std::pair<std::pair<size_t, size_t>, int> > > var_state_coeff_constraints_;
 
+ protected:
+  int first_timestep_;
+  int last_timestep_;
+
  private:
   void couple_outgoing( const Model&, const std::vector<Traxel>&, const std::vector<Traxel>&, OpengmLPCplex& );
   void couple_incoming( const Model&, const std::vector<Traxel>&, const std::vector<Traxel>&, OpengmLPCplex& );
@@ -294,8 +297,6 @@ class ModelBuilder {
   unsigned max_division_level_;
   unsigned max_count_;  
   int maximum_outgoing_arcs_;
-  int first_timestep_;
-  int last_timestep_;
   int transition_parameter_;
 };
 

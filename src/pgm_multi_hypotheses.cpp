@@ -868,14 +868,20 @@ boost::shared_ptr<ModelBuilder> CVPR2014ModelBuilder::clone() const {
 
 boost::shared_ptr<Model> CVPR2014ModelBuilder::build(const MultiHypothesesGraph& hypotheses) {
   LOG(logDEBUG) << "CVPR2014ModelBuilder::build() -- entered";
+  LOG(logDEBUG) << hypotheses.latest_timestep();
 
   if( !has_detection_vars() ) {
     throw std::runtime_error("CVPR2014ModelBuilder::build(): option without detection vars not yet implemented");
   }
 
+  if (timestep_range_specified() == false) {
+    ModelBuilder::first_timestep_ = hypotheses.earliest_timestep();
+    ModelBuilder::last_timestep_ = hypotheses.latest_timestep();
+  }
+
   boost::shared_ptr<Model> model(new Model);
 
-
+  
   if (has_detection_vars()) {
     add_detection_vars( hypotheses, *model );
   }
