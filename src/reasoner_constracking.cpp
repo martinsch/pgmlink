@@ -32,16 +32,16 @@ typedef opengm::LPCplex<pgm::OpengmModelDeprecated::ogmGraphicalModel,
 			pgm::OpengmModelDeprecated::ogmAccumulator		>
     cplex_optimizer;*/
 
-//ConservationTracking::~CelViewConservationTracking() {
-    //	if (pgm_ != NULL) {
-    //		delete pgm_;
-    //		pgm_ = NULL;
-    //	}
-    //   if (optimizer_ != NULL) {
-    //      delete optimizer_;
-    //      optimizer_ = NULL;
-    //   }
-//}
+ConservationTracking::~ConservationTracking() {
+    	/*if (pgm_ != NULL) {
+    		delete pgm_;
+    		pgm_ = NULL;
+    	}
+       if (optimizer_ != NULL) {
+          delete optimizer_;
+          optimizer_ = NULL;
+       }*/
+}
 
 double ConservationTracking::forbidden_cost() const {
     return forbidden_cost_;
@@ -78,14 +78,14 @@ void ConservationTracking::writeUncertainties(HypothesesGraph& hypotheses, SubGm
             hypotheses.get(node_active());
     property_map<arc_active_count, HypothesesGraph::base_graph>::type& active_nodes_count =
             hypotheses.get(arc_active_count());
-    
-	for (std::map<HypothesesGraph::Arc, size_t>::const_iterator it = dis_arc_map_.begin();
-	       it != dis_arc_map_.end(); ++it) {
+    /*
+	for (std::map<HypothesesGraph::Arc, size_t>::const_iterator it = arc_map_.begin();
+	       it != arc_map_.end(); ++it) {
 			if (active_nodes[it]==true && solution[it]==false){
 					arcs_active_count[i]++;
 				}
 		}
-	}
+	}*/
 }
 
 	void ConservationTracking::perturbedInference(HypothesesGraph& hypotheses){
@@ -153,7 +153,7 @@ void ConservationTracking::writeUncertainties(HypothesesGraph& hypotheses, SubGm
 		       add_constraints(*graph);
 		}
 		infer();
-		writeUncertanties(*graph,PertMod2);
+		writeUncertainties(*graph,PertMod2);
 	}
 	//calculateUncertainty();
 	}

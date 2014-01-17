@@ -122,7 +122,7 @@ class ConservationTracking : public Reasoner {
     void add_division_nodes(const HypothesesGraph& );
     void add_finite_factors( const HypothesesGraph& );
     void perturbedInference( HypothesesGraph&);
-    void writeUncertanties( HypothesesGraph&, SubGmType);
+    void writeUncertainties( HypothesesGraph&, SubGmType);
     
     // helper
     size_t cplex_id(size_t opengm_id, size_t state);

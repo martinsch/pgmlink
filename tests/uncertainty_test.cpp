@@ -1,0 +1,95 @@
+#define BOOST_TEST_MODULE hypotheses_test
+
+#include <vector>
+#include <string>
+#include <iostream>
+
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/test/unit_test.hpp>
+#include <boost/test/floating_point_comparison.hpp>
+#include <lemon/core.h>
+#include <lemon/concepts/digraph.h>
+#include <lemon/list_graph.h>
+#include <lemon/maps.h>
+
+#include "pgmlink/hypotheses.h"
+#include "pgmlink/traxels.h"
+#include "pgmlink/tracking.h"
+#include "pgmlink/reasoner_constracking.h"
+
+using namespace pgmlink;
+using namespace std;
+using namespace boost;
+
+BOOST_AUTO_TEST_CASE( uncertainty ) {
+  
+	std::cout << "Constructing HypothesesGraph" << std::endl;
+	std::cout << std::endl;
+
+	typedef HypothesesGraph::ArcIt ArcIt2;
+	typedef HypothesesGraph::Arc Arc;
+	typedef HypothesesGraph::NodeIt NodeIt;
+	typedef HypothesesGraph::Node Node;
+	using lemon::INVALID;
+
+	std::cout << "Adding Traxels to TraxelStore" << std::endl;
+	std::cout << std::endl;
+
+	//  t=1      2      3       4
+	//  o                       o
+	//    |                    |
+	//      ---- o ---- o ----
+	//    |                    |
+	//  o                       o
+	TraxelStore ts;
+	Traxel n11, n12, n21, n31, n41, n42;
+	feature_array com(feature_array::difference_type(3));
+	feature_array divProb(feature_array::difference_type(1));
+	n11.Id = 1; n11.Timestep = 1; com[0] = 0; com[1] = 0; com[2] = 0; divProb[0] = 0.1;
+	n11.features["com"] = com; n11.features["divProb"] = divProb;
+	add(ts,n11);
+	n12.Id = 3; n12.Timestep = 1; com[0] = 2; com[1] = 2; com[2] = 2; divProb[0] = 0.1;
+	n12.features["com"] = com; n12.features["divProb"] = divProb;
+	add(ts,n12);
+	n21.Id = 10; n21.Timestep = 2; com[0] = 1; com[1] = 1; com[2] = 1; divProb[0] = 0.1;
+	n21.features["com"] = com; n21.features["divProb"] = divProb;
+	add(ts,n21);
+	n31.Id = 11; n31.Timestep = 3; com[0] = 1; com[1] = 1; com[2] = 1; divProb[0] = 0.1;
+	n31.features["com"] = com; n31.features["divProb"] = divProb;
+	add(ts,n31);
+	n41.Id = 12; n41.Timestep = 4; com[0] = 0; com[1] = 0; com[2] = 0; divProb[0] = 0.1;
+	n41.features["com"] = com; n41.features["divProb"] = divProb;
+	add(ts,n41);
+	n42.Id = 13; n42.Timestep = 4; com[0] = 0; com[1] = 0; com[2] = 0; divProb[0] = 0.1;
+	n42.features["com"] = com; n42.features["divProb"] = divProb;
+	add(ts,n42);
+	
+	SingleTimestepTraxel_HypothesesBuilder::Options builder_opts(1, // max_nearest_neighbors
+				4.,//max_dist
+				true, // forward_backward
+				true, // consider_divisions
+				8.//division_threshold
+				);
+	SingleTimestepTraxel_HypothesesBuilder hyp_builder(&ts, builder_opts);
+	HypothesesGraph* graph = hyp_builder.build();
+	
+	std::cout << "Initialize Conservation tracking" << std::endl;
+	std::cout << std::endl;
+
+	FieldOfView fov(0, 0, 0, 0, 4, 5, 5, 5); // tlow, xlow, ylow, zlow, tup, xup, yup, zup
+	
+	ConservationTracking CT(6,
+                             detection,
+                             ts.division,
+                             ts.transition
+                             );
+	
+	ConsTracking::perturbedInference();
+	std::cout << "Run Conservation tracking" << std::endl;
+	std::cout << std::endl;
+	std::vector< std::vector<Event> > events = tracking(ts);
+}
+
+// EOF
+
