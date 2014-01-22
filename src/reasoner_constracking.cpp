@@ -550,8 +550,8 @@ size_t ConservationTracking::cplex_id(size_t opengm_id, size_t state) {
 void ConservationTracking::add_constraints(const HypothesesGraph& g) {
     size_t counter = 0;
     LOG(logDEBUG) << "ConservationTracking::add_constraints: entered";
-    typedef opengm::LPCplex<pgm::OpengmModelDeprecated::ogmGraphicalModel,
-            pgm::OpengmModelDeprecated::ogmAccumulator> cplex;
+    //typedef opengm::LPCplex<pgm::OpengmModelDeprecated::ogmGraphicalModel,
+    //        pgm::OpengmModelDeprecated::ogmAccumulator> cplex;
 
     property_map<node_tracklet, HypothesesGraph::base_graph>::type& tracklet_map = g.get(
             node_tracklet());

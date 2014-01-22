@@ -693,7 +693,7 @@ void calculate_gmm_beforehand(HypothesesGraph& g, int n_trials, int n_dimensions
     typedef typename property_map<ArcPropertyTag, HypothesesGraph::base_graph>::type ArcFilter;
 
     typedef lemon::SubDigraph<HypothesesGraph::base_graph, NodeFilter, ArcFilter> CopyGraph;
-    typedef HypothesesGraph::base_graph GRAPH;
+    //typedef HypothesesGraph::base_graph GRAPH;
     
     NodeFilter& node_filter_map = src.get(NodePropertyTag());
     ArcFilter& arc_filter_map = src.get(ArcPropertyTag());

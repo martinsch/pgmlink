@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE( HypothesesGraph_build_hyp2 ) {
   std::cout <<  std::endl;
 
   typedef HypothesesGraph::ArcIt ArcIt2;
-  typedef HypothesesGraph::Arc Arc;
+  //typedef HypothesesGraph::Arc Arc;
   typedef HypothesesGraph::NodeIt NodeIt;
   typedef HypothesesGraph::Node Node;
   using lemon::INVALID;

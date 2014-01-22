@@ -33,10 +33,6 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Merger ) {
 	std::cout << "Constructing HypothesesGraph" << std::endl;
 	std::cout << std::endl;
 
-	typedef HypothesesGraph::ArcIt ArcIt2;
-	typedef HypothesesGraph::Arc Arc;
-	typedef HypothesesGraph::NodeIt NodeIt;
-	typedef HypothesesGraph::Node Node;
 	using lemon::INVALID;
 
 	std::cout << "Adding Traxels to TraxelStore" << std::endl;
@@ -138,10 +134,6 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Division ) {
 	std::cout << "Constructing HypothesesGraph" << std::endl;
 	std::cout << std::endl;
 
-	typedef HypothesesGraph::ArcIt ArcIt2;
-	typedef HypothesesGraph::Arc Arc;
-	typedef HypothesesGraph::NodeIt NodeIt;
-	typedef HypothesesGraph::Node Node;
 	using lemon::INVALID;
 
 	std::cout << "Adding Traxels to TraxelStore" << std::endl;
@@ -233,10 +225,6 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_SimpleMove ) {
 	std::cout << "Constructing HypothesesGraph" << std::endl;
 	std::cout << std::endl;
 
-	typedef HypothesesGraph::ArcIt ArcIt2;
-	typedef HypothesesGraph::Arc Arc;
-	typedef HypothesesGraph::NodeIt NodeIt;
-	typedef HypothesesGraph::Node Node;
 	using lemon::INVALID;
 
 	std::cout << "Adding Traxels to TraxelStore" << std::endl;
@@ -304,10 +292,6 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Merger_Volume ) {
 	std::cout << "Constructing HypothesesGraph" << std::endl;
 	std::cout << std::endl;
 
-	typedef HypothesesGraph::ArcIt ArcIt2;
-	typedef HypothesesGraph::Arc Arc;
-	typedef HypothesesGraph::NodeIt NodeIt;
-	typedef HypothesesGraph::Node Node;
 	using lemon::INVALID;
 
 	std::cout << "Adding Traxels to TraxelStore" << std::endl;
@@ -406,10 +390,6 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Disappearance ) {
 	std::cout << "Constructing HypothesesGraph" << std::endl;
 	std::cout << std::endl;
 
-	typedef HypothesesGraph::ArcIt ArcIt2;
-	typedef HypothesesGraph::Arc Arc;
-	typedef HypothesesGraph::NodeIt NodeIt;
-	typedef HypothesesGraph::Node Node;
 	using lemon::INVALID;
 
 	std::cout << "Adding Traxels to TraxelStore" << std::endl;
@@ -495,10 +475,6 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_AppearanceAndDisappearance )
 	std::cout << "Constructing HypothesesGraph" << std::endl;
 	std::cout << std::endl;
 
-	typedef HypothesesGraph::ArcIt ArcIt2;
-	typedef HypothesesGraph::Arc Arc;
-	typedef HypothesesGraph::NodeIt NodeIt;
-	typedef HypothesesGraph::Node Node;
 	using lemon::INVALID;
 
 	std::cout << "Adding Traxels to TraxelStore" << std::endl;
@@ -600,10 +576,6 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Appearance ) {
 	std::cout << "Constructing HypothesesGraph" << std::endl;
 	std::cout << std::endl;
 
-	typedef HypothesesGraph::ArcIt ArcIt2;
-	typedef HypothesesGraph::Arc Arc;
-	typedef HypothesesGraph::NodeIt NodeIt;
-	typedef HypothesesGraph::Node Node;
 	using lemon::INVALID;
 
 	std::cout << "Adding Traxels to TraxelStore" << std::endl;
@@ -727,10 +699,6 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_AppearanceSimple ) {
 	std::cout << "Constructing HypothesesGraph" << std::endl;
 	std::cout << std::endl;
 
-	typedef HypothesesGraph::ArcIt ArcIt2;
-	typedef HypothesesGraph::Arc Arc;
-	typedef HypothesesGraph::NodeIt NodeIt;
-	typedef HypothesesGraph::Node Node;
 	using lemon::INVALID;
 
 	std::cout << "Adding Traxels to TraxelStore" << std::endl;
@@ -828,10 +796,6 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Tracklets ) {
 	std::cout << "Constructing HypothesesGraph" << std::endl;
 	std::cout << std::endl;
 
-	typedef HypothesesGraph::ArcIt ArcIt2;
-	typedef HypothesesGraph::Arc Arc;
-	typedef HypothesesGraph::NodeIt NodeIt;
-	typedef HypothesesGraph::Node Node;
 	using lemon::INVALID;
 
 	std::cout << "Adding Traxels to TraxelStore" << std::endl;
@@ -951,10 +915,6 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Merger3 ) {
 	std::cout << "Constructing HypothesesGraph" << std::endl;
 	std::cout << std::endl;
 
-	typedef HypothesesGraph::ArcIt ArcIt2;
-	typedef HypothesesGraph::Arc Arc;
-	typedef HypothesesGraph::NodeIt NodeIt;
-	typedef HypothesesGraph::Node Node;
 	using lemon::INVALID;
 
 	std::cout << "Adding Traxels to TraxelStore" << std::endl;
@@ -1143,10 +1103,6 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_TranslationVector_Traxels ) 
 	std::cout << "Constructing HypothesesGraph" << std::endl;
 	std::cout << std::endl;
 
-	typedef HypothesesGraph::ArcIt ArcIt2;
-	typedef HypothesesGraph::Arc Arc;
-	typedef HypothesesGraph::NodeIt NodeIt;
-	typedef HypothesesGraph::Node Node;
 	using lemon::INVALID;
 
 	std::cout << "Adding Traxels to TraxelStore" << std::endl;
@@ -1292,10 +1248,6 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_TranslationVector_Tracklets 
 	std::cout << "Constructing HypothesesGraph" << std::endl;
 	std::cout << std::endl;
 
-	typedef HypothesesGraph::ArcIt ArcIt2;
-	typedef HypothesesGraph::Arc Arc;
-	typedef HypothesesGraph::NodeIt NodeIt;
-	typedef HypothesesGraph::Node Node;
 	using lemon::INVALID;
 
 	std::cout << "Adding Traxels to TraxelStore" << std::endl;
@@ -1441,10 +1393,6 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Merger4 ) {
 	std::cout << "Constructing HypothesesGraph" << std::endl;
 	std::cout << std::endl;
 
-	typedef HypothesesGraph::ArcIt ArcIt2;
-	typedef HypothesesGraph::Arc Arc;
-	typedef HypothesesGraph::NodeIt NodeIt;
-	typedef HypothesesGraph::Node Node;
 	using lemon::INVALID;
 
 	std::cout << "Adding Traxels to TraxelStore" << std::endl;
@@ -1574,10 +1522,6 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_MergerResolvingDivision ) {
 	std::cout << "Constructing HypothesesGraph" << std::endl;
 	std::cout << std::endl;
 
-	typedef HypothesesGraph::ArcIt ArcIt2;
-	typedef HypothesesGraph::Arc Arc;
-	typedef HypothesesGraph::NodeIt NodeIt;
-	typedef HypothesesGraph::Node Node;
 	using lemon::INVALID;
 
 	std::cout << "Adding Traxels to TraxelStore" << std::endl;
@@ -1701,10 +1645,6 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_TranslationVector2 ) {
 	std::cout << "Constructing HypothesesGraph" << std::endl;
 	std::cout << std::endl;
 
-	typedef HypothesesGraph::ArcIt ArcIt2;
-	typedef HypothesesGraph::Arc Arc;
-	typedef HypothesesGraph::NodeIt NodeIt;
-	typedef HypothesesGraph::Node Node;
 	using lemon::INVALID;
 
 	std::cout << "Adding Traxels to TraxelStore" << std::endl;
