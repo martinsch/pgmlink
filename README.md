@@ -7,15 +7,15 @@ pgmlink provides an implementation of
 1. Chaingraph tracking, as it is described in
 
    B. X. Kausler, M. Schiegg, B. Andres, M. Lindner, H. Leitte, L. Hufnagel, 
-   U. Koethe, F. A. Hamprecht. **A Discrete Chain Graph Model for 3d+t Cell 
-   Tracking with High Misdetection Robustness**. Proceedings of the European 
+   U. Koethe, F. A. Hamprecht. [**A Discrete Chain Graph Model for 3d+t Cell 
+   Tracking with High Misdetection Robustness**](http://hci.iwr.uni-heidelberg.de//Staff/bkausler/kausler_12_discrete.pdf). Proceedings of the European 
    Conference on Computer Vision (ECCV 2012), 2012.
 
 
 2. Conservation tracking, as it is described in
 
    M. Schiegg, P. Hanslovsky, B. X. Kausler, L. Hufnagel, F. A. Hamprecht. 
-   **Conservation Tracking**. Proceedings of the IEEE International Conference 
+   [**Conservation Tracking**](http://hci.iwr.uni-heidelberg.de/Staff/mschiegg/schiegg_13_conservation.pdf). Proceedings of the IEEE International Conference 
    on Computer Vision (ICCV 2013), 2013.
 
 
