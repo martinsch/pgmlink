@@ -2,6 +2,9 @@
 pgmLink is about *tracking by assignment with probabilistic graphical models and other approaches*. 
 It is written in C++ (core) and Python (high level, optional). 
 
+A graphical user interace (GUI) for our methods is freely available upon request.
+
+
 pgmlink provides an implementation of
 
 1. Chaingraph tracking, as it is described in
@@ -41,6 +44,7 @@ Dependencies that should be available as packages:
   - boost-python (optional)
   - boost-test (optional)
 - armadillo http://arma.sourceforge.net/
+- libxml2-dev
 - doxygen (optional)
 
 ### CPLEX
@@ -103,3 +107,19 @@ There are several build options which you can set - among others - with `ccmake`
 - **WITH_PYTHON**: Add Python wrappers (requires boost-python).
 
 - **WITH_TESTS**: Compile unit tests. You can execute them via `make test`
+
+
+## Build instructions for armadillo:
+Before installation, modify `include/armadillo_bits/config.hpp` to include
+```
+#define ARMA_USE_LAPACK   (needs liblapack)
+#define ARMA_USE_BLAS     (needs libblas)
+#define ARMA_USE_WRAPPER  (use wrapper for lapack and blas)
+```
+(uncomment if necessary).
+
+## Build instructions for mlpack:
+After installation of `libxml2-dev`, create a softlink to libxml in your `include` directory. If installed gobally, the approriate command is
+```
+sudo ln -s /usr/include/libxml2/libxml /usr/include/
+```
