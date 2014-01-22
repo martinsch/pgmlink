@@ -2,13 +2,36 @@
 pgmLink is about *tracking by assignment with probabilistic graphical models and other approaches*. 
 It is written in C++ (core) and Python (high level, optional). 
 
+pgmlink provides an implementation of
+
+1. Chaingraph tracking, as it is described in
+
+   B. X. Kausler, M. Schiegg, B. Andres, M. Lindner, H. Leitte, L. Hufnagel, 
+   U. Koethe, F. A. Hamprecht. **A Discrete Chain Graph Model for 3d+t Cell 
+   Tracking with High Misdetection Robustness**. Proceedings of the European 
+   Conference on Computer Vision (ECCV 2012), 2012.
+
+
+2. Conservation tracking, as it is described in
+
+   M. Schiegg, P. Hanslovsky, B. X. Kausler, L. Hufnagel, F. A. Hamprecht. 
+   **Conservation Tracking**. Proceedings of the IEEE International Conference 
+   on Computer Vision (ICCV 2013), 2013.
+
+
+Please cite the appropriate paper if you use this software.
+Feel free to contact us if you have any questions or suggestions.
+
+
 ## Dependencies
 Dependencies that have to be built and installed manually:
 
 - LEMON http://lemon.cs.elte.hu/trac/lemon
 - VIGRA https://github.com/ukoethe/vigra
 - openGM https://github.com/opengm/opengm
-- cplex/concert http://www-01.ibm.com/software/integration/optimization/cplex-optimizer/
+- cplex/concert http://www-01.ibm.com/software/integration/optimization/cplex-optimizer/
+- dlib http://dlib.net/
+- mlpack http://mlpack.org/
 
 Dependencies that should be available as packages:
 
@@ -17,6 +40,7 @@ Dependencies that should be available as packages:
   - boost-serialization
   - boost-python (optional)
   - boost-test (optional)
+- armadillo http://arma.sourceforge.net/
 - doxygen (optional)
 
 ### CPLEX
@@ -44,13 +68,22 @@ This installer bug happens when the installer is called from a shell with a modi
 #### CPLEX shared libraries
 
 
-The CPLEX package does not provide shared versions of all required libraries, but only static variants (luckily with PIC). You can link your own shared libraries using the following commands:
+The CPLEX package does not provide shared versions of all required libraries, but only static variants (luckily with PIC). You can link your own shared libraries using the following commands
 
+on Linux:
 ```
 g++ -fpic -shared -Wl,-whole-archive libcplex.a -Wl,-no-whole-archive -o libcplex.so
 g++ -fpic -shared -Wl,-whole-archive libilocplex.a -Wl,-no-whole-archive -o libilocplex.so
 g++ -fpic -shared -Wl,-whole-archive libconcert.a -Wl,-no-whole-archive -o libconcert.so
 ```
+
+on Mac:
+```
+g++ -fpic -shared -Wl,-all_load libcplex.a -Wl,-noall_load -o libcplex.dylib
+g++ -fpic -shared -Wl,-all_load libconcert.a -Wl,-noall_load -o libconcert.dylib
+g++ -fpic -shared -Wl,-all_load libilocplex.a -Wl,-noall_load -L/PATH/TO/CONCERT/LIB -L/PATH/TO/CPLEX/LIB -lconcert -lcplex -o libilocplex.dylib
+```
+
 
 ## How to Build
 pgmLink is built with [cmake](www.cmake.org):
