@@ -21,7 +21,6 @@ set(PYPGMLINK_SRCS
   pypgmlink.cpp
   pytrack.cpp
   pytraxels.cpp
-  pycrosscorrelation.cpp
   pymerger_resolving.cpp
   )
 

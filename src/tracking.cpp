@@ -13,8 +13,6 @@
 #include "pgmlink/log.h"
 #include "pgmlink/reasoner_pgm.h"
 #include "pgmlink/tracking.h"
-#include "pgmlink/reasoner_nearestneighbor.h"
-#include "pgmlink/reasoner_nntracklets.h"
 #include "pgmlink/reasoner_constracking.h"
 #include "pgmlink/merger_resolving.h"
 
@@ -170,202 +168,6 @@ vector<map<unsigned int, bool> > ChaingraphTracking::detections() {
 }
 
 
-////
-//// class NNTracking
-////
-vector<vector<Event> > NNTracking::operator()(TraxelStore& ts) {
-	cout << "-> building hypotheses" << endl;
-	SingleTimestepTraxel_HypothesesBuilder::Options builder_opts(2, max(divDist_,movDist_));
-	SingleTimestepTraxel_HypothesesBuilder hyp_builder(&ts, builder_opts);
-	HypothesesGraph* graph = hyp_builder.build();
-	HypothesesGraph& g = *graph;
-
-	LOG(logDEBUG1) << "NNTracking: adding offered property to nodes";
-	// adding 'offered' property and set it true for each node
-	g.add(node_offered());
-	property_map<node_offered, HypothesesGraph::base_graph>::type& offered_nodes = g.get(node_offered());
-	// adding 'split_into' property
-	g.add(split_from());
-	property_map<split_from, HypothesesGraph::base_graph>::type& split_from_map = g.get(split_from());
-	for(HypothesesGraph::NodeIt n(g); n!=lemon::INVALID; ++n) {
-		offered_nodes.set(n,true);
-		split_from_map.set(n,-1);
-	}
-	LOG(logDEBUG1) << "NNTracking: adding distance property to edges";
-	g.add(arc_distance());
-	property_map<arc_distance, HypothesesGraph::base_graph>::type& arc_distances = g.get(arc_distance());
-	property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g.get(node_traxel());
-	for(HypothesesGraph::ArcIt a(g); a!=lemon::INVALID; ++a) {
-		HypothesesGraph::Node from = g.source(a);
-		HypothesesGraph::Node to = g.target(a);
-		Traxel from_tr = traxel_map[from];
-		Traxel to_tr = traxel_map[to];
-
-		double dist = 0;
-		// if we want to add another dimension to the norm, we remove the sqrt, add the dimensions and sqrt again
-
-		for(std::vector<std::string>::const_iterator it = distanceFeatures_.begin(); it!=distanceFeatures_.end(); ++it) {
-			if (*it == "com") {
-				// com is already considered in Traxel::distance_to()
-				// Traxel::distance_to computes: sqrt( (x1-x2)^2 + (y1-y2)^2 + (z1-z2)^2 )
-				double d = from_tr.distance_to(to_tr);
-				LOG(logDEBUG2) << "NNTracking:: com distance from " << from_tr.Id << " to " << to_tr.Id << " = " << d;
-				dist += (d*d);
-			} else {
-				std::vector<float> from_feat = from_tr.features.find(*it)->second;
-				std::vector<float> to_feat = to_tr.features.find(*it)->second;
-				for (size_t i = 0; i<from_feat.size(); ++i) {
-					// TODO: do we have to consider x/y/z scale for some features?
-					double d = (from_feat[i] - to_feat[i]);
-					dist += (d*d);
-				}
-			}
-		}
-		dist = sqrt(dist);
-		LOG(logDEBUG2) << "NNTracking:: combined distance from " << from_tr.Id << " to " << to_tr.Id << " = " << dist;
-
-		arc_distances.set(a, dist);
-	}
-
-
-	cout << "-> init NN reasoner" << endl;
-	NnTracking nn_reasoner(divDist_,movDist_,divisionThreshold_,splitterHandling_, mergerHandling_, maxTraxelIdAt_);
-
-	cout << "-> formulate NN model" << endl;
-	nn_reasoner.formulate(*graph);
-
-	cout << "-> infer" << endl;
-	nn_reasoner.infer();
-
-	cout << "-> conclude" << endl;
-	nn_reasoner.conclude(*graph);
-
-	cout << "-> storing state of detection vars" << endl;
-	last_detections_ = state_of_nodes(*graph);
-
-	cout << "-> pruning inactive hypotheses" << endl;
-	prune_inactive(*graph);
-
-	cout << "-> constructing events" << endl;
-
-	return *events(*graph);
-}
-
-vector<map<unsigned int, bool> > NNTracking::detections() {
-	vector<map<unsigned int, bool> > res;
-	if (last_detections_) {
-		return *last_detections_;
-	} else {
-		throw std::runtime_error(
-				"NNTracking::detections(): previous tracking result required");
-	}
-}
-
-
-
-////
-//// class NNTrackletsTracking
-////
-vector<vector<Event> > NNTrackletsTracking::operator()(TraxelStore& ts) {
-	cout << "-> building hypotheses" << endl;
-	SingleTimestepTraxel_HypothesesBuilder::Options builder_opts(1, // max_nearest_neighbors
-			maxDist_,
-			true, // forward_backward
-			true, // consider_divisions
-			divisionThreshold_
-			);
-	SingleTimestepTraxel_HypothesesBuilder hyp_builder(&ts, builder_opts);
-	HypothesesGraph* graph = hyp_builder.build();
-	HypothesesGraph& g = *graph;
-
-	LOG(logDEBUG1) << "NNTrackletsTracking: adding offered property to nodes";
-	// adding 'offered' property and set it true for each node
-	g.add(node_offered());
-	property_map<node_offered, HypothesesGraph::base_graph>::type& offered_nodes = g.get(node_offered());
-	// adding 'split_into' property
-	g.add(split_from());
-	property_map<split_from, HypothesesGraph::base_graph>::type& split_from_map = g.get(split_from());
-	for(HypothesesGraph::NodeIt n(g); n!=lemon::INVALID; ++n) {
-		offered_nodes.set(n,true);
-		split_from_map.set(n,-1);
-	}
-	LOG(logDEBUG1) << "NNTrackletsTracking: adding distance property to edges";
-	g.add(arc_distance());
-	property_map<arc_distance, HypothesesGraph::base_graph>::type& arc_distances = g.get(arc_distance());
-	property_map<arc_distance, HypothesesGraph::base_graph>::type& arc_vol_ratios = g.get(arc_vol_ratio());
-	property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g.get(node_traxel());
-	for(HypothesesGraph::ArcIt a(g); a!=lemon::INVALID; ++a) {
-		HypothesesGraph::Node from = g.source(a);
-		HypothesesGraph::Node to = g.target(a);
-		Traxel from_tr = traxel_map[from];
-		Traxel to_tr = traxel_map[to];
-
-//		double dist = 0;
-//		// if we want to add another dimension to the norm, we remove the sqrt, add the dimensions and sqrt again
-//
-//		for(std::vector<std::string>::const_iterator it = distanceFeatures_.begin(); it!=distanceFeatures_.end(); ++it) {
-//			if (*it == "com") {
-//				// com is already considered in Traxel::distance_to()
-//				// Traxel::distance_to computes: sqrt( (x1-x2)^2 + (y1-y2)^2 + (z1-z2)^2 )
-//				double d = from_tr.distance_to(to_tr);
-//				LOG(logDEBUG3) << "NNTrackletsTracking: com distance from " << from_tr.Id << " to " << to_tr.Id << " = " << d;
-//				dist += (d*d);
-//			} else {
-//				std::vector<float> from_feat = from_tr.features.find(*it)->second;
-//				std::vector<float> to_feat = to_tr.features.find(*it)->second;
-//				for (size_t i = 0; i<from_feat.size(); ++i) {
-//					// TODO: do we have to consider x/y/z scale for some features?
-//					double d = (from_feat[i] - to_feat[i]);
-//					dist += (d*d);
-//				}
-//			}
-//		}
-//		dist = sqrt(dist);
-		arc_distances.set(a, from_tr.distance_to(to_tr));
-		LOG(logDEBUG2) << "NNTrackletsTracking: combined distance from " << from_tr.Id << " to " << to_tr.Id << " = " << from_tr.distance_to(to_tr);
-
-		std::vector<float> from_vol = from_tr.features.find("count")->second;
-		std::vector<float> to_vol = to_tr.features.find("count")->second;
-		double ratio = from_vol[0] / double(to_vol[0]);
-		arc_vol_ratios.set(a, ratio);
-		LOG(logDEBUG2) << "NNTrackletsTracking: volume ratio for arc from " << from_tr.Id << " to " << to_tr.Id << " = " << ratio;
-
-	}
-
-
-	cout << "-> init NN reasoner" << endl;
-	NnTrackletTracking nn_reasoner(maxDist_,divisionThreshold_,splitterHandling_, mergerHandling_, maxTraxelIdAt_);
-
-	cout << "-> formulate NN model" << endl;
-	nn_reasoner.formulate(*graph);
-
-	cout << "-> infer" << endl;
-	nn_reasoner.infer();
-
-	cout << "-> conclude" << endl;
-	nn_reasoner.conclude(*graph);
-
-	cout << "-> storing state of detection vars" << endl;
-	last_detections_ = state_of_nodes(*graph);
-
-	cout << "-> pruning inactive hypotheses" << endl;
-	prune_inactive(*graph);
-
-	cout << "-> constructing events" << endl;
-
-	return *events(*graph);
-}
-
-vector<map<unsigned int, bool> > NNTrackletsTracking::detections() {
-	vector<map<unsigned int, bool> > res;
-	if (last_detections_) {
-		return *last_detections_;
-	} else {
-		throw std::runtime_error(
-				"NNTracking::detections(): previous tracking result required");
-	}
-}
-
 
 namespace {
 std::vector<double> computeDetProb(double vol, vector<double> means, vector<double> s2) {
@@ -386,22 +188,6 @@ std::vector<double> computeDetProb(double vol, vector<double> means, vector<doub
 
 	return result;
 }
-
-//double dot(double x1,double y1,double z1, double x2,double y2,double z2) {
-//      return x1*x2 + y1*y2 + z1*z2;
-//}
-//
-//double norm(double x,double y,double z) {
-//      return sqrt(dot(x,y,z, x,y,z));
-//}
-//
-//double getCorrectedDistance(Traxel from, Traxel to) {
-//	FeatureMap::const_iterator it = from.features.find("com_corrected");
-//	if (it == from.features.end()) {
-//		throw runtime_error("getCorrectedDistance(): com_corrected feature not found in traxel");
-//	}
-//	return norm(it->second[0]-to.X(),it->second[1]-to.Y(),it->second[2]-to.Z());
-//}
 }
 
 ////
@@ -612,7 +398,6 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
     if (max_number_objects_ > 1 && with_merger_resolution_ && all_true(ev->begin(), ev->end(), has_data<Event>)) {
       cout << "-> resolving mergers" << endl;
       MergerResolver m(graph);
-      // FeatureExtractorMCOMsFromKMeans extractor;
       FeatureExtractorMCOMsFromMCOMs extractor;
       DistanceFromCOMs distance;
       FeatureHandlerFromTraxels handler(extractor, distance);
