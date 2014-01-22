@@ -20,3 +20,23 @@ NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
 LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+pgmlink provides an implementation of
+
+1. Chaingraph tracking, as it is described in
+
+B. X. Kausler, M. Schiegg, B. Andres, M. Lindner, H. Leitte, L. Hufnagel, 
+U. Koethe, F. A. Hamprecht. A Discrete Chain Graph Model for 3d+t Cell 
+Tracking with High Misdetection Robustness. Proceedings of the European 
+Conference on Computer Vision (ECCV 2012), 2012.
+
+
+2. Conservation tracking, as it is described in
+
+M. Schiegg, P. Hanslovsky, B. X. Kausler, L. Hufnagel, F. A. Hamprecht. 
+Conservation Tracking. Proceedings of the IEEE International Conference 
+on Computer Vision (ICCV 2013), 2013.
+
+
+Please feel free to contact us if you have any questions or suggestions.
