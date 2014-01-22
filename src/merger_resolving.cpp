@@ -308,7 +308,7 @@ namespace pgmlink {
     }
     LOG(logDEBUG) << "FeatureHandlerBase::add_arcs_for_replacement_node: checking states of arcs";
 	for(std::vector<int>::const_iterator arc_it = arc_ids.begin(); arc_it != arc_ids.end(); ++arc_it) {
-		HypothesesGraph::Arc arc = g.arcFromId(*arc_it);
+		//HypothesesGraph::Arc arc = g.arcFromId(*arc_it);
 		assert(arc_active_map[arc]);
 	}
   }

@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE( MergerResolver_no_mergers ) {
   HypothesesGraph::Node n1 = src.add_node(1);
   HypothesesGraph::Node n2 = src.add_node(2);
 
-  HypothesesGraph::Arc arc = src.addArc(n1, n2);
+  src.addArc(n1, n2);
 
   resolve_graph(src,
                 dest,

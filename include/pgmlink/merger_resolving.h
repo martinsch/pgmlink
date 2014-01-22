@@ -118,11 +118,11 @@ class GMMWithInitialized : public ClusteringMlpackBase {
     int k_;
     int n_;
     const feature_array& data_;
+    double score_;
+    int n_trials_;
   const std::vector<arma::vec>& means_;
   const std::vector<arma::mat>& covs_;
   const arma::vec& weights_;
-    double score_;
-    int n_trials_;
   public:
     // constructor needs to specify number of dimensions
     // for 2D data, ilastik provides coordinates with 3rd dimension 0

@@ -477,7 +477,7 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
 			  }
 
 			  int count = 0;
-			  int trans_idx = vi.size();
+			  //int trans_idx = vi.size();
 			  for(HypothesesGraph::OutArcIt a(g, n); a != lemon::INVALID; ++a) {
 				  arcs.push_back(a);
 				  vi.push_back(arc_map_[a]);
@@ -488,7 +488,7 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
 			  // construct factor
 			  // build value table
 			  if (count != 0) {
-				  size_t table_dim = count + 1 + int(has_div_node); 		// n * transition var + detection var (+ division var)
+				  //size_t table_dim = count + 1 + int(has_div_node); 		// n * transition var + detection var (+ division var)
 				  std::vector<size_t> coords;
 				  // ITER first_ogm_idx, ITER last_ogm_idx, VALUE init, size_t states_vars
 				  pgm::OpengmExplicitFactor<double> table( vi.begin(), vi.end(), 0, states_vars);
@@ -497,8 +497,11 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
 
 				  ////
 				  //// TODO: set the forbidden configurations to infinity or the allowed to zero
-				  /////
-
+				  ////
+              if (has_div_node) {
+                    // TODO
+              }
+              
 				  table.add_to(*(pgm_->Model()));
 			  }
 
@@ -522,7 +525,7 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
 			  if (count != 0) {
 				  // construct factor
 				  // build value table
-				  size_t table_dim = count + 1; 		// n * transition var + detection var
+				  //size_t table_dim = count + 1; 		// n * transition var + detection var
 				  std::vector<size_t> coords;
 				  // ITER first_ogm_idx, ITER last_ogm_idx, VALUE init, size_t states_vars
 				  pgm::OpengmExplicitFactor<double> table( vi.begin(), vi.end(), 0, states_vars);
