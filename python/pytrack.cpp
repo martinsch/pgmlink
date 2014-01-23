@@ -76,13 +76,6 @@ void export_track() {
 	  .def("detections", &ConsTracking::detections)
 	;
 
-    class_<NNTracking>("NNTracking",
-			init<double,double,std::vector<std::string>, double,bool,bool,std::vector<int> >(
-				 args("divDist", "movDist", "features", "divisionThreshold", "splitterHandling", "mergerHandling", "maxTraxelIdAt")))
-	  .def("__call__", &NNTracking::operator())
-	  .def("detections", &NNTracking::detections)
-        ;
-
     enum_<Event::EventType>("EventType")
 	.value("Move", Event::Move)
 	.value("Division", Event::Division)

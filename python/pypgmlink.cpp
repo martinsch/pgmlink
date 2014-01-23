@@ -12,7 +12,6 @@ void export_field_of_view();
 void export_hypotheses();
 void export_track();
 void export_traxels();
-void export_cross_correlation();
 void export_gmm();
 
 
@@ -23,6 +22,5 @@ BOOST_PYTHON_MODULE( pgmlink )
     export_hypotheses();
     export_track();
     export_traxels();
-    export_cross_correlation();
     export_gmm();
 }
