@@ -38,7 +38,7 @@
 
 ###########################################################################################
 
-CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.6)
 PROJECT(pgmlink)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_extensions/)
 message( "\nConfiguring pgmlink:" )
