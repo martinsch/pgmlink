@@ -109,8 +109,8 @@ There are several build options which you can set - among others - with `ccmake`
 - **WITH_TESTS**: Compile unit tests. You can execute them via `make test`
 
 
-## Build instructions for armadillo:
-Before installation, modify `include/armadillo_bits/config.hpp` to include
+## Build instructions for armadillo
+Before compilation, modify `include/armadillo_bits/config.hpp` to include
 ```
 #define ARMA_USE_LAPACK   (needs liblapack)
 #define ARMA_USE_BLAS     (needs libblas)
@@ -119,7 +119,7 @@ Before installation, modify `include/armadillo_bits/config.hpp` to include
 (uncomment if necessary).
 
 ## Build instructions for mlpack:
-After installation of `libxml2-dev`, create a softlink to libxml in your `include` directory. If installed gobally, the approriate command is
+After installation of `libxml2-dev`, create a softlink to `libxml` in your `include` directory. If installed globally, the appropriate command is
 ```
 sudo ln -s /usr/include/libxml2/libxml /usr/include/
 ```
