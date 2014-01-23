@@ -51,7 +51,6 @@ find_package( Lemon REQUIRED )
 find_package( Boost REQUIRED COMPONENTS serialization )
 find_package( Armadillo REQUIRED )
 find_package( Mlpack REQUIRED )
-find_package( FFTW3 REQUIRED )
 message(STATUS "  found: ${Boost_LIBRARIES}")
 
 if(WIN32)
@@ -158,7 +157,7 @@ endif(WIN32)
 
 include_directories( ${CMAKE_CURRENT_BINARY_DIR}/include )
 
-target_link_libraries(pgmlink ${ANN_LIBRARIES} ${Boost_LIBRARIES}  ${CPLEX_LIBRARIES} ${VIGRA_IMPEX_LIBRARY} ${LEMON_LIBRARIES} ${HDF5_LIBRARIES} ${Mlpack_LIBRARIES} ${Armadillo_LIBARIES} ${FFTW3_LIBRARIES})
+target_link_libraries(pgmlink ${ANN_LIBRARIES} ${Boost_LIBRARIES}  ${CPLEX_LIBRARIES} ${VIGRA_IMPEX_LIBRARY} ${LEMON_LIBRARIES} ${HDF5_LIBRARIES} ${Mlpack_LIBRARIES} ${Armadillo_LIBARIES})
 
 # Install target pgmlink
 install(TARGETS pgmlink
