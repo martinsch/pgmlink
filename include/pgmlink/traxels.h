@@ -127,8 +127,8 @@ class PGMLINK_EXPORT IntmaxposLocator : public Locator {
    // construction / assignment
    //takes ownership of locator pointer
    Traxel(unsigned int id = 0, int timestep = 0, int level = 0, FeatureMap fmap = FeatureMap(), Locator* l = new ComLocator(),
-          ComCorrLocator* lc = new ComCorrLocator()) :
-       Id(id), Timestep(timestep), Level(level), features(fmap), locator_(l), corr_locator_(lc) {  };
+          ComCorrLocator* lc = new ComCorrLocator(), unsigned connected_component = 0) :
+       Id(id), Timestep(timestep), Level(level), features(fmap), locator_(l), corr_locator_(lc), Component(connected_component) {  };
    Traxel(const Traxel& other);
    Traxel& operator=(const Traxel& other);
    ~Traxel() { delete locator_; };
@@ -140,6 +140,7 @@ class PGMLINK_EXPORT IntmaxposLocator : public Locator {
    int Timestep; // traxel occured after
    int Level; // traxel level in segmentation hierarchy
    FeatureMap features;
+   unsigned Component; // connected component to which the traxel belongs to
    
    // position according to locator
    double X() const;
