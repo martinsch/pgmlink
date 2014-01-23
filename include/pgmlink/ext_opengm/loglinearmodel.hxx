@@ -133,9 +133,10 @@ struct WeightAccessor<FUNCTION_INDEX, opengm::FunctionDecoratorWeighted<FUNCTION
 template<class FUNCTION_TYPE, class T, class FUNCTION_TYPE_LIST, class SPACE>
 struct WeightAccessor<0, FUNCTION_TYPE, T, FUNCTION_TYPE_LIST, SPACE> {
   typedef LoglinearModel<T, FUNCTION_TYPE_LIST, SPACE> model_t;
-  void get( const model_t* /*m*/, std::vector<T>& out ) const {
+  void get( const model_t* m, std::vector<T>& out ) const {
     assert(out.size() == m->numberOfWeights() );
     _unused(out); // build in release mode
+    _unused(m); // build in release mode
   };
   void set( model_t* /*m*/, std::vector<T>& /*in*/ ) {
   };

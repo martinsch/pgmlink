@@ -493,7 +493,7 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
 				  // ITER first_ogm_idx, ITER last_ogm_idx, VALUE init, size_t states_vars
 				  pgm::OpengmExplicitFactor<double> table( vi.begin(), vi.end(), 0, states_vars);
 
-				  assert(table_dim - trans_idx == count);
+				  //assert(table_dim - trans_idx == count);
 
 				  ////
 				  //// TODO: set the forbidden configurations to infinity or the allowed to zero
@@ -530,7 +530,7 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
 				  // ITER first_ogm_idx, ITER last_ogm_idx, VALUE init, size_t states_vars
 				  pgm::OpengmExplicitFactor<double> table( vi.begin(), vi.end(), 0, states_vars);
 
-				  assert(table_dim - trans_idx == count);
+				  //assert(table_dim - trans_idx == count);
 
 				  ////
 				  //// TODO: set the forbidden configurations to infinity or the allowed to zero
