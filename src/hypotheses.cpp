@@ -60,12 +60,13 @@ namespace pgmlink {
       LOG(logDEBUG) << "prune_inactive(): entered";
       property_map<arc_active, HypothesesGraph::base_graph>::type& active_arcs = g.get(arc_active());
 
-      property_map<node_active, HypothesesGraph::base_graph>::type* active_nodes;
-	  property_map<node_active2, HypothesesGraph::base_graph>::type* active2_nodes;
+      property_map<node_active, HypothesesGraph::base_graph>::type* active_nodes = 0;
+	  property_map<node_active2, HypothesesGraph::base_graph>::type* active2_nodes = 0;
 	  bool active2_used = false;
 	  if (g.getProperties().count("node_active") > 0) {
 		active_nodes = &g.get(node_active());
-	  } else if (g.getProperties().count("node_active2") > 0) {
+	  } else {
+        assert(g.getProperties().count("node_active2") > 0);
 		active2_nodes = &g.get(node_active2());
 		active2_used = true;
 	  }
