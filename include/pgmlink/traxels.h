@@ -140,7 +140,7 @@ class PGMLINK_EXPORT IntmaxposLocator : public Locator {
    int Timestep; // traxel occured after
    int Level; // traxel level in segmentation hierarchy
    FeatureMap features;
-   unsigned Component; // connected component to which the traxel belongs to
+   
    
    // position according to locator
    double X() const;
@@ -166,6 +166,8 @@ class PGMLINK_EXPORT IntmaxposLocator : public Locator {
    Locator* locator_;
 
    ComCorrLocator* corr_locator_;
+public:
+   unsigned Component; // connected component to which the traxel belongs to
  };
 
  // compare by (time,id) (Traxels can be used as keys (for instance in a std::map) )
