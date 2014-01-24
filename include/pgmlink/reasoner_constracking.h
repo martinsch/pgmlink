@@ -83,6 +83,7 @@ class ConservationTracking : public Reasoner {
     virtual void formulate( const HypothesesGraph& );
     virtual void infer();
     virtual void conclude( HypothesesGraph& );
+    virtual void perturbedInference( HypothesesGraph&);
     
     double forbidden_cost() const;
     bool with_constraints() const;
@@ -121,7 +122,6 @@ class ConservationTracking : public Reasoner {
     void add_transition_nodes( const HypothesesGraph& );
     void add_division_nodes(const HypothesesGraph& );
     void add_finite_factors( const HypothesesGraph& );
-    void perturbedInference( HypothesesGraph&);
     void writeUncertainties( HypothesesGraph&, SubGmType);
     
     // helper

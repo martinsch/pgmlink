@@ -90,7 +90,7 @@ namespace pgmlink {
     static const std::string name;
   };
   template <typename Graph>
-    const std::string property_map<node_active_count,Graph>::name = "arc_active_count";	
+    const std::string property_map<arc_active_count,Graph>::name = "arc_active_count";	
 	
   // node_active
   struct node_active {};

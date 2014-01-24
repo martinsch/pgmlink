@@ -64,31 +64,34 @@ BOOST_AUTO_TEST_CASE( uncertainty ) {
 	n42.Id = 13; n42.Timestep = 4; com[0] = 0; com[1] = 0; com[2] = 0; divProb[0] = 0.1;
 	n42.features["com"] = com; n42.features["divProb"] = divProb;
 	add(ts,n42);
-	
-	SingleTimestepTraxel_HypothesesBuilder::Options builder_opts(1, // max_nearest_neighbors
-				4.,//max_dist
-				true, // forward_backward
-				true, // consider_divisions
-				8.//division_threshold
-				);
-	SingleTimestepTraxel_HypothesesBuilder hyp_builder(&ts, builder_opts);
-	HypothesesGraph* graph = hyp_builder.build();
-	
+
+
 	std::cout << "Initialize Conservation tracking" << std::endl;
 	std::cout << std::endl;
 
 	FieldOfView fov(0, 0, 0, 0, 4, 5, 5, 5); // tlow, xlow, ylow, zlow, tup, xup, yup, zup
-	
-	ConservationTracking CT(6,
-                             detection,
-                             ts.division,
-                             ts.transition
-                             );
-	
-	ConsTracking::perturbedInference();
-	std::cout << "Run Conservation tracking" << std::endl;
-	std::cout << std::endl;
-	std::vector< std::vector<Event> > events = tracking(ts);
+	ConsTracking tracking = ConsTracking(
+				  2, // max_number_objects
+	              20, // max_neighbor_distance
+				  0.3, // division_threshold
+				  "none", // random_forest_filename
+	              false, // detection_by_volume
+	              0, // forbidden_cost
+	              0.0, // ep_gap
+	              double(1.1), // avg_obj_size
+				  false, // with_tracklets
+				  10.0, //division_weight
+				  10.0, //transition_weight
+				  true, //with_divisions
+				  1500., // disappearance_cost,
+				  1500., // appearance_cost
+				  false, //with_merger_resolution
+				  3, //n_dim
+				  5, //transition_parameter
+				  0, //border_width for app/disapp costs
+	              fov
+		  	      );
+	tracking(ts, true /*with perturbation*/);
 }
 
 // EOF

@@ -175,7 +175,8 @@ namespace pgmlink {
 		fov_(fov),
 		with_constraints_(with_constraints){}
     std::vector< std::vector<Event> > operator()(TraxelStore& ts,
-                                                 TimestepIdCoordinateMapPtr coordinates = TimestepIdCoordinateMapPtr());
+                                                 TimestepIdCoordinateMapPtr coordinates = TimestepIdCoordinateMapPtr(),
+                                                 bool withPerturbation=false);
 
       /**
        * Get state of detection variables after call to operator().

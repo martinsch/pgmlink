@@ -215,7 +215,8 @@ bool all_true (InputIterator first, InputIterator last, UnaryPredicate pred) {
 ////
 //// class ConsTracking
 ////
-vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts, TimestepIdCoordinateMapPtr coordinates) {
+vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts, TimestepIdCoordinateMapPtr coordinates,
+                                                   bool withPerturbation/*=false*/) {
 	cout << "-> building energy functions " << endl;
 
 	double detection_weight = 10;
@@ -375,7 +376,14 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts, TimestepIdCoord
 			transition_parameter_,
 			with_constraints_
 			);
-
+	if (withPerturbation) {
+		
+    
+		cout << "-> perturbed Inference" << endl;
+		pgm.perturbedInference(*graph);
+		cout << "-> finished perturbed Inference" << endl;
+		}
+	else {
 	cout << "-> formulate ConservationTracking model" << endl;
 	pgm.formulate(*graph);
 
@@ -391,6 +399,8 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts, TimestepIdCoord
 	cout << "-> pruning inactive hypotheses" << endl;
 	prune_inactive(*graph);
 
+	}
+	
     cout << "-> constructing unresolved events" << endl;
     boost::shared_ptr<std::vector< std::vector<Event> > > ev = events(*graph);
 
