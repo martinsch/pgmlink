@@ -28,8 +28,11 @@
 
 namespace pgmlink {
 
+typedef std::vector<unsigned> ConflictSet;
 
-typedef std::map<int, std::vector<std::vector<unsigned> > > ConflictMap;
+typedef std::vector<ConflictSet > ConflictSetVector;
+
+typedef std::map<int, ConflictSetVector > ConflictMap;
 
 
 
