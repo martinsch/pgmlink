@@ -14,6 +14,7 @@
 #include "pgmlink/reasoner_pgm.h"
 #include "pgmlink/tracking.h"
 #include "pgmlink/reasoner_constracking.h"
+#include "pgmlink/reasoner_constracking_dd.h"
 #include "pgmlink/merger_resolving.h"
 
 using namespace std;
@@ -215,6 +216,32 @@ bool all_true (InputIterator first, InputIterator last, UnaryPredicate pred) {
 ////
 //// class ConsTracking
 ////
+ConservationTracking* ConsTracking::setupConsTracker(
+        boost::function<double(const Traxel&, const size_t)> detection,
+        boost::function<double(const double)> transition,
+        boost::function<double(const Traxel&)> appearance_cost_fn,
+        boost::function<double(const Traxel&, const size_t)> division,
+        boost::function<double(const Traxel&)> disappearance_cost_fn)
+{
+    return new ConservationTracking(
+            max_number_objects_,
+            detection,
+            division,
+            transition,
+            forbidden_cost_,
+            ep_gap_,
+            with_tracklets_,
+            with_divisions_,
+            disappearance_cost_fn,
+            appearance_cost_fn,
+            true, // with_misdetections_allowed
+            true, // with_appearance
+            true, // with_disappearance
+            transition_parameter_,
+            with_constraints_
+            );
+}
+
 vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 	cout << "-> building energy functions " << endl;
 
@@ -358,32 +385,16 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 												fov_);
 
 	cout << "-> init ConservationTracking reasoner" << endl;
-	ConservationTracking pgm(
-			max_number_objects_,
-			detection,
-			division,
-			transition,
-			forbidden_cost_,
-			ep_gap_,
-			with_tracklets_,
-			with_divisions_,
-			disappearance_cost_fn,
-			appearance_cost_fn,
-			true, // with_misdetections_allowed
-			true, // with_appearance
-			true, // with_disappearance
-			transition_parameter_,
-			with_constraints_
-			);
+    ConservationTracking* pgm = setupConsTracker(detection, transition, appearance_cost_fn, division, disappearance_cost_fn);
 
 	cout << "-> formulate ConservationTracking model" << endl;
-	pgm.formulate(*graph);
+    pgm->formulate(*graph);
 
 	cout << "-> infer" << endl;
-	pgm.infer();
+    pgm->infer();
 
 	cout << "-> conclude" << endl;
-	pgm.conclude(*graph);
+    pgm->conclude(*graph);
 
 	cout << "-> storing state of detection vars" << endl;
 	last_detections_ = state_of_nodes(*graph);
@@ -394,6 +405,7 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
     cout << "-> constructing unresolved events" << endl;
     boost::shared_ptr<std::vector< std::vector<Event> > > ev = events(*graph);
 
+    delete pgm;
 
     if (max_number_objects_ > 1 && with_merger_resolution_ && all_true(ev->begin(), ev->end(), has_data<Event>)) {
       cout << "-> resolving mergers" << endl;
@@ -417,13 +429,7 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 
     else {
       return *ev;
-    }
-
-        
-
-	
-
-	
+    }	
 }
 
 vector<map<unsigned int, bool> > ConsTracking::detections() {
@@ -436,5 +442,33 @@ vector<map<unsigned int, bool> > ConsTracking::detections() {
 	}
 }
 
+////
+//// class ConsTracking
+////
+ConservationTracking* ConsTrackingDD::setupConsTracker(
+        boost::function<double(const Traxel&, const size_t)> detection,
+        boost::function<double(const double)> transition,
+        boost::function<double(const Traxel&)> appearance_cost_fn,
+        boost::function<double(const Traxel&, const size_t)> division,
+        boost::function<double(const Traxel&)> disappearance_cost_fn)
+{
+    return new DualDecompositionConservationTracking(
+            max_number_objects_,
+            detection,
+            division,
+            transition,
+            forbidden_cost_,
+            ep_gap_,
+            with_tracklets_,
+            with_divisions_,
+            disappearance_cost_fn,
+            appearance_cost_fn,
+            true, // with_misdetections_allowed
+            true, // with_appearance
+            true, // with_disappearance
+            transition_parameter_,
+            with_constraints_
+            );
+}
 
 } // namespace tracking

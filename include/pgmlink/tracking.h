@@ -11,6 +11,7 @@
 #include <vector>
 #include <string>
 #include <boost/shared_ptr.hpp>
+#include <boost/function.hpp>
 
 #include "pgmlink/event.h"
 #include "pgmlink/pgmlink_export.h"
@@ -130,6 +131,8 @@ namespace pgmlink {
         std::vector<int> maxTraxelIdAt_;
   };
 
+  class ConservationTracking;
+
   class ConsTracking {
     public:
 	  ConsTracking(
@@ -173,14 +176,22 @@ namespace pgmlink {
 		border_width_(border_width),
 		fov_(fov),
 		with_constraints_(with_constraints){}
+      virtual ~ConsTracking(){}
+
       std::vector< std::vector<Event> > operator()(TraxelStore&);
 
       /**
        * Get state of detection variables after call to operator().
        */
       std::vector< std::map<unsigned int, bool> > detections();
-
-    private:
+  protected:
+      virtual ConservationTracking* setupConsTracker(
+              boost::function<double(const Traxel&, const size_t)> detection,
+              boost::function<double(const double)> transition,
+              boost::function<double(const Traxel&)> appearance_cost_fn,
+              boost::function<double(const Traxel&, const size_t)> division,
+              boost::function<double(const Traxel&)> disappearance_cost_fn);
+  protected:
       int max_number_objects_;
       double max_dist_;
       double division_threshold_;
@@ -202,6 +213,61 @@ namespace pgmlink {
       double border_width_;
       FieldOfView fov_;
       bool with_constraints_;
+    };
+
+  class ConsTrackingDD : public ConsTracking{
+    public:
+      ConsTrackingDD(
+          int max_number_objects=3,
+          double max_neighbor_distance = 20,
+          double division_threshold = 0.3,
+          const std::string& random_forest_filename = "none",
+          bool size_dependent_detection_prob = false,
+          double forbidden_cost = 0,
+          double ep_gap=0.01,
+          double avg_obj_size=30.0,
+          bool with_tracklets=true,
+          double division_weight=10.0,
+          double transition_weight=10.0,
+          bool with_divisions=true,
+          double disappearance_cost = 0,
+          double appearance_cost = 0,
+          bool with_merger_resolution = true,
+          int n_dim = 3,
+          double transition_parameter = 5.,
+          double border_width = 0,
+          FieldOfView fov = FieldOfView(),
+          bool with_constraints = true
+          )
+        : ConsTracking(max_number_objects,
+                       max_neighbor_distance,
+                       division_threshold,
+                       random_forest_filename,
+                       size_dependent_detection_prob,
+                       forbidden_cost,
+                       ep_gap,
+                       avg_obj_size,
+                       with_tracklets,
+                       division_weight,
+                       transition_weight,
+                       with_divisions,
+                       disappearance_cost,
+                       appearance_cost,
+                       with_merger_resolution,
+                       n_dim,
+                       transition_parameter,
+                       border_width,
+                       fov,
+                       with_constraints){}
+
+      virtual ~ConsTrackingDD(){}
+  protected:
+      virtual ConservationTracking* setupConsTracker(
+              boost::function<double(const Traxel&, const size_t)> detection,
+              boost::function<double(const double)> transition,
+              boost::function<double(const Traxel&)> appearance_cost_fn,
+              boost::function<double(const Traxel&, const size_t)> division,
+              boost::function<double(const Traxel&)> disappearance_cost_fn);
     };
 }
 

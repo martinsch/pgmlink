@@ -16,7 +16,7 @@ class Traxel;
 
 
 class ConservationTracking : public Reasoner {
-    public:
+public:
 	ConservationTracking(
                              unsigned int max_number_objects,
                              boost::function<double (const Traxel&, const size_t)> detection,
@@ -82,13 +82,14 @@ class ConservationTracking : public Reasoner {
      * The map is populated after the first call to formulate().
      */
     const std::map<HypothesesGraph::Arc, size_t>& get_arc_map() const;
-    
 
-    private:
+private:
     // copy and assingment have to be implemented, yet
-    ConservationTracking(const ConservationTracking&) {};
-    ConservationTracking& operator=(const ConservationTracking&) { return *this;};
+    ConservationTracking(const ConservationTracking&) {}
+    ConservationTracking& operator=(const ConservationTracking&) { return *this;}
 
+protected:
+    virtual void extractSolution(std::vector<pgm::OpengmModelDeprecated::ogmInference::LabelType> &solution);
     void reset();
     void add_constraints( const HypothesesGraph& );
     void add_detection_nodes( const HypothesesGraph& );

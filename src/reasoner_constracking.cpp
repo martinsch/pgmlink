@@ -91,13 +91,18 @@ void ConservationTracking::infer() {
     }
 }
 
-void ConservationTracking::conclude(HypothesesGraph& g) {
-    // extract solution from optimizer
-    vector<pgm::OpengmModelDeprecated::ogmInference::LabelType> solution;
+void ConservationTracking::extractSolution(std::vector<pgm::OpengmModelDeprecated::ogmInference::LabelType>& solution)
+{
     opengm::InferenceTermination status = optimizer_->arg(solution);
     if (status != opengm::NORMAL) {
         throw runtime_error("GraphicalModel::infer(): solution extraction terminated abnormally");
     }
+}
+
+void ConservationTracking::conclude(HypothesesGraph& g) {
+    // extract solution from optimizer
+    vector<pgm::OpengmModelDeprecated::ogmInference::LabelType> solution;
+    extractSolution(solution);
 
     // add 'active' properties to graph
     g.add(node_active2()).add(arc_active()).add(division_active());
