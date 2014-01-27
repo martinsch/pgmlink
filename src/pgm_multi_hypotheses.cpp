@@ -922,13 +922,15 @@ void CVPR2014ModelBuilder::add_outgoing_factor( const MultiHypothesesGraph& hypo
         feature_type probability = 0.;
         if (has_classifiers()) {
           probability = hypotheses.get(node_division_features())[node]
-              .find(std::make_pair(target_traxels[i]->Id, target_traxels[i]->Id))->second[1];
+              .find(std::make_pair(std::min(target_traxels[i-1]->Id, target_traxels[j-1]->Id),
+                                   std::max(target_traxels[i-1]->Id, target_traxels[j-1]->Id)))->second[1];
         }
         double division_energy = division()(trax, *(target_traxels[i-1]), *(target_traxels[j-1]), probability);
         double non_division_energy = division()(trax, *(target_traxels[i-1]), *(target_traxels[j-1]), 1.-probability);
         if (non_division_energy > maximum_non_division_energy) {
           maximum_non_division_energy = non_division_energy;
         }
+        assert(trax.features.find("cardinality") != trax.features.end() && "Cardinality must be present");
         table.set_value(coords, (trax.features.find("cardinality")->second[0]/maximum_cardinality)*division_energy);
         LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_outgoing_factor: division="
                        << table.get_value( coords );

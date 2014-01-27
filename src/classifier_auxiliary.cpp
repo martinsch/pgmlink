@@ -792,7 +792,8 @@ void ClassifierDivisionRF::classify(const Traxel& trax_out,
                                     const Traxel& trax_in_second,
                                     std::map<std::pair<unsigned, unsigned>, feature_array >& feature_map,
                                     bool with_predict) {
-  feature_array& probabilities_fa = feature_map[std::make_pair(trax_in_first.Id, trax_in_second.Id)];
+  feature_array& probabilities_fa = feature_map[std::make_pair(std::min(trax_in_first.Id, trax_in_second.Id),
+                                                               std::max(trax_in_first.Id, trax_in_second.Id))];
   if (with_predict) {
     vigra::MultiArray<2, feature_type> features(features_.shape());
     vigra::MultiArray<2, feature_type> probabilities(probabilities_.shape());
