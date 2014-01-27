@@ -288,6 +288,7 @@ void MultiHypothesesGraph::add_classifier_features(ClassifierStrategy* move,
     }
     LOG(logDEBUG3) << "MultiHypothesesGraph::add_classifier_features: classifying detections";
     detection->classify(trax, true); // with_predict = true
+    assert(trax.features.count("detProb") > 0 && "detProb must be present after classification");
     // LOG(logDEBUG3) << "MultiHypothesesGraph::add_classifier_features: classifying count";
     // count->classify(sources);
   }
@@ -387,6 +388,7 @@ SingleTimestepTraxel_MultiHypothesesBuilder::SingleTimestepTraxel_MultiHypothese
 }
 
 MultiHypothesesGraphPtr SingleTimestepTraxel_MultiHypothesesBuilder::build_multi_hypotheses_graph() const {
+  LOG(logDEBUG) << "SingleTimestepTraxel_MultiHypothesesBuilder::build_multi_hypotheses_graph(): entered";
   MultiHypothesesGraph* graph = new MultiHypothesesGraph();
   add_nodes(graph);
   add_edges(graph);
@@ -394,6 +396,7 @@ MultiHypothesesGraphPtr SingleTimestepTraxel_MultiHypothesesBuilder::build_multi
 }
 
 HypothesesGraph* SingleTimestepTraxel_MultiHypothesesBuilder::build() const {
+  LOG(logDEBUG) << "SingleTimestepTraxel_MultiHypothesesBuilder::build(): entered";
   HypothesesGraph* graph = construct();
   graph = add_nodes(graph);
   graph = add_edges(graph);
@@ -419,6 +422,8 @@ HypothesesGraph* SingleTimestepTraxel_MultiHypothesesBuilder::add_nodes(Hypothes
   for(HypothesesGraph::NodeIt node(*graph); node != lemon::INVALID; ++node) {
     const Traxel& trax = traxel_m[node];
     component_m.set(node, std::make_pair(trax.Timestep, trax.Component));
+    LOG(logDEBUG4) << "SingleTimestepTraxel_MultiHypothesesBuilder::add_nodes(): added traxel " << trax
+                   << " to component (" << trax.Timestep << "," << trax.Component << ")";
   }
   return graph;
 }
