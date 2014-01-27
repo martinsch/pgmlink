@@ -87,6 +87,7 @@ void MultiHypotheses::conclude( MultiHypothesesGraph& g ) {
   g.add(node_active()).add(arc_active());
   property_map<node_active, HypothesesGraph::base_graph>::type& active_nodes = g.get(node_active());
   property_map<arc_active, HypothesesGraph::base_graph>::type& active_arcs = g.get(arc_active());
+  MultiHypothesesGraph::TraxelMap& traxel_map = g.get(node_traxel());
 
   // write state after inference into 'active'-property maps
   if(builder_->has_detection_vars()) {
@@ -94,6 +95,7 @@ void MultiHypotheses::conclude( MultiHypothesesGraph& g ) {
       bool state = false;
       if(solution[it->second] == 1) state = true;
       active_nodes.set(it->first, state);
+      LOG(logDEBUG4) << "GraphicalModel::conclude detection " << traxel_map[it->first] << " has state " << state;
     }
   } else {
     // if we have no detection vars we set all nodes to active by default
