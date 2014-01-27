@@ -433,12 +433,13 @@ void ModelBuilder::couple_outgoing( const std::vector<size_t>& cplex_idxs, Openg
 
 
 void ModelBuilder::couple_incoming( const std::vector<size_t>& cplex_idxs, OpengmLPCplex& cplex ) {
-  LOG(logDEBUG1) << "MultiHypotheses::couple_incoming()";
+  LOG(logDEBUG1) << "MultiHypotheses::couple_incoming() entering";
   if (cplex_idxs.size() > 0) {
     std::vector<int> coeffs(cplex_idxs.size(), 1);
     // 0 <= 1*transition + ... + 1*transition <= 1
     cplex.addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0, 1);
   }
+  LOG(logDEBUG1) << "MultiHypotheses::couple_incoming() done";
 }
 
 
