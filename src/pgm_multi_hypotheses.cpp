@@ -640,7 +640,7 @@ void CVPR2014ModelBuilder::add_conflict_factors( const MultiHypothesesGraph& hyp
     
       double deactivated_energy_max = 0.;
       for (size_t coord_index = 0; coord_index < table_dim; ++coord_index) {
-        LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_conflict_factor() -- current deactivated_energy_max=" << deactivated_energy_max
+        LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_conflict_factors() -- current deactivated_energy_max=" << deactivated_energy_max
                        << "," << *(traxels[coord_index]);
         coords[coord_index] = 1;
         double deactivated_energy_curr = detection()(*(traxels[coord_index]), 0);
@@ -651,7 +651,7 @@ void CVPR2014ModelBuilder::add_conflict_factors( const MultiHypothesesGraph& hyp
         coords[coord_index] = 0;
       }
       table.set_value( coords, deactivated_energy_max + opportunity_cost());
-      LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_conflict_factor() -- maximum deactivation energy: "
+      LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_conflict_factors() -- maximum deactivation energy: "
                      << deactivated_energy_max;
     }
   }
