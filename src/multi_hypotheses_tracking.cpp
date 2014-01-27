@@ -321,95 +321,13 @@ void MultiHypothesesTracking::track(MultiHypothesesGraph& g, boost::shared_ptr<s
   std::cout << " -> workflow: conclude" << std::endl;
   reasoner.conclude( *graph );
 
-  event_vector = events( *graph );
-  
-  // std::cout << " -> workflow: creating events" << std::endl;
+  prune_inactive( *graph );
 
-  // create all neccessary vectors:
-  /* for (int i = graph->earliest_timestep(); i < graph->latest_timestep(); ++i) {
-    events->push_back(std::vector<Event>());
-  } */
+  boost::shared_ptr<std::vector<std::vector<Event> > > event_vector_tmp = events( *graph );
+  event_vector->push_back(std::vector<Event>()); // need to create empty event at first time frame
+  event_vector->insert(event_vector->end(), event_vector_tmp->begin(), event_vector_tmp->end());
 
-
-  
-  // MultiHypothesesGraph::ContainedRegionsMap& regions = graph->get(node_regions_in_component());
-  // MultiHypothesesGraph::node_timestep_map& timesteps = graph->get(node_timestep());
-
-  // // CHECK INDICES AT PUSH_BACK!
-  // // first timestep should be empty!
-  // events->push_back(std::vector<Event>());
-  // for (MultiHypothesesGraph::node_timestep_map::ValueIt timestep = timesteps.beginValue();
-  //      timestep != timesteps.endValue();
-  //      ++timestep) {
-  //   // iterating over timesteps. current timestep t == *timestep
-  //   // do nothing in last timestep. there must not be any events there anyway
-  //   MultiHypothesesGraph::node_timestep_map::ValueIt timestep_check = timestep;
-  //   if (++timestep_check == timesteps.endValue()) {
-  //     break;
-  //   }
-  //   events->push_back(std::vector<Event>());
-  //   if (options_.restrict_timestep_range &&
-  //       (*timestep < options_.get_weight("first_timestep") || *timestep > options_.get_weight("last_timestep"))) {
-  //     continue;
-  //   }
-  //   for (MultiHypothesesGraph::node_timestep_map::ItemIt n(timesteps, *timestep);
-  //        n!= lemon::INVALID;
-  //        ++n) {
-  //     std::vector<Traxel>& traxels = regions.get_value(n);
-  //     LOG(logDEBUG4) << "Region " << traxels[0].Id << " at time " << traxels[0].Timestep << '\n';
-  //     for (std::vector<Traxel>::iterator t = traxels.begin(); t != traxels.end(); ++t) {
-  //       assert(t->Timestep == *timestep);
-  //       std::vector<Event>& events_at = *(events->rbegin());
-  //       if (t->features["active"][0] > 0.) {        
-  //         if (t->features["outgoing"].size() == 2) {
-  //           // division: parent cell in timestep t, children cells in t+1
-  //           Event e;
-  //           e.type = Event::Division;
-  //           e.traxel_ids.push_back(t->Id);
-  //           e.traxel_ids.push_back(t->features["outgoing"][0]);
-  //           e.traxel_ids.push_back(t->features["outgoing"][1]);
-  //           events_at.push_back(e);
-  //         } else if (t->features["outgoing"].size() == 1) {
-  //           Event e;
-  //           e.type = Event::Move;
-  //           e.traxel_ids.push_back(t->Id);
-  //           e.traxel_ids.push_back(t->features["outgoing"][0]);
-  //           events_at.push_back(e);
-  //         } else if (t->features["outgoing"].size() == 0 && t->Timestep < graph->latest_timestep()) {
-  //           Event e;
-  //           e.type = Event::Disappearance;
-  //           e.traxel_ids.push_back(t->Id);
-  //           events_at.push_back(e);
-  //         }
-  //       }
-  //     }
-  //   }
-  //   if (options_.restrict_timestep_range &&
-  //         (*timestep_check < options_.get_weight("first_timestep") || *timestep_check > options_.get_weight("last_timestep"))) {
-  //     continue;
-  //   }
-  //   // appears in the next timestep
-  //   for (MultiHypothesesGraph::node_timestep_map::ItemIt n(timesteps, *timestep + 1);
-  //        n != lemon::INVALID;
-  //        ++n) {
-  //     if (options_.restrict_timestep_range &&
-  //         (timesteps[n] < options_.get_weight("first_timestep") || timesteps[n] > options_.get_weight("last_timestep"))) {
-  //       continue;
-  //     }
-  //     std::vector<Traxel>& traxels = regions.get_value(n);
-  //     for (std::vector<Traxel>::iterator t = traxels.begin(); t != traxels.end(); ++t) {
-  //       std::vector<Event>& events_at = *(events->rbegin());
-  //       if (t->features["active"][0] > 0.) {
-  //         if (t->features["parent"].size() == 0 && t->Timestep > graph->earliest_timestep()) {
-  //           Event e;
-  //           e.type = Event::Appearance;
-  //           e.traxel_ids.push_back(t->Id);
-  //           events_at.push_back(e);
-  //         }
-  //       }
-  //     }
-  //   }
-  // }
+ 
 
 
   std::cout << " -> workflow: return events" << std::endl;
