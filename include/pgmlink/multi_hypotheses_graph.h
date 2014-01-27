@@ -142,6 +142,8 @@ class MultiHypothesesGraph : public HypothesesGraph {
                                ClassifierStrategy* count,
                                ClassifierStrategy* detection);
 
+  void add_cardinalities();
+
   void add_conflicts(boost::shared_ptr<ConflictMap > conflicts);
 
   const ConflictMap& get_conflicts() const;
