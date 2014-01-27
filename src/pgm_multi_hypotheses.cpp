@@ -470,22 +470,30 @@ void ModelBuilder::couple_conflicts( const multihypotheses::Model& m,
          conflict != conflict_vector.end();
          ++conflict) {
       std::vector<size_t> cplex_idxs;
+      stringstream name;
+      name << "Conflict constraint: ";
       for (std::vector<unsigned>::const_iterator id = conflict->begin(); id != conflict->end(); ++id) {
-        MultiHypothesesGraph::TraxelMap::ItemIt n(traxels, Traxel(timestep->first, *id));
-        cplex_idxs.push_back(m.var_of_node(n));
+        LOG(logDEBUG4) <<  "ModelBuilder::couple_conflicts(): adding id " << *id << " at time " << timestep->first;
+        MultiHypothesesGraph::TraxelMap::ItemIt n(traxels, Traxel(*id, timestep->first));
+        cplex_idxs.push_back(cplex_id(cplex, m.var_of_node(n)));
+        name << Traxel(*id, timestep->first) << "(" << *(cplex_idxs.rbegin()) <<"),";
       }
-      couple_conflict(cplex_idxs, cplex);
+      name << "\b";
+      couple_conflict(cplex_idxs, cplex, name.str());
     }
   }
+  LOG(logDEBUG1) << "ModelBuilder::couple_conflicts(): done";
 }
 
 
-void ModelBuilder::couple_conflict( const std::vector<size_t>& cplex_idxs, OpengmLPCplex& cplex ) {
+void ModelBuilder::couple_conflict( const std::vector<size_t>& cplex_idxs, OpengmLPCplex& cplex, const std::string& name ) {
+  LOG(logDEBUG3) << "ModelBuilder::couple_conflict(): entered";
   if (cplex_idxs.size() > 0) {
     std::vector<int> coeffs(cplex_idxs.size(), 1);
     // 0 <= 1*detection + ... + 1*detection <= 1
-    cplex.addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0, 1);
+    cplex.addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0, 1, name.c_str());
   }
+  LOG(logDEBUG3) << "ModelBuilder::couple_conflict(): done";
 }
 
 
