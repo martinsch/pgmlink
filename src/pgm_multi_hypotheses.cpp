@@ -926,6 +926,7 @@ void CVPR2014ModelBuilder::add_outgoing_factor( const MultiHypothesesGraph& hypo
 
   // division configuration
   if (has_divisions()) {
+    LOG(logDEBUG3) << "CVPR2014ModeLBuilder::add_outoging_factor: adding divisions for " << trax;
     coords[0] = 1;
     for (unsigned int i = 1; i < table_dim - 1; ++i) {
       coords[i] = 1;
@@ -954,6 +955,7 @@ void CVPR2014ModelBuilder::add_outgoing_factor( const MultiHypothesesGraph& hypo
   }
 
   // disappearance configuration
+  LOG(logDEBUG3) << "CVPR2014ModeLBuilder::add_outoging_factor: adding disappearance for " << trax;
   if (trax.Timestep < hypotheses.latest_timestep()) {
     coords[0] = 1;
     table.set_value( coords,
