@@ -687,23 +687,24 @@ void CVPR2014ModelBuilder::add_count_factors( const MultiHypothesesGraph& hypoth
   for (MultiHypothesesGraph::ConnectedComponentMap::ValueIt value = components.beginValue();
        value != components.endValue();
        ++value) {
+    LOG(logDEBUG3) << "CVPR2014ModelBuilder::add_count_factors() -- adding factor for component ("
+                   << value->first << "," << value->second << ")";
     std::vector<size_t> vi;
     const Traxel* component_traxel = NULL;
     for (MultiHypothesesGraph::ConnectedComponentMap::ItemIt n(components, *value);
          n != lemon::INVALID;
          ++n) {
       const Traxel* current_traxel = &traxel_map[n];
-      if (current_traxel->Id == *value) {
+      if (current_traxel->Id == value->second) {
         component_traxel = current_traxel;
       }
       vi.push_back(m.var_of_node(n));
     }
     assert(component_traxel != NULL && "There must be a traxel for the connected component.");
-  }
-  if (has_hierarchical_counting_factor()) {
-    
-  } else {
-    
+    if (has_hierarchical_counting_factor()) {
+      add_hierarchical_count_factor( m, vi, *component_traxel );
+    } else {
+    }
   }
 }
 
