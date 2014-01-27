@@ -887,10 +887,8 @@ void CVPR2014ModelBuilder::add_outgoing_factor( const MultiHypothesesGraph& hypo
     coords[i] = 1;
     feature_type probability = 0.;
     if (has_classifiers() && transition_parameter() == 0) {
-      // need to rewrite MoveFeatures, only then this can be rearranged
-      /* probability = hypotheses.get(node_move_features())[node]
-         .find(trax)->second
-         .find(arcs[i-1].second)->second[1]; */
+      probability = hypotheses.get(node_move_features())[node]
+         .find(target_traxels[i-1]->Id)->second[1];
       LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_outgoing_factor: move using classifier, prob: " << probability
                      << ", energy: " << move()(trax, *(target_traxels[i-1]), probability);
     } else if (transition_parameter() != 0) {
@@ -923,10 +921,8 @@ void CVPR2014ModelBuilder::add_outgoing_factor( const MultiHypothesesGraph& hypo
         coords[j] = 1;
         feature_type probability = 0.;
         if (has_classifiers()) {
-          // need to rewrite DivisionFeatures, only then this can be rearranged
-          /* probability = hypotheses.get(node_division_features())[node]
-              .find(trax)->second
-              .find(std::make_pair(arcs[i-1].second, arcs[j-1].second))->second[0]; */
+          probability = hypotheses.get(node_division_features())[node]
+              .find(std::make_pair(target_traxels[i]->Id, target_traxels[i]->Id))->second[1];
         }
         double division_energy = division()(trax, *(target_traxels[i-1]), *(target_traxels[j-1]), probability);
         double non_division_energy = division()(trax, *(target_traxels[i-1]), *(target_traxels[j-1]), 1.-probability);

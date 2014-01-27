@@ -270,18 +270,19 @@ class ClassifierStrategy {
  public:
   explicit ClassifierStrategy(const std::string& name = "");
   virtual ~ClassifierStrategy();
-  virtual void classify(std::vector<Traxel>& traxels,
-		  	  	  	  bool with_predict=true) = 0;
-  virtual void classify(std::vector<Traxel>& traxels_out,
-                        const std::vector<Traxel>& traxels_in,
+  virtual void classify(Traxel& trax,
                         bool with_predict=true) = 0;
-  virtual void classify(const std::vector<Traxel>& traxels_out,
-                        const std::vector<Traxel>& traxels_in,
-                        std::map<Traxel, std::map<Traxel, feature_array> >& feature_map,
+  virtual void classify(Traxel& trax_out,
+                        const Traxel& trax_in,
                         bool with_predict=true) = 0;
-  virtual void classify(const std::vector<Traxel>& traxels_out,
-                        const std::vector<Traxel>& traxels_in,
-                        std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_array> >& feature_map,
+  virtual void classify(const Traxel& trax_out,
+                        const Traxel& trax_in,
+                        std::map<unsigned, feature_array >& feature_map,
+                        bool with_predict=true) = 0;
+  virtual void classify(const Traxel& trax_out,
+                        const Traxel& trax_in_first,
+                        const Traxel& trax_in_second,
+                        std::map<std::pair<unsigned, unsigned>, feature_array >& feature_map,
                         bool with_predict=true) = 0;
  protected:
   std::string name_;
@@ -295,18 +296,19 @@ class ClassifierLazy : public ClassifierStrategy {
  public:
   ClassifierLazy();
   virtual ~ClassifierLazy();
-  virtual void classify(std::vector<Traxel>& traxels,
-		  	  	  	  bool with_predict);
-  virtual void classify(std::vector<Traxel>& traxels_out,
-                        const std::vector<Traxel>& traxels_in,
+  virtual void classify(Traxel& trax,
                         bool with_predict);
-  virtual void classify(const std::vector<Traxel>& traxels_out,
-                        const std::vector<Traxel>& traxels_in,
-                        std::map<Traxel, std::map<Traxel, feature_array> >& feature_map,
+  virtual void classify(Traxel& trax_out,
+                        const Traxel& trax_in,
                         bool with_predict);
-  virtual void classify(const std::vector<Traxel>& traxels_out,
-                        const std::vector<Traxel>& traxels_in,
-                        std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_array> >& feature_map,
+  virtual void classify(const Traxel& trax_out,
+                        const Traxel& trax_in,
+                        std::map<unsigned, feature_array >& feature_map,
+                        bool with_predict);
+  virtual void classify(const Traxel& trax_out,
+                        const Traxel& trax_in_first,
+                        const Traxel& trax_in_second,
+                        std::map<std::pair<unsigned, unsigned>, feature_array >& feature_map,
                         bool with_predict);
  protected:
   std::string name_;
@@ -317,18 +319,19 @@ class ClassifierConstant : public ClassifierStrategy {
  public:
   ClassifierConstant(double probability, const std::string& name = "");
   virtual ~ClassifierConstant();
-  virtual void classify(std::vector<Traxel>& traxels,
-		  	  	  	  bool with_predict);
-  virtual void classify(std::vector<Traxel>& traxels_out,
-                        const std::vector<Traxel>& traxels_in,
+  virtual void classify(Traxel& trax,
                         bool with_predict);
-  virtual void classify(const std::vector<Traxel>& traxels_out,
-                        const std::vector<Traxel>& traxels_in,
-                        std::map<Traxel, std::map<Traxel, feature_array> >& feature_map,
+  virtual void classify(Traxel& trax_out,
+                        const Traxel& trax_in,
                         bool with_predict);
-  virtual void classify(const std::vector<Traxel>& traxels_out,
-                        const std::vector<Traxel>& traxels_in,
-                        std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_array> >& feature_map,
+  virtual void classify(const Traxel& trax_out,
+                        const Traxel& trax_in,
+                        std::map<unsigned, feature_array >& feature_map,
+                        bool with_predict);
+  virtual void classify(const Traxel& trax_out,
+                        const Traxel& trax_in_first,
+                        const Traxel& trax_in_second,
+                        std::map<std::pair<unsigned, unsigned>, feature_array >& feature_map,
                         bool with_predict);
  private:
   double probability_;
@@ -341,18 +344,19 @@ class ClassifierRF : public ClassifierStrategy {
                const std::vector<boost::shared_ptr<FeatureExtractor> >& extractor_list,
                const std::string& name = "");
   virtual ~ClassifierRF();
-  virtual void classify(std::vector<Traxel>& traxels,
-		  	  	  	  bool with_predict);
-  virtual void classify(std::vector<Traxel>& traxels_out,
-                        const std::vector<Traxel>& traxels_in,
+  virtual void classify(Traxel& trax,
                         bool with_predict);
-  virtual void classify(const std::vector<Traxel>& traxels_out,
-                        const std::vector<Traxel>& traxels_in,
-                        std::map<Traxel, std::map<Traxel, feature_array> >& feature_map,
+  virtual void classify(Traxel& trax_out,
+                        const Traxel& trax_in,
                         bool with_predict);
-  virtual void classify(const std::vector<Traxel>& traxels_out,
-                        const std::vector<Traxel>& traxels_in,
-                        std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_array> >& feature_map,
+  virtual void classify(const Traxel& trax_out,
+                        const Traxel& trax_in,
+                        std::map<unsigned, feature_array >& feature_map,
+                        bool with_predict);
+  virtual void classify(const Traxel& trax_out,
+                        const Traxel& trax_in_first,
+                        const Traxel& trax_in_second,
+                        std::map<std::pair<unsigned, unsigned>, feature_array >& feature_map,
                         bool with_predict);
  protected:
   virtual void extract_features(const Traxel& t);
@@ -384,12 +388,12 @@ class ClassifierMoveRF : public ClassifierRF {
                    const std::vector<boost::shared_ptr<FeatureExtractor> >& extractor_list,
                    const std::string& name = "");
   virtual ~ClassifierMoveRF();
-  virtual void classify(std::vector<Traxel>& traxels_out,
-                        const std::vector<Traxel>& traxels_in,
+  virtual void classify(Traxel& trax_out,
+                        const Traxel& trax_in,
                         bool with_predict);
-  virtual void classify(const std::vector<Traxel>& traxels_out,
-                        const std::vector<Traxel>& traxels_in,
-                        std::map<Traxel, std::map<Traxel, feature_array> >& feature_map,
+  virtual void classify(const Traxel& trax_out,
+                        const Traxel& trax_in,
+                        std::map<unsigned, feature_array >& feature_map,
                         bool with_predict);
   
 };
@@ -401,12 +405,14 @@ class ClassifierDivisionRF : public ClassifierRF {
                        const std::vector<boost::shared_ptr<FeatureExtractor> >& extractor_list,
                        const std::string& name = "");
   virtual ~ClassifierDivisionRF();
-  virtual void classify(std::vector<Traxel>& traxels_out,
-                        const std::vector<Traxel>& traxels_in,
+  virtual void classify(Traxel& trax_out,
+                        const Traxel& trax_in_first,
+                        const Traxel& trax_in_second,
                         bool with_predict);
-  virtual void classify(const std::vector<Traxel>& traxels_out,
-                        const std::vector<Traxel>& traxels_in,
-                        std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_array> >& feature_map,
+  virtual void classify(const Traxel& trax_out,
+                        const Traxel& trax_in_first,
+                        const Traxel& trax_in_second,
+                        std::map<std::pair<unsigned, unsigned>, feature_array >& feature_map,
                         bool with_predict);
 };
 
@@ -417,7 +423,7 @@ class ClassifierCountRF : public ClassifierRF {
                     const std::vector<boost::shared_ptr<FeatureExtractor> >& extractor_list,
                     const std::string& name = "");
   ~ClassifierCountRF();
-  virtual void classify(std::vector<Traxel>& traxels, bool with_predict);
+  virtual void classify(Traxel& trax, bool with_predict);
 };
 
 
@@ -427,7 +433,7 @@ class ClassifierDetectionRF : public ClassifierRF {
                         const std::vector<boost::shared_ptr<FeatureExtractor> >& extractor_list,
                         const std::string& name = "");
   ~ClassifierDetectionRF();
-  virtual void classify(std::vector<Traxel>& traxels, bool with_predict);
+  virtual void classify(Traxel& trax, bool with_predict);
 };
 
 
