@@ -61,7 +61,7 @@ public:
   boost::shared_ptr<std::vector<std::vector<Event> > > operator()(std::string deserialize_from_fn);
 private:
   void print_info();
-  void track(MultiHypothesesGraph& graph, boost::shared_ptr<std::vector<std::vector<Event> > >& events);
+  void track(MultiHypothesesGraph& graph, boost::shared_ptr<std::vector<std::vector<Event> > > event_vector);
   Options options_;
 };
 }

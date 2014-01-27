@@ -34,8 +34,8 @@
 namespace pgmlink {
 namespace pgm {
 namespace multihypotheses {
-bool operator==(const std::pair<Traxel, feature_type>& p, const Traxel& t);
-bool operator==(const Traxel& t, const std::pair<Traxel, feature_type>& p);
+// bool operator==(const std::pair<Traxel, feature_type>& p, const Traxel& t);
+// bool operator==(const Traxel& t, const std::pair<Traxel, feature_type>& p);
 typedef opengm::LPCplex<OpengmModel, opengm::Minimizer> OpengmLPCplex;
 using boost::function;
 using std::map;

@@ -34,36 +34,16 @@ typedef std::vector<ConflictSet > ConflictSetVector;
 
 typedef std::map<int, ConflictSetVector > ConflictMap;
 
+class MultiHypothesesGraph;
+
+typedef boost::shared_ptr<MultiHypothesesGraph> MultiHypothesesGraphPtr;
+
 
 
 class ClassifierStrategy;
 
 
-  ////
-  //// IterableEditableValueMap
-  ////
-  template <typename Graph, typename Key, typename Value>
-  class IterableEditableValueMap : public lemon::IterableValueMap<Graph, Key, Value> {
-  private:
-  public:
-    Value& get_value(const Key& key);
-    explicit IterableEditableValueMap(const Graph& graph,
-                                      const Value& value = Value());
-  };
-
-  template <typename Graph, typename Key, typename Value>
-  IterableEditableValueMap<Graph, Key, Value>::IterableEditableValueMap(const Graph& graph,
-                                                                        const Value& value) :
-    lemon::IterableValueMap<Graph,Key, Value>(graph, value) {
-    
-  }
-
-  template <typename Graph, typename Key, typename Value>
-  Value& IterableEditableValueMap<Graph, Key, Value>::get_value(const Key& key) {
-    return lemon::IterableValueMap<Graph, Key, Value>::Parent::operator[](key).value;
-  }
-
-
+  
 
 ////
 //// node_move_features
@@ -186,13 +166,28 @@ class MultiHypothesesGraph : public HypothesesGraph {
 
 
 ////
-//// SingleTimestepTraxel_MultiHypothesesbuilder
+//// SingleTimestepTraxel_MultiHypothesesBuilder
 ////
 class PGMLINK_EXPORT SingleTimestepTraxel_MultiHypothesesBuilder : public SingleTimestepTraxel_HypothesesBuilder {
+public:
+  SingleTimestepTraxel_MultiHypothesesBuilder(const TraxelStore* ts, const Options& o);
+  virtual MultiHypothesesGraphPtr build_multi_hypotheses_graph() const;
+  virtual HypothesesGraph* build() const;
 protected:
   virtual HypothesesGraph* construct() const;
   virtual HypothesesGraph* add_nodes(HypothesesGraph* graph) const;
+  virtual HypothesesGraph* add_edges(HypothesesGraph* graph) const;
 
+};
+
+
+////
+//// MultiHypothesesTraxelStore
+////
+
+struct MultiHypothesesTraxelStore {
+  TraxelStore ts;
+  boost::shared_ptr<ConflictMap > conflicts;
 };
 
 

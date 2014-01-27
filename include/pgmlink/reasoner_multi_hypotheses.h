@@ -33,7 +33,7 @@ typedef opengm::LPCplex<OpengmModel, opengm::Minimizer> OpengmLPCplex;
 
 class MultiHypotheses { // : public Reasoner {
  public:
-  typedef pgm::multihypotheses::Model::trax_var_map trax_var_map;
+  typedef pgm::multihypotheses::Model::node_var_map node_var_map;
   typedef pgm::multihypotheses::Model::arc_var_map arc_var_map;
 
   MultiHypotheses(bool with_constraints = true,
@@ -86,7 +86,7 @@ class MultiHypotheses { // : public Reasoner {
    *
    * The map is populated after the first call to formulate().
    */
-  const trax_var_map& get_trax_map() const;
+  const node_var_map& get_trax_map() const;
 
   /** Return mapping from HypothesesGraph arcs to graphical model variable ids
    *
