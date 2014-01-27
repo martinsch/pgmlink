@@ -626,7 +626,7 @@ void CVPR2014ModelBuilder::add_conflict_factors( const MultiHypothesesGraph& hyp
       for (ConflictSet::const_iterator det = conflict->begin();
            det != conflict->end();
            ++det) {
-        MultiHypothesesGraph::TraxelMap::ItemIt n(traxel_map, Traxel(timestep->first, *det));
+        MultiHypothesesGraph::TraxelMap::ItemIt n(traxel_map, Traxel(*det, timestep->first));
         traxels.push_back(&traxel_map[n]);
         vi.push_back(m.var_of_node(n));
       }
