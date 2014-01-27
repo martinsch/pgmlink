@@ -461,6 +461,7 @@ void ModelBuilder::couple( const multihypotheses::Model& m,
 void ModelBuilder::couple_conflicts( const multihypotheses::Model& m,
                                      const MultiHypothesesGraph& hypotheses,
                                      OpengmLPCplex& cplex ) {
+  LOG(logDEBUG1) << "ModelBuilder::couple_conflicts(): entered";
   const ConflictMap& conflicts = hypotheses.get_conflicts();
   const MultiHypothesesGraph::TraxelMap& traxels = hypotheses.get(node_traxel());
   for (ConflictMap::const_iterator timestep = conflicts.begin(); timestep != conflicts.end(); ++timestep) {
