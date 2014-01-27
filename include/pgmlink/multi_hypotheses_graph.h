@@ -189,9 +189,23 @@ protected:
 ////
 
 struct MultiHypothesesTraxelStore {
+  void add(const Traxel& trax, unsigned /*obsolete: component_id*/);
+  const Traxel& get(int timestep, unsigned component_id, unsigned traxel_id) const;
+  void add_conflict_map(int timestep, const std::map<int, std::vector<std::vector<int> > >& new_conflicts);
+  std::string print();
   TraxelStore ts;
   boost::shared_ptr<ConflictMap > conflicts;
+
+ private:
+  friend class boost::serialization::access;
+  template< typename Archive >
+  void serialize( Archive& ar, const unsigned int /*version*/ );
 };
+
+
+////
+//// Implementations
+////
 
 
 // lemon graph format (lgf) serialization
@@ -239,6 +253,13 @@ void MultiHypothesesGraph::load( Archive& ar, const unsigned int /*version*/ ) {
     std::stringstream ss(lgf);
     read_lgf(*this, ss, with_n_traxel);
   }
+}
+
+
+template< typename Archive >
+void MultiHypothesesTraxelStore::serialize( Archive& ar, const unsigned int /*version*/ ) {
+  // ar & ts;
+  // ar & conflicts;
 }
 
 

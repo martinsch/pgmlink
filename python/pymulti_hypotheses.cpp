@@ -35,14 +35,14 @@
 using namespace pgmlink;
 using namespace boost::python;
 
-MultiHypothesesGraph::ContainedRegionsMap& addContainedRegionsMap(MultiHypothesesGraph* g) {
-  g->add(node_regions_in_component());
-  return g->get(node_regions_in_component());
-}
+// MultiHypothesesGraph::ContainedRegionsMap& addContainedRegionsMap(MultiHypothesesGraph* g) {
+//   g->add(node_regions_in_component());
+//   return g->get(node_regions_in_component());
+// }
 
-MultiHypothesesGraph::ContainedRegionsMap& getContainedRegionsMap(MultiHypothesesGraph* g) {
-  return g->get(node_regions_in_component());
-}
+// MultiHypothesesGraph::ContainedRegionsMap& getContainedRegionsMap(MultiHypothesesGraph* g) {
+//   return g->get(node_regions_in_component());
+// }
 
 inline object pass_through(object const& o) { return o; }
 
@@ -338,20 +338,20 @@ std::pair<IntersectCountType, IntersectCountType> py_calculate_intersect_union(c
 
 
 void export_multi_hypotheses() {
-  IterableValueMap_ValueIterator<MultiHypothesesGraph::ContainedRegionsMap>::wrap("ContainedRegionsMap_ValueIt");
-  // IterableValueMap_ValueIterator<node_traxel>::wrap("NodeTraxelMap_ValueIt");
+  // IterableValueMap_ValueIterator<MultiHypothesesGraph::ContainedRegionsMap>::wrap("ContainedRegionsMap_ValueIt");
+  // // IterableValueMap_ValueIterator<node_traxel>::wrap("NodeTraxelMap_ValueIt");
 
-  class_<MultiHypothesesGraph::ContainedRegionsMap, boost::noncopyable>("ContainedRegionsMap",
-                                                                        init<const MultiHypothesesGraph&>(args("multi_hypotheses_graph"))
-                                                                        )
-      .def("__getitem__",
-           &MultiHypothesesGraph::ContainedRegionsMap::operator[],
-           return_internal_reference<>())
-      .def("get_value",
-           &MultiHypothesesGraph::ContainedRegionsMap::get_value,
-           return_internal_reference<>())
-      .def("values", &IterableValueMap_ValueIterator<MultiHypothesesGraph::ContainedRegionsMap>::values)
-      ;
+  // class_<MultiHypothesesGraph::ContainedRegionsMap, boost::noncopyable>("ContainedRegionsMap",
+  //                                                                       init<const MultiHypothesesGraph&>(args("multi_hypotheses_graph"))
+  //                                                                       )
+  //     .def("__getitem__",
+  //          &MultiHypothesesGraph::ContainedRegionsMap::operator[],
+  //          return_internal_reference<>())
+  //     .def("get_value",
+  //          &MultiHypothesesGraph::ContainedRegionsMap::get_value,
+  //          return_internal_reference<>())
+  //     .def("values", &IterableValueMap_ValueIterator<MultiHypothesesGraph::ContainedRegionsMap>::values)
+  //     ;
 
   // handle function overloading
   MultiHypothesesGraph::Node (HypothesesGraph::*addnode1)(const int)
@@ -373,12 +373,12 @@ void export_multi_hypotheses() {
            return_internal_reference<>())
       .def("get", &MultiHypothesesTraxelStore::get,
            return_internal_reference<>())
-      .def("startComponent", &MultiHypothesesTraxelStore::start_component,
-           return_internal_reference<>())
+      // .def("startComponent", &MultiHypothesesTraxelStore::start_component,
+      // return_internal_reference<>())
       .def("make_string", &MultiHypothesesTraxelStore::print)
       .def("__str__", &MultiHypothesesTraxelStore::print)
       .def("addConflictMap", &MultiHypothesesTraxelStore::add_conflict_map)
-      .def("addConflictMap", &MultiHypothesesTraxelStore::add_signed_conflict_map)
+      // .def("addConflictMap", &MultiHypothesesTraxelStore::add_signed_conflict_map)
       .def_pickle(traxelstore_pickle_suite())
       ;
 

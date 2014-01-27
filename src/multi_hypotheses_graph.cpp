@@ -429,6 +429,43 @@ HypothesesGraph* SingleTimestepTraxel_MultiHypothesesBuilder::add_edges(Hypothes
 }
 
 
+////
+//// MultiHypothesesTraxelStore
+////
+
+void MultiHypothesesTraxelStore::add(const Traxel& trax, unsigned /*obsolete: component_id*/) {
+  pgmlink::add(ts, trax);
+}
+
+const Traxel& MultiHypothesesTraxelStore::get(int timestep, unsigned component_id, unsigned traxel_id) const {
+  return *std::find(ts.begin(), ts.end(), Traxel(traxel_id, timestep));
+}
+
+void MultiHypothesesTraxelStore::add_conflict_map(int timestep,
+                                                  const std::map<int, std::vector<std::vector<int> > >& new_conflicts) {
+  if (!conflicts) {
+    conflicts = boost::shared_ptr<ConflictMap >(new ConflictMap);
+  }
+  ConflictSetVector& conflicts_at = (*conflicts)[timestep];
+  for (std::map<int, std::vector<std::vector<int> > >::const_iterator conflict_it = new_conflicts.begin();
+       conflict_it != new_conflicts.end();
+       ++conflict_it) {
+    for (std::vector<std::vector<int> >::const_iterator conflict = conflict_it->second.begin();
+         conflict != conflict_it->second.end();
+         ++conflict) {
+      conflicts_at.push_back(ConflictSet());
+      conflicts_at.rbegin()->resize(conflict->size());
+      std::copy(conflict->begin(), conflict->end(), conflicts_at.rbegin()->begin());
+    }
+  }
+}
+
+
+std::string MultiHypothesesTraxelStore::print() {
+  return std::string("MultiHypothesesTraxelStore");
+}
+
+
 } // namespace pgmlink
 
 
