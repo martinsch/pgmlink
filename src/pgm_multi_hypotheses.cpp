@@ -875,7 +875,7 @@ void CVPR2014ModelBuilder::add_outgoing_factor( const MultiHypothesesGraph& hypo
   }
 
   size_t table_dim = vi.size();
-  assert(table_dim <= target_traxels.size() + 1);
+  assert(table_dim == target_traxels.size() + 1);
   LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_outgoing_factor(): table_dim=" << table_dim;
 
     
