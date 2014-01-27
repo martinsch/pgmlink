@@ -178,7 +178,7 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts, std::string 
     graph->add_classifier_features(mov.get(), div.get(), cnt.get(), det.get());
   }
 
-  graph->remove_traxel_features();
+  // graph->remove_traxel_features();
 
   if (serialize_to_fn.length() != 0) {
 	  // get rid of all the traxel features which are not longer needed
