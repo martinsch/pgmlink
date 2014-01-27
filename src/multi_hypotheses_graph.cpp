@@ -48,6 +48,7 @@ MultiHypothesesGraph::MultiHypothesesGraph() :
   add(node_conflict_sets());
   add(arc_from_timestep());
   add(arc_to_timestep());
+  add(node_connected_component());
 }
 
 
