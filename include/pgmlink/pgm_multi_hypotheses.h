@@ -246,8 +246,8 @@ class ModelBuilder {
   void couple( const multihypotheses::Model&, const MultiHypothesesGraph::Node&, const MultiHypothesesGraph::Arc&, OpengmLPCplex& );
   void couple_outgoing( const std::vector<size_t>&, OpengmLPCplex& );
   void couple_incoming( const std::vector<size_t>& ,OpengmLPCplex& );
-  static void couple_conflicts( const multihypotheses::Model&, const MultiHypothesesGraph&, OpengmLPCplex& );
-  static void couple_conflict( const std::vector<size_t>&, OpengmLPCplex& );
+  void couple_conflicts( const multihypotheses::Model&, const MultiHypothesesGraph&, OpengmLPCplex& );
+  void couple_conflict( const std::vector<size_t>&, OpengmLPCplex&, const std::string& );
 
 
   bool with_detection_vars_;
