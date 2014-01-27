@@ -225,7 +225,7 @@ MultiHypothesesTracking::operator()(std::string deserialize_from_fn) {
   return events;
 }
 
-void MultiHypothesesTracking::track(MultiHypothesesGraph& g, boost::shared_ptr<std::vector<std::vector<Event> > > event_vector) {
+void MultiHypothesesTracking::track(MultiHypothesesGraph& g, boost::shared_ptr<std::vector<std::vector<Event> > >& event_vector) {
   std::cout << " -> workflow: initializing builder" << std::endl;
   
   MultiHypothesesGraph* graph = &g;
