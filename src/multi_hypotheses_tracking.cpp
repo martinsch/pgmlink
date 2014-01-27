@@ -113,6 +113,7 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts, std::string 
   // ts.make_sane();
   MultiHypothesesGraphPtr graph = mult_builder.build_multi_hypotheses_graph();
   graph->add_conflicts(ts.conflicts);
+  graph->add_cardinalities();
 
   if (options_.with_constant_classifiers) {
     LOG(logINFO) << "MultiHypothesesTracking: using constant classifiers";
