@@ -272,7 +272,7 @@ class ModelBuilder {
   double opportunity_cost_;
   double cplex_timeout_;
   unsigned max_division_level_;
-  unsigned max_count_;  
+  unsigned max_count_;
   int maximum_outgoing_arcs_;
   int transition_parameter_;
 };
