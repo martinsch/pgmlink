@@ -36,7 +36,8 @@ namespace pgmlink {
 //// MultiHypothesesGraph
 ////
 MultiHypothesesGraph::MultiHypothesesGraph() :
-    conflicts_(new ConflictMap) {
+    conflicts_(new ConflictMap),
+    conflicts_node_() {
   add(node_traxel());
 
 
@@ -293,9 +294,46 @@ void MultiHypothesesGraph::add_classifier_features(ClassifierStrategy* move,
   
 }
 
+void MultiHypothesesGraph::add_cardinalities() {
+  if (!conflicts_node_) {
+    return;
+  }
+  TraxelMap& traxel_map = get(node_traxel());
+  for (std::map<int, std::vector<std::vector<base_graph::Node> > >::const_iterator conflicts_at = conflicts_node_->begin();
+       conflicts_at != conflicts_node_->end();
+       ++conflicts_at) {
+    for (std::vector<std::vector<base_graph::Node> >::const_iterator conflict = conflicts_at->second.begin();
+         conflict != conflicts_at->second.end();
+         ++conflict) {
+      for (std::vector<base_graph::Node>::const_iterator node = conflict->begin();
+           node != conflict->end();
+           ++node) {
+        feature_array& cardinality = traxel_map.get_value(*node).features["cardinality"];
+        if (cardinality.size() == 0) {
+          cardinality.push_back(0.0);
+        }
+        cardinality[0] += 1.0;
+      }
+    }
+  }
+}
+
 
 void MultiHypothesesGraph::add_conflicts(boost::shared_ptr<std::map<int, std::vector<std::vector<unsigned> > > > conflicts) {
   conflicts_ = conflicts;
+  TraxelMap& traxel_map = get(node_traxel());
+  conflicts_node_ = boost::shared_ptr<std::map<int, std::vector<std::vector<base_graph::Node> > > >
+      (new std::map<int, std::vector<std::vector<base_graph::Node> > >);
+  for (ConflictMap::const_iterator conflicts_at = conflicts_->begin(); conflicts_at != conflicts_->end(); ++conflicts_at) {
+    std::vector<std::vector<base_graph::Node> >& conflicts_node_at = (*conflicts_node_)[conflicts_at->first];
+    for (ConflictSetVector::const_iterator conflict = conflicts_at->second.begin(); conflict != conflicts_at->second.end(); ++conflict) {
+      conflicts_node_at.push_back(std::vector<base_graph::Node>());
+      for (ConflictSet::const_iterator id = conflict->begin(); id != conflict->end(); ++id) {
+        TraxelMap::ItemIt node(traxel_map, Traxel(*id, conflicts_at->first));
+        conflicts_node_at.rbegin()->push_back(node);
+      }
+    }
+  }
 }
 
 

@@ -162,6 +162,7 @@ class MultiHypothesesGraph : public HypothesesGraph {
   unsigned maximum_timestep_;
   // store conflicts by timestep
   boost::shared_ptr<ConflictMap > conflicts_;
+  boost::shared_ptr<std::map<int, std::vector<std::vector<base_graph::Node> > > > conflicts_node_;
 };
 
 
