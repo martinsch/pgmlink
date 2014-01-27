@@ -71,7 +71,7 @@ Model::var_t Model::var_of_node(const node_t& e) const {
   if(it!=var_of_node().end()) {
     return it->second;
   } else {
-    throw std::out_of_range("chaingraph::Model::var_of_node(): key does not exist");
+    throw std::out_of_range("MultiHypothesesModel::var_of_node(): key does not exist");
   }
 }
 
@@ -98,7 +98,7 @@ Model::arc_t Model::arc_of_var(var_t e) const {
   if(it!=arc_of_var().end()) {
     return it->second;
   } else {
-    throw std::out_of_range("ChaingraphModel::arc_of_var(): key does not exist");
+    throw std::out_of_range("MultiHypothesesModel::arc_of_var(): key does not exist");
   }
 }
 
@@ -108,7 +108,7 @@ Model::VarCategory Model::var_category(var_t e) const {
   } else if(node_of_var().count(e)) {
     return Model::node_var;
   } else {
-    throw std::out_of_range("ChaingraphModel::var_category(): key does not exist");
+    throw std::out_of_range("MultiHypothesesModel::var_category(): key does not exist");
   }
 }
 
