@@ -640,6 +640,8 @@ void CVPR2014ModelBuilder::add_conflict_factors( const MultiHypothesesGraph& hyp
     
       double deactivated_energy_max = 0.;
       for (size_t coord_index = 0; coord_index < table_dim; ++coord_index) {
+        LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_conflict_factor() -- current deactivated_energy_max=" << deactivated_energy_max
+                       << "," << *(traxels[coord_index]);
         coords[coord_index] = 1;
         double deactivated_energy_curr = detection()(*(traxels[coord_index]), 0);
         if (deactivated_energy_curr > deactivated_energy_max) {
