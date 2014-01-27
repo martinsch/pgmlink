@@ -125,6 +125,7 @@ void export_traxels() {
     class_<Traxel>("Traxel")
 	.def_readwrite("Id", &Traxel::Id)
 	.def_readwrite("Timestep", &Traxel::Timestep)
+        .def_readwrite("Component", &Traxel::Component)
         //.def("set_locator", &Traxel::set_locator, return_self<>())
         .def("set_x_scale", &set_x_scale)
         .def("set_y_scale", &set_y_scale)
