@@ -83,6 +83,7 @@ public:
      */
     const std::map<HypothesesGraph::Arc, size_t>& get_arc_map() const;
 
+    void add_constraint(std::vector<std::size_t>::iterator ids_begin, std::vector<std::size_t>::iterator ids_end, std::vector<int>::iterator coeffs_begin, int lower, int higher, const char *name);
 private:
     // copy and assingment have to be implemented, yet
     ConservationTracking(const ConservationTracking&) {}
@@ -91,7 +92,11 @@ private:
 protected:
     virtual void extractSolution(std::vector<pgm::OpengmModelDeprecated::ogmInference::LabelType> &solution);
     void reset();
-    void add_constraints( const HypothesesGraph& );
+    virtual void add_constraints( const HypothesesGraph& );
+    void add_constraints( const HypothesesGraph&, boost::function<void(std::vector<std::size_t>::iterator,
+                                                                       std::vector<std::size_t>::iterator,
+                                                                       std::vector<int>::iterator,
+                                                                       int, int, const char *)> );
     void add_detection_nodes( const HypothesesGraph& );
     void add_appearance_nodes( const HypothesesGraph& );
     void add_disappearance_nodes( const HypothesesGraph& );

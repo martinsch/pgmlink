@@ -51,9 +51,18 @@ public:
 
     void configure_hard_constraints(const pgmlink::DualDecompositionConservationTracking::DualDecompositionSubGradient::SubGmType &subGM,
                                     pgmlink::DualDecompositionConservationTracking::DualDecompositionSubGradient::InfType &optimizer);
+    void add_constraint(pgmlink::DualDecompositionConservationTracking::DualDecompositionSubGradient::InfType *optimizer,
+                        std::vector<std::size_t>::iterator ids_begin,
+                        std::vector<std::size_t>::iterator ids_end,
+                        std::vector<int>::iterator coeffs_begin,
+                        int lower, int higher, const char *name);
 protected:
     virtual void extractSolution(std::vector<pgm::OpengmModelDeprecated::ogmInference::LabelType> &solution);
+    virtual void add_constraints( const HypothesesGraph& );
+
+
     DualDecompositionSubGradient* dd_optimizer_;
+    const HypothesesGraph* hypotheses_graph_;
 };
 
 }

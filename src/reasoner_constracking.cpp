@@ -552,7 +552,24 @@ size_t ConservationTracking::cplex_id(size_t opengm_id, size_t state) {
     return optimizer_->lpNodeVi(opengm_id, state);
 }
 
-void ConservationTracking::add_constraints(const HypothesesGraph& g) {
+void ConservationTracking::add_constraint(std::vector<std::size_t>::iterator ids_begin,
+                                          std::vector<std::size_t>::iterator ids_end,
+                                          std::vector<int>::iterator coeffs_begin,
+                                          int lower, int higher, const char* name)
+{
+    optimizer_->addConstraint(ids_begin, ids_end, coeffs_begin, lower, higher, name);
+}
+
+void ConservationTracking::add_constraints(const HypothesesGraph& g)
+{
+    add_constraints(g, boost::bind(&ConservationTracking::add_constraint, this, _1, _2, _3, _4, _5, _6));
+}
+
+void ConservationTracking::add_constraints( const HypothesesGraph&g , boost::function<void(std::vector<std::size_t>::iterator,
+                                                                   std::vector<std::size_t>::iterator,
+                                                                   std::vector<int>::iterator,
+                                                                   int, int, const char *)> constraint_adder)
+{
     size_t counter = 0;
     LOG(logDEBUG) << "ConservationTracking::add_constraints: entered";
     //typedef opengm::LPCplex<pgm::OpengmModelDeprecated::ogmGraphicalModel,
@@ -596,7 +613,7 @@ void ConservationTracking::add_constraints(const HypothesesGraph& g) {
                     constraint_name << "outgoing: 0 <= App_i[" << nu << "] + Y_ij[" << mu << "] <= 1; ";
                     constraint_name << "g.id(n) = " << g.id(n) << ", g.id(a) = " << g.id(a) << ", Traxel " << traxel_names;
                     constraint_name << ", cid = " << ++counter;
-                    optimizer_->addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(),
+                    constraint_adder(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(),
                             0, 1, constraint_name.str().c_str());
                     LOG(logDEBUG3) << constraint_name.str();
                 }
@@ -636,7 +653,7 @@ void ConservationTracking::add_constraints(const HypothesesGraph& g) {
             constraint_name << " sum(Y_ij) = D_i + App_i added for Traxel " << traxel_names << ", "
                     << "n = " << app_node_map_[n];
             constraint_name << ", cid = " << ++counter;
-            optimizer_->addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0, 0,
+            constraint_adder(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0, 0,
                     constraint_name.str().c_str());
             LOG(logDEBUG3) << constraint_name.str();
 
@@ -661,7 +678,7 @@ void ConservationTracking::add_constraints(const HypothesesGraph& g) {
             constraint_name << " D_i=1 => App_i =1 added for Traxel " << traxel_names << ", " << "n = "
                     << app_node_map_[n] << ", d = " << div_node_map_[n];
             constraint_name << ", cid = " << ++counter;
-            optimizer_->addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), -1, 0,
+            constraint_adder(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), -1, 0,
                     constraint_name.str().c_str());
             LOG(logDEBUG3) << constraint_name.str();
 
@@ -689,7 +706,7 @@ void ConservationTracking::add_constraints(const HypothesesGraph& g) {
                             << nu;
                     constraint_name << ", cid = " << ++counter;
 
-                    optimizer_->addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(),
+                    constraint_adder(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(),
                             0, 1, constraint_name.str().c_str());
                     LOG(logDEBUG3) << constraint_name.str();
 
@@ -705,7 +722,7 @@ void ConservationTracking::add_constraints(const HypothesesGraph& g) {
             constraint_name  << " D_i = 1 => sum_k(Y_ik) = 2 added for Traxel " << traxel_names << ", "
                     << "d = " << div_node_map_[n];
             constraint_name << ", cid = " << ++counter;
-            optimizer_->addConstraint(cplex_idxs2.begin(), cplex_idxs2.end(), coeffs2.begin(),
+            constraint_adder(cplex_idxs2.begin(), cplex_idxs2.end(), coeffs2.begin(),
                     -int(max_number_objects_), 0, constraint_name.str().c_str());
             LOG(logDEBUG3) << constraint_name.str();
         }
@@ -740,7 +757,7 @@ void ConservationTracking::add_constraints(const HypothesesGraph& g) {
             constraint_name << " sum_k(Y_kj) = Dis_j added for Traxel " << traxel_names << ", " << "n = "
                     << dis_node_map_[n];
             constraint_name << ", cid = " << ++counter;
-            optimizer_->addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0, 0,
+            constraint_adder(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0, 0,
                     constraint_name.str().c_str());
             LOG(logDEBUG3) << constraint_name.str();
         }
@@ -769,7 +786,7 @@ void ConservationTracking::add_constraints(const HypothesesGraph& g) {
                 constraint_name << " A_i[nu] = 1 => V_i[nu] = 1 v V_i[0] = 1 added for Traxel "
                         << traxel_names << ", " << "n = " << app_node_map_[n];
                 constraint_name << ", cid = " << ++counter;
-                optimizer_->addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), -1,
+                constraint_adder(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), -1,
                         0, constraint_name.str().c_str());
                 LOG(logDEBUG3) << constraint_name.str();
             }
@@ -794,7 +811,7 @@ void ConservationTracking::add_constraints(const HypothesesGraph& g) {
                 constraint_name << " V_i[nu] = 1 => A_i[nu] = 1 v A_i[0] = 1 added for Traxel "
                         << traxel_names << ", " << "n = " << app_node_map_[n];
                 constraint_name << ", cid = " << ++counter;
-                optimizer_->addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), -1,
+                constraint_adder(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), -1,
                         0, constraint_name.str().c_str());
                 LOG(logDEBUG3) << constraint_name.str();
             }
@@ -820,7 +837,7 @@ void ConservationTracking::add_constraints(const HypothesesGraph& g) {
             constraint_name << "disappearance/appearance coupling: ";
             constraint_name << " A_i[0] + V_i[0] = 0 added for Traxel " << traxel_names;
             constraint_name << ", cid = " << ++counter;
-            optimizer_->addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0, 0,
+            constraint_adder(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0, 0,
                     constraint_name.str().c_str());
             LOG(logDEBUG3) << constraint_name.str();
         }
@@ -837,7 +854,7 @@ void ConservationTracking::add_constraints(const HypothesesGraph& g) {
             constraint_name << " V_i[0] = 0 added for Traxel " << traxel_names << ", " << "n = "
                     << dis_node_map_[n];
             constraint_name << ", cid = " << ++counter;
-            optimizer_->addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0,
+            constraint_adder(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0,
                     0, constraint_name.str().c_str());
             LOG(logDEBUG3) << constraint_name.str();
         }
@@ -854,7 +871,7 @@ void ConservationTracking::add_constraints(const HypothesesGraph& g) {
             constraint_name << " A_i[0] = 0 added for Traxel " << traxel_names << ", " << "n = "
                     << app_node_map_[n];
             constraint_name << ", cid = " << ++counter;
-            optimizer_->addConstraint(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0,
+            constraint_adder(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0,
                     0, constraint_name.str().c_str());
             LOG(logDEBUG3) << constraint_name.str();
         }

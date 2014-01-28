@@ -13,6 +13,7 @@
 #include <opengm/inference/dualdecomposition/dualdecomposition_subgradient.hxx>
 
 #include <boost/function.hpp>
+#include "../log.h"
 
 namespace opengm {
 
@@ -171,6 +172,7 @@ namespace opengm {
          primalTimer_.tic();
          //omp_set_num_threads(para_.numberOfThreads_);
 
+         LOG(pgmlink::logDEBUG) << "Number of Subproblems: " << subGm_.size();
 //#pragma omp parallel for
          for(size_t subModelId=0; subModelId<subGm_.size(); ++subModelId){
             InfType inf(subGm_[subModelId],para_.subPara_);

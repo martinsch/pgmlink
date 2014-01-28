@@ -34,7 +34,9 @@ pgmlink::DualDecompositionConservationTracking::DualDecompositionConservationTra
           with_appearance,
           with_disappearance,
           transition_parameter,
-          with_constraints)
+          with_constraints),
+      hypotheses_graph_(NULL),
+      dd_optimizer_(NULL)
 {}
 
 pgmlink::DualDecompositionConservationTracking::~DualDecompositionConservationTracking()
@@ -42,10 +44,26 @@ pgmlink::DualDecompositionConservationTracking::~DualDecompositionConservationTr
 
 }
 
+void pgmlink::DualDecompositionConservationTracking::add_constraint(
+        pgmlink::DualDecompositionConservationTracking::DualDecompositionSubGradient::InfType* optimizer,
+        std::vector<std::size_t>::iterator ids_begin,
+        std::vector<std::size_t>::iterator ids_end,
+        std::vector<int>::iterator coeffs_begin,
+        int lower, int higher, const char* name)
+{
+    optimizer->addConstraint(ids_begin, ids_end, coeffs_begin, lower, higher, name);
+}
+
 void pgmlink::DualDecompositionConservationTracking::configure_hard_constraints(const pgmlink::DualDecompositionConservationTracking::DualDecompositionSubGradient::SubGmType& subGM,
                                                                                 pgmlink::DualDecompositionConservationTracking::DualDecompositionSubGradient::InfType& optimizer)
 {
+    assert(hypotheses_graph_ != NULL);
+    //subGM.
+    LOG(logDEBUG) << "Found subproblem with " << subGM.numberOfVariables() << " variables";
 
+    pgmlink::ConservationTracking::add_constraints(*hypotheses_graph_, boost::bind(
+                                                       &pgmlink::DualDecompositionConservationTracking::add_constraint,
+                                                       this, &optimizer, _1, _2, _3, _4, _5, _6));
 }
 
 void pgmlink::DualDecompositionConservationTracking::infer()
@@ -75,4 +93,9 @@ void pgmlink::DualDecompositionConservationTracking::extractSolution(std::vector
     if (status != opengm::NORMAL) {
         throw std::runtime_error("GraphicalModel::infer(): solution extraction terminated abnormally");
     }
+}
+
+void pgmlink::DualDecompositionConservationTracking::add_constraints(const pgmlink::HypothesesGraph &g)
+{
+    hypotheses_graph_ = &g;
 }
