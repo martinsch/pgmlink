@@ -30,7 +30,8 @@ namespace pgmlink {
       Id(other.Id),
       Timestep(other.Timestep),
       Level(other.Level),
-      features(other.features) {
+      features(other.features),
+      Component(other.Component) {
     locator_ = other.locator_->clone();
     corr_locator_ = other.corr_locator_;
   }
@@ -40,6 +41,7 @@ namespace pgmlink {
     Timestep = other.Timestep;
     Level = other.Level;
     features = other.features;
+    Component = other.Component;
     corr_locator_ = other.corr_locator_;
     // This gracefully handles self assignment
     Locator* temp = other.locator_->clone();

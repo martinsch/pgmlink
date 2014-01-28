@@ -36,26 +36,26 @@ namespace pgmlink {
   ////
   //// IterableEditableValueMap
   ////
-  template <typename Graph, typename Key, typename Value>
-  class IterableEditableValueMap : public lemon::IterableValueMap<Graph, Key, Value> {
-  private:
-  public:
-    Value& get_value(const Key& key);
-    explicit IterableEditableValueMap(const Graph& graph,
-                                      const Value& value = Value());
-  };
+  // template <typename Graph, typename Key, typename Value>
+  // class IterableEditableValueMap : public lemon::IterableValueMap<Graph, Key, Value> {
+  // private:
+  // public:
+  //   Value& get_value(const Key& key);
+  //   explicit IterableEditableValueMap(const Graph& graph,
+  //                                     const Value& value = Value());
+  // };
 
-  template <typename Graph, typename Key, typename Value>
-  IterableEditableValueMap<Graph, Key, Value>::IterableEditableValueMap(const Graph& graph,
-                                                                        const Value& value) :
-    lemon::IterableValueMap<Graph,Key, Value>(graph, value) {
+  // template <typename Graph, typename Key, typename Value>
+  // IterableEditableValueMap<Graph, Key, Value>::IterableEditableValueMap(const Graph& graph,
+  //                                                                       const Value& value) :
+  //   lemon::IterableValueMap<Graph,Key, Value>(graph, value) {
     
-  }
+  // }
 
-  template <typename Graph, typename Key, typename Value>
-  Value& IterableEditableValueMap<Graph, Key, Value>::get_value(const Key& key) {
-    return lemon::IterableValueMap<Graph, Key, Value>::Parent::operator[](key).value;
-  }
+  // template <typename Graph, typename Key, typename Value>
+  // Value& IterableEditableValueMap<Graph, Key, Value>::get_value(const Key& key) {
+  //   return lemon::IterableValueMap<Graph, Key, Value>::Parent::operator[](key).value;
+  // }
 
 
   ////

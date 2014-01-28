@@ -35,14 +35,14 @@
 using namespace pgmlink;
 using namespace boost::python;
 
-MultiHypothesesGraph::ContainedRegionsMap& addContainedRegionsMap(MultiHypothesesGraph* g) {
-  g->add(node_regions_in_component());
-  return g->get(node_regions_in_component());
-}
+// MultiHypothesesGraph::ContainedRegionsMap& addContainedRegionsMap(MultiHypothesesGraph* g) {
+//   g->add(node_regions_in_component());
+//   return g->get(node_regions_in_component());
+// }
 
-MultiHypothesesGraph::ContainedRegionsMap& getContainedRegionsMap(MultiHypothesesGraph* g) {
-  return g->get(node_regions_in_component());
-}
+// MultiHypothesesGraph::ContainedRegionsMap& getContainedRegionsMap(MultiHypothesesGraph* g) {
+//   return g->get(node_regions_in_component());
+// }
 
 inline object pass_through(object const& o) { return o; }
 
@@ -320,69 +320,6 @@ vigra::NumpyArray<2, feature_type> calculate_3t(const std::vector<boost::shared_
 }
 
 
-// wrap feature calculation w/o traxels
-/* vigra::NumpyArray<2, feature_type> calculate_2f(const std::vector<boost::shared_ptr<FeatureCalculator> >& calculators,
-                                                const feature_array& f1,
-                                                const feature_array& f2) {
-  feature_array ret;
-  for (std::vector<boost::shared_ptr<FeatureCalculator> >::const_iterator it = calculators.begin();
-       it != calculators.end();
-       ++it) {
-    feature_array res = (*it)->calculate(f1, f2);
-    ret.insert(ret.end(), res.begin(), res.end());
-  }
-  vigra::NumpyArray<2, feature_type> features(vigra::Shape2(1, ret.size()));
-  std::copy(ret.begin(), ret.end(), features.begin());
-  return features;
-}
-
-
-vigra::NumpyArray<2, feature_type> calculate_2n(const std::vector<boost::shared_ptr<FeatureCalculator> >& calculators,
-                                                const vigra::NumpyArray<2, feature_type> n1,
-                                                const vigra::NumpyArray<2, feature_type> n2) {
-  feature_array f1(n1.shape()[1]);
-  feature_array f2(n2.shape()[1]);
-  assert(f1.size() == f2.size());
-  std::copy(n1.begin(), n1.end(), f1.begin());
-  std::copy(n2.begin(), n2.end(), f2.begin());
-  return calculate_2f(calculators, f1, f2);
-}
-
-
-vigra::NumpyArray<2, feature_type> calculate_3f(const std::vector<boost::shared_ptr<FeatureCalculator> >& calculators,
-                                                const feature_array& f1,
-                                                const feature_array& f2,
-                                                const feature_array& f3) {
-  feature_array ret;
-  for (std::vector<boost::shared_ptr<FeatureCalculator> >::const_iterator it = calculators.begin();
-       it != calculators.end();
-       ++it) {
-    feature_array res = (*it)->calculate(f1, f2, f3);
-    ret.insert(ret.end(), res.begin(), res.end());
-  }
-  vigra::NumpyArray<2, feature_type> features(vigra::Shape2(1, ret.size()));
-  std::copy(ret.begin(), ret.end(), features.begin());
-  return features;
-}
-
-
-vigra::NumpyArray<2, feature_type> calculate_3n(const std::vector<boost::shared_ptr<FeatureCalculator> >& calculators,
-                                                const vigra::NumpyArray<2, feature_type> n1,
-                                                const vigra::NumpyArray<2, feature_type> n2,
-                                                const vigra::NumpyArray<2, feature_type> n3) {
-  feature_array f1(n1.shape()[1]);
-  feature_array f2(n2.shape()[1]);
-  feature_array f3(n3.shape()[1]);
-  assert(f1.size() == f2.size());
-  assert(f2.size() == f3.size());
-  std::copy(n1.begin(), n1.end(), f1.begin());
-  std::copy(n2.begin(), n2.end(), f2.begin());
-  std::copy(n3.begin(), n3.end(), f3.begin());
-  return calculate_3f(calculators, f1, f2, f3);
-  } */
-
-
-
 // evaluation
 template <int N, typename T, typename U>
 typename IntersectCountMap<T, U>::type py_get_intersect_count(vigra::NumpyArray<N, T> image1, vigra::NumpyArray<N, U> image2) {
@@ -401,20 +338,20 @@ std::pair<IntersectCountType, IntersectCountType> py_calculate_intersect_union(c
 
 
 void export_multi_hypotheses() {
-  IterableValueMap_ValueIterator<MultiHypothesesGraph::ContainedRegionsMap>::wrap("ContainedRegionsMap_ValueIt");
-  // IterableValueMap_ValueIterator<node_traxel>::wrap("NodeTraxelMap_ValueIt");
+  // IterableValueMap_ValueIterator<MultiHypothesesGraph::ContainedRegionsMap>::wrap("ContainedRegionsMap_ValueIt");
+  // // IterableValueMap_ValueIterator<node_traxel>::wrap("NodeTraxelMap_ValueIt");
 
-  class_<MultiHypothesesGraph::ContainedRegionsMap, boost::noncopyable>("ContainedRegionsMap",
-                                                                        init<const MultiHypothesesGraph&>(args("multi_hypotheses_graph"))
-                                                                        )
-      .def("__getitem__",
-           &MultiHypothesesGraph::ContainedRegionsMap::operator[],
-           return_internal_reference<>())
-      .def("get_value",
-           &MultiHypothesesGraph::ContainedRegionsMap::get_value,
-           return_internal_reference<>())
-      .def("values", &IterableValueMap_ValueIterator<MultiHypothesesGraph::ContainedRegionsMap>::values)
-      ;
+  // class_<MultiHypothesesGraph::ContainedRegionsMap, boost::noncopyable>("ContainedRegionsMap",
+  //                                                                       init<const MultiHypothesesGraph&>(args("multi_hypotheses_graph"))
+  //                                                                       )
+  //     .def("__getitem__",
+  //          &MultiHypothesesGraph::ContainedRegionsMap::operator[],
+  //          return_internal_reference<>())
+  //     .def("get_value",
+  //          &MultiHypothesesGraph::ContainedRegionsMap::get_value,
+  //          return_internal_reference<>())
+  //     .def("values", &IterableValueMap_ValueIterator<MultiHypothesesGraph::ContainedRegionsMap>::values)
+  //     ;
 
   // handle function overloading
   MultiHypothesesGraph::Node (HypothesesGraph::*addnode1)(const int)
@@ -436,12 +373,12 @@ void export_multi_hypotheses() {
            return_internal_reference<>())
       .def("get", &MultiHypothesesTraxelStore::get,
            return_internal_reference<>())
-      .def("startComponent", &MultiHypothesesTraxelStore::start_component,
-           return_internal_reference<>())
+      // .def("startComponent", &MultiHypothesesTraxelStore::start_component,
+      // return_internal_reference<>())
       .def("make_string", &MultiHypothesesTraxelStore::print)
       .def("__str__", &MultiHypothesesTraxelStore::print)
       .def("addConflictMap", &MultiHypothesesTraxelStore::add_conflict_map)
-      .def("addConflictMap", &MultiHypothesesTraxelStore::add_signed_conflict_map)
+      // .def("addConflictMap", &MultiHypothesesTraxelStore::add_signed_conflict_map)
       .def_pickle(traxelstore_pickle_suite())
       ;
 
