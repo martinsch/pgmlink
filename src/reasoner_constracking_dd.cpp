@@ -42,6 +42,12 @@ pgmlink::DualDecompositionConservationTracking::~DualDecompositionConservationTr
 
 }
 
+void pgmlink::DualDecompositionConservationTracking::configure_hard_constraints(const pgmlink::DualDecompositionConservationTracking::DualDecompositionSubGradient::SubGmType& subGM,
+                                                                                pgmlink::DualDecompositionConservationTracking::DualDecompositionSubGradient::InfType& optimizer)
+{
+
+}
+
 void pgmlink::DualDecompositionConservationTracking::infer()
 {
     if (!with_constraints_) {
@@ -50,9 +56,13 @@ void pgmlink::DualDecompositionConservationTracking::infer()
     }
 
     GraphicalModelType* model = pgm_->Model();
-    dd_optimizer_ = new DualDecompositionSubGradient(*model);
+    DualDecompositionSubGradient::Parameter dd_parameter;
+    dd_parameter.decompositionId_ = DualDecompositionSubGradient::Parameter::SPANNINGTREES;
 
-    opengm::InferenceTermination status = dd_optimizer_->infer();
+    dd_optimizer_ = new DualDecompositionSubGradient(*model, dd_parameter, boost::bind(&pgmlink::DualDecompositionConservationTracking::configure_hard_constraints, this, _1, _2));
+
+    DualDecompositionSubGradient::VerboseVisitorType visitor;
+    opengm::InferenceTermination status = dd_optimizer_->infer(visitor);
 
     if (status != opengm::NORMAL) {
         throw std::runtime_error("GraphicalModel::infer(): optimizer terminated abnormally");

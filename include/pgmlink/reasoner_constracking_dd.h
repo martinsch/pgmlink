@@ -4,8 +4,8 @@
 #include <boost/function.hpp>
 #include <opengm/inference/inference.hxx>
 #include <opengm/inference/lpcplex.hxx>
-#include <opengm/inference/dualdecomposition/dualdecomposition_subgradient.hxx>
 
+#include "ext_opengm/dualdecomp_subgradient_hardconstraint.hxx"
 #include "reasoner_constracking.h"
 #include "pgm.h"
 
@@ -21,7 +21,7 @@ public:
     typedef opengm::DDDualVariableBlock< marray::Marray<ValueType> > DualBlockType;
     typedef opengm::DualDecompositionBase<pgm::OpengmModelDeprecated::ogmGraphicalModel, DualBlockType>::SubGmType DualDecompositionSubGraphType;
     typedef opengm::LPCplex<DualDecompositionSubGraphType, pgm::OpengmModelDeprecated::ogmAccumulator> InfType;
-    typedef opengm::DualDecompositionSubGradient<GraphicalModelType,InfType,DualBlockType> DualDecompositionSubGradient;
+    typedef opengm::DualDecompositionSubGradientWithHardConstraints<GraphicalModelType,InfType,DualBlockType> DualDecompositionSubGradient;
 
 public:
     DualDecompositionConservationTracking(
@@ -49,6 +49,8 @@ public:
      */
     virtual void infer();
 
+    void configure_hard_constraints(const pgmlink::DualDecompositionConservationTracking::DualDecompositionSubGradient::SubGmType &subGM,
+                                    pgmlink::DualDecompositionConservationTracking::DualDecompositionSubGradient::InfType &optimizer);
 protected:
     virtual void extractSolution(std::vector<pgm::OpengmModelDeprecated::ogmInference::LabelType> &solution);
     DualDecompositionSubGradient* dd_optimizer_;
