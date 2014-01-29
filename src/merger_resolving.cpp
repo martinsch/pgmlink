@@ -20,6 +20,7 @@
 #include "pgmlink/hypotheses.h"
 #include "pgmlink/event.h"
 #include "pgmlink/traxels.h"
+#include "pgmlink/tracking.h"
 
 
 namespace pgmlink {
@@ -574,7 +575,8 @@ void calculate_gmm_beforehand(HypothesesGraph& g, int n_trials, int n_dimensions
                      double ep_gap,
                      bool with_tracklets, 
                      const double transition_parameter,
-                     const bool with_constraints) {
+                     const bool with_constraints,
+                     ConservationTrackingFactory conservation_tracking_setup_fn) {
 
     // Optimize the graph built by the class MergerResolver.
     // Up to here everything is only graph (nodes, arcs) based
@@ -654,27 +656,54 @@ void calculate_gmm_beforehand(HypothesesGraph& g, int n_trials, int n_dimensions
 
     // Construct conservation tracking and
     // do inference.
-    ConservationTracking pgm(
-                             1, //max_number_objects_,
-                             detection, //detection,
-                             division, // division
-                             transition, // transition
-                             0, // forbidden_cost_,
-                             ep_gap, // ep_gap_
-                             with_tracklets, // with_tracklets_
-                             false, // with_divisions_
-                             disappearance_cost, // disappearance_cost_
-                             appearance_cost, // appearance_cost
-                             false, // with_misdetections_allowed
-                             false, // with appearance
-                             false, // with disappearance
-                             transition_parameter,
-                             with_constraints
-                             );
+    ConservationTracking* pgm = NULL;
+    if(conservation_tracking_setup_fn)
+    {
+        ConservationTrackingParameters* params = new ConservationTrackingParameters(
+                    1, //max_number_objects_,
+                    detection, //detection,
+                    division, // division
+                    transition, // transition
+                    0, // forbidden_cost_,
+                    ep_gap, // ep_gap_
+                    with_tracklets, // with_tracklets_
+                    false, // with_divisions_
+                    disappearance_cost, // disappearance_cost_
+                    appearance_cost, // appearance_cost
+                    false, // with_misdetections_allowed
+                    false, // with appearance
+                    false, // with disappearance
+                    transition_parameter,
+                    with_constraints
+                    );
+        pgm = conservation_tracking_setup_fn(params);
+        delete params;
+    }
+    else
+    {
+        pgm = new ConservationTracking(
+                    1, //max_number_objects_,
+                    detection, //detection,
+                    division, // division
+                    transition, // transition
+                    0, // forbidden_cost_,
+                    ep_gap, // ep_gap_
+                    with_tracklets, // with_tracklets_
+                    false, // with_divisions_
+                    disappearance_cost, // disappearance_cost_
+                    appearance_cost, // appearance_cost
+                    false, // with_misdetections_allowed
+                    false, // with appearance
+                    false, // with disappearance
+                    transition_parameter,
+                    with_constraints
+                    );
+    }
 
-    pgm.formulate(dest);
-    pgm.infer();
-    pgm.conclude(dest);
+    pgm->formulate(dest);
+    pgm->infer();
+    pgm->conclude(dest);
+    delete pgm;
 
     // Remap results from clones to original nodes.
     merge_split_divisions(dest, division_splits, arc_cross_reference_divisions);

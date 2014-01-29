@@ -426,12 +426,16 @@ class GMMWithInitialized : public ClusteringMlpackBase {
     HypothesesGraph* resolve_mergers(FeatureHandlerBase& handler);
   };
 
-
+  ////
+  //// Function type that is used to set up a conservation tracking instance.
+  ////
+  class ConservationTrackingParameters;
+  typedef boost::function<ConservationTracking*(ConservationTrackingParameters*)> ConservationTrackingFactory;
   ////
   //// given a graph, do retracking
   ////
   void resolve_graph(HypothesesGraph& src, HypothesesGraph& dest, boost::function<double(const double)> transition, double ep_gap, bool with_tracklets,
-          const double transition_parameter=5, const bool with_constraints=true);
+          const double transition_parameter=5, const bool with_constraints=true, ConservationTrackingFactory conservation_tracking_setup_fn=0);
   // void resolve_graph(HypothesesGraph& src, HypothesesGraph& dest);
 
   

@@ -19,6 +19,58 @@
 #include "pgmlink/field_of_view.h"
 
 namespace pgmlink {
+struct ConservationTrackingParameters{
+    ConservationTrackingParameters(
+                             unsigned int max_number_objects,
+                             boost::function<double (const Traxel&, const size_t)> detection,
+                             boost::function<double (const Traxel&, const size_t)> division,
+                             boost::function<double (const double)> transition,
+                             double forbidden_cost = 0,
+                             double ep_gap = 0.01,
+                             bool with_tracklets = false,
+                             bool with_divisions = true,
+                             boost::function<double (const Traxel&)> disappearance_cost_fn = 0,
+                             boost::function<double (const Traxel&)> appearance_cost_fn = 0,
+                             bool with_misdetections_allowed = true,
+                             bool with_appearance = true,
+                             bool with_disappearance = true,
+                             double transition_parameter = 5,
+                             bool with_constraints = true
+                             )
+        : max_number_objects_(max_number_objects),
+          detection_(detection),
+          division_(division),
+          transition_(transition),
+          forbidden_cost_(forbidden_cost),
+          ep_gap_(ep_gap),
+          with_tracklets_(with_tracklets),
+          with_divisions_(with_divisions),
+          disappearance_cost_(disappearance_cost_fn),
+          appearance_cost_(appearance_cost_fn),
+          with_misdetections_allowed_(with_misdetections_allowed),
+          with_appearance_(with_appearance),
+          with_disappearance_(with_disappearance),
+          transition_parameter_(transition_parameter),
+          with_constraints_(with_constraints)
+    { }
+
+    unsigned int max_number_objects_;
+    boost::function<double (const Traxel&, const size_t)> detection_;
+    boost::function<double (const Traxel&, const size_t)> division_;
+    boost::function<double (const double)> transition_;
+    bool with_misdetections_allowed_;
+    bool with_appearance_;
+    bool with_disappearance_;
+    double ep_gap_;
+    double forbidden_cost_;
+    bool with_tracklets_;
+    bool with_divisions_;
+    boost::function<double (const Traxel&)> disappearance_cost_;
+    boost::function<double (const Traxel&)> appearance_cost_;
+    double transition_parameter_;
+    bool with_constraints_;
+};
+
   class PGMLINK_EXPORT ChaingraphTracking {
   public:
     ChaingraphTracking(const std::string& random_forest_filename = "none",
@@ -184,13 +236,10 @@ namespace pgmlink {
        * Get state of detection variables after call to operator().
        */
       std::vector< std::map<unsigned int, bool> > detections();
+
   protected:
-      virtual ConservationTracking* setupConsTracker(
-              boost::function<double(const Traxel&, const size_t)> detection,
-              boost::function<double(const double)> transition,
-              boost::function<double(const Traxel&)> appearance_cost_fn,
-              boost::function<double(const Traxel&, const size_t)> division,
-              boost::function<double(const Traxel&)> disappearance_cost_fn);
+      virtual ConservationTracking *setupConsTracker(ConservationTrackingParameters *params);
+
   protected:
       int max_number_objects_;
       double max_dist_;
@@ -261,13 +310,10 @@ namespace pgmlink {
                        with_constraints){}
 
       virtual ~ConsTrackingDD(){}
+
   protected:
-      virtual ConservationTracking* setupConsTracker(
-              boost::function<double(const Traxel&, const size_t)> detection,
-              boost::function<double(const double)> transition,
-              boost::function<double(const Traxel&)> appearance_cost_fn,
-              boost::function<double(const Traxel&, const size_t)> division,
-              boost::function<double(const Traxel&)> disappearance_cost_fn);
+      virtual ConservationTracking *setupConsTracker(
+              ConservationTrackingParameters* params);
     };
 }
 

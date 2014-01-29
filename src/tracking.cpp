@@ -216,30 +216,24 @@ bool all_true (InputIterator first, InputIterator last, UnaryPredicate pred) {
 ////
 //// class ConsTracking
 ////
-ConservationTracking* ConsTracking::setupConsTracker(
-        boost::function<double(const Traxel&, const size_t)> detection,
-        boost::function<double(const double)> transition,
-        boost::function<double(const Traxel&)> appearance_cost_fn,
-        boost::function<double(const Traxel&, const size_t)> division,
-        boost::function<double(const Traxel&)> disappearance_cost_fn)
+ConservationTracking* ConsTracking::setupConsTracker(ConservationTrackingParameters *params)
 {
     return new ConservationTracking(
-            max_number_objects_,
-            detection,
-            division,
-            transition,
-            forbidden_cost_,
-            ep_gap_,
-            with_tracklets_,
-            with_divisions_,
-            disappearance_cost_fn,
-            appearance_cost_fn,
-            true, // with_misdetections_allowed
-            true, // with_appearance
-            true, // with_disappearance
-            transition_parameter_,
-            with_constraints_
-            );
+            params->max_number_objects_,
+            params->detection_,
+            params->division_,
+            params->transition_,
+            params->forbidden_cost_,
+            params->ep_gap_,
+            params->with_tracklets_,
+            params->with_divisions_,
+            params->disappearance_cost_,
+            params->appearance_cost_,
+            params->with_misdetections_allowed_,
+            params->with_appearance_,
+            params->with_disappearance_,
+            params->transition_parameter_,
+            params->with_constraints_);
 }
 
 vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
@@ -385,7 +379,25 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
 												fov_);
 
 	cout << "-> init ConservationTracking reasoner" << endl;
-    ConservationTracking* pgm = setupConsTracker(detection, transition, appearance_cost_fn, division, disappearance_cost_fn);
+
+    ConservationTrackingParameters* params = new ConservationTrackingParameters(
+                max_number_objects_,
+                detection,
+                division,
+                transition,
+                forbidden_cost_,
+                ep_gap_,
+                with_tracklets_,
+                with_divisions_,
+                disappearance_cost_fn,
+                appearance_cost_fn,
+                true, // with_misdetections_allowed
+                true, // with_appearance
+                true, // with_disappearance
+                transition_parameter_,
+                with_constraints_);
+    ConservationTracking* pgm = setupConsTracker(params);
+    delete(params);
 
 	cout << "-> formulate ConservationTracking model" << endl;
     pgm->formulate(*graph);
@@ -417,7 +429,7 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
       m.resolve_mergers(handler);
 
       HypothesesGraph g_res;
-      resolve_graph(*graph, g_res, transition, ep_gap_, with_tracklets_, transition_parameter_, with_constraints_);
+      resolve_graph(*graph, g_res, transition, ep_gap_, with_tracklets_, transition_parameter_, with_constraints_, boost::bind(&pgmlink::ConsTracking::setupConsTracker, this, _1));
       prune_inactive(*graph);
 
       cout << "-> constructing resolved events" << endl;
@@ -445,30 +457,24 @@ vector<map<unsigned int, bool> > ConsTracking::detections() {
 ////
 //// class ConsTracking
 ////
-ConservationTracking* ConsTrackingDD::setupConsTracker(
-        boost::function<double(const Traxel&, const size_t)> detection,
-        boost::function<double(const double)> transition,
-        boost::function<double(const Traxel&)> appearance_cost_fn,
-        boost::function<double(const Traxel&, const size_t)> division,
-        boost::function<double(const Traxel&)> disappearance_cost_fn)
+ConservationTracking* ConsTrackingDD::setupConsTracker(ConservationTrackingParameters *params)
 {
     return new DualDecompositionConservationTracking(
-            max_number_objects_,
-            detection,
-            division,
-            transition,
-            forbidden_cost_,
-            ep_gap_,
-            with_tracklets_,
-            with_divisions_,
-            disappearance_cost_fn,
-            appearance_cost_fn,
-            true, // with_misdetections_allowed
-            true, // with_appearance
-            true, // with_disappearance
-            transition_parameter_,
-            with_constraints_
-            );
+                params->max_number_objects_,
+                params->detection_,
+                params->division_,
+                params->transition_,
+                params->forbidden_cost_,
+                params->ep_gap_,
+                params->with_tracklets_,
+                params->with_divisions_,
+                params->disappearance_cost_,
+                params->appearance_cost_,
+                params->with_misdetections_allowed_,
+                params->with_appearance_,
+                params->with_disappearance_,
+                params->transition_parameter_,
+                params->with_constraints_);
 }
 
 } // namespace tracking
