@@ -75,7 +75,10 @@ void pgmlink::DualDecompositionConservationTracking::infer()
 
     GraphicalModelType* model = pgm_->Model();
     DualDecompositionSubGradient::Parameter dd_parameter;
-    dd_parameter.decompositionId_ = DualDecompositionSubGradient::Parameter::SPANNINGTREES;
+    dd_parameter.decompositionId_ = DualDecompositionSubGradient::Parameter::TREE;
+    dd_parameter.subPara_.verbose_ = true;
+    dd_parameter.subPara_.integerConstraint_ = true;
+    dd_parameter.subPara_.epGap_ = ep_gap_;
 
     dd_optimizer_ = new DualDecompositionSubGradient(*model, dd_parameter, boost::bind(&pgmlink::DualDecompositionConservationTracking::configure_hard_constraints, this, _1, _2));
 
