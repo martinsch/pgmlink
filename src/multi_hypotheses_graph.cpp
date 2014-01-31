@@ -355,18 +355,19 @@ void MultiHypothesesGraph::remove_traxel_features() {
      FeatureMap& feats_old = trax.features;
      FeatureMap feats_new;
      for(std::size_t i = 0; i < sizeof(keep_names)/sizeof(keep_names[0]); ++i) {
+       LOG(logDEBUG4) << "keep_names[i]: " << keep_names[i];
        FeatureMap::iterator feats_old_it = feats_old.find(keep_names[i]);
        if( feats_old_it != feats_old.end() ) {
-         LOG(logDEBUG4) << "keep_names[i]: " << keep_names[i];
+	 LOG(logDEBUG4) << "found " << keep_names[i];
          feats_new[keep_names[i]] = feature_array(feats_old_it->second);
        }
+     }
                   
-       feats_old.clear();
+     feats_old.clear();
                   
-       for(FeatureMap::const_iterator feat_it = feats_new.begin(); feat_it != feats_new.end(); ++feat_it) {
+     for(FeatureMap::const_iterator feat_it = feats_new.begin(); feat_it != feats_new.end(); ++feat_it) {
          LOG(logDEBUG4) << feat_it->first << ": " << feat_it->second.size();
          feats_old[feat_it->first] = feat_it->second;
-       }
      }
   }
 }
