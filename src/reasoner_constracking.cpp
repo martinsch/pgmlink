@@ -5,6 +5,7 @@
 #include <opengm/datastructures/marray/marray.hxx>
 #include <opengm/graphicalmodel/graphicalmodel_hdf5.hxx>
 
+
 #include "pgmlink/hypotheses.h"
 #include "pgmlink/log.h"
 #include "pgmlink/reasoner_constracking.h"
@@ -81,10 +82,10 @@ void ConservationTracking::formulate(const HypothesesGraph& hypotheses) {
 }
 
 void ConservationTracking::infer() {
-	if (!with_constraints_) {
-		opengm::hdf5::save(optimizer_->graphicalModel(), "./conservationTracking.h5", "conservationTracking");
-		throw std::runtime_error("GraphicalModel::infer(): inference with soft constraints is not implemented yet. The conservation tracking factor graph has been saved to file");
-	}
+    if (!with_constraints_) {
+        opengm::hdf5::save(optimizer_->graphicalModel(), "./conservationTracking.h5", "conservationTracking");
+        throw std::runtime_error("GraphicalModel::infer(): inference with soft constraints is not implemented yet. The conservation tracking factor graph has been saved to file");
+    }
     opengm::InferenceTermination status = optimizer_->infer();
     if (status != opengm::NORMAL) {
         throw std::runtime_error("GraphicalModel::infer(): optimizer terminated abnormally");
@@ -127,19 +128,19 @@ void ConservationTracking::conclude(HypothesesGraph& g) {
     // write state after inference into 'active'-property maps
     // the node is also active if its appearance node is active
     for (std::map<HypothesesGraph::Node, size_t>::const_iterator it = app_node_map_.begin();
-            it != app_node_map_.end(); ++it) {
+         it != app_node_map_.end(); ++it) {
         if (with_tracklets_) {
             // set state of tracklet nodes
             std::vector<HypothesesGraph::Node> traxel_nodes = tracklet2traxel_node_map_[it->first];
             for (std::vector<HypothesesGraph::Node>::const_iterator tr_n_it = traxel_nodes.begin();
-                    tr_n_it != traxel_nodes.end(); ++tr_n_it) {
+                 tr_n_it != traxel_nodes.end(); ++tr_n_it) {
                 HypothesesGraph::Node n = *tr_n_it;
                 active_nodes.set(n, solution[it->second]);
             }
             // set state of tracklet internal arcs
             std::vector<int> arc_ids = tracklet_arc_id_map[it->first];
             for (std::vector<int>::const_iterator arc_id_it = arc_ids.begin();
-                    arc_id_it != arc_ids.end(); ++arc_id_it) {
+                 arc_id_it != arc_ids.end(); ++arc_id_it) {
                 HypothesesGraph::Arc a = g.arcFromId(*arc_id_it);
                 assert(active_arcs[a] == false);
                 if (solution[it->second] > 0) {
@@ -157,14 +158,14 @@ void ConservationTracking::conclude(HypothesesGraph& g) {
 
     // the node is also active if its disappearance node is active
     for (std::map<HypothesesGraph::Node, size_t>::const_iterator it = dis_node_map_.begin();
-            it != dis_node_map_.end(); ++it) {
+         it != dis_node_map_.end(); ++it) {
 
         if (solution[it->second] > 0) {
             if (with_tracklets_) {
                 // set state of tracklet nodes
                 std::vector<HypothesesGraph::Node> traxel_nodes = tracklet2traxel_node_map_[it->first];
                 for (std::vector<HypothesesGraph::Node>::const_iterator tr_n_it =
-                        traxel_nodes.begin(); tr_n_it != traxel_nodes.end(); ++tr_n_it) {
+                     traxel_nodes.begin(); tr_n_it != traxel_nodes.end(); ++tr_n_it) {
                     HypothesesGraph::Node n = *tr_n_it;
                     if (active_nodes[n] == 0) {
                         active_nodes.set(n, solution[it->second]);
@@ -175,7 +176,7 @@ void ConservationTracking::conclude(HypothesesGraph& g) {
                 // set state of tracklet internal arcs
                 std::vector<int> arc_ids = tracklet_arc_id_map[it->first];
                 for (std::vector<int>::const_iterator arc_id_it = arc_ids.begin();
-                        arc_id_it != arc_ids.end(); ++arc_id_it) {
+                     arc_id_it != arc_ids.end(); ++arc_id_it) {
                     HypothesesGraph::Arc a = g.arcFromId(*arc_id_it);
                     if (solution[it->second] > 0) {
                         active_arcs.set(a, true);
@@ -196,7 +197,7 @@ void ConservationTracking::conclude(HypothesesGraph& g) {
     }
 
     for (std::map<HypothesesGraph::Arc, size_t>::const_iterator it = arc_map_.begin();
-            it != arc_map_.end(); ++it) {
+         it != arc_map_.end(); ++it) {
         if (solution[it->second] >= 1) {
             if (with_tracklets_) {
                 active_arcs.set(g.arcFromId((traxel_arc_id_map[it->first])), true);
@@ -208,11 +209,11 @@ void ConservationTracking::conclude(HypothesesGraph& g) {
     // initialize division node map
     if (with_divisions_) {
         for (std::map<HypothesesGraph::Node, size_t>::const_iterator it = div_node_map_.begin();
-                it != div_node_map_.end(); ++it) {
+             it != div_node_map_.end(); ++it) {
             division_nodes.set(it->first, false);
         }
         for (std::map<HypothesesGraph::Node, size_t>::const_iterator it = div_node_map_.begin();
-                it != div_node_map_.end(); ++it) {
+             it != div_node_map_.end(); ++it) {
             if (solution[it->second] >= 1) {
                 if (with_tracklets_) {
                     // set division property for the last node in the tracklet
@@ -368,21 +369,21 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
             if (with_tracklets_) {
                 // add all detection factors of the internal nodes
                 for (std::vector<Traxel>::const_iterator trax_it = tracklet_map[n].begin();
-                        trax_it != tracklet_map[n].end(); ++trax_it) {
+                     trax_it != tracklet_map[n].end(); ++trax_it) {
                     energy += detection_(*trax_it, state);
                 }
                 // add all transition factors of the internal arcs
                 for (std::vector<double>::const_iterator intern_dist_it =
-                        tracklet_intern_dist_map[n].begin();
-                        intern_dist_it != tracklet_intern_dist_map[n].end(); ++intern_dist_it) {
+                     tracklet_intern_dist_map[n].begin();
+                     intern_dist_it != tracklet_intern_dist_map[n].end(); ++intern_dist_it) {
                     energy += transition_(
-                            get_transition_prob(*intern_dist_it, state, transition_parameter_));
+                                get_transition_prob(*intern_dist_it, state, transition_parameter_));
                 }
             } else {
                 energy = detection_(traxel_map[n], state);
             }
             LOG(logDEBUG2) << "ConservationTracking::add_finite_factors: detection[" << state
-                    << "] = " << energy;
+                           << "] = " << energy;
             for (size_t var_idx = 0; var_idx < num_vars; ++var_idx) {
                 coords[var_idx] = state;
                 // if only one of the variables is > 0, then it is an appearance in this time frame
@@ -391,7 +392,7 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
                 table.set_value(coords, energy + state * cost[var_idx]);
                 coords[var_idx] = 0;
                 LOG(logDEBUG4) << "ConservationTracking::add_finite_factors: var_idx "
-                        << var_idx << " = " << energy;
+                               << var_idx << " = " << energy;
             }
             // also this energy if both variables have the same state
             if (num_vars == 2) {
@@ -403,7 +404,7 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
                 coords[1] = 0;
 
                 LOG(logDEBUG4) << "ConservationTracking::add_finite_factors: var_idxs 0 and var_idx 1 = "
-                        << energy;
+                               << energy;
             }
         }
 
@@ -416,7 +417,7 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
     ////
     LOG(logDEBUG) << "ConservationTracking::add_finite_factors: add transition factors";
     property_map<arc_distance, HypothesesGraph::base_graph>::type& arc_distances = g.get(
-            arc_distance());
+                arc_distance());
     for (HypothesesGraph::ArcIt a(g); a != lemon::INVALID; ++a) {
         size_t vi[] = { arc_map_[a] };
         vector<size_t> coords(1, 0); // number of variables
@@ -425,7 +426,7 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
         for (size_t state = 0; state <= max_number_objects_; ++state) {
             double energy = transition_(get_transition_prob(arc_distances[a], state, transition_parameter_));
             LOG(logDEBUG2) << "ConservationTracking::add_finite_factors: transition[" << state
-                    << "] = " << energy;
+                           << "] = " << energy;
             coords[0] = state;
             table.set_value(coords, energy);
             coords[0] = 0;
@@ -454,7 +455,7 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
                     energy = division_(traxel_map[n], state);
                 }
                 LOG(logDEBUG2) << "ConservationTracking::add_finite_factors: division[" << state
-                        << "] = " << energy;
+                               << "] = " << energy;
                 coords[0] = state;
                 table.set_value(coords, energy);
                 coords[0] = 0;
@@ -465,85 +466,85 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
 
 
     if (!with_constraints_) {
-    	for (HypothesesGraph::NodeIt n(g); n != lemon::INVALID; ++n) {
-			LOG(logDEBUG) << "ConservationTracking::add_finite_factors: add soft-constraints for outgoing";
+        for (HypothesesGraph::NodeIt n(g); n != lemon::INVALID; ++n) {
+            LOG(logDEBUG) << "ConservationTracking::add_finite_factors: add soft-constraints for outgoing";
 
-			// collect and count outgoing arcs
-			  std::vector<HypothesesGraph::Arc> arcs;
-			  std::vector<size_t> vi;
-			  std::vector<size_t> states_vars;
-			  states_vars.push_back(max_number_objects_+1);
-			  vi.push_back(app_node_map_[n]); // first detection node, remaining will be transition nodes
-			  bool has_div_node = false;
-			  if (with_divisions_ && div_node_map_.count(n) != 0) {
-				  vi.push_back(div_node_map_[n]);
-				  has_div_node = true;
-				  states_vars.push_back(2);
-			  }
+            // collect and count outgoing arcs
+            std::vector<HypothesesGraph::Arc> arcs;
+            std::vector<size_t> vi;
+            std::vector<size_t> states_vars;
+            states_vars.push_back(max_number_objects_+1);
+            vi.push_back(app_node_map_[n]); // first detection node, remaining will be transition nodes
+            bool has_div_node = false;
+            if (with_divisions_ && div_node_map_.count(n) != 0) {
+                vi.push_back(div_node_map_[n]);
+                has_div_node = true;
+                states_vars.push_back(2);
+            }
 
-			  int count = 0;
-			  //int trans_idx = vi.size();
-			  for(HypothesesGraph::OutArcIt a(g, n); a != lemon::INVALID; ++a) {
-				  arcs.push_back(a);
-				  vi.push_back(arc_map_[a]);
-				  states_vars.push_back(max_number_objects_+1);
-				  ++count;
-			  }
+            int count = 0;
+            //int trans_idx = vi.size();
+            for(HypothesesGraph::OutArcIt a(g, n); a != lemon::INVALID; ++a) {
+                arcs.push_back(a);
+                vi.push_back(arc_map_[a]);
+                states_vars.push_back(max_number_objects_+1);
+                ++count;
+            }
 
-			  // construct factor
-			  // build value table
-			  if (count != 0) {
-				  //size_t table_dim = count + 1 + int(has_div_node); 		// n * transition var + detection var (+ division var)
-				  std::vector<size_t> coords;
-				  // ITER first_ogm_idx, ITER last_ogm_idx, VALUE init, size_t states_vars
-				  pgm::OpengmExplicitFactor<double> table( vi.begin(), vi.end(), 0, states_vars);
+            // construct factor
+            // build value table
+            if (count != 0) {
+                //size_t table_dim = count + 1 + int(has_div_node); 		// n * transition var + detection var (+ division var)
+                std::vector<size_t> coords;
+                // ITER first_ogm_idx, ITER last_ogm_idx, VALUE init, size_t states_vars
+                pgm::OpengmExplicitFactor<double> table( vi.begin(), vi.end(), 0, states_vars);
 
-				  //assert(table_dim - trans_idx == count);
+                //assert(table_dim - trans_idx == count);
 
-				  ////
-				  //// TODO: set the forbidden configurations to infinity or the allowed to zero
-				  ////
-              if (has_div_node) {
+                ////
+                //// TODO: set the forbidden configurations to infinity or the allowed to zero
+                ////
+                if (has_div_node) {
                     // TODO
-              }
-              
-				  table.add_to(*(pgm_->Model()));
-			  }
+                }
+
+                table.add_to(*(pgm_->Model()));
+            }
 
 
 
-			  LOG(logDEBUG) << "ConservationTracking::add_finite_factors: add soft-constraints for incomfing";
-			  // collect and count incoming arcs
-			  arcs.clear();
-			  vi.clear();
-			  states_vars.clear();
-			  states_vars.push_back(max_number_objects_+1);
-			  vi.push_back(dis_node_map_[n]); // first detection node, remaining will be transition nodes
+            LOG(logDEBUG) << "ConservationTracking::add_finite_factors: add soft-constraints for incomfing";
+            // collect and count incoming arcs
+            arcs.clear();
+            vi.clear();
+            states_vars.clear();
+            states_vars.push_back(max_number_objects_+1);
+            vi.push_back(dis_node_map_[n]); // first detection node, remaining will be transition nodes
 
-			  count = 0;
-			  for(HypothesesGraph::InArcIt a(g, n); a != lemon::INVALID; ++a) {
-				  arcs.push_back(a);
-				  vi.push_back(arc_map_[a]);
-				  states_vars.push_back(max_number_objects_+1);
-				  ++count;
-			  }
-			  if (count != 0) {
-				  // construct factor
-				  // build value table
-				  //size_t table_dim = count + 1; 		// n * transition var + detection var
-				  std::vector<size_t> coords;
-				  // ITER first_ogm_idx, ITER last_ogm_idx, VALUE init, size_t states_vars
-				  pgm::OpengmExplicitFactor<double> table( vi.begin(), vi.end(), 0, states_vars);
+            count = 0;
+            for(HypothesesGraph::InArcIt a(g, n); a != lemon::INVALID; ++a) {
+                arcs.push_back(a);
+                vi.push_back(arc_map_[a]);
+                states_vars.push_back(max_number_objects_+1);
+                ++count;
+            }
+            if (count != 0) {
+                // construct factor
+                // build value table
+                //size_t table_dim = count + 1; 		// n * transition var + detection var
+                std::vector<size_t> coords;
+                // ITER first_ogm_idx, ITER last_ogm_idx, VALUE init, size_t states_vars
+                pgm::OpengmExplicitFactor<double> table( vi.begin(), vi.end(), 0, states_vars);
 
-				  //assert(table_dim - trans_idx == count);
+                //assert(table_dim - trans_idx == count);
 
-				  ////
-				  //// TODO: set the forbidden configurations to infinity or the allowed to zero
-				  /////
+                ////
+                //// TODO: set the forbidden configurations to infinity or the allowed to zero
+                /////
 
-				  table.add_to(*(pgm_->Model()));
-			  }
-    	}
+                table.add_to(*(pgm_->Model()));
+            }
+        }
 
     }
 }
@@ -566,9 +567,9 @@ void ConservationTracking::add_constraints(const HypothesesGraph& g)
 }
 
 void ConservationTracking::add_constraints( const HypothesesGraph&g , boost::function<void(std::vector<std::size_t>::iterator,
-                                                                   std::vector<std::size_t>::iterator,
-                                                                   std::vector<int>::iterator,
-                                                                   int, int, const char *)> constraint_adder)
+                                                                                           std::vector<std::size_t>::iterator,
+                                                                                           std::vector<int>::iterator,
+                                                                                           int, int, const char *)> constraint_adder)
 {
     size_t counter = 0;
     LOG(logDEBUG) << "ConservationTracking::add_constraints: entered";
@@ -576,7 +577,7 @@ void ConservationTracking::add_constraints( const HypothesesGraph&g , boost::fun
     //        pgm::OpengmModelDeprecated::ogmAccumulator> cplex;
 
     property_map<node_tracklet, HypothesesGraph::base_graph>::type& tracklet_map = g.get(
-            node_tracklet());
+                node_tracklet());
 
     std::stringstream constraint_name;
 
@@ -584,7 +585,7 @@ void ConservationTracking::add_constraints( const HypothesesGraph&g , boost::fun
     for (HypothesesGraph::NodeIt n(g); n != lemon::INVALID; ++n) {
         std::stringstream traxel_names_ss;
         for (std::vector<Traxel>::const_iterator trax_it = tracklet_map[n].begin();
-                trax_it != tracklet_map[n].end(); ++trax_it) {
+             trax_it != tracklet_map[n].end(); ++trax_it) {
             traxel_names_ss << trax_it->Id << "." << trax_it->Timestep << " ";
         }
         std::string traxel_names = traxel_names_ss.str();
@@ -599,7 +600,7 @@ void ConservationTracking::add_constraints( const HypothesesGraph&g , boost::fun
         // couple detection and transitions: Y_ij <= App_i
         for (HypothesesGraph::OutArcIt a(g, n); a != lemon::INVALID; ++a) {
             assert(app_node_map_.count(n) > 0
-                    && "this node should be contained in app_node_map_ since it has outgoing arcs");
+                   && "this node should be contained in app_node_map_ since it has outgoing arcs");
             for (size_t nu = 0; nu < max_number_objects_; ++nu) {
                 for (size_t mu = nu + 1; mu <= max_number_objects_; ++mu) {
                     cplex_idxs.clear();
@@ -614,7 +615,7 @@ void ConservationTracking::add_constraints( const HypothesesGraph&g , boost::fun
                     constraint_name << "g.id(n) = " << g.id(n) << ", g.id(a) = " << g.id(a) << ", Traxel " << traxel_names;
                     constraint_name << ", cid = " << ++counter;
                     constraint_adder(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(),
-                            0, 1, constraint_name.str().c_str());
+                                     0, 1, constraint_name.str().c_str());
                     LOG(logDEBUG3) << constraint_name.str();
                 }
             }
@@ -651,10 +652,10 @@ void ConservationTracking::add_constraints( const HypothesesGraph&g , boost::fun
             constraint_name.str(std::string()); // clear the name
             constraint_name << "couple transitions: ";
             constraint_name << " sum(Y_ij) = D_i + App_i added for Traxel " << traxel_names << ", "
-                    << "n = " << app_node_map_[n];
+                            << "n = " << app_node_map_[n];
             constraint_name << ", cid = " << ++counter;
             constraint_adder(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0, 0,
-                    constraint_name.str().c_str());
+                             constraint_name.str().c_str());
             LOG(logDEBUG3) << constraint_name.str();
 
         }
@@ -662,7 +663,7 @@ void ConservationTracking::add_constraints( const HypothesesGraph&g , boost::fun
         if (div_cplex_id != -1) {
             // couple detection and division: D_i = 1 => App_i = 1
             assert(app_node_map_.count(n) > 0
-                    && "this node should be contained in app_node_map_ since it may divide");
+                   && "this node should be contained in app_node_map_ since it may divide");
             cplex_idxs.clear();
             coeffs.clear();
 
@@ -676,10 +677,10 @@ void ConservationTracking::add_constraints( const HypothesesGraph&g , boost::fun
             constraint_name.str(std::string()); // clear the name
             constraint_name << "couple division and detection: ";
             constraint_name << " D_i=1 => App_i =1 added for Traxel " << traxel_names << ", " << "n = "
-                    << app_node_map_[n] << ", d = " << div_node_map_[n];
+                            << app_node_map_[n] << ", d = " << div_node_map_[n];
             constraint_name << ", cid = " << ++counter;
             constraint_adder(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), -1, 0,
-                    constraint_name.str().c_str());
+                             constraint_name.str().c_str());
             LOG(logDEBUG3) << constraint_name.str();
 
             // couple divsion and transition: D_1 = 1 => sum_k(Y_ik) = 2
@@ -702,12 +703,12 @@ void ConservationTracking::add_constraints( const HypothesesGraph&g , boost::fun
                     constraint_name.str(std::string()); // clear the name
                     constraint_name << "couple division and transition: ";
                     constraint_name << " D_i=1 => Y_i[nu]=0 added for Traxel " << traxel_names << ", "
-                            << "d = " << div_node_map_[n] << ", y = " << arc_map_[a] << ", nu = "
-                            << nu;
+                                    << "d = " << div_node_map_[n] << ", y = " << arc_map_[a] << ", nu = "
+                                    << nu;
                     constraint_name << ", cid = " << ++counter;
 
                     constraint_adder(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(),
-                            0, 1, constraint_name.str().c_str());
+                                     0, 1, constraint_name.str().c_str());
                     LOG(logDEBUG3) << constraint_name.str();
 
                 }
@@ -720,10 +721,10 @@ void ConservationTracking::add_constraints( const HypothesesGraph&g , boost::fun
             constraint_name.str(std::string()); // clear the name
             constraint_name << "couple division and transitions: ";
             constraint_name  << " D_i = 1 => sum_k(Y_ik) = 2 added for Traxel " << traxel_names << ", "
-                    << "d = " << div_node_map_[n];
+                             << "d = " << div_node_map_[n];
             constraint_name << ", cid = " << ++counter;
             constraint_adder(cplex_idxs2.begin(), cplex_idxs2.end(), coeffs2.begin(),
-                    -int(max_number_objects_), 0, constraint_name.str().c_str());
+                             -int(max_number_objects_), 0, constraint_name.str().c_str());
             LOG(logDEBUG3) << constraint_name.str();
         }
 
@@ -745,7 +746,7 @@ void ConservationTracking::add_constraints( const HypothesesGraph&g , boost::fun
 
         if (num_inarcs > 0) {
             assert(dis_node_map_.count(n) > 0
-                    && "this node should be contained in dis_node_map_ since it has incoming arcs");
+                   && "this node should be contained in dis_node_map_ since it has incoming arcs");
             for (size_t nu = 1; nu <= max_number_objects_; ++nu) {
                 cplex_idxs.push_back(cplex_id(dis_node_map_[n], nu));
                 coeffs.push_back(-nu);
@@ -755,10 +756,10 @@ void ConservationTracking::add_constraints( const HypothesesGraph&g , boost::fun
             constraint_name.str(std::string()); // clear the name
             constraint_name << "incoming transitions: ";
             constraint_name << " sum_k(Y_kj) = Dis_j added for Traxel " << traxel_names << ", " << "n = "
-                    << dis_node_map_[n];
+                            << dis_node_map_[n];
             constraint_name << ", cid = " << ++counter;
             constraint_adder(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0, 0,
-                    constraint_name.str().c_str());
+                             constraint_name.str().c_str());
             LOG(logDEBUG3) << constraint_name.str();
         }
 
@@ -784,10 +785,10 @@ void ConservationTracking::add_constraints( const HypothesesGraph&g , boost::fun
                 constraint_name.str(std::string()); // clear the name
                 constraint_name << "disappearance/appearance coupling: ";
                 constraint_name << " A_i[nu] = 1 => V_i[nu] = 1 v V_i[0] = 1 added for Traxel "
-                        << traxel_names << ", " << "n = " << app_node_map_[n];
+                                << traxel_names << ", " << "n = " << app_node_map_[n];
                 constraint_name << ", cid = " << ++counter;
                 constraint_adder(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), -1,
-                        0, constraint_name.str().c_str());
+                                 0, constraint_name.str().c_str());
                 LOG(logDEBUG3) << constraint_name.str();
             }
 
@@ -809,10 +810,10 @@ void ConservationTracking::add_constraints( const HypothesesGraph&g , boost::fun
                 constraint_name.str(std::string()); // clear the name
                 constraint_name << "disappearance/appearance coupling: ";
                 constraint_name << " V_i[nu] = 1 => A_i[nu] = 1 v A_i[0] = 1 added for Traxel "
-                        << traxel_names << ", " << "n = " << app_node_map_[n];
+                                << traxel_names << ", " << "n = " << app_node_map_[n];
                 constraint_name << ", cid = " << ++counter;
                 constraint_adder(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), -1,
-                        0, constraint_name.str().c_str());
+                                 0, constraint_name.str().c_str());
                 LOG(logDEBUG3) << constraint_name.str();
             }
         }
@@ -838,7 +839,7 @@ void ConservationTracking::add_constraints( const HypothesesGraph&g , boost::fun
             constraint_name << " A_i[0] + V_i[0] = 0 added for Traxel " << traxel_names;
             constraint_name << ", cid = " << ++counter;
             constraint_adder(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0, 0,
-                    constraint_name.str().c_str());
+                             constraint_name.str().c_str());
             LOG(logDEBUG3) << constraint_name.str();
         }
 
@@ -852,10 +853,10 @@ void ConservationTracking::add_constraints( const HypothesesGraph&g , boost::fun
             constraint_name.str(std::string()); // clear the name
             constraint_name << "disappearance/appearance coupling: ";
             constraint_name << " V_i[0] = 0 added for Traxel " << traxel_names << ", " << "n = "
-                    << dis_node_map_[n];
+                            << dis_node_map_[n];
             constraint_name << ", cid = " << ++counter;
             constraint_adder(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0,
-                    0, constraint_name.str().c_str());
+                             0, constraint_name.str().c_str());
             LOG(logDEBUG3) << constraint_name.str();
         }
 
@@ -869,10 +870,10 @@ void ConservationTracking::add_constraints( const HypothesesGraph&g , boost::fun
             constraint_name.str(std::string()); // clear the name
             constraint_name << "disappearance/appearance coupling: ";
             constraint_name << " A_i[0] = 0 added for Traxel " << traxel_names << ", " << "n = "
-                    << app_node_map_[n];
+                            << app_node_map_[n];
             constraint_name << ", cid = " << ++counter;
             constraint_adder(cplex_idxs.begin(), cplex_idxs.end(), coeffs.begin(), 0,
-                    0, constraint_name.str().c_str());
+                             0, constraint_name.str().c_str());
             LOG(logDEBUG3) << constraint_name.str();
         }
     }
