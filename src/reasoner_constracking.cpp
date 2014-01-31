@@ -26,7 +26,15 @@ typedef opengm::ModelViewFunction
 
 typedef opengm::LPCplex<pgm::OpengmModelDeprecated::ogmGraphicalModel,
 			pgm::OpengmModelDeprecated::ogmAccumulator> cplex_optimizerHG;
-		
+
+
+typedef opengm::GraphicalModel
+		<ValueType, OperatorType,  typename opengm::meta::TypeListGenerator
+		<opengm::ModelViewFunction<pgm::OpengmModelDeprecated::ogmGraphicalModel, marray::Marray<ValueType> > >::type, 
+		opengm::DiscreteSpace<IndexType,LabelType> > 
+		SubGmType;
+
+
 /*typedef opengm::LPCplex
 	<	pgm::OpengmModelDeprecated::ogmGraphicalModel,
 			pgm::OpengmModelDeprecated::ogmAccumulator		>
@@ -88,7 +96,7 @@ void ConservationTracking::writeUncertainties(HypothesesGraph& hypotheses, SubGm
 	}*/
 }
 
-	void ConservationTracking::perturbedInference(HypothesesGraph& hypotheses){
+void ConservationTracking::perturbedInference(HypothesesGraph& hypotheses){
 
 	HypothesesGraph *graph;
 	if (with_tracklets_) {
@@ -99,34 +107,42 @@ void ConservationTracking::writeUncertainties(HypothesesGraph& hypotheses, SubGm
 	  graph = &hypotheses;
 	}
 	
+	LOG(logDEBUG) << "ConservationTracking::perturbedInference: formulate ";
 	formulate(*graph);
+	
 	cplex_optimizer::Parameter param;
 	param.verbose_ = true;
 	param.integerConstraint_ = true;
 	param.epGap_ = ep_gap_;
-	LOG(logDEBUG) << "ConservationTracking::perturbedInference: ep_gap = " << param.epGap_;
 	
 	pgm::OpengmModelDeprecated::ogmGraphicalModel* model = pgm_->Model();
 
-	
 	int dim = model[0].numberOfVariables();
-	marray::Marray<ValueType> offset(dim); 
-	ViewFunctionType view(*model,0,1.0,&offset);
-    
-	SubGmType PertMod = SubGmType();
+	
+	ViewFunctionType view(*model,0,1.0);
+	SubGmType PertMod = SubGmType(model[0].space());
+	
 	PertMod.addFunction(view);
+    
+	LOG(logINFO) << "initialize optimizer= "<<view.size();
 	optimizer_ = new cplex_optimizer(PertMod, param);
-		 
-
-	if (with_constraints_) {
+	
+	LOG(logINFO) << "add_constraints" << model[0].numberOfVariables();
+	 if (with_constraints_) {
 	  add_constraints(*graph);
 	}
+	
+	LOG(logINFO) << "infer" << model[0].numberOfVariables();
 	infer();
+	LOG(logINFO) << "conclude";
 	conclude(*graph);
 	
 	//std::random_device rd;
 	//std::mt19937 gen(rd());
 	//std::normal_distribution<double> d(0.0,1.0);//to do: implement parameters for distribution
+	
+	
+	LOG(logINFO) << "start perturbation";
 	
 	for (int i=0;i<10;i++){
 		
@@ -134,17 +150,20 @@ void ConservationTracking::writeUncertainties(HypothesesGraph& hypotheses, SubGm
 		param.verbose_ = true;
 		param.integerConstraint_ = true;
 		param.epGap_ = ep_gap_;
-		LOG(logDEBUG) << "ConservationTracking::perturbedInference: ep_gap = " << param.epGap_;
+		LOG(logDEBUG) << "ConservationTracking::perturbedInference: pertubation " <<i;
 		
 		pgm::OpengmModelDeprecated::ogmGraphicalModel* model = pgm_->Model();
 		
-		
+		marray::Marray<ValueType> offset(model[0].numberOfVariables());
+		LOG(logINFO) << "number Of Variables = " << offset.size();
 		//std::normal_distribution<double> d(0.0,1.0);//to do: implement parameters for distribution
 		
-		marray::Marray<ValueType> offset(dim); 
-		ViewFunctionType view(*model,0,1.0,&offset);
-	    
-		SubGmType PertMod2 = SubGmType();
+		offset = marray::Marray<ValueType>(model->operator[](0).size());
+		
+		LOG(logINFO) << "number Of Variables = " << offset.size();
+		ViewFunctionType view(*model,0,1.0/*&offset*/);
+		SubGmType PertMod2 = SubGmType(model[0].space());
+	
 		PertMod2.addFunction(view);
 		
 		optimizer_ = new cplex_optimizer(PertMod2, param);
@@ -153,7 +172,9 @@ void ConservationTracking::writeUncertainties(HypothesesGraph& hypotheses, SubGm
 		       add_constraints(*graph);
 		}
 		infer();
-		writeUncertainties(*graph,PertMod2);
+		
+		LOG(logDEBUG) << "perturbed inference " <<i;
+		//writeUncertainties(*graph,PertMod2);
 	}
 	//calculateUncertainty();
 	}
@@ -709,8 +730,10 @@ void ConservationTracking::add_constraints(const HypothesesGraph& g) {
         size_t num_outarcs = 0;
         // couple detection and transitions: Y_ij <= App_i
         for (HypothesesGraph::OutArcIt a(g, n); a != lemon::INVALID; ++a) {
+			
             assert(app_node_map_.count(n) > 0
                     && "this node should be contained in app_node_map_ since it has outgoing arcs");
+            
             for (size_t nu = 0; nu < max_number_objects_; ++nu) {
                 for (size_t mu = nu + 1; mu <= max_number_objects_; ++mu) {
                     cplex_idxs.clear();
