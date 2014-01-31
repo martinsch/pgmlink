@@ -76,6 +76,20 @@ void export_track() {
 	  .def("detections", &ConsTracking::detections)
 	;
 
+    class_<ConsTrackingDD>("ConsTrackingDD",
+                         init<int,double,double,string,bool,double,double,double,bool,double,double,bool,double,double, bool, int, double, double, FieldOfView, bool>(
+                        args("max_number_objects", "max_neighbor_distance", "division_threshold",
+                            "detection_rf_filename", "size_dependent_detection_prob", "forbidden_cost",
+                            "ep_gap", "avg_obj_size",
+                            "with_tracklets",
+                            "division_weight", "transition_weight",
+                            "with_divisions",
+                             "disappearance_cost", "appearance_cost", "with_merger_resolution", "number_of_dimensions",
+                             "transition_parameter", "border_width", "fov", "with_constraints")))
+      .def("__call__", &ConsTrackingDD::operator())
+      .def("detections", &ConsTrackingDD::detections)
+    ;
+
     enum_<Event::EventType>("EventType")
 	.value("Move", Event::Move)
 	.value("Division", Event::Division)
