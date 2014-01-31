@@ -14,6 +14,8 @@
 #include <boost/serialization/map.hpp>
 #include <boost/serialization/set.hpp>
 #include <boost/serialization/export.hpp>
+#include <boost/serialization/utility.hpp>
+#include <boost/serialization/shared_ptr.hpp>
 
 // lemon
 #include <lemon/list_graph.h>
@@ -91,21 +93,6 @@ const std::string property_map<node_count_features, Graph>::name = "node_count_f
 
 
 ////
-//// node_conflict_sets
-////
-struct node_conflict_sets{};
-
-template <typename Graph>
-struct property_map<node_conflict_sets, Graph> {
-  typedef IterableEditableValueMap<Graph, typename Graph::Node, std::vector<std::vector<unsigned> > > type;
-  static const std::string name;
-};
-
-template <typename Graph>
-const std::string property_map<node_conflict_sets, Graph>::name = "node_conflict_sets";
-
-
-////
 //// node_connected_component
 ////
 struct node_connected_component{};
@@ -125,10 +112,9 @@ const std::string property_map<node_connected_component, Graph>::name = "node_co
 class MultiHypothesesGraph : public HypothesesGraph {
  public:
   typedef property_map<node_traxel, base_graph>::type TraxelMap;
-  typedef property_map<node_division_features, base_graph>::type DivisionFeatureMap; // delete this?
-  typedef property_map<node_move_features, base_graph>::type MoveFeatureMap; // delete this?
-  typedef property_map<node_count_features, base_graph>::type CountFeatureMap; // delete this?
-  typedef property_map<node_conflict_sets, base_graph>::type ConflictSetMap; // delete this?
+  typedef property_map<node_division_features, base_graph>::type DivisionFeatureMap;
+  typedef property_map<node_move_features, base_graph>::type MoveFeatureMap;
+  typedef property_map<node_count_features, base_graph>::type CountFeatureMap;
   typedef property_map<node_connected_component, base_graph>::type ConnectedComponentMap;
 
 
@@ -162,7 +148,7 @@ class MultiHypothesesGraph : public HypothesesGraph {
   unsigned maximum_timestep_;
   // store conflicts by timestep
   boost::shared_ptr<ConflictMap > conflicts_;
-  boost::shared_ptr<std::map<int, std::vector<std::vector<base_graph::Node> > > > conflicts_node_;
+  boost::shared_ptr<std::map<int, std::vector<std::vector<unsigned> > > > conflicts_node_;
 };
 
 
@@ -207,7 +193,6 @@ struct MultiHypothesesTraxelStore {
 //// Implementations
 ////
 
-
 // lemon graph format (lgf) serialization
 PGMLINK_EXPORT void write_lgf( const MultiHypothesesGraph&, std::ostream& os=std::cout,
                                bool with_n_traxel=false );
@@ -220,6 +205,8 @@ void MultiHypothesesGraph::save( Archive& ar, const unsigned int /*version*/ ) c
   LOG(logDEBUG) << "MultiHypothesesGraph::save entered";
   ar & maximum_timestep_;
   ar & timesteps_;
+  ar & conflicts_;
+  ar & conflicts_node_;
 
   bool with_n_traxel = false;
   try {
@@ -243,6 +230,8 @@ void MultiHypothesesGraph::load( Archive& ar, const unsigned int /*version*/ ) {
   LOG(logDEBUG) << "MultiHypothesesGraph::load entered";
   ar & maximum_timestep_;
   ar & timesteps_;
+  ar & conflicts_;
+  ar & conflicts_node_;
 
   bool with_n_traxel;
   ar & with_n_traxel;
@@ -258,8 +247,8 @@ void MultiHypothesesGraph::load( Archive& ar, const unsigned int /*version*/ ) {
 
 template< typename Archive >
 void MultiHypothesesTraxelStore::serialize( Archive& ar, const unsigned int /*version*/ ) {
-  // ar & ts;
-  // ar & conflicts;
+  ar & ts;
+  ar & conflicts;
 }
 
 

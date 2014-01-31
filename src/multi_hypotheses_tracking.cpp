@@ -93,6 +93,10 @@ void MultiHypothesesTracking::print_info() {
       ;
 }
 
+class my_iarchive : public boost::archive::detail::common_iarchive<my_iarchive>,
+                    public boost::archive::detail::shared_ptr_helper {
+
+};
 
 boost::shared_ptr<std::vector<std::vector<Event> > >
 MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts, std::string serialize_to_fn) {
@@ -179,7 +183,7 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts, std::string 
     graph->add_classifier_features(mov.get(), div.get(), cnt.get(), det.get());
   }
 
-  // graph->remove_traxel_features();
+  graph->remove_traxel_features();
 
   if (serialize_to_fn.length() != 0) {
 	  // get rid of all the traxel features which are not longer needed

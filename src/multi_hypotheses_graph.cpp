@@ -12,6 +12,7 @@
 #include <boost/tuple/tuple.hpp>
 #include <boost/serialization/utility.hpp>
 #include <boost/serialization/list.hpp>
+#include <boost/archive/shared_ptr_helper.hpp>
 
 // lemon
 #include <lemon/lgf_reader.h>
@@ -45,7 +46,6 @@ MultiHypothesesGraph::MultiHypothesesGraph() :
   add(node_move_features());
   add(node_division_features());
   add(node_count_features());
-  add(node_conflict_sets());
   add(arc_from_timestep());
   add(arc_to_timestep());
   add(node_connected_component());
@@ -73,7 +73,7 @@ struct VectorTraxelToStrConverter { // vector<Traxel>
   }
 };
 struct MoveFeaturesToStrConverter { // std::map<Traxel, std::map<Traxel, feature_array> >
-  std::string operator()(const std::map<Traxel, std::map<Traxel, feature_array> >& t) {
+  std::string operator()(const std::map<unsigned, std::vector<float> >& t) {
     stringstream ss;
     boost::archive::text_oarchive oa(ss);
     oa & BOOST_SERIALIZATION_NVP(t);
@@ -81,7 +81,7 @@ struct MoveFeaturesToStrConverter { // std::map<Traxel, std::map<Traxel, feature
   }
 };
 struct DivisionFeaturesToStrConverter { // std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_array> > >
-  std::string operator()(const std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_array> >& t) {
+  std::string operator()(const std::map<std::pair<unsigned, unsigned>, std::vector<float> > & t) {
     stringstream ss;
     boost::archive::text_oarchive oa(ss);
     oa & BOOST_SERIALIZATION_NVP(t);
@@ -96,13 +96,13 @@ struct CountFeaturesToStrConverter { //std::vector<float>
     return ss.str();
   }
 };
-struct ConflictSetsToStrConverter { //std::vector<std::vector<unsigned> >
-  std::string operator()(const std::vector<std::vector<unsigned> >& t) {
-    stringstream ss;
-    boost::archive::text_oarchive oa(ss);
-    oa & BOOST_SERIALIZATION_NVP(t);
-    return ss.str();
-  }
+struct ConnectedComponentsToStrConverter {
+	std::string operator()(const std::pair<int, unsigned>& t) {
+		stringstream ss;
+		boost::archive::text_oarchive oa(ss);
+		oa & BOOST_SERIALIZATION_NVP(t);
+		return ss.str();
+	}
 };
 }
 
@@ -111,16 +111,13 @@ void write_lgf( const MultiHypothesesGraph& g, std::ostream& os, bool /*with_n_t
   lemon::DigraphWriter<HypothesesGraph> writer( g, os );
   writer.
       nodeMap("node_timestep", g.get(node_timestep())).
-      // nodeMap("node_regions_in_component", g.get(node_regions_in_component()), VectorTraxelToStrConverter()).
-      // nodeMap("node_move_features", g.get(node_move_features()), MoveFeaturesToStrConverter()).
-      // nodeMap("node_division_features", g.get(node_division_features()), DivisionFeaturesToStrConverter()).
+       nodeMap("node_move_features", g.get(node_move_features()), MoveFeaturesToStrConverter()).
+       nodeMap("node_division_features", g.get(node_division_features()), DivisionFeaturesToStrConverter()).
       nodeMap("node_count_features", g.get(node_count_features()), CountFeaturesToStrConverter()).
-      nodeMap("node_conflict_sets", g.get(node_conflict_sets()), ConflictSetsToStrConverter()).
+      nodeMap("node_connected_component", g.get(node_connected_component()), ConnectedComponentsToStrConverter()).
       arcMap("arc_from_timestep", g.get(arc_from_timestep())).
       arcMap("arc_to_timestep", g.get(arc_to_timestep())).
-      //if(with_n_traxel) {
       nodeMap("node_traxel", g.get(node_traxel()), TraxelToStrConverter());
-  //}
   writer.run();
 }
 
@@ -150,20 +147,20 @@ struct StrToVectorTraxelConverter {
   }
 };
 struct StrToMoveFeaturesConverter {
-  std::map<Traxel, std::map<Traxel, feature_array> > operator()(
+	std::map<unsigned, std::vector<float> > operator()(
       const std::string& s) {
     stringstream ss(s);
     boost::archive::text_iarchive ia(ss);
-    std::map<Traxel, std::map<Traxel, feature_array> > t;
+    std::map<unsigned, std::vector<float> > t;
     ia >> BOOST_SERIALIZATION_NVP(t);
     return t;
   }
 };
 struct StrToDivisionFeaturesConverter {
-  std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_array> > operator()(const std::string& s) {
+	std::map<std::pair<unsigned, unsigned>, std::vector<float> > operator()(const std::string& s) {
     stringstream ss(s);
     boost::archive::text_iarchive ia(ss);
-    std::map<Traxel, std::map<std::pair<Traxel, Traxel>, feature_array> > t;
+    std::map<std::pair<unsigned, unsigned>, std::vector<float> > t;
     ia >> BOOST_SERIALIZATION_NVP(t);
     return t;
   }
@@ -177,11 +174,11 @@ struct StrToCountFeaturesConverter {
     return t;
   }
 };
-struct StrToConflictSetsConverter {
-  std::vector<std::vector<unsigned> > operator()(const std::string& s) {
+struct StrToConnectedComponentConverter {
+  std::pair<int, unsigned> operator()(const std::string& s) {
     stringstream ss(s);
     boost::archive::text_iarchive ia(ss);
-    std::vector<std::vector<unsigned> >  t;
+    std::pair<int, unsigned>  t;
     ia >> BOOST_SERIALIZATION_NVP(t);
     return t;
   }
@@ -193,18 +190,13 @@ void read_lgf( MultiHypothesesGraph& g, std::istream& is, bool /*with_n_traxel*/
   lemon::DigraphReader<MultiHypothesesGraph> reader( g, is );
   reader.
       nodeMap("node_timestep", g.get(node_timestep())).
-      // nodeMap("node_regions_in_component", g.get(node_regions_in_component()),StrToVectorTraxelConverter()).
-      // nodeMap("node_move_features", g.get(node_move_features()),StrToMoveFeaturesConverter()).
-      // nodeMap("node_division_features", g.get(node_division_features()), StrToDivisionFeaturesConverter()).
+       nodeMap("node_move_features", g.get(node_move_features()),StrToMoveFeaturesConverter()).
+       nodeMap("node_division_features", g.get(node_division_features()), StrToDivisionFeaturesConverter()).
       nodeMap("node_count_features", g.get(node_count_features()), StrToCountFeaturesConverter()).
-      nodeMap("node_conflict_sets", g.get(node_conflict_sets()), StrToConflictSetsConverter()).
+      nodeMap("node_connected_component", g.get(node_connected_component()), StrToConnectedComponentConverter()).
       arcMap("arc_from_timestep", g.get(arc_from_timestep())).
       arcMap("arc_to_timestep", g.get(arc_to_timestep())).
       nodeMap("node_traxel", g.get(node_traxel()), StrToTraxelConverter());
-  //  if( with_n_traxel ) {
-  //    g.add(node_traxel());
-  //    reader.nodeMap("node_traxel", g.get(node_traxel()), StrToTraxelConverter());
-  //  }
   reader.run();
 }
 
@@ -219,7 +211,7 @@ void read_lgf( MultiHypothesesGraph& g, std::istream& is, bool /*with_n_traxel*/
 
 void MultiHypothesesGraph::add_classifier_features(ClassifierStrategy* move,
                                                    ClassifierStrategy* division,
-                                                   ClassifierStrategy* count,
+                                                   ClassifierStrategy* /*count*/,
                                                    ClassifierStrategy* detection) {
   LOG(logDEBUG) << "MultiHypothesesGraph::add_classifier_features: entered";
   add(node_move_features());
@@ -298,19 +290,20 @@ void MultiHypothesesGraph::add_classifier_features(ClassifierStrategy* move,
 
 void MultiHypothesesGraph::add_cardinalities() {
   if (!conflicts_node_) {
+	LOG(logINFO) << "MultiHypothesesGraph::add_cardinalities: SKIP, no conflicts_map";
     return;
   }
   TraxelMap& traxel_map = get(node_traxel());
-  for (std::map<int, std::vector<std::vector<base_graph::Node> > >::const_iterator conflicts_at = conflicts_node_->begin();
+  for (std::map<int, std::vector<std::vector<unsigned> > >::const_iterator conflicts_at = conflicts_node_->begin();
        conflicts_at != conflicts_node_->end();
        ++conflicts_at) {
-    for (std::vector<std::vector<base_graph::Node> >::const_iterator conflict = conflicts_at->second.begin();
+    for (std::vector<std::vector<unsigned> >::const_iterator conflict = conflicts_at->second.begin();
          conflict != conflicts_at->second.end();
          ++conflict) {
-      for (std::vector<base_graph::Node>::const_iterator node = conflict->begin();
-           node != conflict->end();
-           ++node) {
-        feature_array& cardinality = traxel_map.get_value(*node).features["cardinality"];
+      for (std::vector<unsigned>::const_iterator node_id = conflict->begin();
+           node_id != conflict->end();
+           ++node_id) {
+        feature_array& cardinality = traxel_map.get_value(this->nodeFromId(*node_id)).features["cardinality"];
         if (cardinality.size() == 0) {
           cardinality.push_back(0.0);
         }
@@ -324,15 +317,16 @@ void MultiHypothesesGraph::add_cardinalities() {
 void MultiHypothesesGraph::add_conflicts(boost::shared_ptr<std::map<int, std::vector<std::vector<unsigned> > > > conflicts) {
   conflicts_ = conflicts;
   TraxelMap& traxel_map = get(node_traxel());
-  conflicts_node_ = boost::shared_ptr<std::map<int, std::vector<std::vector<base_graph::Node> > > >
-      (new std::map<int, std::vector<std::vector<base_graph::Node> > >);
+  conflicts_node_ = boost::shared_ptr<std::map<int, std::vector<std::vector<unsigned> > > >
+      (new std::map<int, std::vector<std::vector<unsigned> > >);
   for (ConflictMap::const_iterator conflicts_at = conflicts_->begin(); conflicts_at != conflicts_->end(); ++conflicts_at) {
-    std::vector<std::vector<base_graph::Node> >& conflicts_node_at = (*conflicts_node_)[conflicts_at->first];
+    std::vector<std::vector<unsigned> >& conflicts_node_at = (*conflicts_node_)[conflicts_at->first];
     for (ConflictSetVector::const_iterator conflict = conflicts_at->second.begin(); conflict != conflicts_at->second.end(); ++conflict) {
-      conflicts_node_at.push_back(std::vector<base_graph::Node>());
+      conflicts_node_at.push_back(std::vector<unsigned>());
       for (ConflictSet::const_iterator id = conflict->begin(); id != conflict->end(); ++id) {
         TraxelMap::ItemIt node(traxel_map, Traxel(*id, conflicts_at->first));
-        conflicts_node_at.rbegin()->push_back(node);
+        unsigned node_id = this->id(node);
+        conflicts_node_at.rbegin()->push_back(node_id);
       }
     }
   }
@@ -443,7 +437,7 @@ void MultiHypothesesTraxelStore::add(const Traxel& trax, unsigned /*obsolete: co
   pgmlink::add(ts, trax);
 }
 
-const Traxel& MultiHypothesesTraxelStore::get(int timestep, unsigned component_id, unsigned traxel_id) const {
+const Traxel& MultiHypothesesTraxelStore::get(int timestep, unsigned /*component_id*/, unsigned traxel_id) const {
   return *std::find(ts.begin(), ts.end(), Traxel(traxel_id, timestep));
 }
 
