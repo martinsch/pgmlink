@@ -109,7 +109,7 @@ MultiHypothesesTracking::operator()(MultiHypothesesTraxelStore& ts, std::string 
   SingleTimestepTraxel_HypothesesBuilder::Options builder_options(options_.get_weight("neighbors"), // maximum number of nearest neighbors
                                                                   options_.get_weight("distance"), //distance threshold for nearest neighbors
                                                                   options_.forward_backward, // forward backward,
-                                                                  options_.with_divisions // dividing objects
+                                                                  false //options_.with_divisions // dividing objects
                                                                   );
   SingleTimestepTraxel_MultiHypothesesBuilder mult_builder(&ts.ts, builder_options);
 

@@ -581,6 +581,7 @@ boost::shared_ptr<Model> CVPR2014ModelBuilder::build(const MultiHypothesesGraph&
     if (has_maximal_conflict_cliques() && has_conflict_factors()) {
       add_conflict_factors( hypotheses, *model );
     } else {
+      LOG(logINFO) << "MultiHypothesesGraph::build: add detection factors";
       for (MultiHypothesesGraph::NodeIt n(hypotheses); n != lemon::INVALID; ++n) {
         if (timestep_range_specified() &&
             (timesteps[n] < first_timestep() || timesteps[n] > last_timestep())) {
@@ -593,6 +594,7 @@ boost::shared_ptr<Model> CVPR2014ModelBuilder::build(const MultiHypothesesGraph&
 
   add_count_factors(hypotheses, *model);
 
+  LOG(logINFO) << "ModelBuilder::build: adding outgoing and incoming factors";
   for (MultiHypothesesGraph::NodeIt n(hypotheses); n != lemon::INVALID; ++n) {
     if (timestep_range_specified() &&
         (timesteps[n] < first_timestep() || timesteps[n] > last_timestep())) {
@@ -602,12 +604,13 @@ boost::shared_ptr<Model> CVPR2014ModelBuilder::build(const MultiHypothesesGraph&
     add_incoming_factor( hypotheses, *model, n );
   }
 
+  LOG(logINFO) << "ModelBuilder::build: model built";
   return model;
 }
 
 
 void CVPR2014ModelBuilder::add_conflict_factors( const MultiHypothesesGraph& hypotheses, Model& m ) const {
-  LOG(logDEBUG3) << "CVPR2014ModelBuilder::add_conflict_factors() -- add factors for conflict sets";
+  LOG(logINFO) << "CVPR2014ModelBuilder::add_conflict_factors() -- add factors for conflict sets";
   const ConflictMap& conflict_map = hypotheses.get_conflicts();
   const MultiHypothesesGraph::TraxelMap& traxel_map = hypotheses.get(node_traxel());
   for (ConflictMap::const_iterator timestep = conflict_map.begin(); timestep != conflict_map.end(); ++timestep) {
@@ -683,6 +686,7 @@ void CVPR2014ModelBuilder::add_detection_factor( const MultiHypothesesGraph& hyp
 }
 
 void CVPR2014ModelBuilder::add_count_factors( const MultiHypothesesGraph& hypotheses, Model& m) {
+  LOG(logINFO) << "CVPR2014ModelBuilder::add_count_factors: entered";
   const MultiHypothesesGraph::ConnectedComponentMap& components = hypotheses.get(node_connected_component());
   const MultiHypothesesGraph::TraxelMap& traxel_map = hypotheses.get(node_traxel());
   for (MultiHypothesesGraph::ConnectedComponentMap::ValueIt value = components.beginValue();
