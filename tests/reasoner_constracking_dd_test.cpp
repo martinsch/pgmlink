@@ -910,151 +910,151 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTrackingDD_Tracklets ) {
 }
 
 
-BOOST_AUTO_TEST_CASE( Tracking_ConservationTrackingDD_Merger3 ) {
+//BOOST_AUTO_TEST_CASE( Tracking_ConservationTrackingDD_Merger3 ) {
 
-    std::cout << "Constructing HypothesesGraph" << std::endl;
-    std::cout << std::endl;
+//    std::cout << "Constructing HypothesesGraph" << std::endl;
+//    std::cout << std::endl;
 
-    using lemon::INVALID;
+//    using lemon::INVALID;
 
-    std::cout << "Adding Traxels to TraxelStore" << std::endl;
-    std::cout << std::endl;
+//    std::cout << "Adding Traxels to TraxelStore" << std::endl;
+//    std::cout << std::endl;
 
-    //  t=1      2       3
-    //  1				1
-    //    |		       |
-    //      ---- 2 ----  		1
-    //    |			   |	  |
-    //  1				1 ----
-    //  					  |
-    //							0
-    TraxelStore ts;
-    Traxel n11, n12, n21, n31, n32, n41, n42, n43;
-    feature_array com(feature_array::difference_type(3));
-    feature_array divProb(feature_array::difference_type(1));
-    feature_array detProb(feature_array::difference_type(3));
-    feature_array count(feature_array::difference_type(1));
-    feature_array coordinates(feature_array::difference_type(2*3));
+//    //  t=1      2       3
+//    //  1				1
+//    //    |		       |
+//    //      ---- 2 ----  		1
+//    //    |			   |	  |
+//    //  1				1 ----
+//    //  					  |
+//    //							0
+//    TraxelStore ts;
+//    Traxel n11, n12, n21, n31, n32, n41, n42, n43;
+//    feature_array com(feature_array::difference_type(3));
+//    feature_array divProb(feature_array::difference_type(1));
+//    feature_array detProb(feature_array::difference_type(3));
+//    feature_array count(feature_array::difference_type(1));
+//    feature_array coordinates(feature_array::difference_type(2*3));
 
-    n11.Id = 11; n11.Timestep = 1; com[0] = 854; com[1] = 718; com[2] = 0; divProb[0] = 0.01;
-    detProb[0] = 0.01; detProb[1] = 0.98; detProb[2] = 0.01;
-    n11.features["com"] = com; n11.features["divProb"] = divProb; n11.features["detProb"] = detProb;
-    coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
-    coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
-    n11.features["coordinates"] = coordinates;
-    add(ts,n11);
+//    n11.Id = 11; n11.Timestep = 1; com[0] = 854; com[1] = 718; com[2] = 0; divProb[0] = 0.01;
+//    detProb[0] = 0.01; detProb[1] = 0.98; detProb[2] = 0.01;
+//    n11.features["com"] = com; n11.features["divProb"] = divProb; n11.features["detProb"] = detProb;
+//    coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
+//    coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
+//    n11.features["coordinates"] = coordinates;
+//    add(ts,n11);
 
-    n12.Id = 12; n12.Timestep = 1; com[0] = 846; com[1] = 751; com[2] = 0; divProb[0] = 0.01;
-    detProb[0] = 0.01; detProb[1] = 0.98; detProb[2] = 0.01;
-    n12.features["com"] = com; n12.features["divProb"] = divProb; n12.features["detProb"] = detProb;
-    coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
-    coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
-    n12.features["coordinates"] = coordinates;
-    add(ts,n12);
+//    n12.Id = 12; n12.Timestep = 1; com[0] = 846; com[1] = 751; com[2] = 0; divProb[0] = 0.01;
+//    detProb[0] = 0.01; detProb[1] = 0.98; detProb[2] = 0.01;
+//    n12.features["com"] = com; n12.features["divProb"] = divProb; n12.features["detProb"] = detProb;
+//    coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
+//    coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
+//    n12.features["coordinates"] = coordinates;
+//    add(ts,n12);
 
-    n21.Id = 21; n21.Timestep = 2; com[0] = 845; com[1] = 732; com[2] = 0; divProb[0] = 0.01;
-    detProb[0] = 0.01; detProb[1] = 0.01; detProb[2] = 0.98;
-    n21.features["com"] = com; n21.features["divProb"] = divProb; n21.features["detProb"] = detProb;
-    coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
-    coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
-    n21.features["coordinates"] = coordinates;
-    add(ts,n21);
+//    n21.Id = 21; n21.Timestep = 2; com[0] = 845; com[1] = 732; com[2] = 0; divProb[0] = 0.01;
+//    detProb[0] = 0.01; detProb[1] = 0.01; detProb[2] = 0.98;
+//    n21.features["com"] = com; n21.features["divProb"] = divProb; n21.features["detProb"] = detProb;
+//    coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
+//    coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
+//    n21.features["coordinates"] = coordinates;
+//    add(ts,n21);
 
-    n31.Id = 31; n31.Timestep = 3; com[0] = 853; com[1] = 724; com[2] = 0; divProb[0] = 0.01;
-    detProb[0] = 0.01; detProb[1] = 0.98; detProb[2] = 0.01;
-    n31.features["com"] = com; n31.features["divProb"] = divProb; n31.features["detProb"] = detProb;
-    coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
-    coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
-    n31.features["coordinates"] = coordinates;
-    add(ts,n31);
+//    n31.Id = 31; n31.Timestep = 3; com[0] = 853; com[1] = 724; com[2] = 0; divProb[0] = 0.01;
+//    detProb[0] = 0.01; detProb[1] = 0.98; detProb[2] = 0.01;
+//    n31.features["com"] = com; n31.features["divProb"] = divProb; n31.features["detProb"] = detProb;
+//    coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
+//    coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
+//    n31.features["coordinates"] = coordinates;
+//    add(ts,n31);
 
-    n32.Id = 32; n32.Timestep = 3; com[0] = 835; com[1] = 747; com[2] = 0; divProb[0] = 0.01;
-    detProb[0] = 0.01; detProb[1] = 0.98; detProb[2] = 0.01;
-    n32.features["com"] = com; n32.features["divProb"] = divProb; n32.features["detProb"] = detProb;
-    coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
-    coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
-    n32.features["coordinates"] = coordinates;
-    add(ts,n32);
+//    n32.Id = 32; n32.Timestep = 3; com[0] = 835; com[1] = 747; com[2] = 0; divProb[0] = 0.01;
+//    detProb[0] = 0.01; detProb[1] = 0.98; detProb[2] = 0.01;
+//    n32.features["com"] = com; n32.features["divProb"] = divProb; n32.features["detProb"] = detProb;
+//    coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
+//    coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
+//    n32.features["coordinates"] = coordinates;
+//    add(ts,n32);
 
-    n41.Id = 41; n41.Timestep = 4; com[0] = 825; com[1] = 753; com[2] = 0; divProb[0] = 0.01;
-    detProb[0] = 0.01; detProb[1] = 0.98; detProb[2] = 0.01;
-    n41.features["com"] = com; n41.features["divProb"] = divProb; n41.features["detProb"] = detProb;
-    coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
-    coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
-    n41.features["coordinates"] = coordinates;
-    add(ts,n41);
+//    n41.Id = 41; n41.Timestep = 4; com[0] = 825; com[1] = 753; com[2] = 0; divProb[0] = 0.01;
+//    detProb[0] = 0.01; detProb[1] = 0.98; detProb[2] = 0.01;
+//    n41.features["com"] = com; n41.features["divProb"] = divProb; n41.features["detProb"] = detProb;
+//    coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
+//    coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
+//    n41.features["coordinates"] = coordinates;
+//    add(ts,n41);
 
-    n42.Id = 42; n42.Timestep = 4; com[0] = 842; com[1] = 761; com[2] = 0; divProb[0] = 0.01;
-    detProb[0] = 0.98; detProb[1] = 0.01; detProb[2] = 0.01;
-    n42.features["com"] = com; n42.features["divProb"] = divProb; n42.features["detProb"] = detProb;
-    coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
-    coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
-    n42.features["coordinates"] = coordinates;
-    add(ts,n42);
+//    n42.Id = 42; n42.Timestep = 4; com[0] = 842; com[1] = 761; com[2] = 0; divProb[0] = 0.01;
+//    detProb[0] = 0.98; detProb[1] = 0.01; detProb[2] = 0.01;
+//    n42.features["com"] = com; n42.features["divProb"] = divProb; n42.features["detProb"] = detProb;
+//    coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
+//    coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
+//    n42.features["coordinates"] = coordinates;
+//    add(ts,n42);
 
-    n43.Id = 43; n43.Timestep = 4; com[0] = 853; com[1] = 724; com[2] = 0; divProb[0] = 0.01;
-    detProb[0] = 0.01; detProb[1] = 0.98; detProb[2] = 0.01;
-    n43.features["com"] = com; n43.features["divProb"] = divProb; n43.features["detProb"] = detProb;
-    coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
-    coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
-    n43.features["coordinates"] = coordinates;
-    add(ts,n43);
+//    n43.Id = 43; n43.Timestep = 4; com[0] = 853; com[1] = 724; com[2] = 0; divProb[0] = 0.01;
+//    detProb[0] = 0.01; detProb[1] = 0.98; detProb[2] = 0.01;
+//    n43.features["com"] = com; n43.features["divProb"] = divProb; n43.features["detProb"] = detProb;
+//    coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
+//    coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
+//    n43.features["coordinates"] = coordinates;
+//    add(ts,n43);
 
 
-    std::cout << "Initialize Conservation tracking" << std::endl;
-    std::cout << std::endl;
+//    std::cout << "Initialize Conservation tracking" << std::endl;
+//    std::cout << std::endl;
 
-    FieldOfView fov(0, 0, 0, 0, 4, 1000, 1000, 1); // tlow, xlow, ylow, zlow, tup, xup, yup, zup
+//    FieldOfView fov(0, 0, 0, 0, 4, 1000, 1000, 1); // tlow, xlow, ylow, zlow, tup, xup, yup, zup
 
-    ConsTrackingDD tracking = ConsTrackingDD(
-              2, // max_number_objects
-              99999, // max_neighbor_distance
-              0.1, // division_threshold
-              "none", // random_forest_filename
-              false, // detection_by_volume
-              0, // forbidden_cost
-              0.05, // ep_gap
-              double(1.1), // avg_obj_size
-              true, // with_tracklets
-              10.0, //division_weight
-              10.0, //transition_weight
-              true, //with_divisions
-              500., // disappearance_cost,
-              500., // appearance_cost
-              true, //with_merger_resolution
-              2, //n_dim
-              5, //transition_parameter
-              0, //border_width for app/disapp costs
-              fov
-              );
+//    ConsTrackingDD tracking = ConsTrackingDD(
+//              2, // max_number_objects
+//              99999, // max_neighbor_distance
+//              0.1, // division_threshold
+//              "none", // random_forest_filename
+//              false, // detection_by_volume
+//              0, // forbidden_cost
+//              0.05, // ep_gap
+//              double(1.1), // avg_obj_size
+//              true, // with_tracklets
+//              10.0, //division_weight
+//              10.0, //transition_weight
+//              true, //with_divisions
+//              500., // disappearance_cost,
+//              500., // appearance_cost
+//              true, //with_merger_resolution
+//              2, //n_dim
+//              5, //transition_parameter
+//              0, //border_width for app/disapp costs
+//              fov
+//              );
 
-    std::cout << "Run Conservation tracking" << std::endl;
-    std::cout << std::endl;
-    std::vector< std::vector<Event> > events = tracking(ts);
+//    std::cout << "Run Conservation tracking" << std::endl;
+//    std::cout << std::endl;
+//    std::vector< std::vector<Event> > events = tracking(ts);
 
-    size_t t = 1;
-    size_t apps = 0;
-    size_t disapps = 0;
-    size_t num_events = 0;
-    for (std::vector< std::vector<Event> >::const_iterator it_t = events.begin(); it_t != events.end(); ++it_t) {
-        for (std::vector<Event>::const_iterator it = (*it_t).begin(); it!=(*it_t).end(); ++it) {
-            Event e = *it;
-            if (e.type == Event::Appearance) {
-                ++apps;
-            }
-            if (e.type == Event::Disappearance) {
-                ++disapps;
-            }
-            cout << e << endl;
-            ++num_events;
-        }
-        ++t;
-    }
+//    size_t t = 1;
+//    size_t apps = 0;
+//    size_t disapps = 0;
+//    size_t num_events = 0;
+//    for (std::vector< std::vector<Event> >::const_iterator it_t = events.begin(); it_t != events.end(); ++it_t) {
+//        for (std::vector<Event>::const_iterator it = (*it_t).begin(); it!=(*it_t).end(); ++it) {
+//            Event e = *it;
+//            if (e.type == Event::Appearance) {
+//                ++apps;
+//            }
+//            if (e.type == Event::Disappearance) {
+//                ++disapps;
+//            }
+//            cout << e << endl;
+//            ++num_events;
+//        }
+//        ++t;
+//    }
 
-    BOOST_CHECK_EQUAL(apps, 0);
-    BOOST_CHECK_EQUAL(disapps, 0);
-    BOOST_CHECK_GE(num_events, 3);
-}
+//    BOOST_CHECK_EQUAL(apps, 0);
+//    BOOST_CHECK_EQUAL(disapps, 0);
+//    BOOST_CHECK_GE(num_events, 3);
+//}
 
 namespace{
 void constructTraxel(Traxel& n, size_t id, size_t timestep, double pDiv, std::vector<int> center,
@@ -1388,254 +1388,254 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTrackingDD_TranslationVector_Tracklet
 }
 
 
-BOOST_AUTO_TEST_CASE( Tracking_ConservationTrackingDD_Merger4 ) {
+//BOOST_AUTO_TEST_CASE( Tracking_ConservationTrackingDD_Merger4 ) {
 
-    std::cout << "Constructing HypothesesGraph" << std::endl;
-    std::cout << std::endl;
+//    std::cout << "Constructing HypothesesGraph" << std::endl;
+//    std::cout << std::endl;
 
-    using lemon::INVALID;
+//    using lemon::INVALID;
 
-    std::cout << "Adding Traxels to TraxelStore" << std::endl;
-    std::cout << std::endl;
+//    std::cout << "Adding Traxels to TraxelStore" << std::endl;
+//    std::cout << std::endl;
 
-    //  t=1      2       3
-    //  1
-    //    |
-    //      ---- 2 ---- 2
-    //    |
-    //  1
-    TraxelStore ts;
-    Traxel n11, n12, n21, n31;
-    feature_array com(feature_array::difference_type(3));
-    feature_array divProb(feature_array::difference_type(1));
-    feature_array detProb(feature_array::difference_type(3));
-    feature_array count(feature_array::difference_type(1));
-    feature_array coordinates(feature_array::difference_type(2*3));
+//    //  t=1      2       3
+//    //  1
+//    //    |
+//    //      ---- 2 ---- 2
+//    //    |
+//    //  1
+//    TraxelStore ts;
+//    Traxel n11, n12, n21, n31;
+//    feature_array com(feature_array::difference_type(3));
+//    feature_array divProb(feature_array::difference_type(1));
+//    feature_array detProb(feature_array::difference_type(3));
+//    feature_array count(feature_array::difference_type(1));
+//    feature_array coordinates(feature_array::difference_type(2*3));
 
-    n11.Id = 11; n11.Timestep = 1; com[0] = 0; com[1] = 0; com[2] = 0; divProb[0] = 0.01;
-    detProb[0] = 0.01; detProb[1] = 0.98; detProb[2] = 0.01;
-    n11.features["com"] = com; n11.features["divProb"] = divProb; n11.features["detProb"] = detProb;
-    coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
-    coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
-    n11.features["coordinates"] = coordinates;
-    add(ts,n11);
+//    n11.Id = 11; n11.Timestep = 1; com[0] = 0; com[1] = 0; com[2] = 0; divProb[0] = 0.01;
+//    detProb[0] = 0.01; detProb[1] = 0.98; detProb[2] = 0.01;
+//    n11.features["com"] = com; n11.features["divProb"] = divProb; n11.features["detProb"] = detProb;
+//    coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
+//    coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
+//    n11.features["coordinates"] = coordinates;
+//    add(ts,n11);
 
-    n12.Id = 12; n12.Timestep = 1; com[0] = 2; com[1] = 2; com[2] = 0; divProb[0] = 0.01;
-    detProb[0] = 0.01; detProb[1] = 0.98; detProb[2] = 0.01;
-    n12.features["com"] = com; n12.features["divProb"] = divProb; n12.features["detProb"] = detProb;
-    coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
-    coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
-    n12.features["coordinates"] = coordinates;
-    add(ts,n12);
+//    n12.Id = 12; n12.Timestep = 1; com[0] = 2; com[1] = 2; com[2] = 0; divProb[0] = 0.01;
+//    detProb[0] = 0.01; detProb[1] = 0.98; detProb[2] = 0.01;
+//    n12.features["com"] = com; n12.features["divProb"] = divProb; n12.features["detProb"] = detProb;
+//    coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
+//    coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
+//    n12.features["coordinates"] = coordinates;
+//    add(ts,n12);
 
-    n21.Id = 21; n21.Timestep = 2; com[0] = 1; com[1] = 1; com[2] = 0; divProb[0] = 0.01;
-    detProb[0] = 0.01; detProb[1] = 0.01; detProb[2] = 0.98;
-    n21.features["com"] = com; n21.features["divProb"] = divProb; n21.features["detProb"] = detProb;
-    coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
-    coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
-    n21.features["coordinates"] = coordinates;
-    add(ts,n21);
+//    n21.Id = 21; n21.Timestep = 2; com[0] = 1; com[1] = 1; com[2] = 0; divProb[0] = 0.01;
+//    detProb[0] = 0.01; detProb[1] = 0.01; detProb[2] = 0.98;
+//    n21.features["com"] = com; n21.features["divProb"] = divProb; n21.features["detProb"] = detProb;
+//    coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
+//    coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
+//    n21.features["coordinates"] = coordinates;
+//    add(ts,n21);
 
-    n31.Id = 31; n31.Timestep = 3; com[0] = 1; com[1] = 1; com[2] = 0; divProb[0] = 0.01;
-    detProb[0] = 0.01; detProb[1] = 0.01; detProb[2] = 0.98;
-    n31.features["com"] = com; n31.features["divProb"] = divProb; n31.features["detProb"] = detProb;
-    coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
-    coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
-    n31.features["coordinates"] = coordinates;
-    add(ts,n31);
-
-
-    std::cout << "Initialize Conservation tracking" << std::endl;
-    std::cout << std::endl;
-
-    FieldOfView fov(0, 0, 0, 0, 4, 1000, 1000, 1); // tlow, xlow, ylow, zlow, tup, xup, yup, zup
-
-    ConsTrackingDD tracking = ConsTrackingDD(
-              2, // max_number_objects
-              99999, // max_neighbor_distance
-              0.1, // division_threshold
-              "none", // random_forest_filename
-              false, // detection_by_volume
-              0, // forbidden_cost
-              0.0, // ep_gap
-              double(1.1), // avg_obj_size
-              true, // with_tracklets
-              10.0, //division_weight
-              10.0, //transition_weight
-              true, //with_divisions
-              1500., // disappearance_cost,
-              1500., // appearance_cost
-              true, //with_merger_resolution
-              2, //n_dim
-              5, //transition_parameter
-              0, //border_width for app/disapp costs
-              fov
-              );
-
-    std::cout << "Run Conservation tracking" << std::endl;
-    std::cout << std::endl;
-    std::vector< std::vector<Event> > events = tracking(ts);
-
-    size_t t = 1;
-    size_t apps = 0;
-    size_t disapps = 0;
-    size_t moves = 0;
-    size_t mergers = 0;
-    size_t multis = 0;
-    size_t num_events = 0;
-    for (std::vector< std::vector<Event> >::const_iterator it_t = events.begin(); it_t != events.end(); ++it_t) {
-        for (std::vector<Event>::const_iterator it = (*it_t).begin(); it!=(*it_t).end(); ++it) {
-            Event e = *it;
-            if (e.type == Event::Appearance) {
-                ++apps;
-            }
-            if (e.type == Event::Disappearance) {
-                ++disapps;
-            }
-            if (e.type == Event::MultiFrameMove) {
-                ++multis;
-            }
-            if (e.type == Event::Merger) {
-                ++mergers;
-            }
-            if (e.type == Event::Move) {
-                ++moves;
-            }
-            cout << e << endl;
-            ++num_events;
-        }
-        ++t;
-    }
-
-    BOOST_CHECK_EQUAL(apps, 0);
-    BOOST_CHECK_EQUAL(disapps, 0);
-    BOOST_CHECK_EQUAL(moves, 3);
-    BOOST_CHECK_EQUAL(mergers, 1);
-    BOOST_CHECK_EQUAL(multis, 0);
-}
+//    n31.Id = 31; n31.Timestep = 3; com[0] = 1; com[1] = 1; com[2] = 0; divProb[0] = 0.01;
+//    detProb[0] = 0.01; detProb[1] = 0.01; detProb[2] = 0.98;
+//    n31.features["com"] = com; n31.features["divProb"] = divProb; n31.features["detProb"] = detProb;
+//    coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
+//    coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
+//    n31.features["coordinates"] = coordinates;
+//    add(ts,n31);
 
 
+//    std::cout << "Initialize Conservation tracking" << std::endl;
+//    std::cout << std::endl;
+
+//    FieldOfView fov(0, 0, 0, 0, 4, 1000, 1000, 1); // tlow, xlow, ylow, zlow, tup, xup, yup, zup
+
+//    ConsTrackingDD tracking = ConsTrackingDD(
+//              2, // max_number_objects
+//              99999, // max_neighbor_distance
+//              0.1, // division_threshold
+//              "none", // random_forest_filename
+//              false, // detection_by_volume
+//              0, // forbidden_cost
+//              0.0, // ep_gap
+//              double(1.1), // avg_obj_size
+//              true, // with_tracklets
+//              10.0, //division_weight
+//              10.0, //transition_weight
+//              true, //with_divisions
+//              1500., // disappearance_cost,
+//              1500., // appearance_cost
+//              true, //with_merger_resolution
+//              2, //n_dim
+//              5, //transition_parameter
+//              0, //border_width for app/disapp costs
+//              fov
+//              );
+
+//    std::cout << "Run Conservation tracking" << std::endl;
+//    std::cout << std::endl;
+//    std::vector< std::vector<Event> > events = tracking(ts);
+
+//    size_t t = 1;
+//    size_t apps = 0;
+//    size_t disapps = 0;
+//    size_t moves = 0;
+//    size_t mergers = 0;
+//    size_t multis = 0;
+//    size_t num_events = 0;
+//    for (std::vector< std::vector<Event> >::const_iterator it_t = events.begin(); it_t != events.end(); ++it_t) {
+//        for (std::vector<Event>::const_iterator it = (*it_t).begin(); it!=(*it_t).end(); ++it) {
+//            Event e = *it;
+//            if (e.type == Event::Appearance) {
+//                ++apps;
+//            }
+//            if (e.type == Event::Disappearance) {
+//                ++disapps;
+//            }
+//            if (e.type == Event::MultiFrameMove) {
+//                ++multis;
+//            }
+//            if (e.type == Event::Merger) {
+//                ++mergers;
+//            }
+//            if (e.type == Event::Move) {
+//                ++moves;
+//            }
+//            cout << e << endl;
+//            ++num_events;
+//        }
+//        ++t;
+//    }
+
+//    BOOST_CHECK_EQUAL(apps, 0);
+//    BOOST_CHECK_EQUAL(disapps, 0);
+//    BOOST_CHECK_EQUAL(moves, 3);
+//    BOOST_CHECK_EQUAL(mergers, 1);
+//    BOOST_CHECK_EQUAL(multis, 0);
+//}
 
 
-BOOST_AUTO_TEST_CASE( Tracking_ConservationTrackingDD_MergerResolvingDivision ) {
 
-    std::cout << "Constructing HypothesesGraph" << std::endl;
-    std::cout << std::endl;
 
-    using lemon::INVALID;
+//BOOST_AUTO_TEST_CASE( Tracking_ConservationTrackingDD_MergerResolvingDivision ) {
 
-    std::cout << "Adding Traxels to TraxelStore" << std::endl;
-    std::cout << std::endl;
+//    std::cout << "Constructing HypothesesGraph" << std::endl;
+//    std::cout << std::endl;
 
-    //  t=1      2
-    //  1 ------ 2
-    //      |
-    //  1D<
-    //      |
-    //  1 ------ 2
-    TraxelStore ts;
-    Traxel n11, n12, n13, n21, n22;
-    feature_array com(feature_array::difference_type(3));
-    feature_array divProb(feature_array::difference_type(1));
-    feature_array detProb(feature_array::difference_type(3));
-    feature_array count(feature_array::difference_type(1));
-    feature_array coordinates(feature_array::difference_type(2*3));
+//    using lemon::INVALID;
 
-    n11.Id = 11; n11.Timestep = 1; com[0] = 0; com[1] = 0; com[2] = 0; divProb[0] = 0.01;
-    detProb[0] = 0.0; detProb[1] = 1.; detProb[2] = 0.0;
-    n11.features["com"] = com; n11.features["divProb"] = divProb; n11.features["detProb"] = detProb;
-    coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
-    coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
-    n11.features["coordinates"] = coordinates;
-    add(ts,n11);
+//    std::cout << "Adding Traxels to TraxelStore" << std::endl;
+//    std::cout << std::endl;
 
-    n12.Id = 12; n12.Timestep = 1; com[0] = 2; com[1] = 2; com[2] = 0; divProb[0] = 1.;
-    detProb[0] = 0.0; detProb[1] = 1.; detProb[2] = 0.0;
-    n12.features["com"] = com; n12.features["divProb"] = divProb; n12.features["detProb"] = detProb;
-    coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
-    coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
-    n12.features["coordinates"] = coordinates;
-    add(ts,n12);
+//    //  t=1      2
+//    //  1 ------ 2
+//    //      |
+//    //  1D<
+//    //      |
+//    //  1 ------ 2
+//    TraxelStore ts;
+//    Traxel n11, n12, n13, n21, n22;
+//    feature_array com(feature_array::difference_type(3));
+//    feature_array divProb(feature_array::difference_type(1));
+//    feature_array detProb(feature_array::difference_type(3));
+//    feature_array count(feature_array::difference_type(1));
+//    feature_array coordinates(feature_array::difference_type(2*3));
 
-    n13.Id = 13; n13.Timestep = 1; com[0] = 4; com[1] = 4; com[2] = 0; divProb[0] = 0.01;
-    detProb[0] = 0.00; detProb[1] = 1.; detProb[2] = 0.0;
-    n13.features["com"] = com; n13.features["divProb"] = divProb; n13.features["detProb"] = detProb;
-    coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
-    coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
-    n13.features["coordinates"] = coordinates;
-    add(ts,n13);
+//    n11.Id = 11; n11.Timestep = 1; com[0] = 0; com[1] = 0; com[2] = 0; divProb[0] = 0.01;
+//    detProb[0] = 0.0; detProb[1] = 1.; detProb[2] = 0.0;
+//    n11.features["com"] = com; n11.features["divProb"] = divProb; n11.features["detProb"] = detProb;
+//    coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
+//    coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
+//    n11.features["coordinates"] = coordinates;
+//    add(ts,n11);
 
-    n21.Id = 21; n21.Timestep = 2; com[0] = 0; com[1] = 0; com[2] = 0; divProb[0] = 0.01;
-    detProb[0] = 0.0; detProb[1] = 0.0; detProb[2] = 1.;
-    n21.features["com"] = com; n21.features["divProb"] = divProb; n21.features["detProb"] = detProb;
-    coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
-    coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 0;
-    n21.features["coordinates"] = coordinates;
-    add(ts,n21);
+//    n12.Id = 12; n12.Timestep = 1; com[0] = 2; com[1] = 2; com[2] = 0; divProb[0] = 1.;
+//    detProb[0] = 0.0; detProb[1] = 1.; detProb[2] = 0.0;
+//    n12.features["com"] = com; n12.features["divProb"] = divProb; n12.features["detProb"] = detProb;
+//    coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
+//    coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
+//    n12.features["coordinates"] = coordinates;
+//    add(ts,n12);
 
-    n22.Id = 22; n22.Timestep = 2; com[0] = 4; com[1] = 4; com[2] = 0; divProb[0] = 0.01;
-    detProb[0] = 0.0; detProb[1] = 0.0; detProb[2] = 1.;
-    n22.features["com"] = com; n22.features["divProb"] = divProb; n22.features["detProb"] = detProb;
-    coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
-    coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 0;
-    n22.features["coordinates"] = coordinates;
-    add(ts,n22);
+//    n13.Id = 13; n13.Timestep = 1; com[0] = 4; com[1] = 4; com[2] = 0; divProb[0] = 0.01;
+//    detProb[0] = 0.00; detProb[1] = 1.; detProb[2] = 0.0;
+//    n13.features["com"] = com; n13.features["divProb"] = divProb; n13.features["detProb"] = detProb;
+//    coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
+//    coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 1;
+//    n13.features["coordinates"] = coordinates;
+//    add(ts,n13);
 
-    std::cout << "Initialize Conservation tracking" << std::endl;
-    std::cout << std::endl;
+//    n21.Id = 21; n21.Timestep = 2; com[0] = 0; com[1] = 0; com[2] = 0; divProb[0] = 0.01;
+//    detProb[0] = 0.0; detProb[1] = 0.0; detProb[2] = 1.;
+//    n21.features["com"] = com; n21.features["divProb"] = divProb; n21.features["detProb"] = detProb;
+//    coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
+//    coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 0;
+//    n21.features["coordinates"] = coordinates;
+//    add(ts,n21);
 
-    FieldOfView fov(0, 0, 0, 0, 4, 1000, 1000, 1); // tlow, xlow, ylow, zlow, tup, xup, yup, zup
+//    n22.Id = 22; n22.Timestep = 2; com[0] = 4; com[1] = 4; com[2] = 0; divProb[0] = 0.01;
+//    detProb[0] = 0.0; detProb[1] = 0.0; detProb[2] = 1.;
+//    n22.features["com"] = com; n22.features["divProb"] = divProb; n22.features["detProb"] = detProb;
+//    coordinates[0] = com[0]; coordinates[1] = com[1]; coordinates[2] = com[2];
+//    coordinates[3] = com[0] + 1; coordinates[4] = com[1] + 1; coordinates[5] = com[2] + 0;
+//    n22.features["coordinates"] = coordinates;
+//    add(ts,n22);
 
-    ConsTrackingDD tracking = ConsTrackingDD(
-              2, // max_number_objects
-              99999, // max_neighbor_distance
-              0.1, // division_threshold
-              "none", // random_forest_filename
-              false, // detection_by_volume
-              0, // forbidden_cost
-              0.0, // ep_gap
-              double(1.1), // avg_obj_size
-              true, // with_tracklets
-              10.0, //division_weight
-              10.0, //transition_weight
-              true, //with_divisions
-              1500., // disappearance_cost,
-              1500., // appearance_cost
-              true, //with_merger_resolution
-              2, //n_dim
-              5, //transition_parameter
-              0, //border_width for app/disapp costs
-              fov
-              );
+//    std::cout << "Initialize Conservation tracking" << std::endl;
+//    std::cout << std::endl;
 
-    std::cout << "Run Conservation tracking" << std::endl;
-    std::cout << std::endl;
-    std::vector< std::vector<Event> > events = tracking(ts);
+//    FieldOfView fov(0, 0, 0, 0, 4, 1000, 1000, 1); // tlow, xlow, ylow, zlow, tup, xup, yup, zup
 
-    size_t t = 0;
-    BOOST_CHECK_EQUAL(events[t].size(), 3);
-    for (std::vector<Event>::const_iterator it = events[t].begin(); it!=events[t].end(); ++it) {
-            Event e = *it;
-            if (e.type == Event::Move && e.traxel_ids[0] == 11) {
-                BOOST_CHECK_EQUAL(e.traxel_ids[1], 21);
-            } else if (e.type == Event::Move && e.traxel_ids[0] == 13) {
-                BOOST_CHECK_EQUAL(e.traxel_ids[1], 22);
-            } else if (e.type == Event::Division && e.traxel_ids[0] == 12) {
-                                set<unsigned> division_set(e.traxel_ids.begin()+1, e.traxel_ids.end());
-                                set<unsigned> comparison_set;
-                                comparison_set.insert(21);
-                                comparison_set.insert(22);
-                                BOOST_CHECK_EQUAL_COLLECTIONS(division_set.begin(),
-                                                             division_set.end(),
-                                                             comparison_set.begin(),
-                                                             comparison_set.end());
-            } else {
-                cout << "unexpected event: " << e;
-                BOOST_CHECK(false);
-            }
-    }
+//    ConsTrackingDD tracking = ConsTrackingDD(
+//              2, // max_number_objects
+//              99999, // max_neighbor_distance
+//              0.1, // division_threshold
+//              "none", // random_forest_filename
+//              false, // detection_by_volume
+//              0, // forbidden_cost
+//              0.0, // ep_gap
+//              double(1.1), // avg_obj_size
+//              true, // with_tracklets
+//              10.0, //division_weight
+//              10.0, //transition_weight
+//              true, //with_divisions
+//              1500., // disappearance_cost,
+//              1500., // appearance_cost
+//              true, //with_merger_resolution
+//              2, //n_dim
+//              5, //transition_parameter
+//              0, //border_width for app/disapp costs
+//              fov
+//              );
 
-}
+//    std::cout << "Run Conservation tracking" << std::endl;
+//    std::cout << std::endl;
+//    std::vector< std::vector<Event> > events = tracking(ts);
+
+//    size_t t = 0;
+//    BOOST_CHECK_EQUAL(events[t].size(), 3);
+//    for (std::vector<Event>::const_iterator it = events[t].begin(); it!=events[t].end(); ++it) {
+//            Event e = *it;
+//            if (e.type == Event::Move && e.traxel_ids[0] == 11) {
+//                BOOST_CHECK_EQUAL(e.traxel_ids[1], 21);
+//            } else if (e.type == Event::Move && e.traxel_ids[0] == 13) {
+//                BOOST_CHECK_EQUAL(e.traxel_ids[1], 22);
+//            } else if (e.type == Event::Division && e.traxel_ids[0] == 12) {
+//                                set<unsigned> division_set(e.traxel_ids.begin()+1, e.traxel_ids.end());
+//                                set<unsigned> comparison_set;
+//                                comparison_set.insert(21);
+//                                comparison_set.insert(22);
+//                                BOOST_CHECK_EQUAL_COLLECTIONS(division_set.begin(),
+//                                                             division_set.end(),
+//                                                             comparison_set.begin(),
+//                                                             comparison_set.end());
+//            } else {
+//                cout << "unexpected event: " << e;
+//                BOOST_CHECK(false);
+//            }
+//    }
+
+//}
 
 
 
