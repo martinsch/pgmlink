@@ -43,7 +43,7 @@ namespace opengm {
       typedef typename DDBaseType::SubVariableType               SubVariableType;
       typedef typename DDBaseType::SubVariableListType           SubVariableListType;
 
-      typedef boost::function<void(const SubGmType&, InfType&)> HardConstraintConfigurator;
+      typedef boost::function<void(const SubGmType&, size_t, InfType&)> HardConstraintConfigurator;
 
       class Parameter : public DualDecompositionBaseParameter{
       public:
@@ -69,10 +69,10 @@ namespace opengm {
       virtual ValueType bound() const;
       virtual ValueType value() const;
       virtual InferenceTermination arg(std::vector<LabelType>&, const size_t = 1)const;
+      virtual DualDecompositionBaseParameter& parameter();
 
    private:
       virtual void allocate();
-      virtual DualDecompositionBaseParameter& parameter();
       void dualStep(const size_t);
       template <class T_IndexType, class T_LabelType>
       void getPartialSubGradient(const size_t, const std::vector<T_IndexType>&, std::vector<T_LabelType>&)const;
@@ -114,7 +114,10 @@ namespace opengm {
       :   DualDecompositionBase<GmType, DualBlockType >(gm),para_(para),
         hardConstraintConfigurator_(hcc)
    {
+      std::cout << "The parameter contains " << para_.decomposition_.numberOfSubModels()
+                << " submodels, and has address: " << &para_ << std::endl;
       this->init(para_);
+      std::cout << "After initializing we have " << subGm_.size() << " submodels" << std::endl;
       subStates_.resize(subGm_.size());
       for(size_t i=0; i<subGm_.size(); ++i)
          subStates_[i].resize(subGm_[i].numberOfVariables());
@@ -165,18 +168,18 @@ namespace opengm {
       //visitor.startInference();
       visitor.begin(*this,this->value(),this->bound());
 
+      LOG(pgmlink::logWARNING) << "Number of Subproblems: " << subGm_.size();
       for(size_t iteration=0; iteration<para_.maximalNumberOfIterations_; ++iteration){
-
+          LOG(pgmlink::logWARNING) << "Iteration: " << iteration;
          // Solve Subproblems
          primalTime_=0;
          primalTimer_.tic();
          //omp_set_num_threads(para_.numberOfThreads_);
 
-         LOG(pgmlink::logDEBUG) << "Number of Subproblems: " << subGm_.size();
 //#pragma omp parallel for
          for(size_t subModelId=0; subModelId<subGm_.size(); ++subModelId){
             InfType inf(subGm_[subModelId],para_.subPara_);
-            hardConstraintConfigurator_(subGm_[subModelId], inf);
+            hardConstraintConfigurator_(subGm_[subModelId], subModelId, inf);
             inf.infer();
             inf.arg(subStates_[subModelId]);
          }
@@ -236,12 +239,15 @@ namespace opengm {
          visitor((*this), upperBound_, lowerBound_);
          //visitor((*this), lowerBound_, -acNegLowerBound_.value(), upperBound_, acUpperBound_.value(), primalTime_, dualTime_);
 
+         std::cout << "************************************\n"
+                      "Current gap: " << acUpperBound_.value() + acNegLowerBound_.value()
+                      << "\n************************************" << std::endl;
 
          // Test for Convergence
          ValueType o;
          AccumulationType::iop(0.0001,-0.0001,o);
-         OPENGM_ASSERT(AccumulationType::bop(lowerBound_, upperBound_+o));
-         OPENGM_ASSERT(AccumulationType::bop(-acNegLowerBound_.value(), acUpperBound_.value()+o));
+//         OPENGM_ASSERT(AccumulationType::bop(lowerBound_, upperBound_+o));
+//         OPENGM_ASSERT(AccumulationType::bop(-acNegLowerBound_.value(), acUpperBound_.value()+o));
 
          if(   fabs(acUpperBound_.value() + acNegLowerBound_.value())                       <= para_.minimalAbsAccuracy_
             || fabs((acUpperBound_.value()+ acNegLowerBound_.value())/acUpperBound_.value()) <= para_.minimalRelAccuracy_){

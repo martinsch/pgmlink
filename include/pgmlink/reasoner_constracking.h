@@ -105,7 +105,7 @@ protected:
     void add_finite_factors( const HypothesesGraph& );
 
     // helper
-    size_t cplex_id(size_t opengm_id, size_t state);
+    virtual size_t cplex_id(size_t opengm_id, size_t state);
 
 
     unsigned int max_number_objects_;

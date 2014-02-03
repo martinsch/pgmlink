@@ -49,20 +49,25 @@ public:
      */
     virtual void infer();
 
-    void configure_hard_constraints(const pgmlink::DualDecompositionConservationTracking::DualDecompositionSubGradient::SubGmType &subGM,
+    void configure_hard_constraints(const pgmlink::DualDecompositionConservationTracking::DualDecompositionSubGradient::SubGmType &subGM, size_t sub_gm_index,
                                     pgmlink::DualDecompositionConservationTracking::DualDecompositionSubGradient::InfType &optimizer);
-    void add_constraint(pgmlink::DualDecompositionConservationTracking::DualDecompositionSubGradient::InfType *optimizer,
+    void add_constraint(pgmlink::DualDecompositionConservationTracking::DualDecompositionSubGradient::InfType *optimizer, size_t sub_gm_index,
                         std::vector<std::size_t>::iterator ids_begin,
                         std::vector<std::size_t>::iterator ids_end,
                         std::vector<int>::iterator coeffs_begin,
                         int lower, int higher, const char *name);
+    void debug_graph_output(GraphicalModelType* model);
+    void constraint_debug_output(const pgmlink::DualDecompositionConservationTracking::DualDecompositionSubGradient::SubGmType& subGM);
 protected:
     virtual void extractSolution(std::vector<pgm::OpengmModelDeprecated::ogmInference::LabelType> &solution);
     virtual void add_constraints( const HypothesesGraph& );
+    virtual size_t cplex_id(size_t opengm_id, size_t state);
 
 
     DualDecompositionSubGradient* dd_optimizer_;
     const HypothesesGraph* hypotheses_graph_;
+    size_t current_sub_gm_id_;
+    DualDecompositionSubGradient::InfType* current_sub_optimizer_;
 };
 
 }
