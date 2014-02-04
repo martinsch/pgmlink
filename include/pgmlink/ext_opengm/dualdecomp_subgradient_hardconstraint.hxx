@@ -26,7 +26,7 @@ class DualDecompositionSubGradientWithHardConstraints
 public:
     typedef GM                                                 GmType;
     typedef GM                                                 GraphicalModelType;
-    typedef typename IxNF::AccumulationType                     AccumulationType;
+    typedef typename INF::AccumulationType                     AccumulationType;
     OPENGM_GM_TYPE_TYPEDEFS;
     typedef VerboseVisitor<DualDecompositionSubGradientWithHardConstraints<GM, INF,DUALBLOCK> > VerboseVisitorType;
     typedef TimingVisitor<DualDecompositionSubGradientWithHardConstraints<GM, INF,DUALBLOCK> >  TimingVisitorType;
