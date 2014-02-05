@@ -856,13 +856,15 @@ void CVPR2014ModelBuilder::add_outgoing_factor( const MultiHypothesesGraph& hypo
   const MultiHypothesesGraph::ConnectedComponentMap& component_map = hypotheses.get(node_connected_component());
   const Traxel& trax = traxel_map[node];
   const Traxel& connected_component_traxel =
-      traxel_map[MultiHypothesesGraph::ConnectedComponentMap::ItemIt(component_map, std::make_pair(trax.Timestep, trax.Component))];
+      traxel_map[MultiHypothesesGraph::TraxelMap::ItemIt(traxel_map, Traxel(trax.Component, trax.Timestep))];
   feature_type maximum_cardinality = connected_component_traxel.features.find("cardinality")->second[0];
   
   const vector<size_t> vi = vars_for_outgoing_factor(hypotheses, m, node);
   LOG(logDEBUG3) << "CVPR2014ModelBuilder::add_outgoing_factor(): entered for " << trax
                  << " at " << trax.features.find("com")->second[0] << "," << trax.features.find("com")->second[1] << ","
                  << trax.features.find("com")->second[2] << " lvl: " << trax.Level << " - factor order: " << vi.size();
+  LOG(logDEBUG3) << "CVPR2014ModelBuilder::add_outgoing_factor(): connected component " << connected_component_traxel
+                 << " has cardinality " << maximum_cardinality;
   if (vi.size() == 0) {
     // nothing to do here
     // happens in case of no det vars and no outgoing arcs
@@ -987,7 +989,7 @@ void CVPR2014ModelBuilder::add_incoming_factor( const MultiHypothesesGraph& hypo
   const MultiHypothesesGraph::ConnectedComponentMap& component_map = hypotheses.get(node_connected_component());
   const Traxel& trax = traxel_map[node];
   const Traxel& connected_component_traxel =
-      traxel_map[MultiHypothesesGraph::ConnectedComponentMap::ItemIt(component_map, std::make_pair(trax.Timestep, trax.Component))];
+      traxel_map[MultiHypothesesGraph::TraxelMap::ItemIt(traxel_map, Traxel(trax.Component, trax.Timestep))];
   feature_type maximum_cardinality = connected_component_traxel.features.find("cardinality")->second[0];
   LOG(logDEBUG2) << "CVPR2014ModelBuilder::add_incoming_factor(): entered for " << trax;
   const std::vector<size_t> vi = vars_for_incoming_factor(hypotheses, m, node);
