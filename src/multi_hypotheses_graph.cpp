@@ -303,11 +303,14 @@ void MultiHypothesesGraph::add_cardinalities() {
       for (std::vector<unsigned>::const_iterator node_id = conflict->begin();
            node_id != conflict->end();
            ++node_id) {
-        feature_array& cardinality = traxel_map.get_value(this->nodeFromId(*node_id)).features["cardinality"];
+        Traxel& trax = traxel_map.get_value(this->nodeFromId(*node_id));
+        feature_array& cardinality = trax.features["cardinality"];
         if (cardinality.size() == 0) {
           cardinality.push_back(0.0);
         }
         cardinality[0] += 1.0;
+        LOG(logDEBUG4) << "MultiHypothesesGraph::add_cardinalities: increased cardinality of " << trax
+                       << ". Cardinality is now " << cardinality[0];
       }
     }
   }
