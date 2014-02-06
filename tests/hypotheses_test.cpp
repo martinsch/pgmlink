@@ -3,6 +3,8 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <set>
+#include <utility>
 
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
@@ -499,6 +501,149 @@ BOOST_AUTO_TEST_CASE( SingleTimestepTraxel_HypothesesGraph_generateTraxelGraph )
 	BOOST_CHECK_EQUAL(num_of_tracklets_size[1],2); // tracklets of length 2
 	BOOST_CHECK_EQUAL(num_of_tracklets_size[2],1); // tracklets of length 3
 	BOOST_CHECK_EQUAL(num_of_arcs,7);
+}
+
+
+
+
+
+namespace {
+
+std::set<std::pair<Traxel, Traxel> > arcs_to_traxel_pairs(HypothesesGraph* g) {
+  std::set<std::pair<Traxel, Traxel> > result;
+  property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g->get(node_traxel());
+  for (HypothesesGraph::ArcIt a(*g); a != lemon::INVALID; ++a) {
+    result.insert(std::make_pair(traxel_map[g->source(a)], traxel_map[g->target(a)]));
+  }
+  return result;
+}
+
+template <typename T, typename U>
+void check_sequence(T begin1, T end1, U begin2, U end2) {
+  // assume equal size
+  for (; begin1 != end1; ++begin1, ++begin2) {
+    BOOST_CHECK_EQUAL(*begin1, *begin2);
+  }
+  BOOST_CHECK_EQUAL(begin1, end1);
+  BOOST_CHECK_EQUAL(begin2, end2);
+}
+
+template <>
+void check_sequence(std::set<std::pair<Traxel, Traxel> >::const_iterator begin1,
+                    std::set<std::pair<Traxel, Traxel> >::const_iterator end1,
+                    std::set<std::pair<Traxel, Traxel> >::const_iterator begin2,
+                    std::set<std::pair<Traxel, Traxel> >::const_iterator) {
+  for (; begin1 != end1; ++begin1, ++begin2) {
+    BOOST_CHECK_EQUAL(begin1->first, begin2->first);
+    BOOST_CHECK_EQUAL(begin1->second, begin2->second);
+  }
+}
+
+} // namespace
+
+
+
+
+
+
+BOOST_AUTO_TEST_CASE( SingleTimestepTraxel_HypothesesGraph_generateTraxelGraph_forward_backward ) {
+  typedef std::set<std::pair<Traxel, Traxel> > result_type;
+
+  TraxelStore ts1;
+  TraxelStore ts2;
+  TraxelStore ts3;
+  TraxelStore ts4;
+
+  feature_array com(3, 0.);
+
+  Traxel t1(1, 1);
+  com[0] = 1;
+  t1.features["com"] = com;
+
+  Traxel t2(2, 1);
+  com[0] = 0;
+  t2.features["com"] = com;
+
+  Traxel t3(3, 1);
+  com[0] = 4;
+  t3.features["com"] = com;
+
+  Traxel t4(4, 2);
+  com[0] = 1;
+  t4.features["com"] = com;
+
+  Traxel t5(5, 2);
+  com[0] = 0;
+  t5.features["com"] = com;
+
+  Traxel t6(6, 2);
+  com[0] = 4;
+  t6.features["com"] = com;
+
+  add(ts1, t1);
+  add(ts1, t5);
+  add(ts1, t6);
+
+  add(ts2, t1);
+  add(ts2, t4);
+
+  add(ts3, t2);
+  add(ts3, t3);
+  add(ts3, t4);
+
+  add(ts4, t1);
+  add(ts4, t2);
+  add(ts4, t4);
+  add(ts4, t5);
+  add(ts4, t6);
+
+  SingleTimestepTraxel_HypothesesBuilder::Options builder_opts(2, // max_nn
+                                                               10000, // max_distance
+                                                               true, // forward_backward
+                                                               true, // consider_divisions
+                                                               0.5 //division_threshold
+                                                               );
+  SingleTimestepTraxel_HypothesesBuilder builder1(&ts1, builder_opts);
+  SingleTimestepTraxel_HypothesesBuilder builder2(&ts2, builder_opts);
+  SingleTimestepTraxel_HypothesesBuilder builder3(&ts3, builder_opts);
+  SingleTimestepTraxel_HypothesesBuilder builder4(&ts4, builder_opts);
+
+  HypothesesGraph* g1 = builder1.build();
+  HypothesesGraph* g2 = builder2.build();
+  HypothesesGraph* g3 = builder3.build();
+  HypothesesGraph* g4 = builder4.build();
+
+  result_type base1;
+  result_type res1 = arcs_to_traxel_pairs(g1);
+  base1.insert(std::make_pair(t1, t5));
+  base1.insert(std::make_pair(t1, t6));
+  BOOST_CHECK_EQUAL(base1.size(), res1.size());
+  check_sequence(base1.begin(), base1.end(), res1.begin(), res1.end());
+
+  result_type base2;
+  result_type res2 = arcs_to_traxel_pairs(g2);
+  base2.insert(std::make_pair(t1, t4));
+  BOOST_CHECK_EQUAL(base2.size(), res2.size());
+  check_sequence(base2.begin(), base2.end(), res2.begin(), res2.end());
+  
+  result_type base3;
+  result_type res3 = arcs_to_traxel_pairs(g3);
+  base3.insert(std::make_pair(t2, t4));
+  base3.insert(std::make_pair(t3, t4));
+  BOOST_CHECK_EQUAL(base3.size(), res3.size());
+  check_sequence(base3.begin(), base3.end(), res3.begin(), res3.end());
+
+  result_type base4;
+  result_type res4 = arcs_to_traxel_pairs(g4);
+  base4.insert(std::make_pair(t1, t4));
+  base4.insert(std::make_pair(t1, t5));
+  base4.insert(std::make_pair(t1, t6));
+  base4.insert(std::make_pair(t2, t4));
+  base4.insert(std::make_pair(t2, t5));
+  BOOST_CHECK_EQUAL(base4.size(), res4.size());
+  check_sequence(base4.begin(), base4.end(), res4.begin(), res4.end());
+  
+
 }
 
 
