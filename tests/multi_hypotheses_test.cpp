@@ -18,6 +18,7 @@
 #include "pgmlink/traxels.h"
 #include "pgmlink/pgm_multi_hypotheses.h"
 #include "pgmlink/reasoner_multi_hypotheses.h"
+#include "pgmlink/hypotheses.h"
 
 using namespace pgmlink;
 using namespace std;
@@ -27,7 +28,57 @@ typedef MultiHypothesesGraph::Node Node;
 typedef MultiHypothesesGraph::Arc Arc;
 typedef pgm::multihypotheses::Model Model;
 
-#if 0>1 // ignore this test for now
+BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_cardinalities ) {
+  TraxelStore ts;
+  feature_array com(3, 0.0);
+  for (unsigned i = 1; i <= 5; ++i) {
+    Traxel trax(i, 1);
+    trax.features["com"] = com;
+    add(ts, trax);
+  }
+  boost::shared_ptr<ConflictMap > conflicts(new ConflictMap);
+  
+  (*conflicts)[1].push_back(ConflictSet());
+  (*conflicts)[1].rbegin()->push_back(1);
+  (*conflicts)[1].rbegin()->push_back(5);
+  
+  (*conflicts)[1].push_back(ConflictSet());
+  (*conflicts)[1].rbegin()->push_back(2);
+  (*conflicts)[1].rbegin()->push_back(4);
+  (*conflicts)[1].rbegin()->push_back(5);
+  
+  (*conflicts)[1].push_back(ConflictSet());
+  (*conflicts)[1].rbegin()->push_back(3);
+  (*conflicts)[1].rbegin()->push_back(4);
+  (*conflicts)[1].rbegin()->push_back(5);
+
+  std::map<Traxel, feature_type> cardinalities;
+  cardinalities[Traxel(1, 1)] = 1.;
+  cardinalities[Traxel(2, 1)] = 1.;
+  cardinalities[Traxel(3, 1)] = 1.;
+  cardinalities[Traxel(4, 1)] = 2.;
+  cardinalities[Traxel(5, 1)] = 3.;
+
+  SingleTimestepTraxel_HypothesesBuilder::Options builder_opts(2, // max_nn
+                                                               10000, // max_distance
+                                                               true, // forward_backward
+                                                               true, // consider_divisions
+                                                               0.5 //division_threshold
+                                                               );
+  SingleTimestepTraxel_MultiHypothesesBuilder builder(&ts, builder_opts);
+  MultiHypothesesGraphPtr g = builder.build_multi_hypotheses_graph();
+
+  g->add_conflicts(conflicts);
+  g->add_cardinalities();
+
+  MultiHypothesesGraph::TraxelMap& traxel_map = g->get(node_traxel());
+  for (MultiHypothesesGraph::NodeIt n(*g); n != lemon::INVALID; ++n) {
+    const Traxel& trax = traxel_map[n]; 
+    BOOST_CHECK_CLOSE(trax.features.find("cardinality")->second[0], cardinalities[trax], 0.001);
+  }
+}
+
+#if 0>1 // ignore the following tests for now
 
 BOOST_AUTO_TEST_CASE( MultiHypothesesGraph_serialize ) {
 
