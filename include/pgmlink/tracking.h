@@ -16,6 +16,7 @@
 #include "pgmlink/pgmlink_export.h"
 #include "pgmlink/traxels.h"
 #include "pgmlink/field_of_view.h"
+#include "pgmlink/merger_resolving.h"
 
 namespace pgmlink {
   class PGMLINK_EXPORT ChaingraphTracking {
@@ -173,7 +174,8 @@ namespace pgmlink {
 		border_width_(border_width),
 		fov_(fov),
 		with_constraints_(with_constraints){}
-      std::vector< std::vector<Event> > operator()(TraxelStore&);
+    std::vector< std::vector<Event> > operator()(TraxelStore& ts,
+                                                 TimestepIdCoordinateMapPtr coordinates = TimestepIdCoordinateMapPtr());
 
       /**
        * Get state of detection variables after call to operator().

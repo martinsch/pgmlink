@@ -215,7 +215,7 @@ bool all_true (InputIterator first, InputIterator last, UnaryPredicate pred) {
 ////
 //// class ConsTracking
 ////
-vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
+vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts, TimestepIdCoordinateMapPtr coordinates) {
 	cout << "-> building energy functions " << endl;
 
 	double detection_weight = 10;
@@ -398,10 +398,15 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
     if (max_number_objects_ > 1 && with_merger_resolution_ && all_true(ev->begin(), ev->end(), has_data<Event>)) {
       cout << "-> resolving mergers" << endl;
       MergerResolver m(graph);
-      FeatureExtractorMCOMsFromMCOMs extractor;
+      FeatureExtractorBase* extractor;
       DistanceFromCOMs distance;
-      FeatureHandlerFromTraxels handler(extractor, distance);
-      calculate_gmm_beforehand(*graph, 1, number_of_dimensions_);
+      if (coordinates) {
+        extractor = new FeatureExtractorArmadillo(coordinates);
+      } else {
+        extractor = new FeatureExtractorMCOMsFromMCOMs;
+      }
+      FeatureHandlerFromTraxels handler(*extractor, distance);
+      // calculate_gmm_beforehand(*graph, 1, number_of_dimensions_);
       m.resolve_mergers(handler);
 
       HypothesesGraph g_res;
@@ -412,6 +417,7 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts) {
       boost::shared_ptr<std::vector< std::vector<Event> > > multi_frame_moves = multi_frame_move_events(*graph);
 
       cout << "-> merging unresolved and resolved events" << endl;
+      // delete extractor; // TO DELETE FIRST CREATE VIRTUAL DTORS
       return *merge_event_vectors(*ev, *multi_frame_moves);
     }
 

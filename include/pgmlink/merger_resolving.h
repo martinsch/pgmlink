@@ -14,6 +14,9 @@
 #include <lemon/maps.h>
 #include <lemon/adaptors.h>
 #include <armadillo>
+#include <boost/shared_ptr.hpp>
+#include <vigra/multi_iterator_coupled.hxx>
+#include <vigra/tinyvector.hxx>
 
 
 // pgmlink headers
@@ -36,6 +39,12 @@
  */
 
 namespace pgmlink {
+
+// typedef std::map<unsigned, arma::mat> IdCoordinateMap;
+
+typedef std::map<std::pair<int, unsigned>, arma::mat> TimestepIdCoordinateMap;
+
+typedef boost::shared_ptr<TimestepIdCoordinateMap > TimestepIdCoordinateMapPtr;
 
 ////
 //// ClusteringMlpackBase
@@ -201,6 +210,7 @@ void get_centers(const arma::Mat<T>& data, const arma::Col<size_t> labels, arma:
 class FeatureExtractorBase {
  public:
   virtual std::vector<Traxel> operator()(Traxel trax, size_t nMergers, unsigned int max_id) = 0;
+ protected:
 };
 
 
@@ -241,6 +251,20 @@ class FeatureExtractorMCOMsFromGMM : public FeatureExtractorBase {
   FeatureExtractorMCOMsFromGMM(int n_dim) : n_dim_(n_dim) {}
   virtual std::vector<Traxel> operator()(Traxel trax, size_t nMergers, unsigned int max_id);
 };
+
+////
+//// FeatureExtractorArmadillo
+////
+class FeatureExtractorArmadillo : public FeatureExtractorBase {
+ public:
+  FeatureExtractorArmadillo(TimestepIdCoordinateMapPtr coordinates);
+  virtual std::vector<Traxel> operator()(Traxel trax, size_t nMergers, unsigned int max_id);
+ private:
+  FeatureExtractorArmadillo();
+  TimestepIdCoordinateMapPtr coordinates_;
+};
+  
+
 
 ////
 //// DistanceBase
@@ -499,6 +523,15 @@ void merge_split_divisions(const HypothesesGraph& graph,
 void calculate_gmm_beforehand(HypothesesGraph& g, int n_trials, int n_dimensions);
 
 
+// extract coordinates in arma::mat
+template<int N, typename T>
+void extract_coordinates(TimestepIdCoordinateMapPtr coordinates,
+                         const vigra::MultiArrayView<N, T>& image,
+                         long x_offset,
+                         long y_offset,
+                         const Traxel& trax);
+
+
 
 ////
 //// IMPLEMENTATIONS ////
@@ -702,6 +735,34 @@ void get_subset(const HypothesesGraph& src,
   lemon::digraphCopy<CopyGraph, HypothesesGraph::base_graph>(sub,dest).nodeRef(nr).nodeCrossRef(ncr).arcRef(ar).arcCrossRef(acr).run();
 }
 
+
+template<int N, typename T>
+void extract_coordinates(TimestepIdCoordinateMapPtr coordinates,
+                         const vigra::MultiArrayView<N, T>& image,
+                         long x_offset,
+                         long y_offset,
+                         const Traxel& trax) {
+  typedef typename vigra::CoupledIteratorType<N, T>::type Iterator;
+  Iterator start = createCoupledIterator(image);
+  Iterator end = start.getEndIterator();
+  arma::mat& coord = (*coordinates)[std::make_pair(trax.Timestep, trax.Id)];
+  coord = arma::mat(trax.features.find("Count")->second[0], N);
+  {
+    int index = 0;
+    for (; start != end; ++start) {
+      if (start.get<1>() == trax.Id) {
+        const vigra::TinyVector<long int, N>& position = start.get<0>();
+        for (int i = 0; i < N; ++i) {
+          coord[index, i] = position[i];
+        }        
+        ++index;
+      } else {
+        continue;
+      }
+    }
+    assert(index == coord.n_rows);
+  }
+}
 
 
 
