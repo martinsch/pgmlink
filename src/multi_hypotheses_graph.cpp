@@ -38,7 +38,8 @@ namespace pgmlink {
 ////
 MultiHypothesesGraph::MultiHypothesesGraph() :
     conflicts_(new ConflictMap),
-    conflicts_node_() {
+    conflicts_node_(),
+    classifier_added_(false) {
   add(node_traxel());
 
 
@@ -285,7 +286,7 @@ void MultiHypothesesGraph::add_classifier_features(ClassifierStrategy* move,
     // LOG(logDEBUG3) << "MultiHypothesesGraph::add_classifier_features: classifying count";
     // count->classify(sources);
   }
-  
+  classifier_added_ = true;
 }
 
 void MultiHypothesesGraph::add_cardinalities() {
@@ -318,6 +319,7 @@ void MultiHypothesesGraph::add_cardinalities() {
 
 
 void MultiHypothesesGraph::add_conflicts(boost::shared_ptr<std::map<int, std::vector<std::vector<unsigned> > > > conflicts) {
+  LOG(logDEBUG) << "MultiHypothesesGraph::add_conflicts() -- entered";
   conflicts_ = conflicts;
   TraxelMap& traxel_map = get(node_traxel());
   conflicts_node_ = boost::shared_ptr<std::map<int, std::vector<std::vector<unsigned> > > >
@@ -332,6 +334,49 @@ void MultiHypothesesGraph::add_conflicts(boost::shared_ptr<std::map<int, std::ve
         conflicts_node_at.rbegin()->push_back(node_id);
       }
     }
+  }
+}
+
+namespace {
+bool operator<(const std::pair<MultiHypothesesGraph::Arc, feature_type>& p1, const std::pair<MultiHypothesesGraph::Arc, feature_type>& p2) {
+  return p1.second < p2.second;
+}
+
+}
+
+void MultiHypothesesGraph::limit_arcs(int maximum_arcs) {
+  if (classifier_added_ == false) {
+    throw std::runtime_error("MultiHypothesesGraph::limit_arcs() -- add classifier features first!");
+  }
+  LOG(logDEBUG) << "MultiHypothesesGraph::limit_arcs() -- entered with maximum_arcs = " << maximum_arcs;
+  MultiHypothesesGraph::MoveFeatureMap& move_map = get(node_move_features());
+  MultiHypothesesGraph::TraxelMap& traxel_map = get(node_traxel());
+  std::vector<MultiHypothesesGraph::Arc> arcs_for_disposal;
+  for (NodeIt n(*this); n != lemon::INVALID; ++n) {
+    if (countOutArcs(*this, n) > maximum_arcs) {
+      LOG(logDEBUG3) << "MultiHypothesesGraph::limit_arcs() -- collecting excess arcs for " << traxel_map[n];
+      // collect arcs for disposal
+      const MultiHypothesesGraph::MoveFeatureMap::Value& moves = move_map[n];
+      std::vector<std::pair<MultiHypothesesGraph::Arc, feature_type> > probabilities;
+      for (OutArcIt arc(*this, n); arc != lemon::INVALID; ++arc) {
+        probabilities.push_back(std::make_pair(arc, moves.find(traxel_map[target(arc)].Id)->second[1]));
+      }
+      std::sort(probabilities.begin(), probabilities.end());
+      for (std::vector<std::pair<MultiHypothesesGraph::Arc, feature_type> >::const_iterator it = probabilities.begin() + maximum_arcs;
+           it != probabilities.end();
+           ++it) {
+        arcs_for_disposal.push_back(it->first);
+      }
+    }
+  }
+  LOG(logDEBUG) << "MultiHypothesesGraph::limit_arcs() -- deleting excess arcs";
+  for (std::vector<MultiHypothesesGraph::Arc>::const_iterator arc_to_delete = arcs_for_disposal.begin();
+       arc_to_delete != arcs_for_disposal.end();
+       ++arc_to_delete) {
+    LOG(logDEBUG4) << "MultiHypothesesGraph::limit_arcs() -- erasing arc from "
+                   << traxel_map[source(*arc_to_delete)] << " to "
+                   << traxel_map[target(*arc_to_delete)];
+    erase(*arc_to_delete);
   }
 }
 

@@ -122,7 +122,6 @@ class MultiHypothesesGraph : public HypothesesGraph {
 
   void remove_traxel_features();
 
-  // if classification is done w/o saving, this can be removed
   void add_classifier_features(ClassifierStrategy* move,
                                ClassifierStrategy* division,
                                ClassifierStrategy* count,
@@ -131,6 +130,9 @@ class MultiHypothesesGraph : public HypothesesGraph {
   void add_cardinalities();
 
   void add_conflicts(boost::shared_ptr<ConflictMap > conflicts);
+
+  void limit_arcs(int maximum_arcs);
+  
 
   const ConflictMap& get_conflicts() const;
 
@@ -149,6 +151,8 @@ class MultiHypothesesGraph : public HypothesesGraph {
   // store conflicts by timestep
   boost::shared_ptr<ConflictMap > conflicts_;
   boost::shared_ptr<std::map<int, std::vector<std::vector<unsigned> > > > conflicts_node_;
+
+  bool classifier_added_; // indicates if classifier features have been added
 };
 
 
