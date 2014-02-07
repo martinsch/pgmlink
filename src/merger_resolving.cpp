@@ -138,19 +138,15 @@ namespace pgmlink {
   ////
 
   feature_array GMMInitializeArma::operator()() {
-    feature_array ret;
-    // std::back_insert_iterator<feature_array > bii(ret);
-    // arma::vec d = this->operator()("this is so dirty!");
-    // std::copy(d.begin(), d.end(), bii);
-    return ret;
-  }
-  
-
-  std::vector<arma::vec> GMMInitializeArma::operator()(const char*) {
+    feature_array ret(3*k_, 0);
     mlpack::gmm::GMM<> gmm(k_, data_.n_rows);
     score_ = gmm.Estimate(data_, n_trials_);
-    std::vector<arma::vec> centers = gmm.Means();
-    return centers;
+    const std::vector<arma::vec>& centers = gmm.Means();
+    for (size_t cluster = 0; cluster < centers.size(); ++cluster) {
+      const arma::vec& center = centers[cluster];
+      std::copy(center.begin(), center.end(), ret.begin() + 3*cluster);
+    }
+    return ret;
   }
 
   
@@ -717,13 +713,9 @@ void calculate_gmm_beforehand(HypothesesGraph& g, int n_trials, int n_dimensions
 #   pragma omp parallel for
     for (int k = 1; k <= k_max; ++k) {
       GMMInitializeArma gmm(k, data);
-      std::vector<arma::vec> means = gmm("terrible hack");
+      centers = gmm();
       double curr_bic = calculate_BIC(k, n_samples, regularization_weight, gmm);
       priors.at(k-1) = curr_bic;
-      unsigned idx = 0;
-      for (std::vector<arma::vec>::iterator it = means.begin(); it != means.end(); ++it) {
-        std::copy(it->begin(), it->end(), centers.begin() + ((idx+k-1)*(idx+k))/2*ndim);
-      }
     }
   }
 
