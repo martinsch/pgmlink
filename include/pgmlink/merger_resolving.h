@@ -739,8 +739,7 @@ void get_subset(const HypothesesGraph& src,
 template<int N, typename T>
 void extract_coordinates(TimestepIdCoordinateMapPtr coordinates,
                          const vigra::MultiArrayView<N, T>& image,
-                         long x_offset,
-                         long y_offset,
+                         const vigra::TinyVector<long int, N> offsets,
                          const Traxel& trax) {
   typedef typename vigra::CoupledIteratorType<N, T>::type Iterator;
   Iterator start = createCoupledIterator(image);
@@ -753,7 +752,7 @@ void extract_coordinates(TimestepIdCoordinateMapPtr coordinates,
       if (start.get<1>() == trax.Id) {
         const vigra::TinyVector<long int, N>& position = start.get<0>();
         for (int i = 0; i < N; ++i) {
-          coord[index, i] = position[i];
+          coord(index, i) = position[i] + offsets[i];
         }        
         ++index;
       } else {
