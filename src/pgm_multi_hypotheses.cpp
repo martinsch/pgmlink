@@ -758,6 +758,7 @@ void CVPR2014ModelBuilder::add_hierarchical_count_factor( Model& m,
   for (size_t state = 0; state < probabilities.size(); ++state) {
     coords[0] = state;
     table.set_value( coords, count()(probabilities[state]) );
+    LOG(logDEBUG4) << "count prob for " << component_traxel << "[" << state << "]: " << table.get_value(coords);
   }
   LOG(logDEBUG3) << "CVPR2014ModelBuilder::add_hierarchical_count_factor: "
                  << "helper count factor added";
@@ -828,9 +829,9 @@ void CVPR2014ModelBuilder::fill_probabilities(feature_array& probabilities, size
   // renormalize
   feature_type sum = std::accumulate(probabilities.begin(), probabilities.end(), 0.);
   if (sum > 0) {
-    for(feature_array::iterator p = probabilities.begin(); p != probabilities.end(); ++p) {
+    /*for(feature_array::iterator p = probabilities.begin(); p != probabilities.end(); ++p) {
       *p /= sum;
-    }
+    }*/
   } else {
     feature_type constant = 1/probabilities.size();
     std::fill(probabilities.begin(), probabilities.end(), constant);
