@@ -563,23 +563,36 @@ void ClassifierConstant::classify(Traxel& trax_out,
 void ClassifierConstant::classify(const Traxel& trax_out,
                                   const Traxel& trax_in,
                                   std::map<unsigned, feature_array >& feature_map,
-                                  bool /*with_predict*/) {
+                                  bool with_predict) {
   LOG(logDEBUG3) << "ClassifierConstant::classify() -- entered";
   LOG(logDEBUG4) << "ClassifierConstant::classify() -- " << trax_out << " -> " << trax_in;
-  // assert(feature_map[*out][*in].size() == 0);
-  feature_map[trax_in.Id].push_back(1-probability_);
-  feature_map[trax_in.Id].push_back(probability_);
+  if (with_predict) {
+    assert(feature_map[trax_in.Id].size() == 2);
+    feature_map[trax_in.Id][0] = 1-probability_;
+    feature_map[trax_in.Id][1] = probability_;
+  } else {
+    assert(feature_map[trax_in.Id].size() == 0);
+    feature_map[trax_in.Id].resize(2);
+  }
 }
 
 void ClassifierConstant::classify(const Traxel& trax_out,
                                   const Traxel& trax_in_first,
                                   const Traxel& trax_in_second,
                                   std::map<std::pair<unsigned, unsigned>, feature_array >& feature_map,
-                                  bool /*with_predict*/) {
+                                  bool with_predict) {
+  LOG(logDEBUG3) << "ClassifierConstant::classify() -- entered";
+  LOG(logDEBUG4) << "ClassifierConstant::classify() -- " << trax_out << " -> "
+                 << trax_in_first << ',' << trax_in_second;
   feature_array& features = feature_map[std::make_pair(trax_in_first.Id, trax_in_second.Id)];
-  assert(features.size() == 0);
-  features.push_back(1-probability_);
-  features.push_back(probability_);
+  if (with_predict) {
+    assert(features.size() == 2);
+    features[0] = 1-probability_;
+    features[1] = probability_;
+  } else {
+    assert(features.size() == 0);
+    features.resize(2);
+  }
 }
 
 
