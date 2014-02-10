@@ -527,8 +527,7 @@ void calculate_gmm_beforehand(HypothesesGraph& g, int n_trials, int n_dimensions
 template<int N, typename T>
 void extract_coordinates(TimestepIdCoordinateMapPtr coordinates,
                          const vigra::MultiArrayView<N, T>& image,
-                         long x_offset,
-                         long y_offset,
+                         const vigra::TinyVector<long int, N>& offsets,
                          const Traxel& trax);
 
 
@@ -739,13 +738,18 @@ void get_subset(const HypothesesGraph& src,
 template<int N, typename T>
 void extract_coordinates(TimestepIdCoordinateMapPtr coordinates,
                          const vigra::MultiArrayView<N, T>& image,
-                         const vigra::TinyVector<long int, N> offsets,
+                         const vigra::TinyVector<long int, N>& offsets,
                          const Traxel& trax) {
+  LOG(logDEBUG3) << "extract_coordinates -- entered for " << trax;
   typedef typename vigra::CoupledIteratorType<N, T>::type Iterator;
   Iterator start = createCoupledIterator(image);
   Iterator end = start.getEndIterator();
   arma::mat& coord = (*coordinates)[std::make_pair(trax.Timestep, trax.Id)];
   coord = arma::mat(trax.features.find("Count")->second[0], N);
+  LOG(logDEBUG4) << "extract_coordinates -- coordinate matrix has "
+                 << coord.n_rows << " rows and "
+                 << coord.n_cols << " cols. The traxel size is "
+                 << trax.features.find("Count")->second[0] << ".";
   {
     int index = 0;
     for (; start != end; ++start) {
@@ -761,6 +765,7 @@ void extract_coordinates(TimestepIdCoordinateMapPtr coordinates,
     }
     assert(index == coord.n_rows);
   }
+  LOG(logDEBUG3) << "extract_coordinates -- done";
 }
 
 
