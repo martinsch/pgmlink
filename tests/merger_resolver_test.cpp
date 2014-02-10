@@ -6,8 +6,12 @@
 #include <algorithm>
 #include <set>
 #include <vector>
+#include <iterator>
 
 #include <boost/test/unit_test.hpp>
+
+#include <vigra/multi_array.hxx>
+#include <vigra/tinyvector.hxx>
 
 #include "pgmlink/hypotheses.h"
 #include "pgmlink/traxels.h"
@@ -1007,6 +1011,153 @@ BOOST_AUTO_TEST_CASE( MergerResolver_kmeans) {
   KMeans kMeans(2, data);
   feature_array centers = kMeans();
   BOOST_CHECK_EQUAL_COLLECTIONS(centers.begin(), centers.end(), arr_res, arr_res+sizeof(arr_res)/sizeof(arr_res[0]));
+}
+
+
+BOOST_AUTO_TEST_CASE( MergerResolver_extract_coordinates ) {
+  std::cout << "MergerResolver_extract_coordinates" << std::endl;
+  vigra::MultiArray<2, unsigned> label_image2D(vigra::Shape2(10,10), 0u);
+  vigra::MultiArray<3, unsigned> label_image3D(vigra::Shape3(10,10,3), 0u);
+
+  int timestep = 5;
+
+  TimestepIdCoordinateMap coordinate_base2D;
+  TimestepIdCoordinateMap coordinate_base3D;
+
+  TimestepIdCoordinateMapPtr coordinate_result2D(new TimestepIdCoordinateMap);
+  TimestepIdCoordinateMapPtr coordinate_result3D(new TimestepIdCoordinateMap);
+
+  long int lower1, lower2, upper1, upper2, offset1 = 2, offset2 = 0;
+  unsigned label;
+  vigra::TinyVector<long int, 2> offset2D(offset1, offset2);
+  vigra::TinyVector<long int, 3> offset3D(offset1, offset2, 0);
+
+
+  std::cout << "MergerResolver_extract_coordinates -- create label images and coordinate lists" << std::endl;
+
+  lower1 = 0;
+  upper1 = 6;
+  lower2 = 0;
+  upper2 = 4;
+  label  = 3;
+  Traxel trax1(label, timestep);
+  trax1.features["Count"] = feature_array(1, (upper1-lower1)*(upper2-lower2));
+
+  coordinate_base2D[std::make_pair(timestep, label)] = arma::mat((upper1-lower1)*(upper2-lower2), 2);
+  coordinate_base3D[std::make_pair(timestep, label)] = arma::mat((upper1-lower1)*(upper2-lower2), 3);
+  {
+    int count = 0;
+    for (long idx2 = lower2; idx2 < upper2; ++idx2) {
+      for (long idx1 = lower1; idx1 < upper1; ++idx1, ++count) {
+        label_image2D(idx1, idx2) = label;
+        label_image3D(idx1, idx2, 1) = label;
+        coordinate_base2D[std::make_pair(timestep, label)](count, 0) = idx1 + offset1;
+        coordinate_base2D[std::make_pair(timestep, label)](count, 1) = idx2 + offset2;
+
+        coordinate_base3D[std::make_pair(timestep, label)](count, 0) = idx1 + offset1;
+        coordinate_base3D[std::make_pair(timestep, label)](count, 1) = idx2 + offset2;
+        coordinate_base3D[std::make_pair(timestep, label)](count, 2) = 1;
+      }
+    }
+  }
+
+  lower1 = 1;
+  upper1 = 4;
+  lower2 = 7;
+  upper2 = 10;
+  label  = 15;
+  Traxel trax2(label, timestep);
+  trax2.features["Count"] = feature_array(1, (upper1-lower1)*(upper2-lower2));
+  
+  coordinate_base2D[std::make_pair(timestep, label)] = arma::mat((upper1-lower1)*(upper2-lower2), 2);
+  coordinate_base3D[std::make_pair(timestep, label)] = arma::mat((upper1-lower1)*(upper2-lower2), 3);
+  {
+    int count = 0;
+    for (long idx2 = lower2; idx2 < upper2; ++idx2) {
+      for (long idx1 = lower1; idx1 < upper1; ++idx1, ++count) {
+        label_image2D(idx1, idx2) = label;
+        label_image3D(idx1, idx2, 1) = label;
+        coordinate_base2D[std::make_pair(timestep, label)](count, 0) = idx1 + offset1;
+        coordinate_base2D[std::make_pair(timestep, label)](count, 1) = idx2 + offset2;
+      
+        coordinate_base3D[std::make_pair(timestep, label)](count, 0) = idx1 + offset1;
+        coordinate_base3D[std::make_pair(timestep, label)](count, 1) = idx2 + offset2;
+        coordinate_base3D[std::make_pair(timestep, label)](count, 2) = 1;
+      }
+    }
+  }
+
+  lower1 = 6;
+  upper1 = 9;
+  lower2 = 1;
+  upper2 = 9;
+  label  = 7;
+  Traxel trax3(label, timestep);
+  trax3.features["Count"] = feature_array(1, (upper1-lower1)*(upper2-lower2));
+  
+  coordinate_base2D[std::make_pair(timestep, label)] = arma::mat((upper1-lower1)*(upper2-lower2), 2);
+  coordinate_base3D[std::make_pair(timestep, label)] = arma::mat((upper1-lower1)*(upper2-lower2), 3);
+  {
+    int count = 0;
+    for (long idx2 = lower2; idx2 < upper2; ++idx2) {
+      for (long idx1 = lower1; idx1 < upper1; ++idx1, ++count) {
+        label_image2D(idx1, idx2) = label;
+        label_image3D(idx1, idx2, 1) = label;
+        coordinate_base2D[std::make_pair(timestep, label)](count, 0) = idx1 + offset1;
+        coordinate_base2D[std::make_pair(timestep, label)](count, 1) = idx2 + offset2;
+      
+        coordinate_base3D[std::make_pair(timestep, label)](count, 0) = idx1 + offset1;
+        coordinate_base3D[std::make_pair(timestep, label)](count, 1) = idx2 + offset2;
+        coordinate_base3D[std::make_pair(timestep, label)](count, 2) = 1;
+      }
+    }
+  }
+
+  std::cout << "MergerResolver_extract_coordinates -- extract coordinates" << std::endl;
+
+  extract_coordinates<2, unsigned>(coordinate_result2D, label_image2D, offset2D, trax1);
+  extract_coordinates<2, unsigned>(coordinate_result2D, label_image2D, offset2D, trax2);
+  extract_coordinates<2, unsigned>(coordinate_result2D, label_image2D, offset2D, trax3);
+
+  extract_coordinates<3, unsigned>(coordinate_result3D, label_image3D, offset3D, trax1);
+  extract_coordinates<3, unsigned>(coordinate_result3D, label_image3D, offset3D, trax2);
+  extract_coordinates<3, unsigned>(coordinate_result3D, label_image3D, offset3D, trax3);
+
+  std::cout << "MergerResolver_extract_coordinates -- compare results" << std::endl;
+
+  BOOST_REQUIRE_EQUAL(coordinate_result2D->size(), coordinate_base2D.size());
+  BOOST_REQUIRE_EQUAL(coordinate_result3D->size(), coordinate_base3D.size());
+  
+
+  TimestepIdCoordinateMap::const_iterator result2D_it = coordinate_result2D->begin();
+  TimestepIdCoordinateMap::const_iterator base2D_it = coordinate_base2D.begin();
+
+  for (; result2D_it != coordinate_result2D->end(); ++result2D_it, ++base2D_it) {
+    BOOST_REQUIRE_EQUAL(result2D_it->first, base2D_it->first);
+    BOOST_REQUIRE_EQUAL(result2D_it->second.n_rows, base2D_it->second.n_rows);
+    BOOST_REQUIRE_EQUAL(result2D_it->second.n_cols, base2D_it->second.n_cols);
+    BOOST_CHECK_EQUAL_COLLECTIONS(result2D_it->second.begin(),
+                                  result2D_it->second.end(),
+                                  base2D_it->second.begin(),
+                                  base2D_it->second.end()
+                                  );
+  }
+
+  TimestepIdCoordinateMap::const_iterator result3D_it = coordinate_result3D->begin();
+  TimestepIdCoordinateMap::const_iterator base3D_it = coordinate_base3D.begin();
+
+  for (; result3D_it != coordinate_result3D->end(); ++result3D_it, ++base3D_it) {
+    BOOST_REQUIRE_EQUAL(result3D_it->first, base3D_it->first);
+    BOOST_REQUIRE_EQUAL(result3D_it->second.n_rows, base3D_it->second.n_rows);
+    BOOST_REQUIRE_EQUAL(result3D_it->second.n_cols, base3D_it->second.n_cols);
+    BOOST_CHECK_EQUAL_COLLECTIONS(result3D_it->second.begin(),
+                                  result3D_it->second.end(),
+                                  base3D_it->second.begin(),
+                                  base3D_it->second.end()
+                                  );
+  }
+  
+  
 }
 
 
