@@ -528,8 +528,8 @@ HypothesesGraph* MergerResolver::resolve_mergers(FeatureHandlerBase& handler) {
   LOG(logDEBUG) << "resolve_mergers() entered";
   property_map<node_active2, HypothesesGraph::base_graph>::type& active_map = g_->get(node_active2());
   property_map<node_active2, HypothesesGraph::base_graph>::type::ValueIt active_valueIt = active_map.beginValue();
-  HypothesesGraph::node_timestep_map& timestep_map = g_->get(node_timestep());
-  HypothesesGraph::node_timestep_map::ValueIt timestep_it = timestep_map.beginValue();
+  // HypothesesGraph::node_timestep_map& timestep_map = g_->get(node_timestep());
+  // HypothesesGraph::node_timestep_map::ValueIt timestep_it = timestep_map.beginValue();
 
   // std::vector<HypothesesGraph::Node> nodes_to_deactivate;
   // for (; timestep_it != timestep_map.endValue(); ++timestep_it) {
