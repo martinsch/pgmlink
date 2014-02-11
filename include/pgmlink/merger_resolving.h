@@ -748,12 +748,12 @@ void extract_coordinates(TimestepIdCoordinateMapPtr coordinates,
   Iterator start = createCoupledIterator(image);
   Iterator end = start.getEndIterator();
   arma::mat& coord = (*coordinates)[std::make_pair(trax.Timestep, trax.Id)];
-  coord = arma::mat(N, trax.features.find("Count")->second[0]);
+  coord = arma::mat(N, trax.features.find("count")->second[0]);
   // coord stores coordinates: each row is a spatial dimension and each column is a pixel
   LOG(logDEBUG4) << "extract_coordinates -- coordinate matrix has "
                  << coord.n_rows << " rows and "
                  << coord.n_cols << " cols. The traxel size is "
-                 << trax.features.find("Count")->second[0] << ".";
+                 << trax.features.find("count")->second[0] << ".";
   {
     int index = 0;
     for (; start != end; ++start) {
