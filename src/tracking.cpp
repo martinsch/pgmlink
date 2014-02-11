@@ -403,10 +403,11 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts, TimestepIdCoord
       if (coordinates) {
         extractor = new FeatureExtractorArmadillo(coordinates);
       } else {
+        calculate_gmm_beforehand(*graph, 1, number_of_dimensions_);
         extractor = new FeatureExtractorMCOMsFromMCOMs;
       }
       FeatureHandlerFromTraxels handler(*extractor, distance);
-      calculate_gmm_beforehand(*graph, 1, number_of_dimensions_);
+      
       m.resolve_mergers(handler);
 
       HypothesesGraph g_res;
