@@ -31,6 +31,20 @@ vector<vector<Event> > pythonChaingraphTracking(ChaingraphTracking& tr, TraxelSt
 	return result;
 }
 
+vector<vector<Event> > pythonConsTracking(ConsTracking& tr, TraxelStore& ts, TimestepIdCoordinateMapPtr& coordinates) {
+	vector<vector<Event> > result = std::vector<std::vector<Event> >(0);
+	// release the GIL
+	Py_BEGIN_ALLOW_THREADS
+	try {
+		result = tr(ts, coordinates);
+	} catch (std::exception& e) {
+		Py_BLOCK_THREADS
+		throw;
+	}
+	Py_END_ALLOW_THREADS
+	return result;
+}
+
 void export_track() {
     class_<vector<Event> >("EventVector")
 	.def(vector_indexing_suite<vector<Event> >())
@@ -72,7 +86,7 @@ void export_track() {
 							"with_divisions",
 							 "disappearance_cost", "appearance_cost", "with_merger_resolution", "number_of_dimensions",
 							 "transition_parameter", "border_width", "fov", "with_constraints")))
-	  .def("__call__", &ConsTracking::operator())
+	  .def("__call__", &pythonConsTracking)
 	  .def("detections", &ConsTracking::detections)
 	;
 
