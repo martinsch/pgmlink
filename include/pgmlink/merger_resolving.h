@@ -212,7 +212,7 @@ void get_centers(const arma::Mat<T>& data, const arma::Col<size_t> labels, arma:
  */
 class FeatureExtractorBase {
  public:
-  virtual std::vector<Traxel> operator()(Traxel trax, size_t nMergers, unsigned int max_id) = 0;
+  virtual std::vector<Traxel> operator()(Traxel& trax, size_t nMergers, unsigned int max_id) = 0;
  protected:
 };
 
@@ -222,7 +222,7 @@ class FeatureExtractorBase {
 ////
 class FeatureExtractorMCOMsFromPCOMs : public FeatureExtractorBase {
  public:
-  virtual std::vector<Traxel> operator()(Traxel trax, size_t nMergers, unsigned int max_id);
+  virtual std::vector<Traxel> operator()(Traxel& trax, size_t nMergers, unsigned int max_id);
 };
 
   
@@ -231,7 +231,7 @@ class FeatureExtractorMCOMsFromPCOMs : public FeatureExtractorBase {
 ////
 class FeatureExtractorMCOMsFromMCOMs : public FeatureExtractorBase {
  public:
-  virtual std::vector<Traxel> operator()(Traxel trax, size_t nMergers, unsigned int max_id);
+  virtual std::vector<Traxel> operator()(Traxel& trax, size_t nMergers, unsigned int max_id);
 };
     
 
@@ -240,7 +240,7 @@ class FeatureExtractorMCOMsFromMCOMs : public FeatureExtractorBase {
 ////
 class FeatureExtractorMCOMsFromKMeans : public FeatureExtractorBase {
  public:
-  virtual std::vector<Traxel> operator()(Traxel trax, size_t nMergers, unsigned int max_id);
+  virtual std::vector<Traxel> operator()(Traxel& trax, size_t nMergers, unsigned int max_id);
 };
 
 
@@ -252,7 +252,7 @@ class FeatureExtractorMCOMsFromGMM : public FeatureExtractorBase {
   int n_dim_;
  public:
   FeatureExtractorMCOMsFromGMM(int n_dim) : n_dim_(n_dim) {}
-  virtual std::vector<Traxel> operator()(Traxel trax, size_t nMergers, unsigned int max_id);
+  virtual std::vector<Traxel> operator()(Traxel& trax, size_t nMergers, unsigned int max_id);
 };
 
 ////
@@ -261,7 +261,7 @@ class FeatureExtractorMCOMsFromGMM : public FeatureExtractorBase {
 class FeatureExtractorArmadillo : public FeatureExtractorBase {
  public:
   FeatureExtractorArmadillo(TimestepIdCoordinateMapPtr coordinates);
-  virtual std::vector<Traxel> operator()(Traxel trax, size_t nMergers, unsigned int max_id);
+  virtual std::vector<Traxel> operator()(Traxel& trax, size_t nMergers, unsigned int max_id);
  private:
   FeatureExtractorArmadillo();
   TimestepIdCoordinateMapPtr coordinates_;
@@ -411,7 +411,7 @@ class MergerResolver {
 
   // Add arcs to nodes created to replace merger node.
   void add_arcs_for_replacement_node(HypothesesGraph::Node node,
-                                     Traxel trax,
+                                     Traxel& trax,
                                      std::vector<HypothesesGraph::base_graph::Arc> src,
                                      std::vector<HypothesesGraph::base_graph::Arc> dest,
                                      DistanceBase& distance);

@@ -188,11 +188,11 @@ double GMMInitializeArma::score() const {
 ////
 //// FeatureExtractorMCOMsFromKMeans
 ////
-std::vector<Traxel> FeatureExtractorMCOMsFromKMeans::operator()(Traxel trax,
+std::vector<Traxel> FeatureExtractorMCOMsFromKMeans::operator()(Traxel& trax,
                                                                 size_t nMergers,
                                                                 unsigned int max_id
                                                                 ) {
-  std::map<std::string, feature_array>::iterator it = trax.features.find("coordinates");
+  std::map<std::string, feature_array>::const_iterator it = trax.features.find("coordinates");
   assert(it != trax.features.end());
   std::vector<Traxel> res;
   KMeans kmeans(nMergers, it->second);
@@ -205,7 +205,7 @@ std::vector<Traxel> FeatureExtractorMCOMsFromKMeans::operator()(Traxel trax,
 ////
 //// FeatureExtractorMCOMsFromGMM
 ////
-std::vector<Traxel> FeatureExtractorMCOMsFromGMM::operator() (Traxel trax,
+std::vector<Traxel> FeatureExtractorMCOMsFromGMM::operator() (Traxel& trax,
                                                               size_t nMergers,
                                                               unsigned int max_id
                                                               ){
@@ -224,7 +224,7 @@ std::vector<Traxel> FeatureExtractorMCOMsFromGMM::operator() (Traxel trax,
 //// FeatureExtractorMCOMsFromPCOMs
 ////
 std::vector<Traxel> FeatureExtractorMCOMsFromPCOMs::operator()(
-    Traxel trax,
+    Traxel& trax,
     size_t nMerger,
     unsigned int start_id
                                                                ) {
@@ -250,7 +250,7 @@ std::vector<Traxel> FeatureExtractorMCOMsFromPCOMs::operator()(
 //// FeatureExtractorMCOMsFromMCOMs
 ////
 std::vector<Traxel> FeatureExtractorMCOMsFromMCOMs::operator()(
-    Traxel trax,
+    Traxel& trax,
     size_t nMerger,
     unsigned int start_id
                                                                ) {
@@ -280,7 +280,7 @@ FeatureExtractorArmadillo::FeatureExtractorArmadillo(TimestepIdCoordinateMapPtr 
 }
 
 
-std::vector<Traxel> FeatureExtractorArmadillo::operator() (Traxel trax,
+std::vector<Traxel> FeatureExtractorArmadillo::operator() (Traxel& trax,
                                                            size_t nMergers,
                                                            unsigned int max_id
                                                            ){
