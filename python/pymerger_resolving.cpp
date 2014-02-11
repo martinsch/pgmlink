@@ -7,6 +7,7 @@
 #include <vigra/multi_array.hxx>
 #include <vigra/numpy_array.hxx>
 #include <vigra/numpy_array_converters.hxx>
+#include <vigra/tinyvector.hxx>
 
 
 using namespace std;
@@ -28,6 +29,34 @@ void gmm_priors_and_centers_numpy_to_arma(const vigra::NumpyArray<2, T>& data, f
   gmm_priors_and_centers_arma(d, priors, centers, k_max, ndim, regularization_weight);
 }
 
+
+
+class PyTimestepIdCoordinateMap
+{
+ public:
+  PyTimestepIdCoordinateMap() : map_() {}
+  void initialize() {if (!map_) map_ = TimestepIdCoordinateMapPtr(new TimestepIdCoordinateMap);}
+  TimestepIdCoordinateMapPtr get() {return map_;}
+ private:
+  TimestepIdCoordinateMapPtr map_;
+};
+
+template <int N, typename T>
+void py_extract_coordinates(PyTimestepIdCoordinateMap coordinates,
+                            const vigra::NumpyArray<N, T>& image,
+                            const vigra::NumpyArray<1, long int>& offsets,
+                            const Traxel& trax) {
+  if (offsets.shape()[0] != N) {
+    throw std::runtime_error("py_extract_coordinates() -- Number of offsets and image dimensions disagree!");
+  }
+  vigra::TinyVector<long int, N> offsets_tv;
+  for (size_t idx = 0; idx < N; ++idx) {
+    offsets_tv[idx] = offsets[idx];
+  }
+  extract_coordinates<N, T>(coordinates.get(), image, offsets_tv, trax);
+}
+
+
 void export_gmm() {
   def("gmm_priors_and_centers", gmm_priors_and_centers);
   def("gmm_priors_and_centers", gmm_priors_and_centers_numpy_to_arma<double>);
@@ -35,4 +64,14 @@ void export_gmm() {
   def("gmm_priors_and_centers", gmm_priors_and_centers_numpy_to_arma<float>);
   def("gmm_priors_and_centers", gmm_priors_and_centers_numpy_to_arma<unsigned>);
   def("gmm_priors_and_centers", gmm_priors_and_centers_numpy_to_arma<int>);
+
+  class_<PyTimestepIdCoordinateMap>("TimestepIdCoordinateMap")
+      .def("initialize", &PyTimestepIdCoordinateMap::initialize)
+      .def("get", &PyTimestepIdCoordinateMap::get)
+      ;
+
+  class_<TimestepIdCoordinateMapPtr>("TimestepIdCoordinateMapPtr");
+
+  def("extract_coordinates", vigra::registerConverters(&py_extract_coordinates<2, unsigned>));
+  def("extract_coordinates", vigra::registerConverters(&py_extract_coordinates<3, unsigned>));
 }

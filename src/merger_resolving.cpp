@@ -138,14 +138,24 @@ double GMMWithInitialized::score() const {
 ////
 
 feature_array GMMInitializeArma::operator()() {
+  LOG(logDEBUG4) << "GMMInitializeArma::operator() -- entered";
   feature_array ret(3*k_, 0);
   mlpack::gmm::GMM<> gmm(k_, data_.n_rows);
   score_ = gmm.Estimate(data_, n_trials_);
+  // TRANSPOSE NECCESSARY FOR GMM?
   const std::vector<arma::vec>& centers = gmm.Means();
-  for (size_t cluster = 0; cluster < centers.size(); ++cluster) {
-    const arma::vec& center = centers[cluster];
-    std::copy(center.begin(), center.end(), ret.begin() + 3*cluster);
+  LOG(logDEBUG4) << "GMMInitializeArma::operator() -- ret has size " << ret.size()
+                 << " and got " << centers.size() << " centers from GMM.";
+  {
+    std::vector<arma::vec>::const_iterator it = centers.begin();
+    for (size_t cluster = 0; cluster < centers.size(); ++cluster, ++it) {
+      LOG(logDEBUG4) << "GMMInitializeArma::operator() -- copying cluster " << cluster
+                     << " to feature array ret with size " << ret.size();
+      std::copy(it->begin(), it->end(), ret.begin() + 3*cluster);
+    }
   }
+  LOG(logDEBUG4) << "GMMInitializeArma::operator() -- exit with feature_array ret.size()="
+                 << ret.size() << " (divide by 3 for number of clusters)";
   return ret;
 }
 
@@ -244,17 +254,19 @@ std::vector<Traxel> FeatureExtractorMCOMsFromMCOMs::operator()(
     size_t nMerger,
     unsigned int start_id
                                                                ) {
+  LOG(logDEBUG3) << "FeatureExtractorMCOMsFromMCOMs::operator() -- entered";
   std::map<std::string, feature_array>::iterator it = trax.features.find("mergerCOMs");
   assert(it != trax.features.end());
-  LOG(logINFO) << "FeatureExtractorMCOMsFromMCOMs::operator()() possible coms size: " << it->second.size()
+  LOG(logDEBUG3) << "FeatureExtractorMCOMsFromMCOMs::operator()() possible coms size: " << it->second.size()
                << " and objects in merger: " << nMerger;
   std::vector<Traxel> res;
   for (unsigned int n = 0; n < nMerger; ++n, ++start_id) {
     trax.Id = start_id;
     trax.features["com"] = feature_array(it->second.begin()+(3*n), it->second.begin()+(3*(n+1)));
     res.push_back(trax);
-    LOG(logINFO) << "FeatureExtractorMCOMsFromMCOMs::operator()(): Appended traxel with com (" << trax.features["com"][0] << "," << trax.features["com"][1] << "," << trax.features["com"][2] << ") and id " << trax.Id;
+    LOG(logDEBUG3) << "FeatureExtractorMCOMsFromMCOMs::operator()(): Appended traxel with com (" << trax.features["com"][0] << "," << trax.features["com"][1] << "," << trax.features["com"][2] << ") and id " << trax.Id;
   }
+  LOG(logDEBUG3) << std::endl;
   return res;
 }
 
@@ -269,16 +281,22 @@ FeatureExtractorArmadillo::FeatureExtractorArmadillo(TimestepIdCoordinateMapPtr 
 
 
 std::vector<Traxel> FeatureExtractorArmadillo::operator() (Traxel trax,
-                                                              size_t nMergers,
-                                                              unsigned int max_id
-                                                              ){
+                                                           size_t nMergers,
+                                                           unsigned int max_id
+                                                           ){
+  LOG(logDEBUG3) << "FeatureExtractorArmadillo::operator() -- entered for " << trax;
   TimestepIdCoordinateMap::const_iterator it = coordinates_->find(std::make_pair(trax.Timestep, trax.Id));
   if (it == coordinates_->end()) {
     throw std::runtime_error("Traxel not found in coordinates.");
-  } 
+  }
+  LOG(logDEBUG4) << "FeatureExtractorArmadillo::operator() -- coordinate list for " << trax
+                 << " has " << it->second.n_cols << " dimensions and "
+                 << it->second.n_rows << " points.";
   GMMInitializeArma gmm(nMergers, it->second);
-  trax.features["mergerCOMs"] = gmm();
+  feature_array merger_coms = gmm();
+  trax.features["mergerCOMs"] = feature_array(merger_coms.begin(), merger_coms.end());
   FeatureExtractorMCOMsFromMCOMs extractor;
+  LOG(logDEBUG3) << "FeatureExtractorArmadillo::operator() -- exit";
   return extractor(trax, nMergers, max_id);
 }
 
@@ -346,6 +364,7 @@ void FeatureHandlerFromTraxels::operator()(
     const std::vector<HypothesesGraph::base_graph::Arc>& targets,
     std::vector<unsigned int>& new_ids
                                            ) {
+  
   // property maps
   property_map<node_active2, HypothesesGraph::base_graph>::type& active_map = g.get(node_active2());
   property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g.get(node_traxel());
@@ -355,7 +374,9 @@ void FeatureHandlerFromTraxels::operator()(
 
   // traxel and vector of replacement traxels
   Traxel trax = traxel_map[n];
+  LOG(logDEBUG3) << "FeatureHandlerFromTraxel::operator() -- entered for " << trax;
   std::vector<Traxel> ft = extractor_(trax, n_merger, max_id);
+  LOG(logDEBUG3) << "FeatureHandlerFromTraxel::operator() -- got " << ft.size() << " new traxels";
   // MAYBE LOG
   for (std::vector<Traxel>::iterator it = ft.begin(); it != ft.end(); ++it) {
     // set traxel features, most of which can be copied from the merger node
@@ -377,6 +398,7 @@ void FeatureHandlerFromTraxels::operator()(
     node_resolution_map.set(new_node, true);
  
   }
+  LOG(logDEBUG3) << "FeatureHandlerFromTraxle::operator() -- exit";
 }
 
   

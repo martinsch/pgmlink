@@ -156,7 +156,10 @@ class GMMInitializeArma : public ClusteringMlpackBase {
   int n_trials_;
  public:
   GMMInitializeArma(int k, const arma::mat& data, int n_trials=1) :
-      k_(k), data_(data), score_(0.0), n_trials_(n_trials) {}
+      k_(k), data_(data), score_(0.0), n_trials_(n_trials) {
+    LOG(logDEBUG4) << "GMMInitializeArma -- constructor call";
+  }
+  ~GMMInitializeArma() {}
 
   virtual feature_array operator()();
   double score() const;
@@ -745,7 +748,8 @@ void extract_coordinates(TimestepIdCoordinateMapPtr coordinates,
   Iterator start = createCoupledIterator(image);
   Iterator end = start.getEndIterator();
   arma::mat& coord = (*coordinates)[std::make_pair(trax.Timestep, trax.Id)];
-  coord = arma::mat(trax.features.find("Count")->second[0], N);
+  coord = arma::mat(N, trax.features.find("Count")->second[0]);
+  // coord stores coordinates: each row is a spatial dimension and each column is a pixel
   LOG(logDEBUG4) << "extract_coordinates -- coordinate matrix has "
                  << coord.n_rows << " rows and "
                  << coord.n_cols << " cols. The traxel size is "
@@ -756,14 +760,14 @@ void extract_coordinates(TimestepIdCoordinateMapPtr coordinates,
       if (start.get<1>() == trax.Id) {
         const vigra::TinyVector<long int, N>& position = start.get<0>();
         for (int i = 0; i < N; ++i) {
-          coord(index, i) = position[i] + offsets[i];
+          coord(i, index) = position[i] + offsets[i];
         }        
         ++index;
       } else {
         continue;
       }
     }
-    assert(index == coord.n_rows);
+    assert(index == coord.n_cols);
   }
   LOG(logDEBUG3) << "extract_coordinates -- done";
 }
