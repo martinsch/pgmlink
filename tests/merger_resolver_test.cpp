@@ -1041,22 +1041,22 @@ BOOST_AUTO_TEST_CASE( MergerResolver_extract_coordinates ) {
   upper2 = 4;
   label  = 3;
   Traxel trax1(label, timestep);
-  trax1.features["Count"] = feature_array(1, (upper1-lower1)*(upper2-lower2));
+  trax1.features["count"] = feature_array(1, (upper1-lower1)*(upper2-lower2));
 
-  coordinate_base2D[std::make_pair(timestep, label)] = arma::mat((upper1-lower1)*(upper2-lower2), 2);
-  coordinate_base3D[std::make_pair(timestep, label)] = arma::mat((upper1-lower1)*(upper2-lower2), 3);
+  coordinate_base2D[std::make_pair(timestep, label)] = arma::mat(2, (upper1-lower1)*(upper2-lower2));
+  coordinate_base3D[std::make_pair(timestep, label)] = arma::mat(3, (upper1-lower1)*(upper2-lower2));
   {
     int count = 0;
     for (long idx2 = lower2; idx2 < upper2; ++idx2) {
       for (long idx1 = lower1; idx1 < upper1; ++idx1, ++count) {
         label_image2D(idx1, idx2) = label;
         label_image3D(idx1, idx2, 1) = label;
-        coordinate_base2D[std::make_pair(timestep, label)](count, 0) = idx1 + offset1;
-        coordinate_base2D[std::make_pair(timestep, label)](count, 1) = idx2 + offset2;
+        coordinate_base2D[std::make_pair(timestep, label)](0, count) = idx1 + offset1;
+        coordinate_base2D[std::make_pair(timestep, label)](1, count) = idx2 + offset2;
 
-        coordinate_base3D[std::make_pair(timestep, label)](count, 0) = idx1 + offset1;
-        coordinate_base3D[std::make_pair(timestep, label)](count, 1) = idx2 + offset2;
-        coordinate_base3D[std::make_pair(timestep, label)](count, 2) = 1;
+        coordinate_base3D[std::make_pair(timestep, label)](0, count) = idx1 + offset1;
+        coordinate_base3D[std::make_pair(timestep, label)](1, count) = idx2 + offset2;
+        coordinate_base3D[std::make_pair(timestep, label)](2, count) = 1;
       }
     }
   }
@@ -1067,22 +1067,22 @@ BOOST_AUTO_TEST_CASE( MergerResolver_extract_coordinates ) {
   upper2 = 10;
   label  = 15;
   Traxel trax2(label, timestep);
-  trax2.features["Count"] = feature_array(1, (upper1-lower1)*(upper2-lower2));
+  trax2.features["count"] = feature_array(1, (upper1-lower1)*(upper2-lower2));
   
-  coordinate_base2D[std::make_pair(timestep, label)] = arma::mat((upper1-lower1)*(upper2-lower2), 2);
-  coordinate_base3D[std::make_pair(timestep, label)] = arma::mat((upper1-lower1)*(upper2-lower2), 3);
+  coordinate_base2D[std::make_pair(timestep, label)] = arma::mat(2, (upper1-lower1)*(upper2-lower2));
+  coordinate_base3D[std::make_pair(timestep, label)] = arma::mat(3, (upper1-lower1)*(upper2-lower2));
   {
     int count = 0;
     for (long idx2 = lower2; idx2 < upper2; ++idx2) {
       for (long idx1 = lower1; idx1 < upper1; ++idx1, ++count) {
         label_image2D(idx1, idx2) = label;
         label_image3D(idx1, idx2, 1) = label;
-        coordinate_base2D[std::make_pair(timestep, label)](count, 0) = idx1 + offset1;
-        coordinate_base2D[std::make_pair(timestep, label)](count, 1) = idx2 + offset2;
+        coordinate_base2D[std::make_pair(timestep, label)](0, count) = idx1 + offset1;
+        coordinate_base2D[std::make_pair(timestep, label)](1, count) = idx2 + offset2;
       
-        coordinate_base3D[std::make_pair(timestep, label)](count, 0) = idx1 + offset1;
-        coordinate_base3D[std::make_pair(timestep, label)](count, 1) = idx2 + offset2;
-        coordinate_base3D[std::make_pair(timestep, label)](count, 2) = 1;
+        coordinate_base3D[std::make_pair(timestep, label)](0, count) = idx1 + offset1;
+        coordinate_base3D[std::make_pair(timestep, label)](1, count) = idx2 + offset2;
+        coordinate_base3D[std::make_pair(timestep, label)](2, count) = 1;
       }
     }
   }
@@ -1093,22 +1093,22 @@ BOOST_AUTO_TEST_CASE( MergerResolver_extract_coordinates ) {
   upper2 = 9;
   label  = 7;
   Traxel trax3(label, timestep);
-  trax3.features["Count"] = feature_array(1, (upper1-lower1)*(upper2-lower2));
+  trax3.features["count"] = feature_array(1, (upper1-lower1)*(upper2-lower2));
   
-  coordinate_base2D[std::make_pair(timestep, label)] = arma::mat((upper1-lower1)*(upper2-lower2), 2);
-  coordinate_base3D[std::make_pair(timestep, label)] = arma::mat((upper1-lower1)*(upper2-lower2), 3);
+  coordinate_base2D[std::make_pair(timestep, label)] = arma::mat(2, (upper1-lower1)*(upper2-lower2));
+  coordinate_base3D[std::make_pair(timestep, label)] = arma::mat(3, (upper1-lower1)*(upper2-lower2));
   {
     int count = 0;
     for (long idx2 = lower2; idx2 < upper2; ++idx2) {
       for (long idx1 = lower1; idx1 < upper1; ++idx1, ++count) {
         label_image2D(idx1, idx2) = label;
         label_image3D(idx1, idx2, 1) = label;
-        coordinate_base2D[std::make_pair(timestep, label)](count, 0) = idx1 + offset1;
-        coordinate_base2D[std::make_pair(timestep, label)](count, 1) = idx2 + offset2;
+        coordinate_base2D[std::make_pair(timestep, label)](0, count) = idx1 + offset1;
+        coordinate_base2D[std::make_pair(timestep, label)](1, count) = idx2 + offset2;
       
-        coordinate_base3D[std::make_pair(timestep, label)](count, 0) = idx1 + offset1;
-        coordinate_base3D[std::make_pair(timestep, label)](count, 1) = idx2 + offset2;
-        coordinate_base3D[std::make_pair(timestep, label)](count, 2) = 1;
+        coordinate_base3D[std::make_pair(timestep, label)](0, count) = idx1 + offset1;
+        coordinate_base3D[std::make_pair(timestep, label)](1, count) = idx2 + offset2;
+        coordinate_base3D[std::make_pair(timestep, label)](2, count) = 1;
       }
     }
   }
