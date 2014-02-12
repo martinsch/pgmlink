@@ -36,7 +36,7 @@ Dependencies that have to be built and installed manually:
 - openGM https://github.com/opengm/opengm
 - cplex/concert http://www-01.ibm.com/software/integration/optimization/cplex-optimizer/
 - dlib http://dlib.net/
-- mlpack http://mlpack.org/
+- mlpack (>= 1.0.8) http://mlpack.org/
 
 Dependencies that should be available as packages:
 
