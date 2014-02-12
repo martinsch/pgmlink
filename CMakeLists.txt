@@ -51,6 +51,7 @@ find_package( Lemon REQUIRED )
 find_package( Boost REQUIRED COMPONENTS serialization )
 find_package( Armadillo REQUIRED )
 find_package( Mlpack REQUIRED )
+find_package( Opengm REQUIRED )
 message(STATUS "  found: ${Boost_LIBRARIES}")
 
 if(WIN32)
@@ -70,7 +71,7 @@ endif()
 
 include_directories(${PROJECT_SOURCE_DIR}/include/)
 # include external headers as system includes so we do not have to cope with their warnings
-include_directories(SYSTEM ${ANN_INCLUDE_DIR} ${CPLEX_INCLUDE_DIRS} ${VIGRA_INCLUDE_DIR} ${LEMON_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
+include_directories(SYSTEM ${ANN_INCLUDE_DIR} ${CPLEX_INCLUDE_DIRS} ${VIGRA_INCLUDE_DIR} ${LEMON_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} ${Opengm_INCLUDE_DIR})
 
 # CPLEX switch to be compatible with STL
 ADD_DEFINITIONS(-DIL_STD)
@@ -91,6 +92,7 @@ message(STATUS "  VIGRA: ${VIGRA_INCLUDE_DIR}")
 message(STATUS "  Lemon: ${LEMON_INCLUDE_DIR}")
 message(STATUS "  Boost: ${Boost_INCLUDE_DIRS}")
 message(STATUS "  HDF5:  ${HDF5_INCLUDE_DIRS}")
+message(STATUS "  Opengm: ${Opengm_INCLUDE_DIR}")
 
 # hide these variables to have a cleaner interface
 mark_as_advanced( Boost_DIR )
