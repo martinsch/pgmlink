@@ -134,13 +134,25 @@ double GMMWithInitialized::score() const {
 
 
 ////
-//// GMMInitalizeArma
+//// GMMInitializeArma
 ////
+GMMInitializeArma::GMMInitializeArma(int k, const arma::mat& data, int n_trials, int n_iterations, double threshold) :
+    k_(k), data_(data), score_(0.0), n_trials_(n_trials), n_iterations_(n_iterations), threshold_(threshold) {
+  LOG(logDEBUG4) << "GMMInitializeArma -- constructor call";
+}
+
+
+GMMInitializeArma::~GMMInitializeArma() {
+
+}
+
 
 feature_array GMMInitializeArma::operator()() {
   LOG(logDEBUG4) << "GMMInitializeArma::operator() -- entered";
   feature_array ret(3*k_, 0);
   mlpack::gmm::GMM<> gmm(k_, data_.n_rows);
+  gmm.Fitter().MaxIterations() = n_iterations_;
+  gmm.Fitter().Tolerance() = threshold_;
   score_ = gmm.Estimate(data_, n_trials_);
   // TRANSPOSE NECCESSARY FOR GMM?
   const std::vector<arma::vec>& centers = gmm.Means();
