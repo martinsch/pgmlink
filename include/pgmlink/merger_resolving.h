@@ -148,21 +148,23 @@ class GMMWithInitialized : public ClusteringMlpackBase {
 
 
 class GMMInitializeArma : public ClusteringMlpackBase {
+
+ public:
+  
+  GMMInitializeArma(int k, const arma::mat& data, int n_trials=1, int n_iterations=30, double threshold=0.000001);
+  ~GMMInitializeArma();
+
+  virtual feature_array operator()();
+  double score() const;
+
  private:
   GMMInitializeArma();
   int k_;
   const arma::mat& data_;
   double score_;
   int n_trials_;
- public:
-  GMMInitializeArma(int k, const arma::mat& data, int n_trials=1) :
-      k_(k), data_(data), score_(0.0), n_trials_(n_trials) {
-    LOG(logDEBUG4) << "GMMInitializeArma -- constructor call";
-  }
-  ~GMMInitializeArma() {}
-
-  virtual feature_array operator()();
-  double score() const;
+  int n_iterations_;
+  double threshold_;
 
 };
 
