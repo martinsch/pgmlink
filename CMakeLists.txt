@@ -51,20 +51,7 @@ find_package( Lemon REQUIRED )
 find_package( Boost REQUIRED COMPONENTS serialization filesystem system)
 message(STATUS "  found: ${Boost_LIBRARIES}")
 
-# first try to find ArmadilloConfig.cmake to get correct transitive 
-# dependencies (e.g. libopenblas)
-find_package( Armadillo CONFIG )
-if(Armadillo_FOUND)
-    get_target_property(Armadillo_LIBRARY armadillo IMPORTED_IMPLIB_RELEASE)
-    get_target_property(Armadillo_LIBRARIES armadillo IMPORTED_LINK_INTERFACE_LIBRARIES_RELEASE)
-    set(Armadillo_LIBRARIES ${Armadillo_LIBRARY} ${Armadillo_LIBRARIES})
-    set(Armadillo_INCLUDE_DIR ${ARMADILLO_INCLUDE_DIRS})
-else()
-    # if this fails, try search heuristics
-    find_package( Armadillo REQUIRED )
-endif()
-message(STATUS "Armadillo: ${Armadillo_LIBRARIES}")
-
+find_package( Armadillo REQUIRED )
 find_package( Mlpack REQUIRED )
 find_package( Opengm REQUIRED )
 find_package( Vigranumpy REQUIRED PATHS ${Vigranumpy_DIR} )
@@ -91,7 +78,7 @@ endif()
 
 include_directories(${PROJECT_SOURCE_DIR}/include/)
 # include external headers as system includes so we do not have to cope with their warnings
-include_directories(SYSTEM ${ANN_INCLUDE_DIR} ${CPLEX_INCLUDE_DIRS} ${VIGRA_INCLUDE_DIR} ${LEMON_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
+include_directories(SYSTEM ${ANN_INCLUDE_DIR} ${CPLEX_INCLUDE_DIRS} ${VIGRA_INCLUDE_DIR} ${LEMON_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} ${Opengm_INCLUDE_DIR})
 
 # CPLEX switch to be compatible with STL
 ADD_DEFINITIONS(-DIL_STD)
