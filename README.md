@@ -2,12 +2,19 @@
 pgmLink is about *tracking by assignment with probabilistic graphical models and other approaches*. 
 It is written in C++ (core) and Python (high level, optional). 
 
-A graphical user interace (GUI) for our methods is freely available upon request.
+A graphical user interace (GUI) for our methods is freely available on github [martinsch/ilastik](http://github.com/martinsch/ilastik)
+and binaries for Windows/Mac/Linux are provided upon request.
 
 
 pgmlink provides an implementation of
 
-1. Chaingraph tracking, as it is described in
+1. **Conservation tracking**, as it is described in
+
+   M. Schiegg, P. Hanslovsky, B. X. Kausler, L. Hufnagel, F. A. Hamprecht. 
+   [**Conservation Tracking**](http://hci.iwr.uni-heidelberg.de/Staff/mschiegg/schiegg_13_conservation.pdf). Proceedings of the IEEE International Conference 
+   on Computer Vision (ICCV 2013), 2013.
+
+2. **Chaingraph tracking**, as it is described in
 
    B. X. Kausler, M. Schiegg, B. Andres, M. Lindner, H. Leitte, L. Hufnagel, 
    U. Koethe, F. A. Hamprecht. [**A Discrete Chain Graph Model for 3d+t Cell 
@@ -15,11 +22,6 @@ pgmlink provides an implementation of
    Conference on Computer Vision (ECCV 2012), 2012.
 
 
-2. Conservation tracking, as it is described in
-
-   M. Schiegg, P. Hanslovsky, B. X. Kausler, L. Hufnagel, F. A. Hamprecht. 
-   [**Conservation Tracking**](http://hci.iwr.uni-heidelberg.de/Staff/mschiegg/schiegg_13_conservation.pdf). Proceedings of the IEEE International Conference 
-   on Computer Vision (ICCV 2013), 2013.
 
 
 Please cite the appropriate paper if you use this software.
