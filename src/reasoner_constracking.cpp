@@ -18,12 +18,7 @@
 #include "opengm/functions/view.hxx"
 
 //Random:
-#include <boost/random/linear_congruential.hpp>
-#include <boost/random/uniform_int.hpp>
-#include <boost/random/uniform_real.hpp>
 #include <boost/random/variate_generator.hpp>
-#include <boost/random.hpp>
-#include <boost/generator_iterator.hpp>
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/normal_distribution.hpp>
 
@@ -148,10 +143,12 @@ void ConservationTracking::perturbedInference(HypothesesGraph& hypotheses, int n
 	LOG(logINFO) << "conclude";
 	conclude(*graph);
 	
-	//std::tr1::random_device rd;
-	//std::tr1::mt19937 gen(rd());
-	//std::normal_distribution<double> d(0.0,1.0);//to do: implement parameters for distribution
-	//rand();
+
+	boost::mt19937 rng;  
+	
+	typedef boost::normal_distribution<> distribution_type;
+	typedef boost::variate_generator<boost::mt19937, distribution_type> gen_type;
+	gen_type randn(rng, distribution_type(0, 20));
 	
 	LOG(logINFO) << "start perturbation";
 	
@@ -173,25 +170,23 @@ void ConservationTracking::perturbedInference(HypothesesGraph& hypotheses, int n
 		LOG(logINFO) << "ConservationTracking::perturbedInference: pertubation with offset " <<off[0]<<", size "<<off.size();
 		marray::Marray<ValueType> offset(off.begin(),off.end(),0);
 		
-		boost::mt19937 rng;  
 		
-		typedef boost::normal_distribution<> distribution_type;
-		typedef boost::variate_generator<boost::mt19937, distribution_type> gen_type;
-		gen_type randn(rng, distribution_type(0, sigma));
-		
-		for (marray::Marray<ValueType>::iterator j = offset.begin();j!=offset.end();j++){
-			offset(j)
+		for (int j=0;j<offset.dimension();j++){
+			for (int k=0;k<offset.shape(j);k++){
+				
+				LOG(logINFO) << "size of offset = " << j<<" "<<k << ", "<<model->operator[](0).size();
+				offset(j,k) = static_cast<double> (randn());
+			}
 		}
-		
+		LOG(logINFO) << "example offset " << offset(0,0);
 		LOG(logINFO) << "size of offset = " << offset.size() << ", "<<model->operator[](0).size();
 		LOG(logINFO) << "number Of Variables = " << offset.dimension() << ", "<< model->operator[](0).numberOfVariables();
 		//std::normal_distribution<double> d(0.0,1.0);//to do: implement parameters for distribution
 		
 		ViewFunctionType view(*model,0,1.0,&offset);
 		SubGmType PertMod2 = SubGmType(model[0].space());
-	
-		PertMod2.addFunction(view);
 		
+		PertMod2.addFunction(view);
 		optimizer_ = new cplex_optimizer(PertMod2, param);
 		
 		if (with_constraints_) {
