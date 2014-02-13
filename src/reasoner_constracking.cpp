@@ -5,6 +5,7 @@
 #include <opengm/datastructures/marray/marray.hxx>
 #include <opengm/graphicalmodel/graphicalmodel_hdf5.hxx>
 //#include <random>
+//#include <cstdlib>
 
 #include "pgmlink/hypotheses.h"
 #include "pgmlink/log.h"
@@ -15,6 +16,16 @@
 #include "opengm/graphicalmodel/graphicalmodel.hxx"
 #include "opengm/functions/modelviewfunction.hxx"
 #include "opengm/functions/view.hxx"
+
+//Random:
+#include <boost/random/linear_congruential.hpp>
+#include <boost/random/uniform_int.hpp>
+#include <boost/random/uniform_real.hpp>
+#include <boost/random/variate_generator.hpp>
+#include <boost/random.hpp>
+#include <boost/generator_iterator.hpp>
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/normal_distribution.hpp>
 
 using namespace std;
 
@@ -96,7 +107,7 @@ void ConservationTracking::writeUncertainties(HypothesesGraph& hypotheses, SubGm
 	}*/
 }
 
-void ConservationTracking::perturbedInference(HypothesesGraph& hypotheses){
+void ConservationTracking::perturbedInference(HypothesesGraph& hypotheses, int numberOfPertubations=0, double sigma=1){
 
 	HypothesesGraph *graph;
 	if (with_tracklets_) {
@@ -137,31 +148,46 @@ void ConservationTracking::perturbedInference(HypothesesGraph& hypotheses){
 	LOG(logINFO) << "conclude";
 	conclude(*graph);
 	
-	//std::random_device rd;
-	//std::mt19937 gen(rd());
+	//std::tr1::random_device rd;
+	//std::tr1::mt19937 gen(rd());
 	//std::normal_distribution<double> d(0.0,1.0);//to do: implement parameters for distribution
-	
+	//rand();
 	
 	LOG(logINFO) << "start perturbation";
 	
-	for (int i=0;i<10;i++){
+	for (int i=0;i<numberOfPertubations;i++){
 		
 		cplex_optimizer::Parameter param;
 		param.verbose_ = true;
 		param.integerConstraint_ = true;
 		param.epGap_ = ep_gap_;
-		LOG(logDEBUG) << "ConservationTracking::perturbedInference: pertubation " <<i;
+		LOG(logINFO) << "ConservationTracking::perturbedInference: pertubation " <<i;
 		
 		pgm::OpengmModelDeprecated::ogmGraphicalModel* model = pgm_->Model();
 		
-		marray::Marray<ValueType> offset(model[0].numberOfVariables());
-		LOG(logINFO) << "number Of Variables = " << offset.size();
+		vector<ValueType> off(model->operator[](0).numberOfVariables());
+		for (int j=0;j<model->operator[](0).numberOfVariables();j++){
+			off[j]=model->operator[](0).numberOfLabels(j);
+		}
+		
+		LOG(logINFO) << "ConservationTracking::perturbedInference: pertubation with offset " <<off[0]<<", size "<<off.size();
+		marray::Marray<ValueType> offset(off.begin(),off.end(),0);
+		
+		boost::mt19937 rng;  
+		
+		typedef boost::normal_distribution<> distribution_type;
+		typedef boost::variate_generator<boost::mt19937, distribution_type> gen_type;
+		gen_type randn(rng, distribution_type(0, sigma));
+		
+		for (marray::Marray<ValueType>::iterator j = offset.begin();j!=offset.end();j++){
+			offset(j)
+		}
+		
+		LOG(logINFO) << "size of offset = " << offset.size() << ", "<<model->operator[](0).size();
+		LOG(logINFO) << "number Of Variables = " << offset.dimension() << ", "<< model->operator[](0).numberOfVariables();
 		//std::normal_distribution<double> d(0.0,1.0);//to do: implement parameters for distribution
 		
-		offset = marray::Marray<ValueType>(model->operator[](0).size());
-		
-		LOG(logINFO) << "number Of Variables = " << offset.size();
-		ViewFunctionType view(*model,0,1.0/*&offset*/);
+		ViewFunctionType view(*model,0,1.0,&offset);
 		SubGmType PertMod2 = SubGmType(model[0].space());
 	
 		PertMod2.addFunction(view);

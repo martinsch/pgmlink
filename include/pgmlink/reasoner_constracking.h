@@ -83,7 +83,7 @@ class ConservationTracking : public Reasoner {
     virtual void formulate( const HypothesesGraph& );
     virtual void infer();
     virtual void conclude( HypothesesGraph& );
-    virtual void perturbedInference( HypothesesGraph&);
+    virtual void perturbedInference( HypothesesGraph&, int numberOfPertubations, double sigma);
     
     double forbidden_cost() const;
     bool with_constraints() const;
