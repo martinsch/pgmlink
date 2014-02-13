@@ -1,7 +1,7 @@
 ILASTIK_BUILD=$PWD
 CPLEX_ROOT_DIR=$HOME/local
 
-sudo apt-get install build-essential g++ gcc git cmake cmake-curses-gui gfortran libxext-dev &&
+sudo apt-get install build-essential g++ gcc git cmake cmake-curses-gui gfortran libxext-dev libfontconfig1-dev&&
 
 mkdir -p ilastik-build/build &&
 cd ilastik-build &&
