@@ -61,46 +61,7 @@ double ConservationTracking::forbidden_cost() const {
     return forbidden_cost_;
 }
 
-/*
-ModelView ConservationTracking::getPerturbedView(const HypothesesGraph& hypotheses){
 
-
-  //std::default_random_engine generator;
-  //std::normal_distribution<double> distribution(5.0,2.0);
-   
-      typedef opengm::GraphicalModel
-      <
-         ValueType, //value type (should be float double or long double)
-         opengm::Multiplier //operator (something like Adder or Multiplier)
-      >
-      GraphicalModelType;
-      int dim = gm[0].numberOfVariables();
-      marray::Marray<ValurType> offset(dim);
-      
-  for (int i=0; i<100; ++i) {
-    //double number = distribution(generator);
-   }
-   ModelView pertuhypo(hypotheses,0,1.0,&offset);
-   return pertuhypo;
-}*/
-
-void ConservationTracking::writeUncertainties(HypothesesGraph& hypotheses, SubGmType PertMod) {
-	vector<pgm::OpengmModelDeprecated::ogmInference::LabelType> solution;
-    opengm::InferenceTermination status = optimizer_->arg(solution);
-    
-	property_map<node_active, HypothesesGraph::base_graph>::type& active_nodes =
-            hypotheses.get(node_active());
-    property_map<arc_active_count, HypothesesGraph::base_graph>::type& active_nodes_count =
-            hypotheses.get(arc_active_count());
-    /*
-	for (std::map<HypothesesGraph::Arc, size_t>::const_iterator it = arc_map_.begin();
-	       it != arc_map_.end(); ++it) {
-			if (active_nodes[it]==true && solution[it]==false){
-					arcs_active_count[i]++;
-				}
-		}
-	}*/
-}
 
 void ConservationTracking::perturbedInference(HypothesesGraph& hypotheses, int numberOfPertubations=0, double sigma=1){
 
@@ -122,8 +83,6 @@ void ConservationTracking::perturbedInference(HypothesesGraph& hypotheses, int n
 	param.epGap_ = ep_gap_;
 	
 	pgm::OpengmModelDeprecated::ogmGraphicalModel* model = pgm_->Model();
-
-	int dim = model[0].numberOfVariables();
 	
 	ViewFunctionType view(*model,0,1.0);
 	SubGmType PertMod = SubGmType(model[0].space());
@@ -148,9 +107,11 @@ void ConservationTracking::perturbedInference(HypothesesGraph& hypotheses, int n
 	
 	typedef boost::normal_distribution<> distribution_type;
 	typedef boost::variate_generator<boost::mt19937, distribution_type> gen_type;
-	gen_type randn(rng, distribution_type(0, 20));
+	gen_type randn(rng, distribution_type(0, sigma));
 	
 	LOG(logINFO) << "start perturbation";
+	
+	isMAP_ = false;
 	
 	for (int i=0;i<numberOfPertubations;i++){
 		
@@ -163,7 +124,7 @@ void ConservationTracking::perturbedInference(HypothesesGraph& hypotheses, int n
 		pgm::OpengmModelDeprecated::ogmGraphicalModel* model = pgm_->Model();
 		
 		vector<ValueType> off(model->operator[](0).numberOfVariables());
-		for (int j=0;j<model->operator[](0).numberOfVariables();j++){
+		for (unsigned int j=0;j<model->operator[](0).numberOfVariables();j++){
 			off[j]=model->operator[](0).numberOfLabels(j);
 		}
 		
@@ -171,8 +132,8 @@ void ConservationTracking::perturbedInference(HypothesesGraph& hypotheses, int n
 		marray::Marray<ValueType> offset(off.begin(),off.end(),0);
 		
 		
-		for (int j=0;j<offset.dimension();j++){
-			for (int k=0;k<offset.shape(j);k++){
+		for (unsigned int j=0;j<offset.dimension();j++){
+			for (unsigned int k=0;k<offset.shape(j);k++){
 				
 				LOG(logINFO) << "size of offset = " << j<<" "<<k << ", "<<model->operator[](0).size();
 				offset(j,k) = static_cast<double> (randn());
@@ -194,7 +155,8 @@ void ConservationTracking::perturbedInference(HypothesesGraph& hypotheses, int n
 		}
 		infer();
 		
-		LOG(logDEBUG) << "perturbed inference " <<i;
+		LOG(logINFO) << "\n\nperturbed inference " <<i;
+		conclude(*graph);
 		//writeUncertainties(*graph,PertMod2);
 	}
 	//calculateUncertainty();
@@ -281,6 +243,14 @@ void ConservationTracking::conclude( HypothesesGraph& g) {
     property_map<arc_active, HypothesesGraph::base_graph>::type& active_arcs = g.get(arc_active());
     property_map<division_active, HypothesesGraph::base_graph>::type& division_nodes =
             g.get(division_active());
+    
+	// add counting properties for analysis of perturbed models
+	g.add(arc_active_count()).add(node_active_count());
+	property_map<arc_active_count, HypothesesGraph::base_graph>::type& active_arcs_count =
+		g.get(arc_active_count());
+	property_map<node_active_count, HypothesesGraph::base_graph>::type& active_nodes_count =
+		g.get(node_active_count());
+	
     if (!with_tracklets_) {
         tracklet_graph_.add(tracklet_intern_arc_ids()).add(traxel_arc_id());
     }
@@ -288,11 +258,18 @@ void ConservationTracking::conclude( HypothesesGraph& g) {
             tracklet_graph_.get(tracklet_intern_arc_ids());
     property_map<traxel_arc_id, HypothesesGraph::base_graph>::type& traxel_arc_id_map =
             tracklet_graph_.get(traxel_arc_id());
-
-    for (HypothesesGraph::ArcIt a(g); a != lemon::INVALID; ++a) {
-        active_arcs.set(a, false);
-    }
-
+	
+	if (isMAP_){
+		//initialize arcs as inactive and counts as 0
+		for (HypothesesGraph::ArcIt a(g); a != lemon::INVALID; ++a) {
+			active_arcs.set(a, false);
+			active_arcs_count.set(a,0);
+		}
+		for(std::map<HypothesesGraph::Node, size_t>::const_iterator it = app_node_map_.begin();
+            it != app_node_map_.end(); ++it) {
+			active_nodes_count.set(it->first,0);
+		}
+	}
     // write state after inference into 'active'-property maps
     // the node is also active if its appearance node is active
     for (std::map<HypothesesGraph::Node, size_t>::const_iterator it = app_node_map_.begin();
@@ -303,7 +280,11 @@ void ConservationTracking::conclude( HypothesesGraph& g) {
             for (std::vector<HypothesesGraph::Node>::const_iterator tr_n_it = traxel_nodes.begin();
                     tr_n_it != traxel_nodes.end(); ++tr_n_it) {
                 HypothesesGraph::Node n = *tr_n_it;
-                active_nodes.set(n, solution[it->second]);
+                if (isMAP_) {
+					active_nodes.set(n, solution[it->second]);}
+				else if (solution[it->second]>0) {
+					active_nodes_count.set(n,active_nodes_count[n]+1);
+				}
             }
             // set state of tracklet internal arcs
             std::vector<int> arc_ids = tracklet_arc_id_map[it->first];
@@ -312,7 +293,13 @@ void ConservationTracking::conclude( HypothesesGraph& g) {
                 HypothesesGraph::Arc a = g.arcFromId(*arc_id_it);
                 assert(active_arcs[a] == false);
                 if (solution[it->second] > 0) {
-                    active_arcs.set(a, true);
+					
+					if (isMAP_){
+						active_arcs.set(a, true);}
+                    else {
+						active_arcs_count.set(a, active_arcs_count[a]+1);
+					}
+                    
                     assert(active_nodes[g.source(a)] == solution[it->second]
                             && "tracklet internal arcs must have the same flow as their connected nodes");
                     assert(active_nodes[g.target(a)] == solution[it->second]
@@ -320,7 +307,12 @@ void ConservationTracking::conclude( HypothesesGraph& g) {
                 }
             }
         } else {
-            active_nodes.set(it->first, solution[it->second]);
+			if (isMAP_){
+				active_nodes.set(it->first, solution[it->second]);}
+			else if (solution[it->second]>0) {
+				LOG(logINFO) << "added a node with count " << active_nodes_count[it->first]+1 ;
+				active_nodes_count.set(it->first, active_nodes_count[it->first]+1 );
+			}
         }
     }
 
@@ -336,7 +328,13 @@ void ConservationTracking::conclude( HypothesesGraph& g) {
                         traxel_nodes.begin(); tr_n_it != traxel_nodes.end(); ++tr_n_it) {
                     HypothesesGraph::Node n = *tr_n_it;
                     if (active_nodes[n] == 0) {
-                        active_nodes.set(n, solution[it->second]);
+						
+						if (isMAP_) {
+							active_nodes.set(n, solution[it->second]);}
+						else if (solution[it->second]>0) {
+							active_nodes_count.set(n, active_nodes_count[n]+1);
+						}
+                    
                     } else {
                         assert(active_nodes[n] == solution[it->second]);
                     }
@@ -347,7 +345,12 @@ void ConservationTracking::conclude( HypothesesGraph& g) {
                         arc_id_it != arc_ids.end(); ++arc_id_it) {
                     HypothesesGraph::Arc a = g.arcFromId(*arc_id_it);
                     if (solution[it->second] > 0) {
-                        active_arcs.set(a, true);
+						if (isMAP_){
+							active_arcs.set(a, true);}
+						else {
+							active_arcs_count.set(a,active_arcs_count[a]+1);
+						}
+                        
                         assert(active_nodes[g.source(a)] == solution[it->second]
                                 && "tracklet internal arcs must have the same flow as their connected nodes");
                         assert(active_nodes[g.target(a)] == solution[it->second]
@@ -356,7 +359,11 @@ void ConservationTracking::conclude( HypothesesGraph& g) {
                 }
             } else {
                 if (active_nodes[it->first] == 0) {
-                    active_nodes.set(it->first, solution[it->second]);
+					if (isMAP_) {
+						active_nodes.set(it->first, solution[it->second]);
+					} else if (solution[it->second]>0) {
+						active_nodes_count.set(it->first, active_nodes_count[it->first]+1);
+					}
                 } else {
                     assert(active_nodes[it->first] == solution[it->second]);
                 }
@@ -368,14 +375,21 @@ void ConservationTracking::conclude( HypothesesGraph& g) {
             it != arc_map_.end(); ++it) {
         if (solution[it->second] >= 1) {
             if (with_tracklets_) {
-                active_arcs.set(g.arcFromId((traxel_arc_id_map[it->first])), true);
+				if (isMAP_){
+					active_arcs.set(g.arcFromId((traxel_arc_id_map[it->first])), true);}
+				else { 
+					active_arcs_count.set(g.arcFromId((traxel_arc_id_map[it->first])), active_arcs_count[g.arcFromId((traxel_arc_id_map[it->first]))]+1); }
             } else {
-                active_arcs.set(it->first, true);
+				if (isMAP_){
+					active_arcs.set(it->first, true);}
+				else {
+					active_arcs_count.set(it->first, active_arcs_count[it->first]+1); }
+		
             }
         }
     }
     // initialize division node map
-    if (with_divisions_) {
+    if (with_divisions_ && isMAP_) {
         for (std::map<HypothesesGraph::Node, size_t>::const_iterator it = div_node_map_.begin();
                 it != div_node_map_.end(); ++it) {
             division_nodes.set(it->first, false);

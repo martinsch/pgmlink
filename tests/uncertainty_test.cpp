@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE( uncertainty ) {
 
 	FieldOfView fov(0, 0, 0, 0, 4, 5, 5, 5); // tlow, xlow, ylow, zlow, tup, xup, yup, zup
 	ConsTracking tracking = ConsTracking(
-				  2, // max_number_objects
+				  1, // max_number_objects
 	              20, // max_neighbor_distance
 				  0.3, // division_threshold
 				  "none", // random_forest_filename

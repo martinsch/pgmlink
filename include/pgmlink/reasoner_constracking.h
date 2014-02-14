@@ -76,7 +76,8 @@ class ConservationTracking : public Reasoner {
           with_appearance_(with_appearance),
           with_disappearance_(with_disappearance),
           transition_parameter_(transition_parameter),
-          with_constraints_(with_constraints)
+          with_constraints_(with_constraints),
+          isMAP_(true)
     { };
     ~ConservationTracking();
 
@@ -163,6 +164,7 @@ class ConservationTracking : public Reasoner {
     double transition_parameter_;
 
     bool with_constraints_;
+    bool isMAP_;
 
     HypothesesGraph tracklet_graph_;
     std::map<HypothesesGraph::Node, std::vector<HypothesesGraph::Node> > tracklet2traxel_node_map_;
