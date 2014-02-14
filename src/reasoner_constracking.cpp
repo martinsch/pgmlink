@@ -63,7 +63,7 @@ double ConservationTracking::forbidden_cost() const {
 
 
 
-void ConservationTracking::perturbedInference(HypothesesGraph& hypotheses, int numberOfPertubations=0, double sigma=1){
+void ConservationTracking::perturbedInference(HypothesesGraph& hypotheses, int numberOfPertubations=0, double sigma=1, marray::Marray<ValueType>* defaultOffset=0){
 
 	HypothesesGraph *graph;
 	if (with_tracklets_) {
@@ -129,25 +129,33 @@ void ConservationTracking::perturbedInference(HypothesesGraph& hypotheses, int n
 		}
 		
 		LOG(logINFO) << "ConservationTracking::perturbedInference: pertubation with offset " <<off[0]<<", size "<<off.size();
+		
 		marray::Marray<ValueType> offset(off.begin(),off.end(),0);
-		
-		
-		for (unsigned int j=0;j<offset.dimension();j++){
-			for (unsigned int k=0;k<offset.shape(j);k++){
-				
-				LOG(logINFO) << "size of offset = " << j<<" "<<k << ", "<<model->operator[](0).size();
-				offset(j,k) = static_cast<double> (randn());
+			
+		if (defaultOffset==0){
+			
+			for (unsigned int j=0;j<offset.dimension();j++){
+				for (unsigned int k=0;k<offset.shape(j);k++){
+					
+					LOG(logINFO) << "size of offset = " << j<<" "<<k << ", "<<model->operator[](0).size();
+					offset(j,k) = static_cast<double> (randn());
+				}
 			}
+		} else {
+			offset = *defaultOffset;
 		}
+		
 		LOG(logINFO) << "example offset " << offset(0,0);
 		LOG(logINFO) << "size of offset = " << offset.size() << ", "<<model->operator[](0).size();
 		LOG(logINFO) << "number Of Variables = " << offset.dimension() << ", "<< model->operator[](0).numberOfVariables();
 		//std::normal_distribution<double> d(0.0,1.0);//to do: implement parameters for distribution
 		
-		ViewFunctionType view(*model,0,1.0,&offset);
-		SubGmType PertMod2 = SubGmType(model[0].space());
-		
+		ViewFunctionType view(*model,1,1.0,&offset);
+		SubGmType PertMod2 = SubGmType(model->space());
+	
 		PertMod2.addFunction(view);
+		
+		
 		optimizer_ = new cplex_optimizer(PertMod2, param);
 		
 		if (with_constraints_) {

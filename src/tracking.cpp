@@ -380,7 +380,7 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts, TimestepIdCoord
 		
     
 		cout << "-> perturbed Inference" << endl;
-		pgm.perturbedInference(*graph,10,1);
+		pgm.perturbedInference(*graph,10,10,0);
 		cout << "-> finished perturbed Inference" << endl;
 		}
 	else {

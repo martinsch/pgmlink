@@ -46,23 +46,27 @@ BOOST_AUTO_TEST_CASE( uncertainty ) {
 	Traxel n11, n12, n21, n31, n41, n42;
 	feature_array com(feature_array::difference_type(3));
 	feature_array divProb(feature_array::difference_type(1));
+	feature_array detProb(feature_array::difference_type(3));
+	
+	detProb[0] = 0.01; detProb[1] = 0.98; detProb[2] = 0.01;
+	
 	n11.Id = 1; n11.Timestep = 1; com[0] = 0; com[1] = 0; com[2] = 0; divProb[0] = 0.1;
-	n11.features["com"] = com; n11.features["divProb"] = divProb;
+	n11.features["com"] = com; n11.features["divProb"] = divProb; n11.features["detProb"] = detProb;
 	add(ts,n11);
-	n12.Id = 3; n12.Timestep = 1; com[0] = 2; com[1] = 2; com[2] = 2; divProb[0] = 0.1;
-	n12.features["com"] = com; n12.features["divProb"] = divProb;
+	n12.Id = 3; n12.Timestep = 1; com[0] = 2; com[1] = 2; com[2] = 2; divProb[0] = 0.1;detProb[0]=0.9;
+	n12.features["com"] = com; n12.features["divProb"] = divProb; n12.features["detProb"] = detProb;
 	add(ts,n12);
-	n21.Id = 10; n21.Timestep = 2; com[0] = 1; com[1] = 1; com[2] = 1; divProb[0] = 0.1;
-	n21.features["com"] = com; n21.features["divProb"] = divProb;
+	n21.Id = 10; n21.Timestep = 2; com[0] = 1; com[1] = 1; com[2] = 1; divProb[0] = 0.1;detProb[0]=0.01;
+	n21.features["com"] = com; n21.features["divProb"] = divProb; n21.features["detProb"] = detProb;
 	add(ts,n21);
 	n31.Id = 11; n31.Timestep = 3; com[0] = 1; com[1] = 1; com[2] = 1; divProb[0] = 0.1;
-	n31.features["com"] = com; n31.features["divProb"] = divProb;
+	n31.features["com"] = com; n31.features["divProb"] = divProb; n31.features["detProb"] = detProb;
 	add(ts,n31);
 	n41.Id = 12; n41.Timestep = 4; com[0] = 0; com[1] = 0; com[2] = 0; divProb[0] = 0.1;
-	n41.features["com"] = com; n41.features["divProb"] = divProb;
+	n41.features["com"] = com; n41.features["divProb"] = divProb; n41.features["detProb"] = detProb;
 	add(ts,n41);
 	n42.Id = 13; n42.Timestep = 4; com[0] = 0; com[1] = 0; com[2] = 0; divProb[0] = 0.1;
-	n42.features["com"] = com; n42.features["divProb"] = divProb;
+	n42.features["com"] = com; n42.features["divProb"] = divProb; n42.features["detProb"] = detProb;
 	add(ts,n42);
 
 
