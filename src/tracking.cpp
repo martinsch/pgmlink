@@ -168,7 +168,6 @@ vector<map<unsigned int, bool> > ChaingraphTracking::detections() {
 }
 
 
-
 namespace {
 std::vector<double> computeDetProb(double vol, vector<double> means, vector<double> s2) {
 	std::vector<double> result;
@@ -312,7 +311,7 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts, TimestepIdCoord
 	transition = NegLnTransition(transition_weight_);
 
 	cout << "-> building hypotheses" << endl;
-	SingleTimestepTraxel_HypothesesBuilder::Options builder_opts(1, // max_nearest_neighbors
+	SingleTimestepTraxel_HypothesesBuilder::Options builder_opts(2, // max_nearest_neighbors
 				max_dist_,
 				true, // forward_backward
 				with_divisions_, // consider_divisions
@@ -380,7 +379,7 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts, TimestepIdCoord
 		
     
 		cout << "-> perturbed Inference" << endl;
-		pgm.perturbedInference(*graph,10,10,0);
+		pgm.perturbedInference(*graph,30,2,0);
 		cout << "-> finished perturbed Inference" << endl;
 		}
 	else {
