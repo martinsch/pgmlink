@@ -86,7 +86,8 @@ namespace pgmlink {
   struct node_active_count {};
   template <typename Graph>
     struct property_map<node_active_count, Graph> {
-    typedef lemon::IterableIntMap< Graph, typename Graph::Node> type;
+	typedef lemon::IterableValueMap< Graph, typename Graph::Node, std::vector<long unsigned int> > type;
+    //typedef lemon::IterableIntMap< Graph, typename Graph::Node> type;
     static const std::string name;
   };
   template <typename Graph>
@@ -96,7 +97,8 @@ namespace pgmlink {
   struct arc_active_count {};
   template <typename Graph>
     struct property_map<arc_active_count, Graph> {
-    typedef lemon::IterableIntMap< Graph, typename Graph::Arc> type;
+	typedef lemon::IterableValueMap< Graph, typename Graph::Arc, std::vector<bool> > type;
+    //typedef lemon::IterableIntMap< Graph, typename Graph::Arc> type;
     static const std::string name;
   };
   template <typename Graph>
