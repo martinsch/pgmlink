@@ -52,6 +52,11 @@ find_package( Boost REQUIRED COMPONENTS serialization )
 find_package( Armadillo REQUIRED )
 find_package( Mlpack REQUIRED )
 find_package( Opengm REQUIRED )
+find_package( Vigranumpy REQUIRED PATHS ${Vigranumpy_DIR} )
+SET( Vigranumpy_DIR ${Vigranumpy_DIR}
+  CACHE PATH "Directory containing VigranumpyConfig.cmake"
+  FORCE )
+
 message(STATUS "  found: ${Boost_LIBRARIES}")
 
 if(WIN32)
