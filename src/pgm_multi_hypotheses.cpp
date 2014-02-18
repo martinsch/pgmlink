@@ -785,7 +785,7 @@ void CVPR2014ModelBuilder::add_explicit_count_factor( Model& m,
   fill_probabilities(probabilities, maximum_active_regions);
 
     std::vector<size_t> coords(table_dim, 0);
-    OpengmExplicitFactor<double> table( vi, forbidden_cost() );
+    OpengmExplicitFactor<double> table( vi, 0.0 );
 
     for (size_t i = 0; i < static_cast<size_t>(std::pow(2., static_cast<int>(table_dim))); ++i) {
       std::vector<size_t> state = DecToBin(i);
@@ -889,7 +889,7 @@ void CVPR2014ModelBuilder::add_outgoing_factor( const MultiHypothesesGraph& hypo
 
     
   std::vector<size_t> coords(table_dim, 0);
-  OpengmExplicitFactor<double> table( vi, forbidden_cost() );
+  OpengmExplicitFactor<double> table( vi, 0.0 );
   
   // opportunity?
   table.set_value( coords, 0 );
@@ -972,7 +972,7 @@ void CVPR2014ModelBuilder::add_outgoing_factor( const MultiHypothesesGraph& hypo
                      std::max(maximum_non_move_energy, maximum_non_division_energy)
                      );
     LOG(logDEBUG3) << "CVPR2014ModelBuilder::add_outgoing_factor: at least two outgoing arcs: "
-                   << "forbidden=" << forbidden_cost() << ", disappearance=" << table.get_value(coords);
+                   << "forbidden (not used, intialize everything with 0.0)=" << forbidden_cost() << ", disappearance=" << table.get_value(coords);
     coords[0] = 0;
   }
 
@@ -1001,26 +1001,26 @@ void CVPR2014ModelBuilder::add_incoming_factor( const MultiHypothesesGraph& hypo
   }
 
   // construct factor
-  LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_incoming_factor: " << vi.size();
-
   
-  LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_incoming_factor: constructing factor for "
-                 << trax << ": " << std::pow(2., static_cast<int>(vi.size())) << " entries (2^" << vi.size() << ")";
-  const size_t table_dim = vi.size();
-  std::vector<size_t> coords(table_dim, 0);
-  OpengmExplicitFactor<double> table( vi, forbidden_cost() );
+  
 
   // appearance
   if (trax.Timestep > hypotheses.earliest_timestep()) {
+    LOG(logDEBUG4) << "CVPR2014ModelBuilder::add_incoming_factor: constructing factor for "
+                   << trax << ": " << std::pow(2., static_cast<int>(vi.size())) << " entries (2^" << vi.size() << ")";
+    const size_t table_dim = vi.size();
+    std::vector<size_t> coords(table_dim, 0);
+    OpengmExplicitFactor<double> table( vi, 0.0 );
     coords[0] = 1;
     table.set_value( coords, (trax.features.find("cardinality")->second[0]/maximum_cardinality)*appearance()(trax) );
     // assert(table.get_value( coords ) == (trax.features.find("cardinality")->second[0]/maximum_cardinality+1.5)*appearance()(trax) );
     LOG(logDEBUG2) << "CVPR2014ModelBuilder::add_incoming_factor: appearance="
                    << table.get_value( coords );
     coords[0] = 0;
+    table.add_to( *m.opengm_model );
   }
 
-  table.add_to( *m.opengm_model );
+  
   LOG(logDEBUG2) << "CVPR2014ModelBuilder::add_incoming_factor: done";
 }
 
