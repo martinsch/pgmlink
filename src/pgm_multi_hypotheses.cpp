@@ -847,6 +847,17 @@ double get_transition_prob(double distance, size_t state, double alpha) {
   }
   return prob;
 }
+
+double border_weight(FieldOfView fov, double margin, Traxel tr) {
+	double distance_to_border = fov.spatial_distance_to_border(tr.Timestep,tr.X(),tr.Y(),tr.Z(),false);
+	if( distance_to_border < margin) {
+	  return (distance_to_border / margin);
+	} else {
+		return 1.;
+	}
+
+}
+
 }
 
 
@@ -967,10 +978,13 @@ void CVPR2014ModelBuilder::add_outgoing_factor( const MultiHypothesesGraph& hypo
   LOG(logDEBUG3) << "CVPR2014ModeLBuilder::add_outoging_factor: adding disappearance for " << trax;
   if (trax.Timestep < hypotheses.latest_timestep()) {
     coords[0] = 1;
-    table.set_value( coords,
-                     (trax.features.find("cardinality")->second[0]/maximum_cardinality)*(disappearance()(trax)) +
-                     std::max(maximum_non_move_energy, maximum_non_division_energy)
-                     );
+
+    double disapp = (trax.features.find("cardinality")->second[0]/maximum_cardinality)*(disappearance()(trax)) +
+            std::max(maximum_non_move_energy, maximum_non_division_energy);
+    disapp *= border_weight(fov_, border_margin_, trax);
+    LOG(logDEBUG4) << "disappearance border_weight = " << border_weight(fov_, border_margin_, trax);
+
+    table.set_value( coords, disapp );
     LOG(logDEBUG3) << "CVPR2014ModelBuilder::add_outgoing_factor: at least two outgoing arcs: "
                    << "forbidden (not used, intialize everything with 0.0)=" << forbidden_cost() << ", disappearance=" << table.get_value(coords);
     coords[0] = 0;
@@ -1012,7 +1026,10 @@ void CVPR2014ModelBuilder::add_incoming_factor( const MultiHypothesesGraph& hypo
     std::vector<size_t> coords(table_dim, 0);
     OpengmExplicitFactor<double> table( vi, 0.0 );
     coords[0] = 1;
-    table.set_value( coords, (trax.features.find("cardinality")->second[0]/maximum_cardinality)*appearance()(trax) );
+    double appear = (trax.features.find("cardinality")->second[0]/maximum_cardinality)*appearance()(trax);
+    appear *= border_weight(fov_, border_margin_, trax);
+	LOG(logDEBUG4) << "appearance border_weight = " << border_weight(fov_, border_margin_, trax);
+    table.set_value( coords, appear);
     // assert(table.get_value( coords ) == (trax.features.find("cardinality")->second[0]/maximum_cardinality+1.5)*appearance()(trax) );
     LOG(logDEBUG2) << "CVPR2014ModelBuilder::add_incoming_factor: appearance="
                    << table.get_value( coords );
