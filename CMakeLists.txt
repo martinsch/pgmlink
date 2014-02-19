@@ -49,6 +49,15 @@ find_package( Cplex REQUIRED )
 find_package( VIGRA REQUIRED )
 find_package( Lemon REQUIRED )
 find_package( Boost REQUIRED COMPONENTS serialization filesystem system)
+find_package( Armadillo REQUIRED )
+find_package( Mlpack REQUIRED )
+find_package( Opengm REQUIRED )
+find_package( Vigranumpy REQUIRED PATHS ${Vigranumpy_DIR} )
+SET( Vigranumpy_DIR ${Vigranumpy_DIR}
+  CACHE PATH "Directory containing VigranumpyConfig.cmake"
+  FORCE )
+find_package( Xml2 REQUIRED )
+
 message(STATUS "  found: ${Boost_LIBRARIES}")
 
 if(WIN32)
@@ -89,6 +98,8 @@ message(STATUS "  VIGRA: ${VIGRA_INCLUDE_DIR}")
 message(STATUS "  Lemon: ${LEMON_INCLUDE_DIR}")
 message(STATUS "  Boost: ${Boost_INCLUDE_DIRS}")
 message(STATUS "  HDF5:  ${HDF5_INCLUDE_DIRS}")
+message(STATUS "  Opengm: ${Opengm_INCLUDE_DIR}")
+message(STATUS "  libxml2:  ${Xml2_INCLUDE_DIR}")
 
 # hide these variables to have a cleaner interface
 link_directories(${FFTW3_LIBRARY_DIR})
