@@ -35,11 +35,11 @@ typedef opengm::LPCplex<pgm::OpengmModelDeprecated::ogmGraphicalModel,
 			pgm::OpengmModelDeprecated::ogmAccumulator> cplex_optimizerHG;
 
 
-typedef opengm::GraphicalModel
+/*typedef opengm::GraphicalModel
 		<ValueType, OperatorType,  typename opengm::meta::TypeListGenerator
 		<opengm::ModelViewFunction<pgm::OpengmModelDeprecated::ogmGraphicalModel, marray::Marray<ValueType> > >::type, 
 		opengm::DiscreteSpace<IndexType,LabelType> > 
-		SubGmType;
+		SubGmType;*/
 
 
 /*typedef opengm::LPCplex
@@ -85,12 +85,18 @@ void ConservationTracking::perturbedInference(HypothesesGraph& hypotheses, int n
 	
 	pgm::OpengmModelDeprecated::ogmGraphicalModel* model = pgm_->Model();
 	
-	ViewFunctionType view(*model,0,1.0);
 	SubGmType PertMod = SubGmType(model[0].space());
-	
-	PertMod.addFunction(view);
+	for(size_t factorId=0; factorId<model->numberOfFactors(); ++factorId) {
+		
+		ViewFunctionType view(*model,factorId,1.0/model->numberOfFactors());
+		
+		LOG(logINFO) << "new view of size "<<view.size()<<" for factor index "<<factorId;
+		
+		const typename SubGmType::FunctionIdentifier funcId =PertMod.addFunction(view);
+		
+		PertMod.addFactor(funcId,model->operator[](factorId).variableIndicesBegin(),model->operator[](factorId).variableIndicesEnd());
+    }
     
-	LOG(logINFO) << "initialize optimizer= "<<view.size();
 	optimizer_ = new cplex_optimizer(PertMod, param);
 	
 	LOG(logINFO) << "add_constraints" << model[0].numberOfVariables();
@@ -120,44 +126,56 @@ void ConservationTracking::perturbedInference(HypothesesGraph& hypotheses, int n
 		param.verbose_ = true;
 		param.integerConstraint_ = true;
 		param.epGap_ = ep_gap_;
-		LOG(logINFO) << "ConservationTracking::perturbedInference: pertubation " <<i;
+		LOG(logINFO) << "ConservationTracking::perturbedInference: pertubation " <<i<<" with number of factors "<< model->numberOfFactors();
 		
-		pgm::OpengmModelDeprecated::ogmGraphicalModel* model = pgm_->Model();
-		
-		vector<ValueType> off(model->operator[](0).numberOfVariables());
-		for (unsigned int j=0;j<model->operator[](0).numberOfVariables();j++){
-			off[j]=model->operator[](0).numberOfLabels(j);
-		}
-		
-		LOG(logINFO) << "ConservationTracking::perturbedInference: pertubation with offset " <<off[0]<<", size "<<off.size();
-		
-		marray::Marray<ValueType> offset(off.begin(),off.end(),0);
-			
-		if (defaultOffset==0){
-			
-			for (unsigned int j=0;j<offset.dimension();j++){
-				for (unsigned int k=0;k<offset.shape(j);k++){
-					
-					LOG(logINFO) << "size of offset = " << j<<" "<<k << ", "<<model->operator[](0).size();
-					offset(j,k) = static_cast<double> (randn());
-				}
-			}
-		} else {
-			offset = *defaultOffset;
-		}
-		
-		LOG(logINFO) << "example offset " << offset(0,0);
-		LOG(logINFO) << "size of offset = " << offset.size() << ", "<<model->operator[](0).size();
-		LOG(logINFO) << "number Of Variables = " << offset.dimension() << ", "<< model->operator[](0).numberOfVariables();
-		//std::normal_distribution<double> d(0.0,1.0);//to do: implement parameters for distribution
-		
-		ViewFunctionType view(*model,0,1.0,&offset);
 		SubGmType PertMod2 = SubGmType(model->space());
-	
-		PertMod2.addFunction(view);
-		unsigned char labeling[] = {0, 1, 2, 3};
-		PertMod2.evaluate(labeling);
+		int nOF = model->numberOfFactors();
+		for(int factorId=0; factorId<nOF; factorId++) {
+			
+			int nOV = model->operator[](factorId).numberOfVariables();
+			
+			if (nOV!=1){
+				//perturb only unaries
+				ViewFunctionType view(*model,factorId,1.0/nOF);
+				const typename SubGmType::FunctionIdentifier funcId = PertMod2.addFunction(view);
+				PertMod2.addFactor(funcId,model->operator[](factorId).variableIndicesBegin(),model->operator[](factorId).variableIndicesEnd());
+				continue;
+			}	
+				
+			int nOL = model->operator[](factorId).numberOfLabels(0);
+			vector<int> off(1,2);
+			
+			LOG(logINFO) << "ConservationTracking::perturbedInference: pertubation with offset " <<off[0]<<", size "<<nOL;
+			
+			marray::Marray<ValueType> offset(off.begin(),off.end(),0);
+			
+			LOG(logDEBUG4) << "ConservationTracking::perturbedInference: pertubation with offset " <<offset.dimension()<<", size "<<offset.shape(0);
+			if (defaultOffset==0){
+				//TODO: fix offset access issues
+				
+				for (int k=0;k<nOL;k++){
+					
+					LOG(logDEBUG4)<<k << ", " <<offset.dimension()<< ", "<<offset.shape(0);
+					offset(k) = 0;//static_cast<ValueType> (randn());
+						
+				}
+			} else {
+				offset = *defaultOffset;
+			}
+			
+			//LOG(logINFO) << "example offset " << offset(0,0);
+			LOG(logINFO) << "offset information " << offset.size() << ", "<<model->operator[](factorId).size();
+			LOG(logINFO) << "number Of Variables = " << offset.dimension() << ", "<< nOV;
+			LOG(logINFO) << "number Of Labels = " << offset.shape(0) << ", "<< nOL;
+			LOG(logINFO) << "offset " << offset(0)<<offset(1);
+			
+			
+			ViewFunctionType view(*model,factorId,1.0/nOF,&offset);
+			const typename SubGmType::FunctionIdentifier funcId = PertMod2.addFunction(view);
+			PertMod2.addFactor(funcId,model->operator[](factorId).variableIndicesBegin(),model->operator[](factorId).variableIndicesEnd());
+		}
 		
+		LOG(logINFO) << "plug into cplex";
 		optimizer_ = new cplex_optimizer(PertMod2, param);
 		
 		if (with_constraints_) {
@@ -167,7 +185,6 @@ void ConservationTracking::perturbedInference(HypothesesGraph& hypotheses, int n
 		
 		LOG(logINFO) << "\n\nperturbed inference " <<i;
 		conclude(*graph);
-		//writeUncertainties(*graph,PertMod2);
 	}
 	//calculateUncertainty();
 	}
@@ -178,15 +195,15 @@ void ConservationTracking::formulate(const HypothesesGraph& hypotheses) {
     LOG(logDEBUG) << "ConservationTracking::formulate: entered";
     reset();
     pgm_ = boost::shared_ptr < pgm::OpengmModelDeprecated > (new pgm::OpengmModelDeprecated());
-	HypothesesGraph const *graph = &hypotheses;
-    /*HypothesesGraph const *graph;
+	
+    HypothesesGraph const *graph;
     if (with_tracklets_) {
         LOG(logINFO) << "ConservationTracking::formulate: generating tracklet graph";
         tracklet2traxel_node_map_ = generateTrackletGraph2(hypotheses, tracklet_graph_);
         graph = &tracklet_graph_;
     } else {
         graph = &hypotheses;
-    }*/
+    }
 
     LOG(logDEBUG) << "ConservationTracking::formulate: add_transition_nodes";
     add_transition_nodes(*graph);
@@ -440,18 +457,19 @@ void ConservationTracking::conclude( HypothesesGraph& g) {
             }
         }
     }
-    
+    std::cout << "show arcs "<<std::endl;
     for (HypothesesGraph::ArcIt a(g); a != lemon::INVALID; ++a) {
 		for( std::vector<bool>::const_iterator i = active_arcs_count[a].begin(); i != active_arcs_count[a].end(); ++i)
 			{std::cout << *i << ' ';}
-		std::cout<<std::endl;
+		std::cout<<active_arcs[a]<<std::endl;
 	}
-	std::cout<<std::endl;
+	
+    std::cout  << "show nodes "<<std::endl;;
 	for(std::map<HypothesesGraph::Node, size_t>::const_iterator it = app_node_map_.begin();
 		it != app_node_map_.end(); ++it) {
 		for( std::vector<long unsigned int>::const_iterator i = active_nodes_count[it->first].begin(); i != active_nodes_count[it->first].end(); ++i)
 			{std::cout << *i << ' ';}
-			std::cout<<std::endl;
+			std::cout<<active_nodes[it->first]<<std::endl;
 		}
 }
 
@@ -573,14 +591,19 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
             }
             ++num_vars;
         }
+		LOG(logDEBUG4) << "one"   ;
         if (dis_node_map_.count(n) > 0) {
             vi.push_back(dis_node_map_[n]);
             double c = 0;
             if (node_end_time < g.latest_timestep()) { // "<" holds if there are only tracklets in the last frame
+               
                 if (with_tracklets_) {
+					disappearance_cost_(tracklet_map[n].back());
+                    LOG(logDEBUG4) << "fail!";
                     c += disappearance_cost_(tracklet_map[n].back());
                     LOG(logDEBUG4) << "Disapp-costs 1: " << disappearance_cost_(tracklet_map[n].back()) << ", " << tracklet_map[n].back();
                 } else {
+					LOG(logDEBUG4) << traxel_map[n];
                     c += disappearance_cost_(traxel_map[n]);
                     LOG(logDEBUG4) << "Disapp-costs 2: " << disappearance_cost_(traxel_map[n]) << ", " << traxel_map[n];
                 }
@@ -588,7 +611,8 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
             cost.push_back(c);
             ++num_vars;
         }
-
+        
+		LOG(logDEBUG4) << "onetwo" ;     
         // convert vector to array
         vector<size_t> coords(num_vars, 0); // number of variables
         // ITER first_ogm_idx, ITER last_ogm_idx, VALUE init, size_t states_per_var

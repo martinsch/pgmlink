@@ -311,7 +311,7 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts, TimestepIdCoord
 	transition = NegLnTransition(transition_weight_);
 
 	cout << "-> building hypotheses" << endl;
-	SingleTimestepTraxel_HypothesesBuilder::Options builder_opts(2, // max_nearest_neighbors
+	SingleTimestepTraxel_HypothesesBuilder::Options builder_opts(1, // max_nearest_neighbors
 				max_dist_,
 				true, // forward_backward
 				with_divisions_, // consider_divisions
@@ -379,10 +379,12 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts, TimestepIdCoord
 		
     
 		cout << "-> perturbed Inference" << endl;
-		pgm.perturbedInference(*graph,30,2,0);
+		pgm.perturbedInference(*graph,1,2,0);
 		cout << "-> finished perturbed Inference" << endl;
 		}
 	else {
+	pgm.perturbedInference(*graph,0,2,0);
+	/*
 	cout << "-> formulate ConservationTracking model" << endl;
 	pgm.formulate(*graph);
 
@@ -390,7 +392,7 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts, TimestepIdCoord
 	pgm.infer();
 
 	cout << "-> conclude" << endl;
-	pgm.conclude(*graph);
+	pgm.conclude(*graph);*/
 
 	cout << "-> storing state of detection vars" << endl;
 	last_detections_ = state_of_nodes(*graph);
