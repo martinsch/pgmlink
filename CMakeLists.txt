@@ -56,6 +56,7 @@ find_package( Vigranumpy REQUIRED PATHS ${Vigranumpy_DIR} )
 SET( Vigranumpy_DIR ${Vigranumpy_DIR}
   CACHE PATH "Directory containing VigranumpyConfig.cmake"
   FORCE )
+find_package( Xml2 REQUIRED )
 
 message(STATUS "  found: ${Boost_LIBRARIES}")
 
@@ -98,6 +99,7 @@ message(STATUS "  Lemon: ${LEMON_INCLUDE_DIR}")
 message(STATUS "  Boost: ${Boost_INCLUDE_DIRS}")
 message(STATUS "  HDF5:  ${HDF5_INCLUDE_DIRS}")
 message(STATUS "  Opengm: ${Opengm_INCLUDE_DIR}")
+message(STATUS "  libxml2:  ${Xml2_INCLUDE_DIR}")
 
 # hide these variables to have a cleaner interface
 mark_as_advanced( Boost_DIR )
