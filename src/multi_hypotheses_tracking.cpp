@@ -254,7 +254,9 @@ void MultiHypothesesTracking::track(MultiHypothesesGraph& g, boost::shared_ptr<s
                                                       options_.get_weight("forbidden"), // forbidden cost
                                                       options_.get_weight("opportunity"), // opportunity cost
                                                       options_.get_weight("max_div"), // maximum division level
-                                                      10000 // max_count -> not neccessary -> fix!
+                                                      10000, // max_count -> not neccessary -> fix!
+                                                      options_.fov,
+                                                      options_.get_weight("border_margin")
   );
 
   builder.with_maximal_conflict_cliques(options_.with_maximal_conflict_cliques);

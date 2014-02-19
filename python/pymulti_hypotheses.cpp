@@ -166,6 +166,10 @@ struct PyTrackingOptions {
      options.transition_parameter = alpha;
   }
 
+  void set_field_of_view(FieldOfView fov) {
+	  options.fov = fov;
+  }
+
   void with_restricted_timestep_range(double first, double last) {
     options.restrict_timestep_range = true;
     options.weights["first_timestep"] = first;
@@ -408,6 +412,7 @@ void export_multi_hypotheses() {
       .def("withOneActiveRegionPerComponent", &PyTrackingOptions::with_one_active_constraint)
       .def("withConflictFactors", &PyTrackingOptions::with_conflict_factors)
       .def("withTransitionParameter", &PyTrackingOptions::with_transition_parameter)
+      .def("fieldOfView", &PyTrackingOptions::set_field_of_view)
       ;
 
 

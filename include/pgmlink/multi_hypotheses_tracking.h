@@ -23,6 +23,7 @@
 #include "pgmlink/traxels.h"
 #include "pgmlink/pgmlink_export.h"
 #include "pgmlink/multi_hypotheses_graph.h"
+#include "pgmlink/field_of_view.h"
 
 
 namespace pgmlink {
@@ -39,6 +40,7 @@ public:
     std::map<std::string, vigra::RandomForest<> > classifiers;
     std::map<std::string, std::string> paths;
     std::map<std::string, std::vector<std::pair<std::string, std::string> > > feature_lists;
+    FieldOfView fov;
     bool with_divisions;
     bool with_constraints;
     bool with_detection_vars;

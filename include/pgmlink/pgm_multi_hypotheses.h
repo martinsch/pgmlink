@@ -109,7 +109,9 @@ class ModelBuilder {
                double forbidden_cost = 1000000,
                double opportunity_cost = 0,
                unsigned max_division_level=0,
-               unsigned max_count=2)
+               unsigned max_count=2,
+               FieldOfView fov = FieldOfView(),
+			   double border_margin = 0)
       : with_detection_vars_(false),
     with_divisions_(false),
     with_classifier_priors_(false),
@@ -130,7 +132,10 @@ class ModelBuilder {
     max_division_level_(max_division_level),
     max_count_(max_count),
     maximum_outgoing_arcs_(0),
-    transition_parameter_(0) {}
+    transition_parameter_(0),
+    fov_(fov),
+    border_margin_(border_margin)
+    {}
   virtual boost::shared_ptr<ModelBuilder> clone() const = 0;
   virtual ~ModelBuilder() {}
 
@@ -237,10 +242,6 @@ class ModelBuilder {
   std::vector<std::vector<std::pair<std::pair<size_t, size_t>, int> > > var_state_coeff_constraints_;
 
 
-  
- protected:
-  int first_timestep_;
-  int last_timestep_;
 
  private:
   void couple( const multihypotheses::Model&, const MultiHypothesesGraph::Node&, const MultiHypothesesGraph::Arc&, OpengmLPCplex& );
@@ -275,6 +276,14 @@ class ModelBuilder {
   unsigned max_count_;
   int maximum_outgoing_arcs_;
   int transition_parameter_;
+
+
+ protected:
+  int first_timestep_;
+  int last_timestep_;
+  FieldOfView fov_;
+  double border_margin_;
+
 };
 
 
@@ -287,8 +296,11 @@ class CVPR2014ModelBuilder : public ModelBuilder {
                        double forbidden_cost = 1000000,
                        double opportunity_cost = 1000,
                        unsigned max_division_level=0,
-                       unsigned max_count=2) :
-  ModelBuilder(appearance, disappearance, move, count, forbidden_cost, opportunity_cost, max_division_level, max_count) {}
+                       unsigned max_count=2,
+                       FieldOfView fov = FieldOfView(),
+                       double border_margin = 0
+                       ) :
+  ModelBuilder(appearance, disappearance, move, count, forbidden_cost, opportunity_cost, max_division_level, max_count, fov, border_margin) {}
   virtual boost::shared_ptr<ModelBuilder> clone() const;
   virtual ~CVPR2014ModelBuilder() {}
 
