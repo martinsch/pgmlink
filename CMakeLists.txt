@@ -52,10 +52,6 @@ find_package( Boost REQUIRED COMPONENTS serialization )
 find_package( Armadillo REQUIRED )
 find_package( Mlpack REQUIRED )
 find_package( Opengm REQUIRED )
-find_package( Vigranumpy REQUIRED PATHS ${Vigranumpy_DIR} )
-SET( Vigranumpy_DIR ${Vigranumpy_DIR}
-  CACHE PATH "Directory containing VigranumpyConfig.cmake"
-  FORCE )
 find_package( Xml2 REQUIRED )
 
 message(STATUS "  found: ${Boost_LIBRARIES}")
@@ -196,5 +192,10 @@ endif()
 # Python
 SET(WITH_PYTHON true CACHE BOOL "Build with python wrapper.")
 if(WITH_PYTHON)
+  find_package( Vigranumpy REQUIRED PATHS ${Vigranumpy_DIR} )
+  SET( Vigranumpy_DIR ${Vigranumpy_DIR}
+    CACHE PATH "Directory containing VigranumpyConfig.cmake"
+    FORCE )
+  include_directories(SYSTEM ${VIGRANUMPY_INCLUDE_DIRS})
   add_subdirectory(python/)
 endif()
