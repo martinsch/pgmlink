@@ -14,7 +14,10 @@ if (${BUILDEM_DIR} STREQUAL "None")
     message (FATAL_ERROR "ERROR: FlyEM build directory (for all downloads & builds) should be specified via -D BUILDEM_DIR=<path> on cmake command line.")
 endif ()
 
-get_filename_component(BUILDEM_REPO_DIR ../buildem ABSOLUTE)
+set (BUILDEM_REPO_DIR "None" CACHE TYPE STRING)
+if (${BUILDEM_REPO_DIR} STREQUAL "None")
+  get_filename_component(BUILDEM_REPO_DIR ../buildem ABSOLUTE)
+endif(${BUILDEM_REPO_DIR} STREQUAL "None")
 if (NOT EXISTS ${BUILDEM_REPO_DIR}/python.cmake)
     message ("Downloading buildem repository ...")
     execute_process(COMMAND git clone https://github.com/martinsch/buildem.git ${BUILDEM_REPO_DIR}
