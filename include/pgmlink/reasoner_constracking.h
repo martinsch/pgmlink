@@ -84,7 +84,7 @@ class ConservationTracking : public Reasoner {
     virtual void formulate( const HypothesesGraph& );
     virtual void infer();
     virtual void conclude( HypothesesGraph& );
-    virtual void perturbedInference( HypothesesGraph&, int numberOfPertubations, double sigma, marray::Marray<ValueType>* defaultOffset);
+    virtual void perturbedInference( HypothesesGraph&, int numberOfPertubations = 0, double sigma = 1, marray::Marray<ValueType>* defaultOffset = 0);
     
     double forbidden_cost() const;
     bool with_constraints() const;
@@ -123,7 +123,7 @@ class ConservationTracking : public Reasoner {
     void add_transition_nodes( const HypothesesGraph& );
     void add_division_nodes(const HypothesesGraph& );
     void add_finite_factors( const HypothesesGraph& );
-    void writeUncertainties( HypothesesGraph&, SubGmType);
+    void calculateUncertainty( HypothesesGraph&);
     
     // helper
     size_t cplex_id(size_t opengm_id, size_t state);
@@ -141,7 +141,7 @@ class ConservationTracking : public Reasoner {
     shared_ptr<pgm::OpengmModelDeprecated> pgm_;
     //opengm::LPCplex<pgm::OpengmModelDeprecated::ogmGraphicalModel, pgm::OpengmModelDeprecated::ogmAccumulator>* optimizer_;
 	cplex_optimizer* optimizer_;
-	//here: dimaps!
+	
     std::map<HypothesesGraph::Node, size_t> div_node_map_;
     std::map<HypothesesGraph::Node, size_t> app_node_map_;
     std::map<HypothesesGraph::Node, size_t> dis_node_map_;

@@ -48,14 +48,14 @@ BOOST_AUTO_TEST_CASE( uncertainty ) {
 	feature_array divProb(feature_array::difference_type(1));
 	feature_array detProb(feature_array::difference_type(2));
 	//detProb[2]=0;
-	n11.Id = 11; n11.Timestep = 1; com[0] = 1; com[1] = 1; com[2] = 1; divProb[0] = 0; detProb[0] = 0.2;detProb[1]=0.8;
+	n11.Id = 11; n11.Timestep = 1; com[0] = 1; com[1] = 1; com[2] = 1; divProb[0] = 0; detProb[0] = 0.4;detProb[1]=0.6;
 	n11.features["com"] = com; n11.features["divProb"] = divProb; n11.features["detProb"] = detProb;
 	add(ts,n11);
 	n12.Id = 12; n12.Timestep = 1; com[0] = 3; com[1] = 2; com[2] = 3; divProb[0] = 0; detProb[0] = 0.6;detProb[1]=0.4;
 	n12.features["com"] = com; n12.features["divProb"] = divProb; n12.features["detProb"] = detProb;
 	add(ts,n12);
 	
-	n21.Id = 21; n21.Timestep = 2; com[0] = 2; com[1] = 2; com[2] = 3; divProb[0] = 0; detProb[0] = 0;detProb[1]=1;
+	n21.Id = 21; n21.Timestep = 2; com[0] = 2; com[1] = 2; com[2] = 3; divProb[0] = 0.39; detProb[0] = 0.1;detProb[1]=0.9;
 	n21.features["com"] = com; n21.features["divProb"] = divProb; n21.features["detProb"] = detProb;
 	add(ts,n21);
 	

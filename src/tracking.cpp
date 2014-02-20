@@ -379,11 +379,11 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts, TimestepIdCoord
 		
     
 		cout << "-> perturbed Inference" << endl;
-		pgm.perturbedInference(*graph,1,2,0);
+		pgm.perturbedInference(*graph,100,0.7,0);
 		cout << "-> finished perturbed Inference" << endl;
 		}
 	else {
-	pgm.perturbedInference(*graph,0,2,0);
+	pgm.perturbedInference(*graph);
 	/*
 	cout << "-> formulate ConservationTracking model" << endl;
 	pgm.formulate(*graph);
