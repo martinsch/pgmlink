@@ -759,8 +759,8 @@ void extract_coordinates(TimestepIdCoordinateMapPtr coordinates,
   {
     int index = 0;
     for (; start != end; ++start) {
-      if (start.get<1>() == trax.Id) {
-        const vigra::TinyVector<long int, N>& position = start.get<0>();
+      if (start.template get<1>() == trax.Id) {
+        const vigra::TinyVector<long int, N>& position = start.template get<0>();
         for (int i = 0; i < N; ++i) {
           coord(i, index) = position[i] + offsets[i];
         }        
