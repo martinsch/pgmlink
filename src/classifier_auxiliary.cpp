@@ -208,6 +208,7 @@ feature_array RatioCalculator::calculate(const feature_array& f1, const feature_
     } else {
       ret[i] = f2[i]/f1[i];
     }
+    ret[i] = std::min(2.0f, std::max(0.0f, ret[i]));
   }
   return ret;
 }
@@ -453,7 +454,7 @@ FeatureExtractorDifferentFeatures::~FeatureExtractorDifferentFeatures() {
 
 
 feature_array FeatureExtractorDifferentFeatures::extract(const Traxel& t1) const {
-  LOG(logDEBUG4) << "FeatureExtractorDifferentFeatures::extract: features " << name();
+  LOG(logDEBUG4) << "FeatureExtractorDifferentFeatures::extract: " << calculator_->name() <<  ": features " << name();
   FeatureMap::const_iterator feature_1 = t1.features.find(feature_name_1_);
   FeatureMap::const_iterator feature_2 = t1.features.find(feature_name_2_);
 
@@ -1017,6 +1018,7 @@ boost::shared_ptr<ClassifierStrategy> ClassifierStrategyBuilder::build(const Opt
     for (std::vector<std::pair<std::string, std::string> >::const_iterator feature = options.feature_list.begin();
          feature != options.feature_list.end();
          ++feature) {
+      LOG(logDEBUG4) << "Creating Extractor for " << feature->first << ": " << feature->second;
       if (feature->first == "IntersectionUnionRatio") {
         extractors.push_back(boost::shared_ptr<FeatureExtractorSelective>(new FeatureExtractorSelective(cmap.find("Identity")->second, "IntersectionUnionRatio")));
       } else if (feature->first[0] == '_') {
