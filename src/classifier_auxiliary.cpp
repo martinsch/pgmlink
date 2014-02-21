@@ -197,15 +197,17 @@ RatioCalculator::~RatioCalculator() {
 
 feature_array RatioCalculator::calculate(const feature_array& f1, const feature_array& f2) const {
   assert(f1.size() == f2.size());
-  feature_array ret(length, 0.);
+  feature_array ret(f1.size(), 0.);
   // keep ratio <= 1
   // no zero check, as we do not have empty regions
-  if (f1[0] == f2[0]) {
-    ret[0] = 1;
-  } else if (f1[0] < f2[0]) {
-    ret[0] = f1[0]/f2[0];
-  } else {
-    ret[0] = f2[0]/f1[0];
+  for (size_t i = 0; i < ret.size(); ++i) {
+    if (f1[i] == f2[i]) {
+      ret[i] = 1.0;
+    } else if (f1[i] < f2[i]) {
+      ret[i] = f1[i]/f2[i];
+    } else {
+      ret[i] = f2[i]/f1[i];
+    }
   }
   return ret;
 }
@@ -218,6 +220,45 @@ feature_array RatioCalculator::calculate(const feature_array&, const feature_arr
 
 const std::string& RatioCalculator::name() const {
   return RatioCalculator::name_;
+}
+
+
+////
+//// class AsymmetricRatioCalculator
+////
+const std::string AsymmetricRatioCalculator::name_ = "AsymmetricRatio";
+
+const unsigned AsymmetricRatioCalculator::length = 1;
+
+
+AsymmetricRatioCalculator::~AsymmetricRatioCalculator() {
+
+}
+
+
+feature_array AsymmetricRatioCalculator::calculate(const feature_array& f1, const feature_array& f2) const {
+  assert(f1.size() == f2.size());
+  feature_array ret(f1.size(), 0.);
+  // keep ratio <= 1
+  // no zero check, as we do not have empty regions
+  for (size_t i = 0; i < ret.size(); ++i) {
+    if (f1[i] == f2[i]) {
+      ret[i] = 1.0;
+    } else {
+      ret[i] = f1[i]/f2[i];
+    }
+  }
+  return ret;
+}
+
+
+feature_array AsymmetricRatioCalculator::calculate(const feature_array&, const feature_array& f2, const feature_array& f3) const {
+  return calculate(f2, f3);
+}
+
+
+const std::string& AsymmetricRatioCalculator::name() const {
+  return AsymmetricRatioCalculator::name_;
 }
 
 
@@ -393,6 +434,46 @@ std::string FeatureExtractorSelective::name() const {
 }
 
 
+////
+//// class FeatureExtractorDifferentFeatures
+////
+FeatureExtractorDifferentFeatures::FeatureExtractorDifferentFeatures(boost::shared_ptr<FeatureCalculator> calculator,
+                                                                     const std::string& feature_name_1,
+                                                                     const std::string& feature_name_2) :
+    FeatureExtractor(calculator, feature_name_1),
+    feature_name_1_(feature_name_1),
+    feature_name_2_(feature_name_2) {
+
+}
+
+
+FeatureExtractorDifferentFeatures::~FeatureExtractorDifferentFeatures() {
+  
+}
+
+
+feature_array FeatureExtractorDifferentFeatures::extract(const Traxel& t1) const {
+  LOG(logDEBUG4) << "FeatureExtractorDifferentFeatures::extract: features " << name();
+  FeatureMap::const_iterator feature_1 = t1.features.find(feature_name_1_);
+  FeatureMap::const_iterator feature_2 = t1.features.find(feature_name_2_);
+
+  assert(feature_1 != t1.features.end());
+  assert(feature_2 != t1.features.end());
+
+  if (feature_1->second.size() != feature_2->second.size()) {
+    throw std::runtime_error("FeatureExtractorDifferentFeatures::extract: features " + name() +
+                             " have different sizes");
+  }
+
+  return calculator_->calculate(feature_1->second, feature_2->second);
+}
+
+
+std::string FeatureExtractorDifferentFeatures::name() const {
+  return feature_name_1_ + "," + feature_name_2_;
+}
+
+
 namespace {
 std::map<std::string, boost::shared_ptr<FeatureCalculator> > define_features() {
   // put here all the available features:
@@ -405,6 +486,9 @@ std::map<std::string, boost::shared_ptr<FeatureCalculator> > define_features() {
   calc = boost::shared_ptr<FeatureCalculator>(new RatioCalculator);
   feature_map.insert(std::make_pair("Ratio", calc));
   feature_map.insert(std::make_pair("ChildrenRatio", calc));
+
+  calc = boost::shared_ptr<FeatureCalculator>(new AsymmetricRatioCalculator);
+  feature_map.insert(std::make_pair("AsymmetricRatio", calc));
 
   calc = boost::shared_ptr<FeatureCalculator>(new AbsoluteDifferenceCalculator);
   feature_map.insert(std::make_pair("AbsDiff", calc));
@@ -439,6 +523,7 @@ std::map<std::string, boost::shared_ptr<FeatureCalculator> > define_features() {
   return feature_map;
 }
 } /* namespace */
+
 
 ////
 //// class AvailableCalculators
@@ -934,6 +1019,22 @@ boost::shared_ptr<ClassifierStrategy> ClassifierStrategyBuilder::build(const Opt
          ++feature) {
       if (feature->first == "IntersectionUnionRatio") {
         extractors.push_back(boost::shared_ptr<FeatureExtractorSelective>(new FeatureExtractorSelective(cmap.find("Identity")->second, "IntersectionUnionRatio")));
+      } else if (feature->first[0] == '_') {
+        std::map<std::string, boost::shared_ptr<FeatureCalculator> >::const_iterator c = cmap.find(feature->first.substr(1));
+        if (c == cmap.end()) {
+          throw std::runtime_error("Calculator \"" + feature->first.substr(1) + "\" not available!");
+        } else {
+          size_t pos = feature->second.find(",");
+          if (pos == feature->second.npos) {
+            throw std::runtime_error("Features (" + feature->second + ") are not split by ,");
+          }
+          extractors.push_back(boost::shared_ptr<FeatureExtractor>(new FeatureExtractorDifferentFeatures(c->second,
+                                                                                                         feature->second.substr(0, pos),
+                                                                                                         feature->second.substr(pos+1)
+                                                                                                         )
+                                                                   )
+                               );
+        }        
       } else {
         std::map<std::string, boost::shared_ptr<FeatureCalculator> >::const_iterator c = cmap.find(feature->first);
         if (c == cmap.end()) {

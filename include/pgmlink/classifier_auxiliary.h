@@ -92,6 +92,18 @@ class RatioCalculator : public FeatureCalculator {
 };
 
 
+class AsymmetricRatioCalculator : public FeatureCalculator {
+ public:
+  static const std::string name_;
+  static const unsigned length;
+
+  virtual ~AsymmetricRatioCalculator();
+  virtual feature_array calculate(const feature_array& f1, const feature_array& f2) const;
+  virtual feature_array calculate(const feature_array& f1, const feature_array& f2, const feature_array& f3) const;
+  virtual const std::string& name() const;
+};
+
+
 ////
 //// class ParentRatios
 ////
@@ -205,7 +217,7 @@ class IntersectionUnionRatio {
 
 
 
-/* class IntensityRatioCalculator : public FeatureCalculator {
+/* class IntensityRatioCalcualtor : public FeatureCalculator {
  public:
   static const std::string name_;
   static const unsigned length;
@@ -246,12 +258,29 @@ class FeatureExtractor {
   std::string feature_name_;
 };
 
+
 class FeatureExtractorSelective : public FeatureExtractor {
  public:
   FeatureExtractorSelective(boost::shared_ptr<FeatureCalculator> calculator, const std::string& feature_name);
   virtual ~FeatureExtractorSelective();
   virtual feature_array extract(const Traxel& t1, const Traxel& t2) const;
   virtual std::string name() const;
+};
+
+
+class FeatureExtractorDifferentFeatures : public FeatureExtractor {
+ public:
+  FeatureExtractorDifferentFeatures(boost::shared_ptr<FeatureCalculator> calculator,
+                                    const std::string& feature_name_1,
+                                    const std::string& feature_name_2);
+  virtual ~FeatureExtractorDifferentFeatures();
+  virtual feature_array extract(const Traxel& t1) const;
+  boost::shared_ptr<FeatureCalculator> calculator() const;
+  virtual std::string name() const;
+
+ protected:
+  std::string feature_name_1_;
+  std::string feature_name_2_;
 };
 
 
