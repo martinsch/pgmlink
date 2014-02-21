@@ -246,6 +246,25 @@ class FeatureExtractorCollection {
     if (calculator_name == "IntersectionUnionRatio") {
       extractors_.push_back(boost::shared_ptr<FeatureExtractorSelective>(new FeatureExtractorSelective(name_calculator_mapping_.find("Identity")->second, "IntersectionUnionRatio")));
       calculators_.push_back((*extractors_.rbegin())->calculator());
+    } else if (calculator_name[0] == '_') {
+      
+        std::map<std::string, boost::shared_ptr<FeatureCalculator> >::const_iterator c = name_calculator_mapping_.find(calculator_name.substr(1));
+        if (c == name_calculator_mapping_.end()) {
+          throw std::runtime_error("Calculator \"" + calculator_name.substr(1) + "\" not available!");
+        } else {
+          size_t pos = feature_name.find(",");
+          if (pos == feature_name.npos) {
+            throw std::runtime_error("Features (" + feature_name + ") are not split by ,");
+          }
+          extractors_.push_back(boost::shared_ptr<FeatureExtractor>(new FeatureExtractorDifferentFeatures(c->second,
+                                                                                                         feature_name.substr(0, pos),
+                                                                                                         feature_name.substr(pos+1)
+                                                                                                         )
+                                                                   )
+                               );
+          calculators_.push_back(c->second);
+        }    
+
     } else {
       std::map<std::string, boost::shared_ptr<FeatureCalculator> >::const_iterator it = name_calculator_mapping_.find(calculator_name);
       if (it == name_calculator_mapping_.end()) {
