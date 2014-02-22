@@ -203,12 +203,13 @@ feature_array RatioCalculator::calculate(const feature_array& f1, const feature_
   for (size_t i = 0; i < ret.size(); ++i) {
     if (f1[i] == f2[i]) {
       ret[i] = 1.0;
+    } else if (f1[i] < 0.0001 && f2[i]  < 0.0001) {
+      ret[i] = 1.0;
     } else if (f1[i] < f2[i]) {
       ret[i] = f1[i]/f2[i];
     } else {
       ret[i] = f2[i]/f1[i];
     }
-    ret[i] = std::min(2.0f, std::max(0.0f, ret[i]));
   }
   return ret;
 }
@@ -244,6 +245,8 @@ feature_array AsymmetricRatioCalculator::calculate(const feature_array& f1, cons
   // no zero check, as we do not have empty regions
   for (size_t i = 0; i < ret.size(); ++i) {
     if (f1[i] == f2[i]) {
+      ret[i] = 1.0;
+    } else if (f1[i] < 0.0001 && f2[i] < 0.0001) {
       ret[i] = 1.0;
     } else {
       ret[i] = f1[i]/f2[i];
