@@ -11,6 +11,7 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <map>
 #include <boost/serialization/set.hpp>
 #include <boost/shared_ptr.hpp>
 #include <lemon/list_graph.h>
@@ -50,6 +51,37 @@ namespace pgmlink {
   template <typename Graph>
     const std::string property_map<node_traxel,Graph>::name = "node_traxel";
 
+  // node_traxel
+	struct node_tracklet {};
+	template <typename Graph>
+	  struct property_map<node_tracklet, Graph> {
+	  typedef lemon::IterableValueMap< Graph, typename Graph::Node, std::vector<Traxel> > type;
+	  static const std::string name;
+	};
+	template <typename Graph>
+	  const std::string property_map<node_tracklet,Graph>::name = "node_tracklet";
+
+
+	// tracklet_arcs
+	struct tracklet_intern_dist {};
+	template <typename Graph>
+	  struct property_map<tracklet_intern_dist, Graph> {
+	  typedef lemon::IterableValueMap< Graph, typename Graph::Node, std::vector<double> > type;
+	  static const std::string name;
+	};
+	template <typename Graph>
+	  const std::string property_map<tracklet_intern_dist,Graph>::name = "tracklet_intern_dist";
+
+	// tracklet_arcs
+	struct tracklet_intern_arc_ids {};
+	template <typename Graph>
+	  struct property_map<tracklet_intern_arc_ids, Graph> {
+	  typedef lemon::IterableValueMap< Graph, typename Graph::Node, std::vector<int> > type;
+	  static const std::string name;
+	};
+	template <typename Graph>
+	  const std::string property_map<tracklet_intern_arc_ids,Graph>::name = "tracklet_intern_arc_ids";
+
   // node_active
   struct node_active {};
   template <typename Graph>
@@ -59,6 +91,65 @@ namespace pgmlink {
   };
   template <typename Graph>
     const std::string property_map<node_active,Graph>::name = "node_active";
+
+  // node_active2
+    struct node_active2 {};
+    template <typename Graph>
+      struct property_map<node_active2, Graph> {
+      typedef lemon::IterableValueMap< Graph, typename Graph::Node, std::size_t> type;
+      static const std::string name;
+    };
+    template <typename Graph>
+      const std::string property_map<node_active2,Graph>::name = "node_active2";
+
+  // node_offered
+  struct node_offered {};
+  template <typename Graph>
+    struct property_map<node_offered, Graph> {
+    typedef lemon::IterableBoolMap< Graph, typename Graph::Node> type;
+    static const std::string name;
+  };
+  template <typename Graph>
+    const std::string property_map<node_offered,Graph>::name = "node_offered";
+
+  // arc_distance
+  struct arc_distance {};
+  template <typename Graph>
+    struct property_map<arc_distance, Graph> {
+    typedef lemon::IterableValueMap< Graph, typename Graph::Arc, double> type;
+    static const std::string name;
+  };
+  template <typename Graph>
+    const std::string property_map<arc_distance,Graph>::name = "arc_distance";
+
+  // traxel_arc_id
+  struct traxel_arc_id {};
+    template <typename Graph>
+      struct property_map<traxel_arc_id, Graph> {
+      typedef lemon::IterableValueMap< Graph, typename Graph::Arc, int> type;
+      static const std::string name;
+    };
+    template <typename Graph>
+      const std::string property_map<traxel_arc_id,Graph>::name = "traxel_arc_id";
+
+  struct arc_vol_ratio {};
+    template <typename Graph>
+      struct property_map<arc_vol_ratio, Graph> {
+      typedef lemon::IterableValueMap< Graph, typename Graph::Arc, double> type;
+      static const std::string name;
+    };
+    template <typename Graph>
+      const std::string property_map<arc_vol_ratio,Graph>::name = "arc_vol_ratio";
+
+  // split_into
+  struct split_from {};
+  template <typename Graph>
+    struct property_map<split_from, Graph> {
+    typedef lemon::IterableValueMap< Graph, typename Graph::Node, int> type;
+    static const std::string name;
+  };
+  template <typename Graph>
+    const std::string property_map<split_from,Graph>::name = "split_from";
 
   // arc_from_timestep
   struct arc_from_timestep {};
@@ -90,6 +181,57 @@ namespace pgmlink {
   template <typename Graph>
     const std::string property_map<arc_active,Graph>::name = "arc_active";
 
+  // division_active
+    struct division_active {};
+    template <typename Graph>
+      struct property_map<division_active, Graph> {
+      typedef lemon::IterableBoolMap< Graph, typename Graph::Node> type;
+      static const std::string name;
+    };
+    template <typename Graph>
+      const std::string property_map<division_active,Graph>::name = "division_active";
+
+  // merger_resolved_to
+  struct merger_resolved_to {};
+  template <typename Graph>
+  struct property_map<merger_resolved_to, Graph> {
+    // typedef std::map<typename Graph::Node, std::vector<unsigned int> > type;
+    typedef lemon::IterableValueMap<Graph, typename Graph::Node, std::vector<unsigned int> > type;
+    static const std::string name;
+  };
+  template <typename Graph>
+  const std::string property_map<merger_resolved_to, Graph>::name = "merger_resolved_to";
+
+  // node_originated_from
+  struct node_originated_from {};
+  template <typename Graph>
+  struct property_map<node_originated_from, Graph> {
+    typedef lemon::IterableValueMap<Graph, typename Graph::Node, std::vector<unsigned int> > type;
+    static const std::string name;
+  };
+  template <typename Graph>
+  const std::string property_map<node_originated_from, Graph>::name = "node_originated_from";
+
+  // node_resolution_candidate
+  struct node_resolution_candidate {};
+  template <typename Graph>
+  struct property_map<node_resolution_candidate, Graph> {
+    typedef lemon::IterableBoolMap<Graph, typename Graph::Node> type;
+    static const std::string name;
+  };
+  template <typename Graph>
+  const std::string property_map<node_resolution_candidate, Graph>::name = "node_resolution_candidate";
+
+  // arc_resolution_candidate
+  struct arc_resolution_candidate {};
+  template <typename Graph>
+  struct property_map<arc_resolution_candidate, Graph> {
+    typedef lemon::IterableBoolMap<Graph, typename Graph::Arc> type;
+    static const std::string name;
+  };
+  template <typename Graph>
+  const std::string property_map<arc_resolution_candidate, Graph>::name = "arc_resolution_candidate";
+
 
 
   class PGMLINK_EXPORT HypothesesGraph : public PropertyGraph<lemon::ListDigraph> {
@@ -105,6 +247,8 @@ namespace pgmlink {
 
     // use this instead of calling the parent graph directly
     HypothesesGraph::Node add_node(node_timestep_map::Value timestep);
+    // call this function to add a multi-temporal node (e.g. for tracklets)
+    HypothesesGraph::Node add_node(std::vector<node_timestep_map::Value> timesteps);
 
     const std::set<HypothesesGraph::node_timestep_map::Value>& timesteps() const;
     node_timestep_map::Value earliest_timestep() const;
@@ -122,8 +266,13 @@ namespace pgmlink {
     std::set<node_timestep_map::Value> timesteps_;      
   };
 
+  void generateTrackletGraph(const HypothesesGraph& traxel_graph, HypothesesGraph& tracklet_graph);
+  std::map<HypothesesGraph::Node, std::vector<HypothesesGraph::Node> > generateTrackletGraph2(
+		  const HypothesesGraph& traxel_graph, HypothesesGraph& tracklet_graph);
   PGMLINK_EXPORT HypothesesGraph& prune_inactive(HypothesesGraph&);
   PGMLINK_EXPORT boost::shared_ptr<std::vector< std::vector<Event> > > events(const HypothesesGraph&);
+  PGMLINK_EXPORT boost::shared_ptr<std::vector< std::vector<Event> > > multi_frame_move_events(const HypothesesGraph& g);
+  PGMLINK_EXPORT boost::shared_ptr<std::vector< std::vector<Event> > > merge_event_vectors(const std::vector<std::vector<Event> >& ev1, const std::vector<std::vector<Event> >& ev2);
   PGMLINK_EXPORT boost::shared_ptr<std::vector< std::map<unsigned int, bool> > > state_of_nodes(const HypothesesGraph&);
 
   // lemon graph format (lgf) serialization
@@ -156,10 +305,16 @@ namespace pgmlink {
   class PGMLINK_EXPORT SingleTimestepTraxel_HypothesesBuilder : public HypothesesBuilder {
   public:
     struct Options {
-	Options(unsigned int mnn = 6, double dt = 50) : max_nearest_neighbors(mnn),
-							distance_threshold(dt) {};
-	unsigned int max_nearest_neighbors;
-	double distance_threshold;
+	Options(unsigned int mnn = 6, double dt = 50,
+			bool forward_backward=false, bool consider_divisions=false,
+			double division_threshold = 0.5) :
+  		max_nearest_neighbors(mnn), distance_threshold(dt), forward_backward(forward_backward),
+  		consider_divisions(consider_divisions),
+  		division_threshold(division_threshold){};
+  	unsigned int max_nearest_neighbors;
+  	double distance_threshold;
+  	bool forward_backward, consider_divisions;
+  	double division_threshold;
     };
 
   SingleTimestepTraxel_HypothesesBuilder(const TraxelStore* ts, const Options& o = Options()) : ts_(ts), options_(o) {};
@@ -171,7 +326,7 @@ namespace pgmlink {
     virtual HypothesesGraph* add_edges(HypothesesGraph*) const;
 
   private:
-    HypothesesGraph* add_edges_at(HypothesesGraph*, int timestep) const;
+    HypothesesGraph* add_edges_at(HypothesesGraph*, int timestep, bool reverse=false) const;
 
     const TraxelStore* ts_;
     Options options_;

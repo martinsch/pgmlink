@@ -1,0 +1,26 @@
+#!/bin/bash
+
+if [ -z "$2" ]; then
+    echo "Usage: $0 new_rpath directory"
+    echo
+    echo "       Changes the RPATH of all *.so files under 'directory' into a relative"
+    echo "       path pointing to 'new_rpath' (which must itself be an absolute path)"
+    echo "       using the '\$ORIGIN' feature of RPATH. If 'new_rpath=delete', the RPATH"
+    echo "       is deleted altogether. Also strips the libraries on the fly."
+    exit 1
+fi
+
+which chrpath > /dev/null || { echo "'chrpath' not found. Install it by 'sudo apt-get install chrpath'." && exit 1; }
+
+files=`find $2 -name "*.so"`
+
+for file in $files; do
+    chmod u+w $file
+    strip $file
+    if [ "$1" == "delete" ] ; then
+        chrpath -d $file
+    else
+        rpath=`@PYTHON_EXE@ -c "import sys, os; p=os.path.relpath(sys.argv[1], os.path.dirname(sys.argv[2])); print p == '.' and '\\\$ORIGIN' or '\\\$ORIGIN/'+p" $1 $file`
+        chrpath -r "$rpath" $file
+    fi
+done

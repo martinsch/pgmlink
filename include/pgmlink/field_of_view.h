@@ -52,6 +52,7 @@ namespace pgmlink {
    * The point can be inside or outside the field of view.
    */
   double spatial_margin( double t, double x, double y, double z ) const;
+  double spatial_distance_to_border( double t, double x, double y, double z, bool relative ) const;
   
   /** Shortest distance to the temporal boundary of the field of view. */
   double temporal_margin( double t, double x, double y, double z ) const;

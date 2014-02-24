@@ -40,6 +40,10 @@ namespace pgmlink {
   public:
     typedef Graph base_graph;
 
+    std::map<std::string, boost::any> getProperties() const {
+		return properties_;
+	}
+
     template <typename PropertyTag>
       typename property_map<PropertyTag, Graph>::type &
       get(PropertyTag) const;
@@ -85,7 +89,7 @@ namespace pgmlink {
       // stability of iterators to elements and not actual memory addresses
       return *boost::any_cast<boost::shared_ptr<typename property_map<PropertyTag, Graph>::type> >(properties_.find(name)->second);
     } else {
-      throw std::runtime_error("PropertyGraph::get(): property not found");
+      throw std::runtime_error("PropertyGraph::get(): property " + name + " not found");
     }
   }
   

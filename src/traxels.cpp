@@ -28,12 +28,14 @@ namespace pgmlink {
   ////
   Traxel::Traxel(const Traxel& other): Id(other.Id), Timestep(other.Timestep), features(other.features) {
     locator_ = other.locator_->clone();
+    corr_locator_ = other.corr_locator_;
   }
 
   Traxel& Traxel::operator=(const Traxel& other) {
     Id = other.Id;
     Timestep = other.Timestep;
     features = other.features;
+    corr_locator_ = other.corr_locator_;
     // This gracefully handles self assignment
     Locator* temp = other.locator_->clone();
     delete locator_;
@@ -59,6 +61,30 @@ namespace pgmlink {
     return locator_->Z(features);
   }
 
+  double Traxel::X_corr() const {
+	if (features.count("com_corrected") == 1) {
+		return corr_locator_->X(features);
+	} else {
+		return X();
+	}
+  }
+
+  double Traxel::Y_corr() const {
+	  if (features.count("com_corrected") == 1) {
+		return corr_locator_->Y(features);
+	} else {
+		return Y();
+	}
+  }
+
+  double Traxel::Z_corr() const {
+	  if (features.count("com_corrected") == 1) {
+		  return corr_locator_->Z(features);
+	  } else {
+		  return Z();
+	  }
+  }
+
   namespace {
     double dot(double x1,double y1,double z1, double x2,double y2,double z2) {
       return x1*x2 + y1*y2 + z1*z2;
@@ -71,6 +97,10 @@ namespace pgmlink {
   double Traxel::distance_to(const Traxel& other) const {
     return norm(other.X()-X(), other.Y()-Y(), other.Z()-Z());
   }
+
+  double Traxel::distance_to_corr(const Traxel& other) const {
+      return norm(other.X()-X_corr(), other.Y()-Y_corr(), other.Z()-Z_corr());
+    }
 
   double Traxel::angle(const Traxel& leg1, const Traxel& leg2) const {
     double x0 = this->X();

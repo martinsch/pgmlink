@@ -1,3 +1,5 @@
+#define _unused(x) ((void)x)
+
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -429,6 +431,7 @@ namespace pgmlink {
 	coords = std::vector<size_t>(table_dim, 0); // (0,0,...,0)
 	size_t check = entries.erase(BinToDec(coords));
 	assert(check == 1);
+   _unused(check); // for build in release mode
 	OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), opportunity_cost() )
 	  .add_as_feature_to( *(m.opengm_model), m.weight_map[Model::opp_weight].front() );
       }
@@ -441,6 +444,7 @@ namespace pgmlink {
 	}
 	size_t check = entries.erase(BinToDec(coords));
 	assert(check == 1);
+   _unused(check); // for build in release mode
 	OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), disappearance()(traxel_map[n]) )
 	  .add_as_feature_to( *(m.opengm_model), m.weight_map[Model::dis_weight].front() );
       }
@@ -458,6 +462,7 @@ namespace pgmlink {
 	  coords[i] = 1; 
 	  size_t check = entries.erase(BinToDec(coords));
 	  assert(check == 1);
+     _unused(check); // for build in release mode
 	  OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), move()(traxel_map[n], traxel_map[hypotheses.target(arcs[i-assignment_begin])]) )
 	    .add_as_feature_to( *(m.opengm_model), m.weight_map[Model::mov_weight].front() );
 	  coords[i] = 0; // reset coords
@@ -480,6 +485,7 @@ namespace pgmlink {
 	    coords[j] = 1;
 	    size_t check = entries.erase(BinToDec(coords));
 	    assert(check == 1);
+       _unused(check); // for build in release mode
 	    OpengmModel::ValueType value = division()(traxel_map[n],
 							traxel_map[hypotheses.target(arcs[i-assignment_begin])],
 							traxel_map[hypotheses.target(arcs[j-assignment_begin])]);
@@ -540,6 +546,7 @@ namespace pgmlink {
 	coords = std::vector<size_t>(table_dim, 0);
 	size_t check = entries.erase(BinToDec(coords));
 	assert(check == 1);
+   _unused(check); // for build in release mode
       }
 
       // appearance configuration
@@ -549,6 +556,7 @@ namespace pgmlink {
       }
       size_t check = entries.erase(BinToDec(coords));
       assert(check == 1);
+      _unused(check); // for build in release mode
       OpengmWeightedFeature<OpengmModel::ValueType>(vi, shape.begin(), shape.end(), coords.begin(), appearance()(traxel_map[n]) )
 	.add_as_feature_to( *(m.opengm_model), m.weight_map[Model::app_weight].front() );
 
@@ -564,6 +572,7 @@ namespace pgmlink {
 	coords[i] = 1; 
 	size_t check = entries.erase(BinToDec(coords));
 	assert(check == 1);
+   _unused(check); // for build in release mode
 	coords[i] = 0; // reset coords
       }
 

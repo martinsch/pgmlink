@@ -1,3 +1,6 @@
+#define PY_ARRAY_UNIQUE_SYMBOL pgmlink_pyarray
+#define NO_IMPORT_ARRAY
+
 #include <vector>
 #include <string>
 #include <sstream>
@@ -98,7 +101,11 @@ namespace pgmlink {
 } /* namespace pgmlink */
 
 void export_traxels() {
-    class_< feature_array >("feature_array");
+    class_< feature_array >("feature_array")
+      .def(vector_indexing_suite< feature_array >() )
+      .def("push_back", &feature_array::push_back)
+      .def("size", &feature_array::size)
+      ;
 
     class_< ComLocator >("ComLocator")
       .def_readwrite("x_scale", &ComLocator::x_scale)
@@ -143,6 +150,10 @@ void export_traxels() {
 
     class_< std::vector<int> >("VectorOfInt")
       .def(vector_indexing_suite< std::vector<int> >() )
+    ;
+
+    class_< std::vector<string> >("VectorOfString")
+      .def(vector_indexing_suite< std::vector<string> >() )
     ;
 
     TraxelStoreByTimeid& (TraxelStore::*get_by_timeid)() = &TraxelStore::get<by_timeid>; 

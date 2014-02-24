@@ -64,33 +64,42 @@ bool Event::operator!=(const Event& other) const {
 
 ostream& operator<< (ostream &out, const Event &e)
 {
-    string type;
-    switch(e.type) {
-	case Event::Move:
-	    type = "Move";
-	    break;
-	case Event::Division:
-	    type = "Division";
-	    break;
-	case Event::Appearance:
-	    type = "Appearance";
-	    break;
-	case Event::Disappearance:
-	    type = "Disappearance";
-	    break;
-	case Event::Void:
-	    type = "Voide";
-	    break;
-	default:
-	    type = "unknown";
-	    break;
-    }
-    out << "(" << type << ", traxel_ids:";
-    for(size_t i = 0; i < e.traxel_ids.size(); ++i) {
-	out << " " << e.traxel_ids[i]; 
-    }
-    out << ", energy: " << e.energy() << ")";
-    return out;
+  string type;
+  switch(e.type) {
+  case Event::Move:
+    type = "Move";
+    break;
+  case Event::Division:
+    type = "Division";
+    break;
+  case Event::Appearance:
+    type = "Appearance";
+    break;
+  case Event::Disappearance:
+    type = "Disappearance";
+    break;
+  case Event::Void:
+    type = "Void";
+    break;
+  case Event::Merger:
+    type = "Merger";
+    break;
+  case Event::ResolvedTo:
+    type = "ResolvedTo";
+    break;
+  case Event::MultiFrameMove:
+    type = "MultiFrameMove";
+    break;
+  default:
+    type = "unknown";
+    break;
+  }
+  out << "(" << type << ", traxel_ids:";
+  for(size_t i = 0; i < e.traxel_ids.size(); ++i) {
+    out << " " << e.traxel_ids[i]; 
+  }
+  out << ", energy: " << e.energy() << ")";
+  return out;
 }
 
 } /* namespace pgmlink */

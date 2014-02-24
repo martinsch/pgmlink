@@ -9,10 +9,10 @@
 
 #include <cmath>
 #include <stdexcept>
-
+#include "pgmlink/log.h"
 #include "pgmlink/traxels.h"
+#include "pgmlink/field_of_view.h"
 #include "pgmlink/pgmlink_export.h"
-
 
 namespace pgmlink {
 
@@ -70,6 +70,40 @@ namespace pgmlink {
     double w_;
   };
  
+class PGMLINK_EXPORT NegLnDetection {
+public:
+	NegLnDetection(double weight) :
+		w_(weight) {}
+	double operator()( const Traxel&, const size_t state ) const;
+private:
+	double w_;
+};
+
+class NegLnConstant {
+public:
+	NegLnConstant(double weight, std::vector<double> prob_vector): w_(weight), prob_vector_(prob_vector) {}
+	double operator()(const size_t state ) const;
+private:
+	double w_;
+	std::vector<double> prob_vector_;
+};
+
+class NegLnDivision {
+public:
+	NegLnDivision(double weight) : w_(weight) {}
+	double operator()( const Traxel&, const size_t state ) const;
+private:
+	double w_;
+};
+
+class NegLnTransition {
+public:
+	NegLnTransition(double weight) : w_(weight) {}
+	double operator()( const double ) const;
+private:
+	double w_;
+};
+
   /**
      @brief Zero near temporal border, else 1.
   */
@@ -100,6 +134,25 @@ namespace pgmlink {
     bool early_;
     int margin_t_;
   };
+
+  class PGMLINK_EXPORT SpatialBorderAwareWeight {
+    public:
+	  SpatialBorderAwareWeight( double cost, double margin, bool relative, FieldOfView& fov) :
+		  cost_(cost), margin_(margin), relative_(relative), fov_(fov) {
+		  if (relative && margin > 0.5) {
+			  throw std::runtime_error("The relative margin may not exceed 0.5.");
+		  }
+	  }
+
+      double operator()( const Traxel& tr ) const;
+
+    private:
+      double cost_;
+      double margin_;
+      bool relative_;
+      FieldOfView fov_;
+    };
+
 
   /**
      @brief Primitive fixed value feature.

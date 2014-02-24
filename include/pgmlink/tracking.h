@@ -16,6 +16,7 @@
 #include "pgmlink/pgmlink_export.h"
 #include "pgmlink/traxels.h"
 #include "pgmlink/field_of_view.h"
+#include "pgmlink/merger_resolving.h"
 
 namespace pgmlink {
   class PGMLINK_EXPORT ChaingraphTracking {
@@ -74,6 +75,136 @@ namespace pgmlink {
     shared_ptr<std::vector< std::map<unsigned int, bool> > > last_detections_;
   };
 
+  class NNTracking {
+    public:
+      NNTracking(double divDist = 30,
+    		  double movDist = 10,
+                 std::vector<std::string> features = std::vector<std::string>(0),
+    		  double divisionThreshold = 0.5,
+    		  bool splitterHandling = true,
+    		  bool mergerHandling = true,
+                 std::vector<int> maxTraxelIdAt = std::vector<int>(0))
+        : divDist_(divDist), movDist_(movDist), distanceFeatures_(features),
+          divisionThreshold_(divisionThreshold), splitterHandling_(splitterHandling),
+          mergerHandling_(mergerHandling), maxTraxelIdAt_(maxTraxelIdAt){}
+      std::vector< std::vector<Event> > operator()(TraxelStore&);
+
+      /**
+       * Get state of detection variables after call to operator().
+       */
+      std::vector< std::map<unsigned int, bool> > detections();
+
+    private:
+      double divDist_, movDist_;
+      std::vector<std::string> distanceFeatures_;
+      double divisionThreshold_;
+      bool splitterHandling_, mergerHandling_;
+      shared_ptr<std::vector< std::map<unsigned int, bool> > > last_detections_;
+      std::vector<int> maxTraxelIdAt_;
+    };
+
+
+  class NNTrackletsTracking {
+      public:
+	  NNTrackletsTracking(double maxDist = 30,
+                              std::vector<std::string> features = std::vector<std::string>(0),
+      		  double divisionThreshold = 0.5,
+      		  bool splitterHandling = true,
+      		  bool mergerHandling = true,
+                              std::vector<int> maxTraxelIdAt = std::vector<int>(0))
+          : maxDist_(maxDist), distanceFeatures_(features),
+            divisionThreshold_(divisionThreshold), splitterHandling_(splitterHandling),
+            mergerHandling_(mergerHandling), maxTraxelIdAt_(maxTraxelIdAt){}
+        std::vector< std::vector<Event> > operator()(TraxelStore&);
+
+        /**
+         * Get state of detection variables after call to operator().
+         */
+        std::vector< std::map<unsigned int, bool> > detections();
+
+      private:
+        double maxDist_;
+        std::vector<std::string> distanceFeatures_;
+        double divisionThreshold_;
+        bool splitterHandling_, mergerHandling_;
+        shared_ptr<std::vector< std::map<unsigned int, bool> > > last_detections_;
+        std::vector<int> maxTraxelIdAt_;
+  };
+
+  class ConsTracking {
+    public:
+	  ConsTracking(
+		  int max_number_objects=3,
+	      double max_neighbor_distance = 20,
+		  double division_threshold = 0.3,
+		  const std::string& random_forest_filename = "none",
+  	      bool size_dependent_detection_prob = false,
+  	      double forbidden_cost = 0,
+  	      double ep_gap=0.01,
+  	      double avg_obj_size=30.0,
+  	      bool with_tracklets=true,
+  	      double division_weight=10.0,
+  	      double transition_weight=10.0,
+  	      bool with_divisions=true,
+  	      double disappearance_cost = 0,
+  	      double appearance_cost = 0,
+		  bool with_merger_resolution = true,
+		  int n_dim = 3,
+		  double transition_parameter = 5.,
+		  double border_width = 0,
+		  FieldOfView fov = FieldOfView(),
+		  bool with_constraints = true
+  	      )
+        : max_number_objects_(max_number_objects),
+        	max_dist_(max_neighbor_distance), division_threshold_(division_threshold),
+        detection_rf_fn_(random_forest_filename), use_size_dependent_detection_(size_dependent_detection_prob),
+        forbidden_cost_(forbidden_cost),
+        ep_gap_(ep_gap), avg_obj_size_(avg_obj_size),
+        with_tracklets_(with_tracklets),
+        division_weight_(division_weight),
+        transition_weight_(transition_weight),
+        with_divisions_(with_divisions),
+        disappearance_cost_(disappearance_cost),
+        appearance_cost_(appearance_cost),
+		means_(std::vector<double>()),
+		sigmas_(std::vector<double>()),
+		with_merger_resolution_(with_merger_resolution),
+		number_of_dimensions_(n_dim),
+		transition_parameter_(transition_parameter),
+		border_width_(border_width),
+		fov_(fov),
+		with_constraints_(with_constraints){}
+    std::vector< std::vector<Event> > operator()(TraxelStore& ts,
+                                                 TimestepIdCoordinateMapPtr coordinates = TimestepIdCoordinateMapPtr());
+
+      /**
+       * Get state of detection variables after call to operator().
+       */
+      std::vector< std::map<unsigned int, bool> > detections();
+
+    private:
+      int max_number_objects_;
+      double max_dist_;
+      double division_threshold_;
+      const std::string detection_rf_fn_;
+      bool use_size_dependent_detection_;
+      double forbidden_cost_;
+      double ep_gap_;
+      double avg_obj_size_;
+      bool with_tracklets_;
+      double division_weight_;
+      double transition_weight_;
+      bool with_divisions_;
+      double disappearance_cost_, appearance_cost_;
+      std::vector<double> means_, sigmas_;
+      bool with_merger_resolution_;
+      shared_ptr<std::vector< std::map<unsigned int, bool> > > last_detections_;
+      int number_of_dimensions_;
+      double transition_parameter_;
+      double border_width_;
+      FieldOfView fov_;
+      bool with_constraints_;
+    };
 }
 
 #endif /* TRACKING_H */

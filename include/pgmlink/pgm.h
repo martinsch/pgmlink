@@ -37,6 +37,33 @@ namespace pgmlink {
       opengm::meta::TypeList<FeatureFunction,
       opengm::meta::TypeList<LossFunction, opengm::meta::ListEnd > > > > OpengmModel;
 
+    class OpengmModelDeprecated {
+    public:
+      typedef double Energy;
+      typedef opengm::GraphicalModel<Energy, opengm::Adder> ogmGraphicalModel;
+      typedef opengm::Factor<ogmGraphicalModel> ogmFactor;
+      typedef opengm::Minimizer ogmAccumulator;
+      typedef opengm::Inference<ogmGraphicalModel, ogmAccumulator> ogmInference;
+      typedef opengm::meta::TypeAtTypeList<ogmGraphicalModel::FunctionTypeList, 0>::type ExplicitFunctionType;
+      typedef ogmGraphicalModel::FunctionIdentifier FunctionIdentifier;
+      
+      OpengmModelDeprecated() {
+        model_ = new ogmGraphicalModel();
+      }
+      ~OpengmModelDeprecated() {
+        delete model_;
+      }
+      
+      ogmGraphicalModel* Model() {return model_; }
+      const ogmGraphicalModel* Model() const {return model_; }
+      
+    private:
+      OpengmModelDeprecated(const OpengmModelDeprecated&);
+      OpengmModelDeprecated& operator=(const OpengmModelDeprecated&);
+      
+      ogmGraphicalModel* model_;
+    };
+
     template <typename OGM_FUNCTION>
       class OpengmFactor {
     public:
@@ -70,11 +97,14 @@ namespace pgmlink {
       OpengmExplicitFactor( const std::vector<size_t>& ogm_var_indices, VALUE init=0, size_t states_per_var=2 );
       template <typename ITER>
 	OpengmExplicitFactor( ITER first_ogm_idx, ITER last_ogm_idx, VALUE init=0, size_t states_per_var=2 );  
+      template <typename ITER>
+      OpengmExplicitFactor( ITER first_ogm_idx, ITER last_ogm_idx, VALUE init, std::vector<size_t> states_vars );
   
       void set_value( std::vector<size_t> coords, VALUE v);
   
     private:
       void init_( VALUE init, size_t states_per_var );
+      void init_( VALUE init, std::vector<size_t> states_vars );
     };    
  
     template <typename VALUE>
@@ -104,6 +134,7 @@ namespace pgmlink {
       void default_value( VALUE v );
       VALUE default_value() const;
     };
+
 
     /**
        @brief Accessing entries of a Factor/Function that was already added to a graphical model.
@@ -193,6 +224,12 @@ namespace pgmlink {
    : OpengmFactor<opengm::ExplicitFunction<VALUE> >(opengm::ExplicitFunction<VALUE>(),first_ogm_idx, last_ogm_idx) {
   init_( init, states_per_var );
  }
+ template <typename VALUE>
+    template< typename ITER >
+    OpengmExplicitFactor<VALUE>::OpengmExplicitFactor( ITER first_ogm_idx, ITER last_ogm_idx, VALUE init, std::vector<size_t> states_vars )
+    : OpengmFactor<opengm::ExplicitFunction<VALUE> >(opengm::ExplicitFunction<VALUE>(),first_ogm_idx, last_ogm_idx) {
+   init_( init, states_vars );
+  }
 
  template <typename VALUE>  
    void OpengmExplicitFactor<VALUE>::set_value( std::vector<size_t> coords, VALUE v) {
@@ -212,6 +249,11 @@ namespace pgmlink {
    std::vector<size_t> shape( this->vi_.size(), states_per_var );
    this->ogmfunction_ = opengm::ExplicitFunction<VALUE>( shape.begin(), shape.end(), init );
  }
+
+ template <typename VALUE>
+    void OpengmExplicitFactor<VALUE>::init_( VALUE init, std::vector<size_t> states_vars ) {
+    this->ogmfunction_ = opengm::ExplicitFunction<VALUE>( states_vars.begin(), states_vars.end(), init );
+  }
 
 
 
@@ -291,6 +333,7 @@ template<class VALUE>
   VALUE OpengmWeightedFeature<VALUE>::default_value() const {
   return this->ogmfunction_.innerFunction()->default_value();
  }
+
 
 } /* namespace pgm */
 } /* namespace pgmlink */

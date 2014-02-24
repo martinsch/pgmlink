@@ -20,22 +20,23 @@ namespace pgmlink {
 	public:
 	    template <typename InputIt>
 	    NearestNeighborSearch( InputIt traxel_begin,
-				   InputIt traxel_end);
+				   InputIt traxel_end,
+				   const bool reverse = false);
 	    ~NearestNeighborSearch();
 	
 	     /**
 	      * Returns (traxel id, distance*distance) map.
 	      */
-	    std::map<unsigned int, double> knn_in_range( const Traxel& query, double radius, unsigned int knn );
-	    unsigned int count_in_range( const Traxel& query, double radius );
+	    std::map<unsigned int, double> knn_in_range( const Traxel& query, double radius, unsigned int knn, const bool reverse = false );
+	    unsigned int count_in_range( const Traxel& query, double radius, const bool reverse = false );
 
 	private:
 	    /**
 	     * Ctor helper: define points and association between traxels and points
 	     */
 	    template <typename InputIt>
-	    void define_point_set( InputIt traxel_begin, InputIt traxel_end );
-	    ANNpoint point_from_traxel( const Traxel& traxel );
+	    void define_point_set( InputIt traxel_begin, InputIt traxel_end, const bool reverse = false );
+	    ANNpoint point_from_traxel( const Traxel& traxel, const bool reverse = false );
 
 	    std::map<unsigned int, unsigned int> point_idx2traxel_id_;
 	
@@ -56,6 +57,7 @@ namespace pgmlink {
 #include <iterator>
 #include <boost/scoped_array.hpp>
 #include "pgmlink/traxels.h"
+#include <pgmlink/log.h>
 
 
 
@@ -64,12 +66,12 @@ using namespace std;
 using namespace boost;
 
 template <typename InputIt>
-NearestNeighborSearch::NearestNeighborSearch(InputIt traxel_begin, InputIt traxel_end) : 
+NearestNeighborSearch::NearestNeighborSearch(InputIt traxel_begin, InputIt traxel_end, const bool reverse) :
   dim_(3), points_(NULL) {
   size_t size(distance(traxel_begin, traxel_end));
 
   if(size > 0) {
-    this->define_point_set( traxel_begin, traxel_end );
+    this->define_point_set( traxel_begin, traxel_end, reverse );
     try {
 	kd_tree_ = boost::shared_ptr<ANNkd_tree>( new ANNkd_tree( points_, size, dim_ ) );
     } catch(...) {
@@ -81,7 +83,7 @@ NearestNeighborSearch::NearestNeighborSearch(InputIt traxel_begin, InputIt traxe
 }
 
 template <typename InputIt>
-void NearestNeighborSearch::define_point_set( InputIt traxel_begin, InputIt traxel_end ) {
+void NearestNeighborSearch::define_point_set( InputIt traxel_begin, InputIt traxel_end, const bool reverse ) {
     // allocate memory for kd-tree nodes
     size_t traxel_number = distance(traxel_begin, traxel_end);
     points_ = annAllocPts( traxel_number, dim_ );
@@ -96,9 +98,19 @@ void NearestNeighborSearch::define_point_set( InputIt traxel_begin, InputIt trax
 	for( InputIt traxel = traxel_begin; traxel != traxel_end; ++traxel, ++i) {
 	  ANNpoint point = points_[i];
 	  assert(dim_ == 3);
-	  point[0] = traxel->X();
-	  point[1] = traxel->Y();
-	  point[2] = traxel->Z();
+	  if (!reverse) {
+		  point[0] = traxel->X();
+		  point[1] = traxel->Y();
+		  point[2] = traxel->Z();
+		  LOG(logDEBUG4) << "NearestNeighborSearch::define_point_set (!reverse): " << *traxel <<
+		                  " point = " << point[0] << "," << point[1] << "," << point[2];
+	  } else {
+		  point[0] = traxel->X_corr();
+		  point[1] = traxel->Y_corr();
+		  point[2] = traxel->Z_corr();
+		  LOG(logDEBUG4) << "NearestNeighborSearch::define_point_set: " << *traxel <<
+		                            " point = " << point[0] << "," << point[1] << "," << point[2];
+	  }
 
 	  // save point <-> traxel association
 	  point_idx2traxel_id_[i] = traxel->Id;

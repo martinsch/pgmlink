@@ -21,7 +21,7 @@ NearestNeighborSearch::~NearestNeighborSearch() {
 
 
 
-map<unsigned int, double> NearestNeighborSearch::knn_in_range( const Traxel& query, double radius, unsigned int knn ) {
+map<unsigned int, double> NearestNeighborSearch::knn_in_range( const Traxel& query, double radius, unsigned int knn , const bool reverse) {
     if( radius < 0 ) {
 	throw "knn_in_range: radius has to be non-negative.";
     }
@@ -35,7 +35,7 @@ map<unsigned int, double> NearestNeighborSearch::knn_in_range( const Traxel& que
 
     // allocate
     ANNpoint query_point( NULL );
-    query_point = this->point_from_traxel(query);
+    query_point = this->point_from_traxel(query, reverse);
     if( query_point == NULL ) {
 	throw "query point allocation failure";
     }
@@ -76,7 +76,7 @@ map<unsigned int, double> NearestNeighborSearch::knn_in_range( const Traxel& que
 
 
 
-unsigned int NearestNeighborSearch::count_in_range( const Traxel& query, double radius ) {
+unsigned int NearestNeighborSearch::count_in_range( const Traxel& query, double radius , const bool reverse) {
     if( radius < 0 ) {
 	throw "count_in_range: radius has to be non-negative.";
     }
@@ -88,7 +88,7 @@ unsigned int NearestNeighborSearch::count_in_range( const Traxel& query, double 
 
     // allocate
     ANNpoint query_point( NULL );
-    query_point = this->point_from_traxel(query);
+    query_point = this->point_from_traxel(query, reverse);
     if( query_point == NULL ) {
 	throw "query point allocation failure";
     }
@@ -120,15 +120,23 @@ unsigned int NearestNeighborSearch::count_in_range( const Traxel& query, double 
 
 
 
-ANNpoint NearestNeighborSearch::point_from_traxel( const Traxel& traxel ) {
+ANNpoint NearestNeighborSearch::point_from_traxel( const Traxel& traxel , const bool reverse) {
     assert(dim_ == 3);
     ANNpoint point = annAllocPt( dim_ );
 
-    point[0] = traxel.X();
-    point[1] = traxel.Y();
-    point[2] = traxel.Z();
-
-    return point;
+    if (reverse) {
+        point[0] = traxel.X();
+            point[1] = traxel.Y();
+            point[2] = traxel.Z();
+            LOG(logDEBUG4) << "NearestNeighborSearch::point_from_traxel (reverse): " << traxel <<
+                    " point = " << point[0] << "," << point[1] << "," << point[2];
+    } else {
+    	point[0] = traxel.X_corr();
+		point[1] = traxel.Y_corr();
+		point[2] = traxel.Z_corr();
+		LOG(logDEBUG4) << "NearestNeighborSearch::point_from_traxel: " << traxel <<
+		                " point = " << point[0] << "," << point[1] << "," << point[2];
+    }return point;
 }
 
 

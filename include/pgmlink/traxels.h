@@ -78,6 +78,21 @@ class PGMLINK_EXPORT ComLocator : public Locator {
     void serialize( Archive&, const unsigned int /*version*/ );
 };
 
+class PGMLINK_EXPORT ComCorrLocator : public Locator {
+ public:
+ ComCorrLocator() : Locator("com_corrected") {};
+  virtual ComCorrLocator* clone() { return new ComCorrLocator(*this); };
+  double X(const FeatureMap& m) const { return x_scale * coordinate_from(m, 0); };
+  double Y(const FeatureMap& m) const { return y_scale * coordinate_from(m, 1); };
+  double Z(const FeatureMap& m) const { return z_scale * coordinate_from(m, 2); };
+
+ private:
+  // boost serialize
+  friend class boost::serialization::access;
+  template< typename Archive >
+    void serialize( Archive&, const unsigned int /*version*/ );
+};
+
 class PGMLINK_EXPORT IntmaxposLocator : public Locator {
  public:
  IntmaxposLocator() : Locator("intmaxpos") {};
@@ -102,8 +117,9 @@ class PGMLINK_EXPORT IntmaxposLocator : public Locator {
  public:
    // construction / assignment
    //takes ownership of locator pointer
-   Traxel(unsigned int id = 0, int timestep = 0, FeatureMap fmap = FeatureMap(), Locator* l = new ComLocator()) :
-	   Id(id), Timestep(timestep), features(fmap), locator_(l) {};
+   Traxel(unsigned int id = 0, int timestep = 0, FeatureMap fmap = FeatureMap(), Locator* l = new ComLocator(),
+		   ComCorrLocator* lc = new ComCorrLocator()) :
+	   Id(id), Timestep(timestep), features(fmap), locator_(l), corr_locator_(lc) {};
    Traxel(const Traxel& other);
    Traxel& operator=(const Traxel& other);
    ~Traxel() { delete locator_; };
@@ -120,8 +136,13 @@ class PGMLINK_EXPORT IntmaxposLocator : public Locator {
    double Y() const;
    double Z() const;
 
+   double X_corr() const;
+   double Y_corr() const;
+   double Z_corr() const;
+
    // relation to other traxels
    double distance_to(const Traxel& other) const;
+   double distance_to_corr(const Traxel& other) const;
    double angle(const Traxel& leg1, const Traxel& leg2) const;
    friend std::ostream& operator<< (std::ostream &out, const Traxel &t);
 
@@ -132,6 +153,8 @@ class PGMLINK_EXPORT IntmaxposLocator : public Locator {
      void serialize( Archive&, const unsigned int /*version*/ );
 
    Locator* locator_;
+
+   ComCorrLocator* corr_locator_;
  };
 
  // compare by (time,id) (Traxels can be used as keys (for instance in a std::map) )

@@ -1,4 +1,4 @@
-*.cpp~
+*~
 *.cmake
 *project
 *Makefile*
@@ -13,6 +13,12 @@ CMakeFiles
 doxygenconfig*
 randomforest_test.cpp
 tracking/
+tests/CMakeList.txt
+.gitignore
+learning_systemtest.cpp
+learning_systemtest
+Doxyfile
+
 
 
 # Compiled source #
@@ -51,3 +57,6 @@ Icon?
 Thumbs.db
 
 /build/
+html
+doc/html
+

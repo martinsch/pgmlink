@@ -38,7 +38,7 @@
 
 ###########################################################################################
 
-CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.6)
 PROJECT(pgmlink)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_extensions/)
 message( "\nConfiguring pgmlink:" )
@@ -49,6 +49,11 @@ find_package( Cplex REQUIRED )
 find_package( VIGRA REQUIRED )
 find_package( Lemon REQUIRED )
 find_package( Boost REQUIRED COMPONENTS serialization )
+find_package( Armadillo REQUIRED )
+find_package( Mlpack REQUIRED )
+find_package( Opengm REQUIRED )
+find_package( Xml2 REQUIRED )
+
 message(STATUS "  found: ${Boost_LIBRARIES}")
 
 if(WIN32)
@@ -68,7 +73,7 @@ endif()
 
 include_directories(${PROJECT_SOURCE_DIR}/include/)
 # include external headers as system includes so we do not have to cope with their warnings
-include_directories(SYSTEM ${ANN_INCLUDE_DIR} ${CPLEX_INCLUDE_DIRS} ${VIGRA_INCLUDE_DIR} ${LEMON_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
+include_directories(SYSTEM ${ANN_INCLUDE_DIR} ${CPLEX_INCLUDE_DIRS} ${VIGRA_INCLUDE_DIR} ${LEMON_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} ${Opengm_INCLUDE_DIR})
 
 # CPLEX switch to be compatible with STL
 ADD_DEFINITIONS(-DIL_STD)
@@ -91,10 +96,12 @@ message(STATUS "  Cplex: ${CPLEX_INCLUDE_DIR}")
 message(STATUS "  VIGRA: ${VIGRA_INCLUDE_DIR}")
 message(STATUS "  Lemon: ${LEMON_INCLUDE_DIR}")
 message(STATUS "  Boost: ${Boost_INCLUDE_DIRS}")
+message(STATUS "  HDF5:  ${HDF5_INCLUDE_DIRS}")
+message(STATUS "  Opengm: ${Opengm_INCLUDE_DIR}")
+message(STATUS "  libxml2:  ${Xml2_INCLUDE_DIR}")
 
 # hide these variables to have a cleaner interface
 mark_as_advanced( Boost_DIR )
-mark_as_advanced( HDF5_DIR ) # set by FindHDF5
 
 # build options
 
@@ -109,10 +116,17 @@ if(NOT CMAKE_BUILD_TYPE)
     FORCE)
 endif(NOT CMAKE_BUILD_TYPE)
 
-if(NOT MSVC)
-  set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wfatal-errors -std=c++98 -pedantic -pthread")
-  set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
-  set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Werror")
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+  set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wfatal-errors -std=c++98 -pedantic -pthread -fopenmp ${CMAKE_CXX_FLAGS}")
+  set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 ${CMAKE_CXX_FLAGS_DEBUG}")
+  set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Werror ${CMAKE_CXX_FLAGS_RELEASE}")
+endif()
+
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+  add_definitions("-stdlib=libstdc++")
+  set(CMAKE_CXX_FLAGS "-std=c++98 -ftemplate-depth=512 ${CMAKE_CXX_FLAGS}")
+  set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 ${CMAKE_CXX_FLAGS_DEBUG}")
+  set(CMAKE_CXX_FLAGS_RELEASE "-O3 ${CMAKE_CXX_FLAGS_RELEASE}")
 endif()
 
 IF(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
@@ -153,7 +167,7 @@ endif(WIN32)
 
 include_directories( ${CMAKE_CURRENT_BINARY_DIR}/include )
 
-target_link_libraries(pgmlink ${ANN_LIBRARIES} ${Boost_LIBRARIES}  ${CPLEX_LIBRARIES} ${VIGRA_IMPEX_LIBRARY} ${LEMON_LIBRARIES} ${HDF5_LIBRARIES} )
+target_link_libraries(pgmlink ${ANN_LIBRARIES} ${Boost_LIBRARIES}  ${CPLEX_LIBRARIES} ${VIGRA_IMPEX_LIBRARY} ${LEMON_LIBRARIES} ${HDF5_LIBRARIES} ${Mlpack_LIBRARIES} ${Armadillo_LIBRARIES})
 
 # Install target pgmlink
 install(TARGETS pgmlink
@@ -183,5 +197,10 @@ endif()
 # Python
 SET(WITH_PYTHON true CACHE BOOL "Build with python wrapper.")
 if(WITH_PYTHON)
+  find_package( Vigranumpy REQUIRED PATHS ${Vigranumpy_DIR} )
+  SET( Vigranumpy_DIR ${Vigranumpy_DIR}
+    CACHE PATH "Directory containing VigranumpyConfig.cmake"
+    FORCE )
+  include_directories(SYSTEM ${VIGRANUMPY_INCLUDE_DIRS})
   add_subdirectory(python/)
 endif()
