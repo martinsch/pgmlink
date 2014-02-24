@@ -22,9 +22,9 @@ namespace pgmlink {
   class PGMLINK_EXPORT ChaingraphTracking {
   public:
     ChaingraphTracking(const std::string& random_forest_filename = "none",
-	      double appearance = 500, 
+	      double appearance = 500,                                       
 	      double disappearance = 500,
-	      double detection = 10,
+	      double detection = 10,           
 	      double misdetection = 500,
 	      bool cellness_by_random_forest = false,
 	      double opportunity_cost = 0,
@@ -174,9 +174,11 @@ namespace pgmlink {
 		border_width_(border_width),
 		fov_(fov),
 		with_constraints_(with_constraints){}
-    std::vector< std::vector<Event> > operator()(TraxelStore& ts,
-                                                 TimestepIdCoordinateMapPtr coordinates = TimestepIdCoordinateMapPtr(),
-                                                 bool withPerturbation=false);
+      std::vector< std::vector< std::vector<Event> > > operator()(TraxelStore& ts,
+                                                TimestepIdCoordinateMapPtr coordinates = TimestepIdCoordinateMapPtr(),
+                                                int number_of_iterations=1, 
+                                                int distribution=0, 
+                                                int distribution_param=1);
 
       /**
        * Get state of detection variables after call to operator().

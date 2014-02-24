@@ -136,9 +136,7 @@ namespace pgmlink {
       return g;
   }
 
-
-
-  boost::shared_ptr<std::vector< std::vector<Event> > > events(const HypothesesGraph& g) {
+  boost::shared_ptr<std::vector< std::vector<Event> > > events(const HypothesesGraph& g, int iterationStep) {
     LOG(logDEBUG) << "events(): entered";
     boost::shared_ptr<std::vector< std::vector<Event> > > ret(new vector< vector<Event> >);
     typedef property_map<node_timestep, HypothesesGraph::base_graph>::type node_timestep_map_t;
@@ -183,14 +181,21 @@ namespace pgmlink {
 //        	}
 //        	prev_mergers.clear();
 //        }
-
+	
+	property_map<arc_active_count, HypothesesGraph::base_graph>::type* active_arcs;
+	active_arcs = &g.get(arc_active_count());
+		
+	property_map<node_active_count, HypothesesGraph::base_graph>::type* active_nodes;
+	active_nodes = &g.get(node_active_count());
+	
 	map<unsigned int, vector<unsigned int> > resolver_map;
 
 	// for every node: destiny
 	LOG(logDEBUG2) << "events(): for every node: destiny";
 	for(node_timestep_map_t::ItemIt node_at(node_timestep_map, t); node_at!=lemon::INVALID; ++node_at) {
 	    assert(node_traxel_map[node_at].Timestep == t);
-
+		if (!active_nodes->operator[](node_at)[iterationStep]){continue;}
+		
 	    if (with_origin && (*origin_map)[node_at].size() > 0 && t > g.earliest_timestep()) {
 	      LOG(logINFO) << "events(): collecting resolver node ids for all merger nodes " << t << ", " << (*origin_map)[node_at][0];
 	      resolver_map[(*origin_map)[node_at][0]].push_back(node_traxel_map[node_at].Id);
@@ -244,29 +249,40 @@ namespace pgmlink {
 			(*ret)[t-g.earliest_timestep()-1].push_back(e);
 			LOG(logDEBUG3) << e;
 	    }
-
+	    
 	    // count outgoing arcs
+
 	    size_t count = 0;
-	    for(HypothesesGraph::base_graph::OutArcIt a(g, node_at); a!=lemon::INVALID; ++a) ++count;
+	    for(HypothesesGraph::base_graph::OutArcIt a(g, node_at); a!=lemon::INVALID; ++a) {
+			 if (active_arcs->operator[](a)[iterationStep]) {
+				++count;	
+			 }		
+		}
+		
 	    LOG(logDEBUG3) << "events(): counted outgoing arcs: " << count;
 	    // construct suitable Event object
 	    switch(count) {
 		// Disappearance
 		case 0: {
 		    Event e;
-		    e.type = Event::Disappearance;
-		    e.traxel_ids.push_back(node_traxel_map[node_at].Id);
-		    (*ret)[t-g.earliest_timestep()].push_back(e);
-		    LOG(logDEBUG3) << e;
-		    break;
+			e.type = Event::Disappearance;
+			e.traxel_ids.push_back(node_traxel_map[node_at].Id);
+			(*ret)[t-g.earliest_timestep()].push_back(e);
+			LOG(logDEBUG3) << e;
+			break;
 		    }
 		// Move
 		case 1: {
 		    Event e;
 		    e.type = Event::Move;
 		    e.traxel_ids.push_back(node_traxel_map[node_at].Id);
-		    HypothesesGraph::base_graph::OutArcIt a(g, node_at);
-		    e.traxel_ids.push_back(node_traxel_map[g.target(a)].Id);
+			
+			for(HypothesesGraph::base_graph::OutArcIt a(g, node_at); a != lemon::INVALID; ++a) {
+				if (!active_arcs->operator[](a)[iterationStep]) {
+					continue;
+				}
+				e.traxel_ids.push_back(node_traxel_map[g.target(a)].Id);
+			}
 		    (*ret)[t-g.earliest_timestep()].push_back(e);
 		    LOG(logDEBUG3) << e;
 		    break;
@@ -276,16 +292,25 @@ namespace pgmlink {
 			Event e;
 		    if (with_division_detection) {
 		    	if (count == 2 && (*division_node_map)[node_at]) {
-		    		e.type = Event::Division;
+					e.type = Event::Division;
 					e.traxel_ids.push_back(node_traxel_map[node_at].Id);
-					HypothesesGraph::base_graph::OutArcIt a(g, node_at);
-					e.traxel_ids.push_back(node_traxel_map[g.target(a)].Id);
-					++a;
-					e.traxel_ids.push_back(node_traxel_map[g.target(a)].Id);
+					for(HypothesesGraph::base_graph::OutArcIt a(g, node_at); a != lemon::INVALID; ++a) {
+						if (!active_arcs->operator[](a)[iterationStep]) {
+							continue;
+						}
+						
+						e.traxel_ids.push_back(node_traxel_map[g.target(a)].Id);
+					}
+					
 					(*ret)[t-g.earliest_timestep()].push_back(e);
 					LOG(logDEBUG3) << e;
 		    	} else {
+					
 					for(HypothesesGraph::base_graph::OutArcIt a(g, node_at); a != lemon::INVALID; ++a) {
+						if (!active_arcs->operator[](a)[iterationStep]) {
+							continue;
+						}
+						
 						e.type = Event::Move;
 						e.traxel_ids.clear();
 						e.traxel_ids.push_back(node_traxel_map[node_at].Id);
@@ -301,9 +326,12 @@ namespace pgmlink {
 				e.type = Event::Division;
 				e.traxel_ids.push_back(node_traxel_map[node_at].Id);
 				HypothesesGraph::base_graph::OutArcIt a(g, node_at);
-				e.traxel_ids.push_back(node_traxel_map[g.target(a)].Id);
-				++a;
-				e.traxel_ids.push_back(node_traxel_map[g.target(a)].Id);
+				for(HypothesesGraph::base_graph::OutArcIt a(g, node_at); a != lemon::INVALID; ++a) {
+					if (!active_arcs->operator[](a)[iterationStep]) {
+						continue;
+					}
+					e.traxel_ids.push_back(node_traxel_map[g.target(a)].Id);
+				}
 				(*ret)[t-g.earliest_timestep()].push_back(e);
 				LOG(logDEBUG3) << e;
 		    }
@@ -339,6 +367,9 @@ namespace pgmlink {
 	LOG(logDEBUG2) << "events(): appearances in next timestep";
 	for(node_timestep_map_t::ItemIt node_at(node_timestep_map, t+1); node_at!=lemon::INVALID; ++node_at) {
 	    // count incoming arcs
+	    if (!active_nodes->operator[](node_at)[iterationStep]){
+			continue;
+		}
 	    int count = 0;
 	    for(HypothesesGraph::base_graph::InArcIt a(g, node_at); a!=lemon::INVALID; ++a) ++count;
     	    LOG(logDEBUG3) << "events(): counted incoming arcs in next timestep: " << count;

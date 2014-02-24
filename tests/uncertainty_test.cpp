@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE( uncertainty ) {
 				  0, //border_width for app/disapp costs
 	              fov
 		  	      );
-	tracking(ts, true /*with perturbation*/);
+	tracking(ts, 100,0,1);
 }
 
 // EOF

@@ -214,8 +214,8 @@ bool all_true (InputIterator first, InputIterator last, UnaryPredicate pred) {
 ////
 //// class ConsTracking
 ////
-vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts, TimestepIdCoordinateMapPtr coordinates,
-                                                   bool withPerturbation/*=false*/) {
+vector< vector<vector<Event> > >ConsTracking::operator()(TraxelStore& ts, TimestepIdCoordinateMapPtr coordinates,
+                int number_of_iterations, int distribution, int distribution_param) {
 	cout << "-> building energy functions " << endl;
 
 	double detection_weight = 10;
@@ -373,13 +373,16 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts, TimestepIdCoord
 			true, // with_appearance
 			true, // with_disappearance
 			transition_parameter_,
-			with_constraints_
+			with_constraints_,
+			number_of_iterations,
+			distribution, 
+			distribution_param
 			);
-	if (withPerturbation) {
+	if (number_of_iterations>1) {
 		
     
 		cout << "-> perturbed Inference" << endl;
-		pgm.perturbedInference(*graph,100,0.7,0);
+		pgm.perturbedInference(*graph);
 		cout << "-> finished perturbed Inference" << endl;
 		}
 	else {
@@ -403,9 +406,13 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts, TimestepIdCoord
 	}
 	
     cout << "-> constructing unresolved events" << endl;
-    boost::shared_ptr<std::vector< std::vector<Event> > > ev = events(*graph);
-
-
+    
+    std::vector < std::vector< std::vector<Event> > > all_ev(number_of_iterations);
+    for (int i=0;i<number_of_iterations;++i){
+		all_ev[i] = *events(*graph,i); // TODO iterate over iterationSteps, add parameter for backward compatibility
+	}
+	std::vector< std::vector<Event> >* ev = &all_ev[0];
+	
     if (max_number_objects_ > 1 && with_merger_resolution_ && all_true(ev->begin(), ev->end(), has_data<Event>)) {
       cout << "-> resolving mergers" << endl;
       MergerResolver m(graph);
@@ -429,12 +436,12 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts, TimestepIdCoord
       boost::shared_ptr<std::vector< std::vector<Event> > > multi_frame_moves = multi_frame_move_events(*graph);
 
       cout << "-> merging unresolved and resolved events" << endl;
-      // delete extractor; // TO DELETE FIRST CREATE VIRTUAL DTORS
-      return *merge_event_vectors(*ev, *multi_frame_moves);
+      all_ev[0] = *merge_event_vectors(*ev, *multi_frame_moves);
+      return all_ev;
     }
 
     else {
-      return *ev;
+      return all_ev;
     }
 
         

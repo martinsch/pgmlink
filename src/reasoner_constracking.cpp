@@ -68,7 +68,6 @@ void ConservationTracking::calculateUncertainty(HypothesesGraph& g){
 	property_map<node_active_count, HypothesesGraph::base_graph>::type& active_nodes_count =
 		g.get(node_active_count());
 	
-	std::cout << "show arcs "<<std::endl;
 	int c;
     for (HypothesesGraph::ArcIt a(g); a != lemon::INVALID; ++a) {
 		c=0;
@@ -97,7 +96,7 @@ void ConservationTracking::calculateUncertainty(HypothesesGraph& g){
 }
 
 
-void ConservationTracking::perturbedInference(HypothesesGraph& hypotheses, int numberOfPertubations, double sigma, marray::Marray<ValueType>* defaultOffset){
+void ConservationTracking::perturbedInference(HypothesesGraph& hypotheses, marray::Marray<ValueType>* defaultOffset){
 
 	HypothesesGraph *graph;
 	if (with_tracklets_) {
@@ -153,13 +152,11 @@ void ConservationTracking::perturbedInference(HypothesesGraph& hypotheses, int n
 	boost::mt19937 rng;  
 	typedef boost::normal_distribution<> distribution_type;
 	typedef boost::variate_generator<boost::mt19937, distribution_type> gen_type;
-	gen_type randn(rng, distribution_type(0, sigma));
-	
-	LOG(logINFO) << "start perturbation";
+	gen_type randn(rng, distribution_type(0, distribution_param_));
 	
 	isMAP_ = false;
 	
-	for (int iterStep=0;iterStep<numberOfPertubations;++iterStep){
+	for (int iterStep=1;iterStep<number_of_iterations_;++iterStep){
 		
 		LOG(logINFO) << "ConservationTracking::perturbedInference: prepare pertubation number " <<iterStep;
 		
@@ -227,7 +224,7 @@ void ConservationTracking::perturbedInference(HypothesesGraph& hypotheses, int n
 		
 		conclude(*graph);
 	}
-	calculateUncertainty(*graph);
+	//calculateUncertainty(*graph);
 	}
 
 void ConservationTracking::formulate(const HypothesesGraph& hypotheses) {

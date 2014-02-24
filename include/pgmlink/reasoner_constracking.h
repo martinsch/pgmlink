@@ -55,8 +55,11 @@ class ConservationTracking : public Reasoner {
                              bool with_appearance = true,
                              bool with_disappearance = true,
                              double transition_parameter = 5,
-                             bool with_constraints = true
-                             )
+                             bool with_constraints = true,
+                             int number_of_iterations = 1,
+                             int distribution = 0,
+                             double distribution_param = 1
+                             ) // TODO: add parameter for distribution, parameter of distribution and number of iterations 
         : max_number_objects_(max_number_objects),
           detection_(detection),
           division_(division),
@@ -77,6 +80,9 @@ class ConservationTracking : public Reasoner {
           with_disappearance_(with_disappearance),
           transition_parameter_(transition_parameter),
           with_constraints_(with_constraints),
+		  number_of_iterations_(number_of_iterations),
+		  distribution_(distribution),
+		  distribution_param_(distribution_param),
           isMAP_(true)
     { };
     ~ConservationTracking();
@@ -84,7 +90,7 @@ class ConservationTracking : public Reasoner {
     virtual void formulate( const HypothesesGraph& );
     virtual void infer();
     virtual void conclude( HypothesesGraph& );
-    virtual void perturbedInference( HypothesesGraph&, int numberOfPertubations = 0, double sigma = 1, marray::Marray<ValueType>* defaultOffset = 0);
+    virtual void perturbedInference( HypothesesGraph&, marray::Marray<ValueType>* defaultOffset = 0);
     
     double forbidden_cost() const;
     bool with_constraints() const;
@@ -164,6 +170,10 @@ class ConservationTracking : public Reasoner {
     double transition_parameter_;
 
     bool with_constraints_;
+    
+    int number_of_iterations_;
+    int distribution_;
+    double distribution_param_;
     bool isMAP_;
 
     HypothesesGraph tracklet_graph_;
