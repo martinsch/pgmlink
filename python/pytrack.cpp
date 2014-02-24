@@ -31,12 +31,13 @@ vector<vector<Event> > pythonChaingraphTracking(ChaingraphTracking& tr, TraxelSt
 	return result;
 }
 
-vector<vector<Event> > pythonConsTracking(ConsTracking& tr, TraxelStore& ts, TimestepIdCoordinateMapPtr& coordinates) {
-	vector<vector<Event> > result = std::vector<std::vector<Event> >(0);
+vector<vector<vector<Event> > > pythonConsTracking(ConsTracking& tr, TraxelStore& ts, TimestepIdCoordinateMapPtr& coordinates,
+                        int number_of_iterations=1, int distribution=0, int distribution_parameter=1) {
+	vector<vector<vector<Event> > > result = std::vector<std::vector<std::vector<Event> > >(0);
 	// release the GIL
 	Py_BEGIN_ALLOW_THREADS
 	try {
-		result = tr(ts, coordinates);
+		result = tr(ts, coordinates, number_of_iterations, distribution, distribution_parameter);
 	} catch (std::exception& e) {
 		Py_BLOCK_THREADS
 		throw;
@@ -52,6 +53,10 @@ void export_track() {
 
     class_<vector<vector<Event> > >("NestedEventVector")
 	.def(vector_indexing_suite<vector<vector<Event> > >())
+    ;
+
+    class_<vector<vector<vector<Event> > > >("NestedNestedEventVector")
+	.def(vector_indexing_suite<vector<vector<vector<Event> > > >())
     ;
 
     class_<map<unsigned int, bool> >("DetectionMap")
