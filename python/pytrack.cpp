@@ -32,7 +32,7 @@ vector<vector<Event> > pythonChaingraphTracking(ChaingraphTracking& tr, TraxelSt
 }
 
 vector<vector<vector<Event> > > pythonConsTracking(ConsTracking& tr, TraxelStore& ts, TimestepIdCoordinateMapPtr& coordinates,
-                        int number_of_iterations=1, int distribution=0, int distribution_parameter=1) {
+                        size_t number_of_iterations=1, size_t distribution=0, double distribution_parameter=1.) {
 	vector<vector<vector<Event> > > result = std::vector<std::vector<std::vector<Event> > >(0);
 	// release the GIL
 	Py_BEGIN_ALLOW_THREADS

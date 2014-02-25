@@ -215,7 +215,7 @@ bool all_true (InputIterator first, InputIterator last, UnaryPredicate pred) {
 //// class ConsTracking
 ////
 vector< vector<vector<Event> > >ConsTracking::operator()(TraxelStore& ts, TimestepIdCoordinateMapPtr coordinates,
-                int number_of_iterations, int distribution, int distribution_param) {
+                std::size_t number_of_iterations, std::size_t distribution, double distribution_param) {
 	cout << "-> building energy functions " << endl;
 
 	double detection_weight = 10;
@@ -411,8 +411,9 @@ vector< vector<vector<Event> > >ConsTracking::operator()(TraxelStore& ts, Timest
     for (int i=0;i<number_of_iterations;++i){
 		all_ev[i] = *events(*graph,i); // TODO iterate over iterationSteps, add parameter for backward compatibility
 	}
+
 	std::vector< std::vector<Event> >* ev = &all_ev[0];
-	
+
     if (max_number_objects_ > 1 && with_merger_resolution_ && all_true(ev->begin(), ev->end(), has_data<Event>)) {
       cout << "-> resolving mergers" << endl;
       MergerResolver m(graph);

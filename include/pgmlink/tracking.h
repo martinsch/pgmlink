@@ -176,9 +176,9 @@ namespace pgmlink {
 		with_constraints_(with_constraints){}
       std::vector< std::vector< std::vector<Event> > > operator()(TraxelStore& ts,
                                                 TimestepIdCoordinateMapPtr coordinates = TimestepIdCoordinateMapPtr(),
-                                                int number_of_iterations=1, 
-                                                int distribution=0, 
-                                                int distribution_param=1);
+                                                std::size_t number_of_iterations=1,
+                                                std::size_t distribution=0,
+                                                double distribution_param=1.);
 
       /**
        * Get state of detection variables after call to operator().

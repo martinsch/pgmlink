@@ -56,8 +56,8 @@ class ConservationTracking : public Reasoner {
                              bool with_disappearance = true,
                              double transition_parameter = 5,
                              bool with_constraints = true,
-                             int number_of_iterations = 1,
-                             int distribution = 0,
+                             std::size_t number_of_iterations = 1,
+                             std::size_t distribution = 0,
                              double distribution_param = 1
                              ) // TODO: add parameter for distribution, parameter of distribution and number of iterations 
         : max_number_objects_(max_number_objects),
@@ -171,8 +171,8 @@ class ConservationTracking : public Reasoner {
 
     bool with_constraints_;
     
-    int number_of_iterations_;
-    int distribution_;
+    std::size_t number_of_iterations_;
+    std::size_t distribution_;
     double distribution_param_;
     bool isMAP_;
 
