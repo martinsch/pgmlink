@@ -73,7 +73,7 @@ endif()
 
 include_directories(${PROJECT_SOURCE_DIR}/include/)
 # include external headers as system includes so we do not have to cope with their warnings
-include_directories(SYSTEM ${ANN_INCLUDE_DIR} ${CPLEX_INCLUDE_DIRS} ${VIGRA_INCLUDE_DIR} ${LEMON_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} ${Opengm_INCLUDE_DIR})
+include_directories(SYSTEM ${ANN_INCLUDE_DIR} ${CPLEX_INCLUDE_DIRS} ${VIGRA_INCLUDE_DIR} ${LEMON_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} ${Opengm_INCLUDE_DIR} ${Xml2_INCLUDE_DIR})
 
 # CPLEX switch to be compatible with STL
 ADD_DEFINITIONS(-DIL_STD)
