@@ -156,7 +156,7 @@ void ConservationTracking::perturbedInference(HypothesesGraph& hypotheses, marra
 	
 	isMAP_ = false;
 	
-	for (int iterStep=1;iterStep<number_of_iterations_;++iterStep){
+	for (size_t iterStep=1;iterStep<number_of_iterations_;++iterStep){
 		
 		LOG(logINFO) << "ConservationTracking::perturbedInference: prepare pertubation number " <<iterStep;
 		
@@ -233,13 +233,8 @@ void ConservationTracking::formulate(const HypothesesGraph& hypotheses) {
     pgm_ = boost::shared_ptr < pgm::OpengmModelDeprecated > (new pgm::OpengmModelDeprecated());
 	
     HypothesesGraph const *graph;
-    if (with_tracklets_) {
-        LOG(logINFO) << "ConservationTracking::formulate: generating tracklet graph";
-        tracklet2traxel_node_map_ = generateTrackletGraph2(hypotheses, tracklet_graph_);
-        graph = &tracklet_graph_;
-    } else {
-        graph = &hypotheses;
-    }
+    graph = &hypotheses;
+    
 
     LOG(logDEBUG) << "ConservationTracking::formulate: add_transition_nodes";
     add_transition_nodes(*graph);
@@ -331,7 +326,15 @@ void ConservationTracking::conclude( HypothesesGraph& g) {
 		}
 		for(std::map<HypothesesGraph::Node, size_t>::const_iterator it = app_node_map_.begin();
 		it != app_node_map_.end(); ++it) {
-		active_nodes_count.set(it->first,std::vector<long unsigned int>());
+			if (with_tracklets_) {
+				std::vector<HypothesesGraph::Node> traxel_nodes = tracklet2traxel_node_map_[it->first];
+				for (std::vector<HypothesesGraph::Node>::const_iterator tr_n_it = traxel_nodes.begin();
+						tr_n_it != traxel_nodes.end(); ++tr_n_it) {
+					active_nodes_count.set(*tr_n_it,std::vector<long unsigned int>());
+				}
+			} else {
+				active_nodes_count.set(it->first,std::vector<long unsigned int>());
+			}
 		}
 	}
 	
@@ -341,9 +344,20 @@ void ConservationTracking::conclude( HypothesesGraph& g) {
 	//initialize node counts by 0
 	for(std::map<HypothesesGraph::Node, size_t>::const_iterator it = app_node_map_.begin();
 		it != app_node_map_.end(); ++it) {
-		std::vector<long unsigned int> anc = active_nodes_count[it->first];
-		anc.resize(iterStep+1);
-		active_nodes_count.set(it->first,anc);
+		if (with_tracklets_) {
+			std::vector<HypothesesGraph::Node> traxel_nodes = tracklet2traxel_node_map_[it->first];
+            for (std::vector<HypothesesGraph::Node>::const_iterator tr_n_it = traxel_nodes.begin();
+                    tr_n_it != traxel_nodes.end(); ++tr_n_it) {
+				HypothesesGraph::Node n = *tr_n_it;
+				std::vector<long unsigned int> anc = active_nodes_count[n];		
+				anc.resize(iterStep+1);
+				active_nodes_count.set(n,anc);
+			}
+		}else {
+			std::vector<long unsigned int> anc = active_nodes_count[it->first];		
+			anc.resize(iterStep+1);
+			active_nodes_count.set(it->first,anc);
+		}
 	}
 	
 	
@@ -612,8 +626,8 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
             }
             ++num_vars;
         }
-		LOG(logDEBUG4) << "one"   ;
-        if (dis_node_map_.count(n) > 0) {
+		
+		if (dis_node_map_.count(n) > 0) {
             vi.push_back(dis_node_map_[n]);
             double c = 0;
             if (node_end_time < g.latest_timestep()) { // "<" holds if there are only tracklets in the last frame
@@ -633,7 +647,6 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
             ++num_vars;
         }
         
-		LOG(logDEBUG4) << "onetwo" ;     
         // convert vector to array
         vector<size_t> coords(num_vars, 0); // number of variables
         // ITER first_ogm_idx, ITER last_ogm_idx, VALUE init, size_t states_per_var

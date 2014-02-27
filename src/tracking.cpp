@@ -408,7 +408,7 @@ vector< vector<vector<Event> > >ConsTracking::operator()(TraxelStore& ts, Timest
     cout << "-> constructing unresolved events" << endl;
     
     std::vector < std::vector< std::vector<Event> > > all_ev(number_of_iterations);
-    for (int i=0;i<number_of_iterations;++i){
+    for (size_t i=0;i<number_of_iterations;++i){
 		all_ev[i] = *events(*graph,i); // TODO iterate over iterationSteps, add parameter for backward compatibility
 	}
 
