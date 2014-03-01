@@ -15,6 +15,12 @@
 #include "opengm/functions/modelviewfunction.hxx"
 #include "opengm/functions/view.hxx"
 
+//Random:
+#include <boost/random/variate_generator.hpp>
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/normal_distribution.hpp>
+#include <boost/random/uniform_real.hpp>
+
 namespace pgmlink {	
 
 typedef double ValueType;
@@ -35,6 +41,9 @@ typedef opengm::LPCplex
 	<	SubGmType,
 			pgm::OpengmModelDeprecated::ogmAccumulator		>
     cplex_optimizer;
+
+typedef typename boost::variate_generator<boost::mt19937, boost::normal_distribution<> > normalRNGType; 
+typedef typename boost::variate_generator<boost::mt19937, boost::uniform_real<> > uniformRNGType;    
 
 class Traxel;
 
@@ -83,8 +92,11 @@ class ConservationTracking : public Reasoner {
 		  number_of_iterations_(number_of_iterations),
 		  distribution_(distribution),
 		  distribution_param_(distribution_param),
-          isMAP_(true)
-    { };
+          isMAP_(true),
+          random_normal_(rng_,boost::normal_distribution<>(0, distribution_param_)),
+		  random_uniform_(rng_,boost::uniform_real<>(0,1))
+
+     {};
     ~ConservationTracking();
 
     virtual void formulate( const HypothesesGraph& );
@@ -118,7 +130,10 @@ class ConservationTracking : public Reasoner {
     private:
     // copy and assingment have to be implemented, yet
     
-    ConservationTracking(const ConservationTracking&) {};
+    ConservationTracking(const ConservationTracking&):
+		random_normal_(rng_,boost::normal_distribution<>(0, distribution_param_)),
+		random_uniform_(rng_,boost::uniform_real<>(0, 1))
+		{};
     ConservationTracking& operator=(const ConservationTracking&) { return *this;};
 
     void reset();
@@ -130,6 +145,7 @@ class ConservationTracking : public Reasoner {
     void add_division_nodes(const HypothesesGraph& );
     void add_finite_factors( const HypothesesGraph& );
     void calculateUncertainty( HypothesesGraph&);
+    double generateRandomOffset();
     
     // helper
     size_t cplex_id(size_t opengm_id, size_t state);
@@ -175,8 +191,12 @@ class ConservationTracking : public Reasoner {
     std::size_t distribution_;
     double distribution_param_;
     bool isMAP_;
-
-    HypothesesGraph tracklet_graph_;
+    
+    boost::mt19937 rng_;
+    normalRNGType random_normal_;
+    uniformRNGType random_uniform_;
+    
+	HypothesesGraph tracklet_graph_;
     std::map<HypothesesGraph::Node, std::vector<HypothesesGraph::Node> > tracklet2traxel_node_map_;
 };
 

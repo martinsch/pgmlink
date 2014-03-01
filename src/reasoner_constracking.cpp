@@ -18,10 +18,6 @@
 #include "opengm/functions/modelviewfunction.hxx"
 #include "opengm/functions/view.hxx"
 
-//Random:
-#include <boost/random/variate_generator.hpp>
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/normal_distribution.hpp>
 
 using namespace std;
 
@@ -95,7 +91,6 @@ void ConservationTracking::calculateUncertainty(HypothesesGraph& g){
 	}
 }
 
-
 void ConservationTracking::perturbedInference(HypothesesGraph& hypotheses, marray::Marray<ValueType>* defaultOffset){
 
 	HypothesesGraph *graph;
@@ -109,12 +104,10 @@ void ConservationTracking::perturbedInference(HypothesesGraph& hypotheses, marra
 	
 	LOG(logDEBUG) << "ConservationTracking::perturbedInference: formulate ";
 	formulate(*graph);
-	
 	cplex_optimizer::Parameter param;
 	param.verbose_ = true;
 	param.integerConstraint_ = true;
 	param.epGap_ = ep_gap_;
-	
 	pgm::OpengmModelDeprecated::ogmGraphicalModel* model = pgm_->Model();
 	size_t nOF = model->numberOfFactors();
 	
@@ -148,12 +141,6 @@ void ConservationTracking::perturbedInference(HypothesesGraph& hypotheses, marra
 	LOG(logINFO) << "conclude";
 	conclude(*graph);
 	
-	//random numbers will be drawn from a normal distribution RNG with mean 0 
-	boost::mt19937 rng;  
-	typedef boost::normal_distribution<> distribution_type;
-	typedef boost::variate_generator<boost::mt19937, distribution_type> gen_type;
-	gen_type randn(rng, distribution_type(0, distribution_param_));
-	
 	isMAP_ = false;
 	
 	for (size_t iterStep=1;iterStep<number_of_iterations_;++iterStep){
@@ -180,7 +167,7 @@ void ConservationTracking::perturbedInference(HypothesesGraph& hypotheses, marra
 				
 				if (defaultOffset==0){
 					for (int k=0;k<nOL;++k){
-						offset(k) = static_cast<ValueType> (randn());
+						offset(k) = generateRandomOffset();
 					}
 				} else {
 					offset = *defaultOffset;
@@ -226,6 +213,20 @@ void ConservationTracking::perturbedInference(HypothesesGraph& hypotheses, marra
 	}
 	//calculateUncertainty(*graph);
 	}
+
+double ConservationTracking::generateRandomOffset() {
+	switch (distribution_) {
+		case 0: //normal distribution
+				//distribution parameter: sigma
+				return random_normal_();
+				
+		case 1: //Gumbel distribution
+				//distribution parameter: beta
+				return distribution_param_*log(-log(random_uniform_()));
+		default: //
+				return 0;
+	}
+}
 
 void ConservationTracking::formulate(const HypothesesGraph& hypotheses) {
     LOG(logDEBUG) << "ConservationTracking::formulate: entered";

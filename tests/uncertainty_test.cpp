@@ -89,9 +89,10 @@ BOOST_AUTO_TEST_CASE( uncertainty ) {
 				  3, //n_dim
 				  5, //transition_parameter
 				  0, //border_width for app/disapp costs
-	              fov
+	              fov //field of view
+	              
 		  	      );
-	tracking(ts, TimestepIdCoordinateMapPtr(), 100,0,1);
+	tracking(ts, TimestepIdCoordinateMapPtr(), 100,1,1);
 }
 
 // EOF
