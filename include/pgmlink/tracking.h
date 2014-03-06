@@ -153,7 +153,10 @@ namespace pgmlink {
 		  double transition_parameter = 5.,
 		  double border_width = 0,
 		  FieldOfView fov = FieldOfView(),
-		  bool with_constraints = true
+		  bool with_constraints = true,
+		  std::size_t distribution=0,
+		  double distribution_param=1.,
+		  double diverse_lambda=0
   	      )
         : max_number_objects_(max_number_objects),
         	max_dist_(max_neighbor_distance), division_threshold_(division_threshold),
@@ -173,13 +176,14 @@ namespace pgmlink {
 		transition_parameter_(transition_parameter),
 		border_width_(border_width),
 		fov_(fov),
-		with_constraints_(with_constraints){}
-      std::vector< std::vector< std::vector<Event> > > operator()(TraxelStore& ts,
+		with_constraints_(with_constraints),
+		distribution_(distribution),
+		distribution_param_(distribution_param),
+		diverse_lambda_(diverse_lambda){}
+		
+        std::vector< std::vector< std::vector<Event> > > operator()(TraxelStore& ts,
                                                 TimestepIdCoordinateMapPtr coordinates = TimestepIdCoordinateMapPtr(),
-                                                std::size_t number_of_iterations=1,
-                                                std::size_t distribution=0,
-                                                double distribution_param=1.,
-                                                double diverse_lambda=0);
+                                                std::size_t number_of_iterations=1);
 
       /**
        * Get state of detection variables after call to operator().
@@ -208,6 +212,9 @@ namespace pgmlink {
       double border_width_;
       FieldOfView fov_;
       bool with_constraints_;
+      int distribution_;
+      double distribution_param_;
+      double diverse_lambda_;
     };
 }
 
