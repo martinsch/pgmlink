@@ -215,7 +215,7 @@ bool all_true (InputIterator first, InputIterator last, UnaryPredicate pred) {
 //// class ConsTracking
 ////
 vector< vector<vector<Event> > >ConsTracking::operator()(TraxelStore& ts, TimestepIdCoordinateMapPtr coordinates,
-                std::size_t number_of_iterations, std::size_t distribution, double distribution_param) {
+                std::size_t number_of_iterations, std::size_t distribution, double distribution_param, double diverse_lambda) {
 	cout << "-> building energy functions " << endl;
 
 	double detection_weight = 10;
@@ -376,7 +376,8 @@ vector< vector<vector<Event> > >ConsTracking::operator()(TraxelStore& ts, Timest
 			with_constraints_,
 			number_of_iterations,
 			distribution, 
-			distribution_param
+			distribution_param,
+			diverse_lambda
 			);
 	if (number_of_iterations>1) {
 		

@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE( uncertainty ) {
 	              fov //field of view
 	              
 		  	      );
-	tracking(ts, TimestepIdCoordinateMapPtr(), 100,1,1);
+	tracking(ts, TimestepIdCoordinateMapPtr(), 100,1,1,0.042);
 }
 
 // EOF

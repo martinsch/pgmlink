@@ -178,7 +178,8 @@ namespace pgmlink {
                                                 TimestepIdCoordinateMapPtr coordinates = TimestepIdCoordinateMapPtr(),
                                                 std::size_t number_of_iterations=1,
                                                 std::size_t distribution=0,
-                                                double distribution_param=1.);
+                                                double distribution_param=1.,
+                                                double diverse_lambda=0);
 
       /**
        * Get state of detection variables after call to operator().

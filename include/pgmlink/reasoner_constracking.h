@@ -67,7 +67,8 @@ class ConservationTracking : public Reasoner {
                              bool with_constraints = true,
                              std::size_t number_of_iterations = 1,
                              std::size_t distribution = 0,
-                             double distribution_param = 1
+                             double distribution_param = 1,
+                             double diverse_lambda = 0
                              ) // TODO: add parameter for distribution, parameter of distribution and number of iterations 
         : max_number_objects_(max_number_objects),
           detection_(detection),
@@ -92,6 +93,7 @@ class ConservationTracking : public Reasoner {
 		  number_of_iterations_(number_of_iterations),
 		  distribution_(distribution),
 		  distribution_param_(distribution_param),
+		  diverse_lambda_(diverse_lambda),
           isMAP_(true),
           random_normal_(rng_,boost::normal_distribution<>(0, distribution_param_)),
 		  random_uniform_(rng_,boost::uniform_real<>(0,1))
@@ -163,6 +165,7 @@ class ConservationTracking : public Reasoner {
     shared_ptr<pgm::OpengmModelDeprecated> pgm_;
     //opengm::LPCplex<pgm::OpengmModelDeprecated::ogmGraphicalModel, pgm::OpengmModelDeprecated::ogmAccumulator>* optimizer_;
 	cplex_optimizer* optimizer_;
+	std::vector<pgm::OpengmModelDeprecated::ogmInference::LabelType> solution_;
 	
     std::map<HypothesesGraph::Node, size_t> div_node_map_;
     std::map<HypothesesGraph::Node, size_t> app_node_map_;
@@ -190,6 +193,7 @@ class ConservationTracking : public Reasoner {
     std::size_t number_of_iterations_;
     std::size_t distribution_;
     double distribution_param_;
+    double diverse_lambda_;
     bool isMAP_;
     
     boost::mt19937 rng_;
