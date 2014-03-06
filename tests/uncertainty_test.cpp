@@ -90,9 +90,10 @@ BOOST_AUTO_TEST_CASE( uncertainty ) {
 				  5, //transition_parameter
 				  0, //border_width for app/disapp costs
 	              fov, //field of view
-	              1, //distribution
+	              true, //with_constraints
+	              0, //distribution
 	              1, //distribution_param
-	              0.042 // diverse_lambda
+	              0 // diverse_lambda
 		  	      );
 	tracking(ts, TimestepIdCoordinateMapPtr(), 10);
 }

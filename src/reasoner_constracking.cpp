@@ -136,7 +136,6 @@ void ConservationTracking::perturbedInference(HypothesesGraph& hypotheses, marra
 	}
     
 	optimizer_ = new cplex_optimizer(PertMod, param);
-	
 	LOG(logINFO) << "add_constraints";
 	 if (with_constraints_) {
 	  add_constraints(*graph);
@@ -166,17 +165,19 @@ void ConservationTracking::perturbedInference(HypothesesGraph& hypotheses, marra
 			if (factor->numberOfVariables()!=1){
 				//only perturb unaries
 				offset_vector.push_back(marray::Marray<ValueType>());
+				
 			} else {
 				int nOL = factor->numberOfLabels(0);
 				vector<int> off(1,nOL);
 				marray::Marray<ValueType> offset(off.begin(),off.end(),0);
+				
+				//add offset on label that was assigned in the last solution
 				deterministic_offset[factorId](solution_[factor->variableIndex(0)])+=diverse_lambda_;
-				std::cout<<"factor "<<factorId<<std::endl;
+				
 				if (defaultOffset==0){
 					for (int k=0;k<nOL;++k){
 						offset(k) = deterministic_offset[factorId](k);
 						offset(k) += generateRandomOffset();
-						std::cout<<deterministic_offset[factorId](k)<<", ";
 					}
 					std::cout<<std::endl;
 				} else {
@@ -216,7 +217,7 @@ void ConservationTracking::perturbedInference(HypothesesGraph& hypotheses, marra
 		if (with_constraints_) {
 		       add_constraints(*graph);
 		}
-		LOG(logINFO) << "infer "<<nOF;
+		LOG(logINFO) << "infer ";
 		infer();
 		
 		LOG(logINFO) << "conclude";
