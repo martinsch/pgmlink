@@ -68,7 +68,8 @@ class ConservationTracking : public Reasoner {
                              std::size_t number_of_iterations = 1,
                              std::size_t distribution = 0,
                              double distribution_param = 1,
-                             double diverse_lambda = 0
+                             double diverse_lambda = 0,
+                             std::size_t m_in_mbest = 1
                              ) // TODO: add parameter for distribution, parameter of distribution and number of iterations 
         : max_number_objects_(max_number_objects),
           detection_(detection),
@@ -94,6 +95,7 @@ class ConservationTracking : public Reasoner {
 		  distribution_(distribution),
 		  distribution_param_(distribution_param),
 		  diverse_lambda_(diverse_lambda),
+		  m_in_mbest_(m_in_mbest),  
           isMAP_(true),
           random_normal_(rng_,boost::normal_distribution<>(0, distribution_param_)),
 		  random_uniform_(rng_,boost::uniform_real<>(0,1))
@@ -194,6 +196,7 @@ class ConservationTracking : public Reasoner {
     std::size_t distribution_;
     double distribution_param_;
     double diverse_lambda_;
+    std::size_t m_in_mbest_; 
     bool isMAP_;
     
     boost::mt19937 rng_;

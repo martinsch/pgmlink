@@ -156,7 +156,8 @@ namespace pgmlink {
 		  bool with_constraints = true,
 		  std::size_t distribution=0,
 		  double distribution_param=1.,
-		  double diverse_lambda=0
+		  double diverse_lambda=0,
+		  std::size_t m_in_mbest=1
   	      )
         : max_number_objects_(max_number_objects),
         	max_dist_(max_neighbor_distance), division_threshold_(division_threshold),
@@ -179,7 +180,8 @@ namespace pgmlink {
 		with_constraints_(with_constraints),
 		distribution_(distribution),
 		distribution_param_(distribution_param),
-		diverse_lambda_(diverse_lambda){}
+		diverse_lambda_(diverse_lambda),
+		m_in_mbest_(m_in_mbest){}
 		
         std::vector< std::vector< std::vector<Event> > > operator()(TraxelStore& ts,
                                                 TimestepIdCoordinateMapPtr coordinates = TimestepIdCoordinateMapPtr(),
@@ -212,9 +214,10 @@ namespace pgmlink {
       double border_width_;
       FieldOfView fov_;
       bool with_constraints_;
-      int distribution_;
+      std::size_t distribution_;
       double distribution_param_;
       double diverse_lambda_;
+      std::size_t m_in_mbest_;
     };
 }
 

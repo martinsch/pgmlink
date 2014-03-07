@@ -377,9 +377,11 @@ vector< vector<vector<Event> > >ConsTracking::operator()(TraxelStore& ts, Timest
 			number_of_iterations,
 			distribution_, 
 			distribution_param_,
-			diverse_lambda_
+			diverse_lambda_,
+			m_in_mbest_
 			);
-	if (number_of_iterations>1) {
+	size_t totalNumberOfSolutions = number_of_iterations+m_in_mbest_-1;
+	if (totalNumberOfSolutions>1) {
 		
     
 		cout << "-> perturbed Inference" << endl;
@@ -388,15 +390,7 @@ vector< vector<vector<Event> > >ConsTracking::operator()(TraxelStore& ts, Timest
 		}
 	else {
 	pgm.perturbedInference(*graph);
-	/*
-	cout << "-> formulate ConservationTracking model" << endl;
-	pgm.formulate(*graph);
 
-	cout << "-> infer" << endl;
-	pgm.infer();
-
-	cout << "-> conclude" << endl;
-	pgm.conclude(*graph);*/
 
 	cout << "-> storing state of detection vars" << endl;
 	last_detections_ = state_of_nodes(*graph);
@@ -408,8 +402,8 @@ vector< vector<vector<Event> > >ConsTracking::operator()(TraxelStore& ts, Timest
 	
     cout << "-> constructing unresolved events" << endl;
     
-    std::vector < std::vector< std::vector<Event> > > all_ev(number_of_iterations);
-    for (size_t i=0;i<number_of_iterations;++i){
+    std::vector < std::vector< std::vector<Event> > > all_ev(totalNumberOfSolutions);
+    for (size_t i=0;i<totalNumberOfSolutions;++i){
 		all_ev[i] = *events(*graph,i); // TODO iterate over iterationSteps, add parameter for backward compatibility
 	}
 

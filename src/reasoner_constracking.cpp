@@ -135,7 +135,7 @@ void ConservationTracking::perturbedInference(HypothesesGraph& hypotheses, marra
 		}
 	}
     
-	optimizer_ = new cplex_optimizer(PertMod, param);
+	optimizer_ = new cplex_optimizer(PertMod, param, m_in_mbest_);
 	LOG(logINFO) << "add_constraints";
 	 if (with_constraints_) {
 	  add_constraints(*graph);
@@ -143,11 +143,21 @@ void ConservationTracking::perturbedInference(HypothesesGraph& hypotheses, marra
 	
 	LOG(logINFO) << "infer";
 	infer();
-	LOG(logINFO) << "conclude";
+	LOG(logINFO) << "conclude"<<m_in_mbest_;
 	conclude(*graph);
-	
 	isMAP_ = false;
 	
+	//m-best
+	for (size_t k=1;k<m_in_mbest_;++k){
+		LOG(logINFO) << "conclude "<<k+1<<"-best solution";
+		opengm::InferenceTermination status = optimizer_->arg(solution_,k);
+		if (status != opengm::NORMAL) {
+			throw runtime_error("GraphicalModel::infer(): solution extraction terminated abnormally");
+		}
+		conclude(*graph);
+	}
+	
+	//deterministic & non-deterministic pertubation
 	for (size_t iterStep=1;iterStep<number_of_iterations_;++iterStep){
 		
 		LOG(logINFO) << "ConservationTracking::perturbedInference: prepare pertubation number " <<iterStep;
@@ -223,7 +233,7 @@ void ConservationTracking::perturbedInference(HypothesesGraph& hypotheses, marra
 		LOG(logINFO) << "conclude";
 		conclude(*graph);
 	}
-	//calculateUncertainty(*graph);
+	calculateUncertainty(*graph);
 }
 
 
@@ -297,15 +307,14 @@ void ConservationTracking::infer() {
     if (status != opengm::NORMAL) {
         throw std::runtime_error("GraphicalModel::infer(): optimizer terminated abnormally");
     }
+    opengm::InferenceTermination statusExtract = optimizer_->arg(solution_);
+    if (statusExtract != opengm::NORMAL) {
+        throw runtime_error("GraphicalModel::infer(): solution extraction terminated abnormally");
+    }
 }
 
 void ConservationTracking::conclude( HypothesesGraph& g) {
     // extract solution from optimizer
-    
-    opengm::InferenceTermination status = optimizer_->arg(solution_);
-    if (status != opengm::NORMAL) {
-        throw runtime_error("GraphicalModel::infer(): solution extraction terminated abnormally");
-    }
 
     // add 'active' properties to graph
     g.add(node_active2()).add(arc_active()).add(division_active());
@@ -519,7 +528,7 @@ void ConservationTracking::conclude( HypothesesGraph& g) {
                 }
             }
         }
-    }
+	}
 }
 
 const std::map<HypothesesGraph::Arc, size_t>& ConservationTracking::get_arc_map() const {
