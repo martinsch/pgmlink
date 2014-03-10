@@ -43,6 +43,7 @@ Dependencies that should be available as packages:
 - ann
 - boost
   - boost-serialization
+  - boost-random
   - boost-python (optional)
   - boost-test (optional)
 - armadillo http://arma.sourceforge.net/
