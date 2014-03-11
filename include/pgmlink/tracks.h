@@ -26,7 +26,7 @@ class Track;
 
 // typedefs
 typedef std::vector<Traxel> Traxelvector;
-typedef std::vector<Track> Tracks;
+typedef std::vector<Track> Trackvector;
 typedef std::vector<feature_array> feature_arrays;
 
 enum FeatureOrder{
