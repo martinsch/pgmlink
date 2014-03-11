@@ -15,9 +15,6 @@
 #include <vigra/random_forest_hdf5_impex.hxx>
 #include <vigra/error.hxx>
 
-// omp
-#include <omp.h>
-
 // pgmlink
 #include "pgmlink/feature.h"
 #include "pgmlink/traxels.h"
