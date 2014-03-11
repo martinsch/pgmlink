@@ -68,6 +68,43 @@ class AbsoluteDifferenceCalculator : public FeatureCalculator {
   virtual const std::string& name() const;
 };
 
+////
+//// class VectorDifferenceCalculator
+////
+//// Returns the vector difference of f1 and f2:
+//// return_array[i] = f1[i] - f2[i]
+class VectorDifferenceCalculator : public FeatureCalculator {
+ public:
+  static const std::string name_;
+  static const unsigned length;
+
+  virtual ~VectorDifferenceCalculator();
+  virtual feature_array calculate(
+    const feature_array& f1,
+    const feature_array& f2
+  ) const;
+  virtual const std::string& name() const;
+};
+
+////
+//// class CurvatureCalculator
+////
+//// f1, f2, f3 -> return_array
+//// return_array[i] = f1[i] - 2*f2[i] + f3[i]
+class CurvatureCalculator : public FeatureCalculator {
+ public:
+  static const std::string name_;
+  static const unsigned length;
+
+  virtual ~CurvatureCalculator();
+  virtual feature_array calculate(
+    const feature_array& f1,
+    const feature_array& f2,
+    const feature_array& f3
+  ) const;
+  virtual const std::string& name() const;
+};
+ 
 
 class SquareRootSquaredDifferenceCalculator : public FeatureCalculator {
  public:

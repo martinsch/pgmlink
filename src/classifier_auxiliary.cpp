@@ -183,6 +183,75 @@ const std::string& SquareRootSquaredDifferenceCalculator::name() const {
 
 
 ////
+//// class VectorDifferenceCalculator
+////
+const std::string VectorDifferenceCalculator::name_ = "VectorDifference";
+
+const unsigned VectorDifferenceCalculator::length = 0;
+
+VectorDifferenceCalculator::~VectorDifferenceCalculator() {
+}
+
+feature_array VectorDifferenceCalculator::calculate(
+  const feature_array& f1,
+  const feature_array& f2
+) const {
+  assert(f1.size() == f2.size());
+  feature_array ret(f1.size(), 0.0);
+
+  feature_array::const_iterator f1_it = f1.begin();
+  feature_array::const_iterator f2_it = f2.begin();
+  feature_array::iterator ret_it = ret.begin();
+
+  for (; f1_it != f1.end(); f1_it++, f2_it++, ret_it++) {
+    (*ret_it) = *f2_it - *f1_it;
+  }
+
+  return ret;
+}
+
+const std::string& VectorDifferenceCalculator::name() const {
+  return VectorDifferenceCalculator::name_;
+}
+
+
+////
+//// Class CurvatureCalculator
+////
+const std::string CurvatureCalculator::name_ = "CurvatureCalculator";
+
+const unsigned CurvatureCalculator::length = 0;
+
+CurvatureCalculator::~CurvatureCalculator() {
+}
+
+feature_array CurvatureCalculator::calculate(
+  const feature_array& f1,
+  const feature_array& f2,
+  const feature_array& f3
+) const {
+  assert(f1.size() == f2.size());
+  assert(f1.size() == f3.size());
+  feature_array ret(f1.size(), 0.0);
+
+  feature_array::const_iterator f1_it = f1.begin();
+  feature_array::const_iterator f2_it = f2.begin();
+  feature_array::const_iterator f3_it = f3.begin();
+  feature_array::iterator ret_it = ret.begin();
+
+  for (; f1_it != f1.end(); f1_it++, f2_it++, f3_it++, ret_it++) {
+    (*ret_it) = (*f2_it) + (*f3_it) - 2*(*f1_it);
+  }
+
+  return ret;
+}
+
+const std::string& CurvatureCalculator::name() const {
+  return CurvatureCalculator::name_;
+}
+
+
+////
 //// class RatioCalculator
 ////
 const std::string RatioCalculator::name_ = "Ratio";
