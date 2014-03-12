@@ -3,8 +3,12 @@
 #include <iostream>
 
 #include <boost/test/unit_test.hpp>
+#include <boost/test/floating_point_comparison.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include "pgmlink/outlier_detection.h"
+#include "pgmlink/tracks.h"
+#include "pgmlink/traxels.h"
 
 using namespace pgmlink;
 using namespace boost;
@@ -33,3 +37,46 @@ BOOST_AUTO_TEST_CASE( MVNOutlierCalculator_calculate ) {
   BOOST_CHECK_EQUAL(outlier.size(), 1);
   BOOST_CHECK_EQUAL(outlier[0], 6);
 }
+
+BOOST_AUTO_TEST_CASE( Outlier_calculate ) {
+  // Set up a track with outlier in feature "feature_x"
+  feature_type x_array[7][2] = {
+    {3., 3.},
+    {4., 3.},
+    {3., 4.},
+    {4., 4.},
+    {5., 4.},
+    {5., 5.},
+    {9., 8.}
+  };
+  Track track;
+  for(size_t i = 0; i < 7; i++) {
+    feature_array y(x_array[i], x_array[i]+2);
+    Traxel traxel;
+    traxel.features["feature_x"] = y;
+    track.traxels_.push_back(traxel);
+  }
+  
+  // Set up an identity extractor for feature "feature_x"
+  boost::shared_ptr<FeatureCalculator> Identity(new IdentityCalculator());
+  boost::shared_ptr<FeatureCalculator> Difference(new VectorDifferenceCalculator());
+  boost::shared_ptr<TrackFeatureExtractor> FeatureX(new TrackFeatureExtractor(Identity, "feature_x", SINGLE));
+  boost::shared_ptr<TrackFeatureExtractor> FeatureXDiff(new TrackFeatureExtractor(Difference, "feature_x", PAIRWISE));
+  
+  Outlier OutlierX(FeatureX);
+  Outlier OutlierXDiff(FeatureXDiff);
+
+  // Calculate the outliers
+  std::vector<size_t> outlierx = OutlierX.calculate(track);
+  std::vector<size_t> outlierxdiff = OutlierXDiff.calculate(track);
+
+  BOOST_CHECK_EQUAL(outlierx.size(), 1);
+  BOOST_CHECK_EQUAL(outlierx[0], 6);
+  BOOST_CHECK_EQUAL(outlierxdiff.size(), 1);
+  BOOST_CHECK_EQUAL(outlierxdiff[0], 5);
+}
+
+
+
+
+
