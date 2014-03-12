@@ -78,6 +78,17 @@ class TotalDiffAggregator : public FeatureAggregator {
   static const std::string name_;
 };
 
+class MinAggregator : public FeatureAggregator {
+ public:
+  MinAggregator() {};
+  ~MinAggregator() {};
+  feature_array vector_valued(const feature_arrays features);
+  feature_type scalar_valued(const feature_arrays features);
+  virtual const std::string& name() const;
+ protected:
+  static const std::string name_;
+};
+
 } // Namespace pgmlink
 
 #endif // PGMLINK_TRACK_FEATURES_H
