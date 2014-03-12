@@ -317,4 +317,50 @@ feature_type MaxAggregator::scalar_valued(
   return ret;
 }
 
+////
+//// MeanAggregator
+////
+const std::string MeanAggregator::name_ = "Mean";
+
+const std::string& MeanAggregator::name() const {
+  return MeanAggregator::name_;
+}
+
+feature_array MeanAggregator::vector_valued(
+  const feature_arrays features
+) {
+  size_t n = features.size();
+  assert(n > 0);
+  size_t feature_dim = features.front().size();
+  (void)feature_dim; // Avoid variable unused warning
+  assert(feature_dim > 0);
+
+  feature_array ret(feature_dim, 0.0);
+  feature_arrays::const_iterator it_fs;
+  for(it_fs = features.begin(); it_fs != features.end(); it_fs++) {
+    assert(feature_dim == it_fs->size());
+    feature_array::iterator it_ret = ret.begin();
+    feature_array::const_iterator it_f = it_fs->begin();
+    for(; it_f != it_fs->end(); it_f++, it_ret++) {
+      (*it_ret) += (*it_f) / feature_type(n);
+    }
+  }
+
+  return ret;
+}
+
+feature_type MeanAggregator::scalar_valued(
+  const feature_arrays features
+) {
+  feature_type ret = 0;
+  feature_array vector = vector_valued(features);
+  size_t n = vector.size();
+  feature_array::iterator v_it;
+  for(v_it = vector.begin(); v_it != vector.end(); v_it++) {
+    ret += (*v_it) / feature_type(n);
+  }
+
+  return ret;
+}
+
 } // namespace pgmlink

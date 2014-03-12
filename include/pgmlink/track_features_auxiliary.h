@@ -100,6 +100,17 @@ class MaxAggregator : public FeatureAggregator {
   static const std::string name_;
 };
 
+class MeanAggregator : public FeatureAggregator {
+ public:
+  MeanAggregator() {};
+  ~MeanAggregator() {};
+  feature_array vector_valued(const feature_arrays features);
+  feature_type scalar_valued(const feature_arrays features);
+  virtual const std::string& name() const;
+ protected:
+  static const std::string name_;
+};
+
 } // Namespace pgmlink
 
 #endif // PGMLINK_TRACK_FEATURES_H
