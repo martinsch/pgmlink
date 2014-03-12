@@ -117,6 +117,7 @@ const std::string FeatureAggregator::name_ = "";
 feature_array FeatureAggregator::vector_valued(
   const feature_arrays features
 ) {
+  (void)features; // Casting to void to avoid the warning "unused parameter"
   throw std::runtime_error(
     "FeatureAggregator \"" + name() + "\" has no vector valued method"
   );
@@ -127,6 +128,7 @@ feature_array FeatureAggregator::vector_valued(
 feature_type FeatureAggregator::scalar_valued(
   const feature_arrays features
 ) {
+  (void)features; // Casting to void to avoid the warning "unused parameter"
   throw std::runtime_error(
     "FeatureAggregator \"" + name() + "\" has no scalar valued method"
   );
@@ -210,4 +212,5 @@ feature_type TotalDiffAggregator::scalar_valued(
   }
   return ret;
 }
+
 } // namespace pgmlink
