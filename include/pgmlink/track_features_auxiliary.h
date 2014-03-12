@@ -57,7 +57,7 @@ class FeatureAggregator {
 
 class OutlierBadnessAggregator : public FeatureAggregator {
  public:
-  OutlierBadnessAggregator();
+  OutlierBadnessAggregator() {};
   ~OutlierBadnessAggregator() {};
   feature_array vector_valued(const feature_arrays features);
   feature_type scalar_valued(const feature_arrays features);
