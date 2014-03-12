@@ -24,6 +24,32 @@
 #include "pgmlink/traxels.h"
 
 namespace pgmlink {
+
+////
+//// IterableEditableValueMap
+////
+template <typename Graph, typename Key, typename Value>
+class IterableEditableValueMap : public lemon::IterableValueMap<Graph, Key, Value> {
+ private:
+ public:
+  Value& get_value(const Key& key);
+  explicit IterableEditableValueMap(const Graph& graph,
+                                    const Value& value = Value());
+};
+
+template <typename Graph, typename Key, typename Value>
+IterableEditableValueMap<Graph, Key, Value>::IterableEditableValueMap(const Graph& graph,
+                                                                      const Value& value) :
+    lemon::IterableValueMap<Graph,Key, Value>(graph, value) {
+    
+}
+
+template <typename Graph, typename Key, typename Value>
+Value& IterableEditableValueMap<Graph, Key, Value>::get_value(const Key& key) {
+  return lemon::IterableValueMap<Graph, Key, Value>::Parent::operator[](key).value;
+}
+
+
   ////
   //// HypothesesGraph
   ////
@@ -45,7 +71,7 @@ namespace pgmlink {
   class Traxel;
   template <typename Graph>
     struct property_map<node_traxel, Graph> {
-    typedef lemon::IterableValueMap< Graph, typename Graph::Node, Traxel > type;
+    typedef IterableEditableValueMap< Graph, typename Graph::Node, Traxel > type;
     static const std::string name;
   };
   template <typename Graph>
@@ -347,11 +373,10 @@ namespace pgmlink {
     virtual HypothesesGraph* add_nodes(HypothesesGraph*) const;
     virtual HypothesesGraph* add_edges(HypothesesGraph*) const;
 
-  private:
-    HypothesesGraph* add_edges_at(HypothesesGraph*, int timestep, bool reverse=false) const;
-
     const TraxelStore* ts_;
     Options options_;
+  private:
+    HypothesesGraph* add_edges_at(HypothesesGraph*, int timestep, bool reverse=false) const;
   };
 
 
