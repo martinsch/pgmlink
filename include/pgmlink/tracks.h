@@ -15,7 +15,7 @@
 // pgmlink
 #include "pgmlink/traxels.h"
 #include "pgmlink/classifier_auxiliary.h"
-#include "pgmlink/track_features.h"
+#include "pgmlink/track_features_auxiliary.h"
 
 // boost
 #include <boost/shared_ptr.hpp>
