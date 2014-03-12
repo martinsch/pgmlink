@@ -57,12 +57,14 @@ BOOST_AUTO_TEST_CASE( Outlier_calculate ) {
     track.traxels_.push_back(traxel);
   }
   
-  // Set up an identity extractor for feature "feature_x"
+  // Set up feature calculator of first and second order
   boost::shared_ptr<FeatureCalculator> Identity(new IdentityCalculator());
   boost::shared_ptr<FeatureCalculator> Difference(new VectorDifferenceCalculator());
+  // Set up the track feature extractors for the feature "feature_x"
   boost::shared_ptr<TrackFeatureExtractor> FeatureX(new TrackFeatureExtractor(Identity, "feature_x", SINGLE));
   boost::shared_ptr<TrackFeatureExtractor> FeatureXDiff(new TrackFeatureExtractor(Difference, "feature_x", PAIRWISE));
   
+  // Set up the outlier detection
   Outlier OutlierX(FeatureX);
   Outlier OutlierXDiff(FeatureXDiff);
 
