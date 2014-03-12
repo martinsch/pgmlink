@@ -1,3 +1,5 @@
+#include <cmath>
+
 #include "pgmlink/track_features_auxiliary.h"
 
 namespace pgmlink{
@@ -163,4 +165,49 @@ feature_type OutlierBadnessAggregator::scalar_valued(
   return max;
 }
 
+////
+//// TotalDiffAggregator
+////
+const std::string TotalDiffAggregator::name_ = "TotalDiff";
+
+const std::string& TotalDiffAggregator::name() const {
+  return TotalDiffAggregator::name_;
+}
+
+feature_array TotalDiffAggregator::vector_valued(
+  const feature_arrays features
+) {
+  assert(features.size() > 0);
+  feature_array first = features.front();
+  feature_array last = features.back();
+  size_t feature_dim = first.size();
+  assert(feature_dim > 0);
+  assert(feature_dim == last.size());
+
+  feature_array ret(feature_dim);
+  feature_array::const_iterator it_first = first.begin();
+  feature_array::const_iterator it_last = last.begin();
+  feature_array::iterator it_ret = ret.begin();
+  for(; it_first != first.end(); it_first++, it_last++, it_ret++) {
+    *it_ret = *it_last - *it_first;
+  }
+
+  return ret;
+}
+
+feature_type TotalDiffAggregator::scalar_valued(
+  const feature_arrays features
+) {
+  feature_array vector = vector_valued(features);
+  feature_type ret = 0;
+  if (vector.size() == 1) {
+    ret = vector.front();
+  } else {
+    for(feature_array::iterator it = vector.begin(); it != vector.end(); it++) {
+      ret += (*it) * (*it);
+    }
+    ret = sqrt(ret);
+  }
+  return ret;
+}
 } // namespace pgmlink

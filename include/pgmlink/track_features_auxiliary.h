@@ -67,6 +67,17 @@ class OutlierBadnessAggregator : public FeatureAggregator {
   MVNOutlierCalculator mvn_outlier_calculator_;
 }; // Class OutlierBadnessAggregator
 
+class TotalDiffAggregator : public FeatureAggregator {
+ public:
+  TotalDiffAggregator() {};
+  ~TotalDiffAggregator() {};
+  feature_array vector_valued(const feature_arrays features);
+  feature_type scalar_valued(const feature_arrays features);
+  virtual const std::string& name() const;
+ protected:
+  static const std::string name_;
+};
+
 } // Namespace pgmlink
 
 #endif // PGMLINK_TRACK_FEATURES_H
