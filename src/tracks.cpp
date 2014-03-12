@@ -46,6 +46,19 @@ TrackFeatureExtractor::TrackFeatureExtractor(
   order_(order) {
 }
 
+TrackFeatureExtractor::TrackFeatureExtractor(
+  boost::shared_ptr<FeatureCalculator> calculator,
+  boost::shared_ptr<FeatureAggregator> aggregator,
+  const std::string& feature_name,
+  const FeatureOrder order
+) :
+  calculator_(calculator),
+  extractor_(new FeatureExtractor(calculator, feature_name)),
+  aggregator_(aggregator),
+  feature_name_(feature_name),
+  order_(order) {
+}
+
 feature_arrays TrackFeatureExtractor::extract(const Track& track) const {
   size_t tracklength = track.get_length(); 
   assert(tracklength-order_ > 0);
@@ -71,6 +84,26 @@ feature_arrays TrackFeatureExtractor::extract(const Track& track) const {
   }
   return ret;
 }
+
+feature_array TrackFeatureExtractor::extract_vector(const Track& track) const {
+  if (!aggregator_) {
+    throw std::runtime_error (
+      "No aggregator set in TrackFeatureExtractor"
+    );
+  }
+  feature_arrays features = TrackFeatureExtractor::extract(track);
+  return aggregator_->vector_valued(features);
+}
+
+feature_type TrackFeatureExtractor::extract_scalar(const Track& track) const {
+  if (!aggregator_) {
+    throw std::runtime_error (
+      "No aggregator set in TrackFeatureExtractor"
+    );
+  }
+  feature_arrays features = TrackFeatureExtractor::extract(track);
+  return aggregator_->scalar_valued(features);
+} 
 
 FeatureOrder TrackFeatureExtractor::get_feature_order() const {
   return TrackFeatureExtractor::order_;

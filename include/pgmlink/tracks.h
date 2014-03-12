@@ -15,6 +15,7 @@
 // pgmlink
 #include "pgmlink/traxels.h"
 #include "pgmlink/classifier_auxiliary.h"
+#include "pgmlink/track_features.h"
 
 // boost
 #include <boost/shared_ptr.hpp>
@@ -27,7 +28,6 @@ class Track;
 // typedefs
 typedef std::vector<Traxel> Traxelvector;
 typedef std::vector<Track> Trackvector;
-typedef std::vector<feature_array> feature_arrays;
 
 enum FeatureOrder{
   SINGLE,
@@ -66,13 +66,22 @@ class TrackFeatureExtractor {
     const std::string& feature_name,
     const FeatureOrder order
   );
+  TrackFeatureExtractor(
+    boost::shared_ptr<FeatureCalculator> calculator,
+    boost::shared_ptr<FeatureAggregator> aggregator,
+    const std::string& feature_name,
+    const FeatureOrder order
+  );
   virtual ~TrackFeatureExtractor() {};
   virtual feature_arrays extract(const Track& track) const;
+  virtual feature_array extract_vector(const Track& track) const;
+  virtual feature_type extract_scalar(const Track& track) const;
   FeatureOrder get_feature_order() const;
 
  protected:
   boost::shared_ptr<FeatureCalculator> calculator_;
   boost::shared_ptr<FeatureExtractor> extractor_;
+  boost::shared_ptr<FeatureAggregator> aggregator_;
   std::string feature_name_;
   FeatureOrder order_;
 }; // class TrackFeatureExtractor
