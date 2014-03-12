@@ -265,4 +265,56 @@ feature_type MinAggregator::scalar_valued(
   return ret;
 }
 
+////
+//// MaxAggregator
+////
+const std::string MaxAggregator::name_ = "Max";
+
+const std::string& MaxAggregator::name() const {
+  return MaxAggregator::name_;
+}
+
+feature_array MaxAggregator::vector_valued(
+  const feature_arrays features
+) {
+  assert(features.size() > 0);
+  size_t feature_dim = features.front().size();
+  (void)feature_dim; // Avoid variable unused warning
+  assert(feature_dim > 0);
+
+  feature_array ret(features.front());
+  feature_arrays::const_iterator it_fs;
+  for(it_fs = features.begin()+1; it_fs != features.end(); it_fs++) {
+    assert(feature_dim == it_fs->size());
+    feature_array::iterator it_ret = ret.begin();
+    feature_array::const_iterator it_f = it_fs->begin();
+    for(; it_f != it_fs->end(); it_f++, it_ret++) {
+      (*it_ret) = (*it_ret) > (*it_f) ? (*it_ret) : (*it_f);
+    }
+  }
+
+  return ret;
+}
+
+feature_type MaxAggregator::scalar_valued(
+  const feature_arrays features
+) {
+  assert(features.size() > 0);
+  size_t feature_dim = features.front().size();
+  (void)feature_dim; // Avoid variable unused warning
+  assert(feature_dim > 0);
+
+  feature_type ret = features[0][0];
+  feature_arrays::const_iterator it_fs;
+  for(it_fs = features.begin()+1; it_fs != features.end(); it_fs++) {
+    assert(feature_dim == it_fs->size());
+    feature_array::const_iterator it_f = it_fs->begin();
+    for(; it_f != it_fs->end(); it_f++) {
+      ret = ret > (*it_f) ? ret : (*it_f);
+    }
+  }
+
+  return ret;
+}
+
 } // namespace pgmlink
