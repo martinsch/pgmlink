@@ -114,7 +114,7 @@ const std::string FeatureAggregator::name_ = "";
 
 feature_array FeatureAggregator::vector_valued(
   const feature_arrays features
-) const {
+) {
   throw std::runtime_error(
     "FeatureAggregator \"" + name() + "\" has no vector valued method"
   );
@@ -124,7 +124,7 @@ feature_array FeatureAggregator::vector_valued(
 
 feature_type FeatureAggregator::scalar_valued(
   const feature_arrays features
-) const {
+) {
   throw std::runtime_error(
     "FeatureAggregator \"" + name() + "\" has no scalar valued method"
   );
@@ -134,6 +134,33 @@ feature_type FeatureAggregator::scalar_valued(
 
 const std::string& FeatureAggregator::name() const {
   return FeatureAggregator::name_;
+}
+
+////
+//// OutlierBadnessAggregator
+////
+const std::string OutlierBadnessAggregator::name_ = "OutlierBadness";
+
+const std::string& OutlierBadnessAggregator::name() const {
+  return OutlierBadnessAggregator::name_;
+}
+
+feature_array OutlierBadnessAggregator::vector_valued(
+  const feature_arrays features
+) {
+  mvn_outlier_calculator_.calculate(features);
+  return mvn_outlier_calculator_.get_measures();
+}
+
+feature_type OutlierBadnessAggregator::scalar_valued(
+  const feature_arrays features
+) {
+  feature_array vector = vector_valued(features);
+  feature_type max = 0;
+  for (feature_array::iterator it = vector.begin(); it!= vector.end(); it++) {
+    max = max > *it ? max : *it;
+  }
+  return max;
 }
 
 } // namespace pgmlink

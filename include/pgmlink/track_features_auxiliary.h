@@ -44,16 +44,28 @@ class MVNOutlierCalculator : public OutlierCalculator {
 }; // class MVNOutlierCalculator
 
 
-
 class FeatureAggregator {
  public:
-  virtual ~FeatureAggregator() = 0; // rein virtuell
-  virtual feature_array vector_valued(const feature_arrays features) const;
-  virtual feature_type scalar_valued(const feature_arrays features) const;
+  FeatureAggregator() {};
+  virtual ~FeatureAggregator() {};
+  virtual feature_array vector_valued(const feature_arrays features);
+  virtual feature_type scalar_valued(const feature_arrays features);
   virtual const std::string& name() const;
 
   static const std::string name_;
 }; // Class FeatureAggregator
+
+class OutlierBadnessAggregator : public FeatureAggregator {
+ public:
+  OutlierBadnessAggregator();
+  ~OutlierBadnessAggregator() {};
+  feature_array vector_valued(const feature_arrays features);
+  feature_type scalar_valued(const feature_arrays features);
+  virtual const std::string& name() const;
+ protected:
+  static const std::string name_;
+  MVNOutlierCalculator mvn_outlier_calculator_;
+}; // Class OutlierBadnessAggregator
 
 } // Namespace pgmlink
 
