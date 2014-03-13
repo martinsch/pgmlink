@@ -177,6 +177,80 @@ BOOST_AUTO_TEST_CASE( MeanAggregator_test ) {
 
 }
 
+BOOST_AUTO_TEST_CASE( OutlierCountAggregator_test ) {
+  // Set up some test data
+  feature_type set11_array[7][2] = {
+    {3., 3.},
+    {4., 3.},
+    {3., 4.},
+    {4., 4.},
+    {5., 4.},
+    {5., 5.},
+    {9., 8.}
+  };
+  feature_type set12_array[7][2] = {
+    {3., 3.},
+    {4., 3.},
+    {3., 4.},
+    {4., 4.},
+    {5., 4.},
+    {5., 5.},
+    {4., 5.}
+  };
+  feature_type set21_array[7][1] = {
+    {3.},
+    {4.},
+    {3.},
+    {4.},
+    {5.},
+    {5.},
+    {9.}
+  };
+  feature_type set22_array[7][1] = {
+    {3.},
+    {4.},
+    {3.},
+    {4.},
+    {5.},
+    {5.},
+    {5.}
+  };
+  feature_arrays set11;
+  feature_arrays set12;
+  for(size_t i = 0; i < 7; i++) {
+    feature_array y1(set11_array[i], set11_array[i]+2);
+    set11.push_back(y1);
+    feature_array y2(set12_array[i], set12_array[i]+2);
+    set12.push_back(y2);
+  }
+  feature_arrays set21;
+  feature_arrays set22;
+  for(size_t i = 0; i < 7; i++) {
+    feature_array y1(set21_array[i], set21_array[i]+1);
+    set21.push_back(y1);
+    feature_array y2(set22_array[i], set22_array[i]+1);
+    set22.push_back(y2);
+  }
+
+  OutlierCountAggregator outliercount;
+
+  feature_type scalar11 = outliercount.scalar_valued(set11);
+  feature_type scalar12 = outliercount.scalar_valued(set12);
+  feature_type scalar21 = outliercount.scalar_valued(set21);
+  feature_type scalar22 = outliercount.scalar_valued(set22);
+
+  feature_type scalar11ref = 1.;
+  feature_type scalar12ref = 0.;
+  feature_type scalar21ref = 1.;
+  feature_type scalar22ref = 0.;
+
+  BOOST_CHECK_EQUAL(scalar11ref, scalar11);
+  BOOST_CHECK_EQUAL(scalar12ref, scalar12);
+  BOOST_CHECK_EQUAL(scalar21ref, scalar21);
+  BOOST_CHECK_EQUAL(scalar22ref, scalar22);
+
+}
+
 BOOST_AUTO_TEST_CASE( Outlier_badness ) {
   // Set up a track with outlier in feature "feature_x"
   feature_type f1_array[7][2] = {
