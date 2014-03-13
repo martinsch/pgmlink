@@ -7,6 +7,9 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/shared_array.hpp>
 
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
+
 #include "pgmlink/feature.h"
 #include "pgmlink/pgm.h"
 #include "pgmlink/hypotheses.h"
@@ -15,6 +18,7 @@
 #include "pgmlink/tracking.h"
 #include "pgmlink/reasoner_constracking.h"
 #include "pgmlink/merger_resolving.h"
+
 
 using namespace std;
 using boost::shared_ptr;
@@ -433,18 +437,18 @@ vector< vector<vector<Event> > >ConsTracking::operator()(TraxelStore& ts, Timest
 
       cout << "-> merging unresolved and resolved events" << endl;
       all_ev[0] = *merge_event_vectors(*ev, *multi_frame_moves);
-      return all_ev;
     }
 
-    else {
-      return all_ev;
+    if(event_vector_dump_filename_ != "none")
+    {
+        // store the traxel store and the resulting event vector
+        std::ofstream ofs(event_vector_dump_filename_.c_str());
+        boost::archive::text_oarchive out_archive(ofs);
+        out_archive << ts;
+        out_archive << all_ev;
     }
 
-        
-
-	
-
-	
+    return all_ev;
 }
 
 vector<map<unsigned int, bool> > ConsTracking::detections() {

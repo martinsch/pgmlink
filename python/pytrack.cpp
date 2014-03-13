@@ -1,6 +1,6 @@
 #define PY_ARRAY_UNIQUE_SYMBOL pgmlink_pyarray
 #define NO_IMPORT_ARRAY
-#define BOOST_PYTHON_MAX_ARITY 25
+#define BOOST_PYTHON_MAX_ARITY 30
 
 #include <vector>
 
@@ -82,7 +82,7 @@ void export_track() {
     ;
 
     class_<ConsTracking>("ConsTracking",
-                         init<int,double,double,string,bool,double,double,double,bool,double,double,bool,double,double, bool, int, double, double, FieldOfView, bool, int, double, double>(
+                         init<int,double,double,string,bool,double,double,double,bool,double,double,bool,double,double, bool, int, double, double, FieldOfView, bool, int, double, double, int, string>(
 						args("max_number_objects", "max_neighbor_distance", "division_threshold",
 							"detection_rf_filename", "size_dependent_detection_prob", "forbidden_cost",
 							"ep_gap", "avg_obj_size",
@@ -90,7 +90,8 @@ void export_track() {
 							"division_weight", "transition_weight",
 							"with_divisions",
 							 "disappearance_cost", "appearance_cost", "with_merger_resolution", "number_of_dimensions",
-							 "transition_parameter", "border_width", "fov", "with_constraints","distribution","distribution_param","diverse_lambda")))
+                             "transition_parameter", "border_width", "fov", "with_constraints","distribution",
+                             "distribution_param","diverse_lambda", "m_in_mbest", "event_vector_dump_filename")))
 	  .def("__call__", &pythonConsTracking)
 	  .def("detections", &ConsTracking::detections)
 	;
