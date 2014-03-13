@@ -168,6 +168,22 @@ feature_type OutlierBadnessAggregator::scalar_valued(
 }
 
 ////
+//// OutlierCountAggregator
+////
+const std::string OutlierCountAggregator::name_ = "OutlierCount";
+
+const std::string& OutlierCountAggregator::name() const {
+  return OutlierCountAggregator::name_;
+}
+
+feature_type OutlierCountAggregator::scalar_valued(
+  const feature_arrays features
+) {
+  std::vector<size_t> out_ids = mvn_outlier_calculator_.calculate(features);
+  return feature_type(out_ids.size());
+}
+
+////
 //// TotalDiffAggregator
 ////
 const std::string TotalDiffAggregator::name_ = "TotalDiff";

@@ -67,6 +67,17 @@ class OutlierBadnessAggregator : public FeatureAggregator {
   MVNOutlierCalculator mvn_outlier_calculator_;
 }; // Class OutlierBadnessAggregator
 
+class OutlierCountAggregator : public FeatureAggregator {
+ public:
+  OutlierCountAggregator() {};
+  ~OutlierCountAggregator() {};
+  feature_type scalar_valued(const feature_arrays features);
+  virtual const std::string& name() const;
+ protected:
+  static const std::string name_;
+  MVNOutlierCalculator mvn_outlier_calculator_;
+}; // Class OutlierCountAggregator
+
 class TotalDiffAggregator : public FeatureAggregator {
  public:
   TotalDiffAggregator() {};
