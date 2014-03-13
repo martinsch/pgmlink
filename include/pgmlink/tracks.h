@@ -19,6 +19,9 @@
 
 // boost
 #include <boost/shared_ptr.hpp>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/serialization/vector.hpp>
 
 namespace pgmlink {
 
@@ -54,6 +57,15 @@ class Track {
   size_t id_;
   size_t time_start_;
   Traxelvector traxels_;
+ private:
+  friend class boost::serialization::access;
+  template<class Archive>
+  void serialize(Archive & archive, const unsigned int version) {
+      (void) version;
+    archive & id_;
+    archive & time_start_;
+    archive & traxels_;
+  }
 }; // class Track
 
 ////
