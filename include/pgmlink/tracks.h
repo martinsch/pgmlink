@@ -14,6 +14,7 @@
 
 // pgmlink
 #include "pgmlink/traxels.h"
+#include "pgmlink/event.h"
 #include "pgmlink/classifier_auxiliary.h"
 #include "pgmlink/track_features_auxiliary.h"
 
@@ -84,6 +85,26 @@ class Track {
     archive & child_ids_;
   }
 }; // class Track
+
+////
+//// Class Tracking
+//// TODO function apply_events, error handling?
+class Tracking {
+ public:
+  typedef std::vector<std::vector<Event> > Events;
+  Tracking();
+  Tracking(const Events& events, const TraxelStore& traxelstore);
+  void build_tracks(const Events& events, const TraxelStore& traxelstore);
+
+  Trackvector tracks_;
+ private:
+  void build_tracks();
+  void apply_event(const Event& event, const size_t timestep);
+  void apply_events(const std::vector<Event>& events, const size_t timestep);
+  Events events_;
+  TraxelStore traxelstore_;
+  std::map<size_t, std::map<size_t, size_t> > in_track_;
+}; // Class Tracking
 
 ////
 //// class TrackFeatureExtractor

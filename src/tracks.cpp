@@ -59,6 +59,52 @@ size_t Track::get_length() const {
   return Track::traxels_.size();
 }
 
+
+////
+//// Class Tracking
+////
+Tracking::Tracking() {
+}
+
+Tracking::Tracking(const Events& events, const TraxelStore& traxelstore) 
+: events_(events), traxelstore_(traxelstore) {
+  Tracking::build_tracks();
+}
+
+void Tracking::build_tracks() {
+  Events::const_iterator events_it = events_.begin();
+  for(size_t t = 0; events_it != events_.begin(); events_it++, t++) {
+    Tracking::apply_events(*events_it, t);
+  }
+}
+
+void Tracking::apply_events(
+  const std::vector<Event>& events,
+  const size_t time_step
+) {
+  for(
+    typename std::vector<Event>::const_iterator event_it = events.begin();
+    event_it != events.end();
+    event_it++
+  ) {
+    Tracking::apply_event(*event_it, time_step);
+  }
+}
+
+// TODO
+void Tracking::apply_event(const Event& event, const size_t time_step) {
+  switch (event.type) {
+    case Event::Move:
+      break;
+    case Event::Division:
+      break;
+    case Event::Appearance:
+      break;
+    case Event::Disappearance:
+      break;
+  }
+}
+
 ////
 //// Class TrackFeatureExtractor
 ////
