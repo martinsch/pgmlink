@@ -6,10 +6,19 @@ namespace pgmlink {
 //// Class Track
 ////
 Track::Track() {
+  parent_id_ = 0;
+  child_ids_.resize(2,0);
 }
 
-Track::Track(size_t id, size_t time_start, const Traxelvector& traxels)
-: id_(id), time_start_(time_start), traxels_(traxels) {
+Track::Track(
+  const size_t id,
+  const size_t time_start,
+  const Traxelvector& traxels,
+  const size_t parent_id,
+  const size_t left_child_id,
+  const size_t right_child_id
+) : id_(id), time_start_(time_start), traxels_(traxels), parent_id_(parent_id) {
+  Track::set_child_ids(left_child_id, right_child_id);
 }
 
 void Track::set_id(const size_t id) {
@@ -26,6 +35,24 @@ void Track::set_time_start(const size_t time_start) {
 
 size_t Track::get_time_start() const {
   return Track::time_start_;
+}
+
+void Track::set_parent_id(const size_t parent_id) {
+  parent_id_ = parent_id;
+}
+
+size_t Track::get_parent_id() const {
+  return Track::parent_id_;
+}
+
+void Track::set_child_ids(const size_t left, const size_t right) {
+  child_ids_.resize(2);
+  child_ids_[0] = left;
+  child_ids_[1] = right;
+}
+
+const std::vector<size_t>& Track::get_child_ids() const {
+  return Track::child_ids_;
 }
 
 size_t Track::get_length() const {

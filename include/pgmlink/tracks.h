@@ -44,19 +44,34 @@ enum FeatureOrder{
 class Track {
  public:
   Track();
-  Track(size_t id, size_t time_start, const Traxelvector& traxels);
+  Track(
+    const size_t id,
+    const size_t time_start,
+    const Traxelvector& traxels,
+    const size_t parent_id = 0,
+    const size_t left_child_id = 0,
+    const size_t right_child_id = 0
+  );
 
   void set_id(const size_t id);
   size_t get_id() const;
 
   void set_time_start(const size_t time_start);
   size_t get_time_start() const;
+
+  void set_parent_id(const size_t parent_id);
+  size_t get_parent_id() const;
+
+  void set_child_ids(const size_t left, const size_t right);
+  const std::vector<size_t>& get_child_ids() const;
   
   size_t get_length() const;
 
   size_t id_;
   size_t time_start_;
   Traxelvector traxels_;
+  size_t parent_id_;
+  std::vector<size_t> child_ids_;
  private:
   friend class boost::serialization::access;
   template<class Archive>
@@ -65,6 +80,8 @@ class Track {
     archive & id_;
     archive & time_start_;
     archive & traxels_;
+    archive & parent_id_;
+    archive & child_ids_;
   }
 }; // class Track
 
