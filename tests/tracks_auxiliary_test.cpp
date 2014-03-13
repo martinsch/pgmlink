@@ -19,20 +19,20 @@ BOOST_AUTO_TEST_CASE( TotalDiffAggregator_test ) {
     {2., 3.}
   };
   feature_arrays setI;
-  for(size_t i = 0; i < 7; i++) {
+  for(size_t i = 0; i < 3; i++) {
     feature_array y(setI_array[i], setI_array[i]+2);
     setI.push_back(y);
   }
   feature_type setII_array[2][1] = {{0}, {2}};
   feature_arrays setII;
-  for(size_t i = 0; i < 7; i++) {
+  for(size_t i = 0; i < 2; i++) {
     feature_array y(setII_array[i], setII_array[i]+1);
     setII.push_back(y);
   }
 
   TotalDiffAggregator totaldiff;
   feature_array vectorI = totaldiff.vector_valued(setI);
-  feature_type scalarI = totaldiff.scalar_valued(setII);
+  feature_type scalarI = totaldiff.scalar_valued(setI);
 
   feature_array vectorII = totaldiff.vector_valued(setII);
   feature_type scalarII = totaldiff.scalar_valued(setII);
