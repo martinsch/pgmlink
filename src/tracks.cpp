@@ -109,21 +109,23 @@ size_t Tracking::start_new_track(
 void Tracking::apply_event(const Event& event, const size_t time_step) {
   switch (event.type) {
     case Event::Move: {
+        assert(time_step > 0);
         size_t parent_traxel_id = event.traxel_ids[0];
         size_t child_traxel_id = event.traxel_ids[1];
         Traxel parent; // TODO get it out of the TraxelStore
         Traxel child; // TODO get it out of the TraxelStore
         size_t track_id;
-        if (in_track_[time_step].count(parent_traxel_id)) {
-          track_id = in_track_[time_step][parent_traxel_id];
+        if (in_track_[time_step-1].count(parent_traxel_id)) {
+          track_id = in_track_[time_step-1][parent_traxel_id];
         } else {
-          track_id = start_new_track(time_step + 1);
+          track_id = start_new_track(time_step);
         }
         tracks_[track_id].traxels_.push_back(child);
-        in_track_[time_step + 1][child_traxel_id] = track_id;
+        in_track_[time_step][child_traxel_id] = track_id;
       }
       break;
     case Event::Division: {
+        assert(time_step > 0);
         size_t parent_traxel_id = event.traxel_ids[0];
         size_t lchild_traxel_id = event.traxel_ids[1];
         size_t rchild_traxel_id = event.traxel_ids[2];
@@ -134,19 +136,19 @@ void Tracking::apply_event(const Event& event, const size_t time_step) {
         
         size_t ptrack_id=0;
         size_t ltrack_id, rtrack_id;
-        if (in_track_[time_step].count(parent_traxel_id)) {
-          ptrack_id = in_track_[time_step][parent_traxel_id];
+        if (in_track_[time_step-1].count(parent_traxel_id)) {
+          ptrack_id = in_track_[time_step-1][parent_traxel_id];
           tracks_[ptrack_id].child_ids_[0] = tracks_.size();
           tracks_[ptrack_id].child_ids_[1] = tracks_.size() + 1;
         }
-        ltrack_id = start_new_track(time_step+1, ptrack_id);
-        rtrack_id = start_new_track(time_step+1, ptrack_id);
+        ltrack_id = start_new_track(time_step, ptrack_id);
+        rtrack_id = start_new_track(time_step, ptrack_id);
   
         tracks_[ltrack_id].traxels_.push_back(lchild);
         tracks_[rtrack_id].traxels_.push_back(rchild);
 
-        in_track_[time_step + 1][rchild_traxel_id] = rtrack_id;
-        in_track_[time_step + 1][lchild_traxel_id] = ltrack_id;
+        in_track_[time_step][rchild_traxel_id] = rtrack_id;
+        in_track_[time_step][lchild_traxel_id] = ltrack_id;
       }
       break;
     case Event::Appearance: {
@@ -154,10 +156,10 @@ void Tracking::apply_event(const Event& event, const size_t time_step) {
         
         Traxel traxel; // TODO get it out of the TraxelStore
 
-        size_t track_id = start_new_track(time_step + 1);
+        size_t track_id = start_new_track(time_step);
         tracks_[track_id].traxels_.push_back(traxel);
 
-        in_track_[time_step + 1][traxel_id] = track_id;
+        in_track_[time_step][traxel_id] = track_id;
       }
       break;
     case Event::Disappearance:
