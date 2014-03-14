@@ -324,10 +324,10 @@ Value& IterableEditableValueMap<Graph, Key, Value>::get_value(const Key& key) {
   PGMLINK_EXPORT boost::shared_ptr<std::vector< std::map<unsigned int, bool> > > state_of_nodes(const HypothesesGraph&);
 
   // lemon graph format (lgf) serialization
-  PGMLINK_EXPORT void write_lgf( const HypothesesGraph&, std::ostream& os=std::cout,
-		  bool with_n_traxel=false );
-  PGMLINK_EXPORT void read_lgf( HypothesesGraph&, std::istream& is=std::cin,
-		 bool with_n_traxel=false);
+  PGMLINK_EXPORT void write_lgf(const HypothesesGraph&, std::ostream& os,
+          std::map<std::string, bool> &config);
+  PGMLINK_EXPORT void read_lgf(HypothesesGraph&, std::istream& is,
+         std::map<std::string, bool> &config);
 
 
 
@@ -389,17 +389,36 @@ Value& IterableEditableValueMap<Graph, Key, Value>::get_value(const Key& key) {
     void HypothesesGraph::save( Archive& ar, const unsigned int /*version*/ ) const {
     ar & timesteps_;
     
-    bool with_n_traxel = false;
-    try {
-      this->get(node_traxel());
-      with_n_traxel = true;
-    } catch( std::runtime_error& e ) {}
-    ar & with_n_traxel;
+    // store config
+    std::map<std::string, bool> config;
+    config["node_timestep"] = this->has_property(node_timestep());
+    config["node_active"] = this->has_property(node_active());
+    config["node_active2"] = this->has_property(node_active2());
+    config["node_active_count"] = this->has_property(node_active_count());
+    config["node_offered"] = this->has_property(node_offered());
+    config["split_from"] = this->has_property(split_from());
+    config["division_active"] = this->has_property(division_active());
+    config["merger_resolved_to"] = this->has_property(merger_resolved_to());
+    config["node_originated_from"] = this->has_property(node_originated_from());
+    config["node_resolution_candidate"] = this->has_property(node_resolution_candidate());
+    config["arc_distance"] = this->has_property(arc_distance());
+    config["traxel_arc_id"] = this->has_property(traxel_arc_id());
+    config["arc_vol_ratio"] = this->has_property(arc_vol_ratio());
+    config["arc_from_timestep"] = this->has_property(arc_from_timestep());
+    config["arc_to_timestep"] = this->has_property(arc_to_timestep());
+    config["arc_active"] = this->has_property(arc_active());
+    config["arc_resolution_candidate"] = this->has_property(arc_resolution_candidate());
+    config["tracklet_intern_dist"] = this->has_property(tracklet_intern_dist());
+    config["tracklet_intern_arc_ids"] = this->has_property(tracklet_intern_arc_ids());
+    config["arc_active_count"] = this->has_property(arc_active_count());
+    config["node_traxel"] = this->has_property(node_traxel());
+
+    ar & config;
 
     std::string lgf;
     {
       std::stringstream ss;
-      write_lgf(*this, ss, with_n_traxel);
+      write_lgf(*this, ss, config);
       lgf = ss.str();
     }
     ar & lgf;
@@ -409,14 +428,15 @@ Value& IterableEditableValueMap<Graph, Key, Value>::get_value(const Key& key) {
     void HypothesesGraph::load( Archive& ar, const unsigned int /*version*/ ) {
     ar & timesteps_;
 
-    bool with_n_traxel;
-    ar & with_n_traxel;
+    // read config first
+    std::map<std::string, bool> config;
+    ar & config;
 
     std::string lgf;
     ar & lgf;
     {
       std::stringstream ss(lgf);
-      read_lgf(*this, ss, with_n_traxel);
+      read_lgf(*this, ss, config);
     }
    }
 
