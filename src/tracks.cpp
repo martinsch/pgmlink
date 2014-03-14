@@ -91,16 +91,82 @@ void Tracking::apply_events(
   }
 }
 
+size_t Tracking::start_new_track(
+  const size_t time_start,
+  const size_t track_parent_id
+) {
+  size_t track_id = tracks_.size();
+  Track new_track;
+  new_track.set_id(track_id);
+  new_track.set_time_start(time_start);
+  new_track.set_parent_id(track_parent_id);
+
+  tracks_.push_back(new_track);
+  return track_id;
+}
+
 // TODO
 void Tracking::apply_event(const Event& event, const size_t time_step) {
   switch (event.type) {
-    case Event::Move:
+    case Event::Move: {
+        size_t parent_traxel_id = event.traxel_ids[0];
+        size_t child_traxel_id = event.traxel_ids[1];
+        Traxel parent; // TODO get it out of the TraxelStore
+        Traxel child; // TODO get it out of the TraxelStore
+        size_t track_id;
+        if (in_track_[time_step].count(parent_traxel_id)) {
+          track_id = in_track_[time_step][parent_traxel_id];
+        } else {
+          track_id = start_new_track(time_step + 1);
+        }
+        tracks_[track_id].traxels_.push_back(child);
+        in_track_[time_step + 1][child_traxel_id] = track_id;
+      }
       break;
-    case Event::Division:
+    case Event::Division: {
+        size_t parent_traxel_id = event.traxel_ids[0];
+        size_t lchild_traxel_id = event.traxel_ids[1];
+        size_t rchild_traxel_id = event.traxel_ids[2];
+  
+        Traxel parent; // TODO get it out of the TraxelStore
+        Traxel lchild; // TODO get it out of the TraxelStore
+        Traxel rchild; // TODO get it out of the TraxelStore
+        
+        size_t ptrack_id=0;
+        size_t ltrack_id, rtrack_id;
+        if (in_track_[time_step].count(parent_traxel_id)) {
+          ptrack_id = in_track_[time_step][parent_traxel_id];
+          tracks_[ptrack_id].child_ids_[0] = tracks_.size();
+          tracks_[ptrack_id].child_ids_[1] = tracks_.size() + 1;
+        }
+        ltrack_id = start_new_track(time_step+1, ptrack_id);
+        rtrack_id = start_new_track(time_step+1, ptrack_id);
+  
+        tracks_[ltrack_id].traxels_.push_back(lchild);
+        tracks_[rtrack_id].traxels_.push_back(rchild);
+
+        in_track_[time_step + 1][rchild_traxel_id] = rtrack_id;
+        in_track_[time_step + 1][lchild_traxel_id] = ltrack_id;
+      }
       break;
-    case Event::Appearance:
+    case Event::Appearance: {
+        size_t traxel_id = event.traxel_ids[0];
+        
+        Traxel traxel; // TODO get it out of the TraxelStore
+
+        size_t track_id = start_new_track(time_step + 1);
+        tracks_[track_id].traxels_.push_back(traxel);
+
+        in_track_[time_step + 1][traxel_id] = track_id;
+      }
       break;
     case Event::Disappearance:
+      break;
+    case Event::Merger:
+      break;
+    case Event::ResolvedTo:
+      break;
+    case Event::MultiFrameMove:
       break;
   }
 }

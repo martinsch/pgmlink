@@ -101,6 +101,7 @@ class Tracking {
   void build_tracks();
   void apply_event(const Event& event, const size_t timestep);
   void apply_events(const std::vector<Event>& events, const size_t timestep);
+  size_t start_new_track(const size_t time_start, const size_t parent_id=0);
   Events events_;
   TraxelStore traxelstore_;
   std::map<size_t, std::map<size_t, size_t> > in_track_;
