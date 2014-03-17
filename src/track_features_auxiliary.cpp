@@ -115,7 +115,7 @@ const std::vector<size_t>& MVNOutlierCalculator::calculate(
 const std::string FeatureAggregator::name_ = "";
 
 feature_array FeatureAggregator::vector_valued(
-  const feature_arrays features
+  const feature_arrays& features
 ) {
   (void)features; // Casting to void to avoid the warning "unused parameter"
   throw std::runtime_error(
@@ -126,7 +126,7 @@ feature_array FeatureAggregator::vector_valued(
 }
 
 feature_type FeatureAggregator::scalar_valued(
-  const feature_arrays features
+  const feature_arrays& features
 ) {
   (void)features; // Casting to void to avoid the warning "unused parameter"
   throw std::runtime_error(
@@ -137,7 +137,7 @@ feature_type FeatureAggregator::scalar_valued(
 }
 
 feature_type FeatureAggregator::scalar_valued(
-  const feature_array features
+  const feature_array& features
 ) {
   feature_arrays f(features.size());
   feature_arrays::iterator f_it = f.begin();
@@ -162,14 +162,14 @@ const std::string& OutlierBadnessAggregator::name() const {
 }
 
 feature_array OutlierBadnessAggregator::vector_valued(
-  const feature_arrays features
+  const feature_arrays& features
 ) {
   mvn_outlier_calculator_.calculate(features);
   return mvn_outlier_calculator_.get_measures();
 }
 
 feature_type OutlierBadnessAggregator::scalar_valued(
-  const feature_arrays features
+  const feature_arrays& features
 ) {
   feature_array vector = vector_valued(features);
   feature_type max = 0;
@@ -189,7 +189,7 @@ const std::string& OutlierCountAggregator::name() const {
 }
 
 feature_type OutlierCountAggregator::scalar_valued(
-  const feature_arrays features
+  const feature_arrays& features
 ) {
   std::vector<size_t> out_ids = mvn_outlier_calculator_.calculate(features);
   return feature_type(out_ids.size());
@@ -205,7 +205,7 @@ const std::string& TotalDiffAggregator::name() const {
 }
 
 feature_array TotalDiffAggregator::vector_valued(
-  const feature_arrays features
+  const feature_arrays& features
 ) {
   assert(features.size() > 0);
   feature_array first = features.front();
@@ -226,7 +226,7 @@ feature_array TotalDiffAggregator::vector_valued(
 }
 
 feature_type TotalDiffAggregator::scalar_valued(
-  const feature_arrays features
+  const feature_arrays& features
 ) {
   feature_array vector = vector_valued(features);
   feature_type ret = 0;
@@ -251,7 +251,7 @@ const std::string& MinAggregator::name() const {
 }
 
 feature_array MinAggregator::vector_valued(
-  const feature_arrays features
+  const feature_arrays& features
 ) {
   assert(features.size() > 0);
   size_t feature_dim = features.front().size();
@@ -273,7 +273,7 @@ feature_array MinAggregator::vector_valued(
 }
 
 feature_type MinAggregator::scalar_valued(
-  const feature_arrays features
+  const feature_arrays& features
 ) {
   assert(features.size() > 0);
   size_t feature_dim = features.front().size();
@@ -303,7 +303,7 @@ const std::string& MaxAggregator::name() const {
 }
 
 feature_array MaxAggregator::vector_valued(
-  const feature_arrays features
+  const feature_arrays& features
 ) {
   assert(features.size() > 0);
   size_t feature_dim = features.front().size();
@@ -325,7 +325,7 @@ feature_array MaxAggregator::vector_valued(
 }
 
 feature_type MaxAggregator::scalar_valued(
-  const feature_arrays features
+  const feature_arrays& features
 ) {
   assert(features.size() > 0);
   size_t feature_dim = features.front().size();
@@ -355,7 +355,7 @@ const std::string& MeanAggregator::name() const {
 }
 
 feature_array MeanAggregator::vector_valued(
-  const feature_arrays features
+  const feature_arrays& features
 ) {
   size_t n = features.size();
   assert(n > 0);
@@ -378,7 +378,7 @@ feature_array MeanAggregator::vector_valued(
 }
 
 feature_type MeanAggregator::scalar_valued(
-  const feature_arrays features
+  const feature_arrays& features
 ) {
   feature_type ret = 0;
   feature_array vector = vector_valued(features);

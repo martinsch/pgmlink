@@ -48,9 +48,9 @@ class FeatureAggregator {
  public:
   FeatureAggregator() {};
   virtual ~FeatureAggregator() {};
-  virtual feature_array vector_valued(const feature_arrays features);
-  virtual feature_type scalar_valued(const feature_arrays features);
-  virtual feature_type scalar_valued(const feature_array features);
+  virtual feature_array vector_valued(const feature_arrays& features);
+  virtual feature_type scalar_valued(const feature_arrays& features);
+  virtual feature_type scalar_valued(const feature_array& features);
   virtual const std::string& name() const;
 
   static const std::string name_;
@@ -60,8 +60,8 @@ class OutlierBadnessAggregator : public FeatureAggregator {
  public:
   OutlierBadnessAggregator() {};
   ~OutlierBadnessAggregator() {};
-  feature_array vector_valued(const feature_arrays features);
-  feature_type scalar_valued(const feature_arrays features);
+  feature_array vector_valued(const feature_arrays& features);
+  feature_type scalar_valued(const feature_arrays& features);
   virtual const std::string& name() const;
  protected:
   static const std::string name_;
@@ -72,7 +72,7 @@ class OutlierCountAggregator : public FeatureAggregator {
  public:
   OutlierCountAggregator() {};
   ~OutlierCountAggregator() {};
-  feature_type scalar_valued(const feature_arrays features);
+  feature_type scalar_valued(const feature_arrays& features);
   virtual const std::string& name() const;
  protected:
   static const std::string name_;
@@ -83,8 +83,8 @@ class TotalDiffAggregator : public FeatureAggregator {
  public:
   TotalDiffAggregator() {};
   ~TotalDiffAggregator() {};
-  feature_array vector_valued(const feature_arrays features);
-  feature_type scalar_valued(const feature_arrays features);
+  feature_array vector_valued(const feature_arrays& features);
+  feature_type scalar_valued(const feature_arrays& features);
   virtual const std::string& name() const;
  protected:
   static const std::string name_;
@@ -94,8 +94,8 @@ class MinAggregator : public FeatureAggregator {
  public:
   MinAggregator() {};
   ~MinAggregator() {};
-  feature_array vector_valued(const feature_arrays features);
-  feature_type scalar_valued(const feature_arrays features);
+  feature_array vector_valued(const feature_arrays& features);
+  feature_type scalar_valued(const feature_arrays& features);
   virtual const std::string& name() const;
  protected:
   static const std::string name_;
@@ -105,8 +105,8 @@ class MaxAggregator : public FeatureAggregator {
  public:
   MaxAggregator() {};
   ~MaxAggregator() {};
-  feature_array vector_valued(const feature_arrays features);
-  feature_type scalar_valued(const feature_arrays features);
+  feature_array vector_valued(const feature_arrays& features);
+  feature_type scalar_valued(const feature_arrays& features);
   virtual const std::string& name() const;
  protected:
   static const std::string name_;
@@ -116,8 +116,8 @@ class MeanAggregator : public FeatureAggregator {
  public:
   MeanAggregator() {};
   ~MeanAggregator() {};
-  feature_array vector_valued(const feature_arrays features);
-  feature_type scalar_valued(const feature_arrays features);
+  feature_array vector_valued(const feature_arrays& features);
+  feature_type scalar_valued(const feature_arrays& features);
   virtual const std::string& name() const;
  protected:
   static const std::string name_;
