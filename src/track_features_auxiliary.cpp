@@ -125,18 +125,6 @@ feature_array FeatureAggregator::vector_valued(
   return ret;
 }
 
-feature_array FeatureAggregator::vector_valued(
-  const feature_array features
-) {
-  feature_arrays f(features.size());
-  feature_arrays::iterator f_it = f.begin();
-  feature_array::const_iterator features_it = features.begin();
-  for(; features_it != features.end(); features_it++, f_it++) {
-    f_it->push_back(*features_it);
-  }
-  return vector_valued(f);
-}
-
 feature_type FeatureAggregator::scalar_valued(
   const feature_arrays features
 ) {

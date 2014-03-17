@@ -49,7 +49,6 @@ class FeatureAggregator {
   FeatureAggregator() {};
   virtual ~FeatureAggregator() {};
   virtual feature_array vector_valued(const feature_arrays features);
-  virtual feature_array vector_valued(const feature_array features);
   virtual feature_type scalar_valued(const feature_arrays features);
   virtual feature_type scalar_valued(const feature_array features);
   virtual const std::string& name() const;
