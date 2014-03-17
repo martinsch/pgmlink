@@ -283,7 +283,7 @@ feature_type TrackingFeatureExtractor::extract(const Tracking& tracking) const {
       for(; tracks_it != tracking.tracks_.end(); tracks_it++, f_it++) {
         *f_it = track_feature_extractor_->extract_scalar(*tracks_it);
       }
-      // TODO ret = feature_aggreagtor_->scalar_valued(features);
+      ret = feature_aggregator_->scalar_valued(features);
     }
     break;
   }
