@@ -302,3 +302,62 @@ BOOST_AUTO_TEST_CASE( Outlier_badness ) {
   BOOST_CHECK(posbadness1 > posbadness2);
   BOOST_CHECK(vbadness1 > vbadness2);
 }
+
+BOOST_AUTO_TEST_CASE( TrackingFeatureExtractor_outliercount ) {
+  // Set up a track with outlier in feature "feature_x"
+  feature_type f1_array[7][2] = {
+    {3., 3.},
+    {4., 3.},
+    {3., 4.},
+    {4., 4.},
+    {5., 4.},
+    {5., 5.},
+    {9., 8.}
+  };
+  feature_type f2_array[7][2] = {
+    {3., 3.},
+    {4., 3.},
+    {3., 4.},
+    {4., 4.},
+    {5., 4.},
+    {5., 5.},
+    {5., 5.}
+  };
+  Track track1;
+  Track track2;
+  for(size_t i = 0; i < 7; i++) {
+    feature_array x1(f1_array[i], f1_array[i]+2);
+    Traxel traxel1;
+    traxel1.features["feature_x"] = x1;
+    track1.traxels_.push_back(traxel1);
+    
+    feature_array x2(f2_array[i], f2_array[i]+2);
+    Traxel traxel2;
+    traxel2.features["feature_x"] = x2;
+    track2.traxels_.push_back(traxel2);
+  }
+  Trackvector tracks;
+  tracks.push_back(track1); tracks.push_back(track2);
+  Tracking tracking;
+  tracking.tracks_ = tracks;
+  
+  // Set up feature calculator and the feature aggregator
+  boost::shared_ptr<FeatureCalculator> Identity(new IdentityCalculator());
+  boost::shared_ptr<FeatureAggregator> OutlierCount(
+    new OutlierCountAggregator()
+  );
+  boost::shared_ptr<FeatureAggregator> Sum(
+    new SumAggregator()
+  );
+
+  // Set up the track feature extractor for the feature "feature_x"
+  boost::shared_ptr<TrackFeatureExtractor> TrackOutlier(
+    new TrackFeatureExtractor(Identity, OutlierCount, "feature_x", SINGLE)
+  );
+
+  // Set up the tracking feature extractor
+  TrackingFeatureExtractor OutlierCountSum(TrackOutlier, Sum, SCALAR);
+
+  BOOST_CHECK_EQUAL(OutlierCountSum.extract(tracking), 1);
+
+}
