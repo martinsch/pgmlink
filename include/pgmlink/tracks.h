@@ -40,7 +40,6 @@ enum FeatureOrder{
 };
 
 enum TrackFeatureOrder{
-  MATRIX,
   VECTOR,
   SCALAR
 };

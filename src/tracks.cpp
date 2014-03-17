@@ -266,9 +266,6 @@ TrackingFeatureExtractor::TrackingFeatureExtractor(
 feature_type TrackingFeatureExtractor::extract(const Tracking& tracking) const {
   feature_type ret = 0.0;
   switch (track_feature_order_) {
-    case MATRIX:
-      // TODO
-    break;
     case VECTOR: {
       feature_arrays features(tracking.tracks_.size());
       feature_arrays::iterator f_it = features.begin();
