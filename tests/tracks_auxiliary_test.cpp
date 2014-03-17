@@ -321,7 +321,7 @@ BOOST_AUTO_TEST_CASE( TrackingFeatureExtractor_outliercount ) {
     {4., 4.},
     {5., 4.},
     {5., 5.},
-    {5., 5.}
+    {4., 4.}
   };
   Track track1;
   Track track2;
@@ -357,6 +357,11 @@ BOOST_AUTO_TEST_CASE( TrackingFeatureExtractor_outliercount ) {
 
   // Set up the tracking feature extractor
   TrackingFeatureExtractor OutlierCountSum(TrackOutlier, Sum, SCALAR);
+
+  std::cout << "Outlier count in track 1: ";
+  std::cout << TrackOutlier->extract_scalar(track1) << std::endl;
+  std::cout << "Outlier count in track 2: ";
+  std::cout << TrackOutlier->extract_scalar(track2) << std::endl;
 
   BOOST_CHECK_EQUAL(OutlierCountSum.extract(tracking), 1);
 
