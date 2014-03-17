@@ -39,6 +39,12 @@ enum FeatureOrder{
   TRIPLET
 };
 
+enum TrackFeatureOrder{
+  MATRIX,
+  VECTOR,
+  SCALAR
+};
+
 ////
 //// class Track
 ////
@@ -136,6 +142,26 @@ class TrackFeatureExtractor {
   std::string feature_name_;
   FeatureOrder order_;
 }; // class TrackFeatureExtractor
+
+
+////
+//// Class TrackingFeatureExtractor
+////
+class TrackingFeatureExtractor {
+ public:
+  TrackingFeatureExtractor(
+    boost::shared_ptr<TrackFeatureExtractor>,
+    boost::shared_ptr<FeatureAggregator>,
+    TrackFeatureOrder track_feature_order
+  );
+  virtual ~TrackingFeatureExtractor() {};
+  virtual feature_type extract(const Tracking& tracking) const;
+  TrackFeatureOrder get_track_feature_order() const;
+
+  boost::shared_ptr<TrackFeatureExtractor> track_feature_extractor_;
+  boost::shared_ptr<FeatureAggregator> feature_aggregator_;
+  TrackFeatureOrder track_feature_order_;
+};
 
 } // namespace pgmlink
 

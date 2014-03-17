@@ -249,5 +249,50 @@ FeatureOrder TrackFeatureExtractor::get_feature_order() const {
   return TrackFeatureExtractor::order_;
 }
 
+////
+//// Class TrackingFeatureExtractor
+////
+TrackingFeatureExtractor::TrackingFeatureExtractor(
+  boost::shared_ptr<TrackFeatureExtractor> track_feature_extractor,
+  boost::shared_ptr<FeatureAggregator> feature_aggregator,
+  TrackFeatureOrder track_feature_order
+) : track_feature_extractor_(track_feature_extractor),
+  feature_aggregator_(feature_aggregator),
+  track_feature_order_(track_feature_order)
+{
+
+}
+
+feature_type TrackingFeatureExtractor::extract(const Tracking& tracking) const {
+  feature_type ret = 0.0;
+  switch (track_feature_order_) {
+    case MATRIX:
+      // TODO
+    break;
+    case VECTOR: {
+      feature_arrays features(tracking.tracks_.size());
+      feature_arrays::iterator f_it = features.begin();
+      Trackvector::const_iterator tracks_it = tracking.tracks_.begin();
+      for (; tracks_it != tracking.tracks_.end(); tracks_it++, f_it++) {
+        *f_it = track_feature_extractor_->extract_vector(*tracks_it);
+      }
+      ret = feature_aggregator_->scalar_valued(features);
+    }
+    break;
+    case SCALAR: {
+      feature_array features(tracking.tracks_.size());
+      feature_array::iterator f_it = features.begin();
+      Trackvector::const_iterator tracks_it = tracking.tracks_.begin();
+      for(; tracks_it != tracking.tracks_.end(); tracks_it++, f_it++) {
+        *f_it = track_feature_extractor_->extract_scalar(*tracks_it);
+      }
+      // TODO ret = feature_aggreagtor_->scalar_valued(features);
+    }
+    break;
+  }
+  return ret;
+}
+  
+
 
 } // namespace pgmlink
