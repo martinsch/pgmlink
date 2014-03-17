@@ -170,6 +170,8 @@ void Tracking::apply_event(const Event& event, const size_t time_step) {
       break;
     case Event::MultiFrameMove:
       break;
+    case Event::Void:
+      break;
   }
 }
 
