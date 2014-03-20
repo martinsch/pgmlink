@@ -172,7 +172,6 @@ vector<map<unsigned int, bool> > ChaingraphTracking::detections() {
 }
 
 
-
 namespace {
 std::vector<double> computeDetProb(double vol, vector<double> means, vector<double> s2) {
 	std::vector<double> result;
@@ -219,7 +218,8 @@ bool all_true (InputIterator first, InputIterator last, UnaryPredicate pred) {
 ////
 //// class ConsTracking
 ////
-vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts, TimestepIdCoordinateMapPtr coordinates) {
+vector< vector<vector<Event> > >ConsTracking::operator()(TraxelStore& ts, TimestepIdCoordinateMapPtr coordinates,
+                std::size_t number_of_iterations) {
 	cout << "-> building energy functions " << endl;
 
 	double detection_weight = 10;
@@ -377,17 +377,24 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts, TimestepIdCoord
 			true, // with_appearance
 			true, // with_disappearance
 			transition_parameter_,
-			with_constraints_
+			with_constraints_,
+			number_of_iterations,
+			distribution_, 
+			distribution_param_,
+			diverse_lambda_,
+			m_in_mbest_
 			);
+	size_t totalNumberOfSolutions = number_of_iterations+m_in_mbest_-1;
+	if (totalNumberOfSolutions>1) {
+		
+    
+		cout << "-> perturbed Inference" << endl;
+		pgm.perturbedInference(*graph);
+		cout << "-> finished perturbed Inference" << endl;
+		}
+	else {
+	pgm.perturbedInference(*graph);
 
-	cout << "-> formulate ConservationTracking model" << endl;
-	pgm.formulate(*graph);
-
-	cout << "-> infer" << endl;
-	pgm.infer();
-
-	cout << "-> conclude" << endl;
-	pgm.conclude(*graph);
 
 	cout << "-> storing state of detection vars" << endl;
 	last_detections_ = state_of_nodes(*graph);
@@ -395,9 +402,16 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts, TimestepIdCoord
 	cout << "-> pruning inactive hypotheses" << endl;
 	prune_inactive(*graph);
 
+	}
+	
     cout << "-> constructing unresolved events" << endl;
-    boost::shared_ptr<std::vector< std::vector<Event> > > ev = events(*graph);
+    
+    std::vector < std::vector< std::vector<Event> > > all_ev(totalNumberOfSolutions);
+    for (size_t i=0;i<totalNumberOfSolutions;++i){
+		all_ev[i] = *events(*graph,i); // TODO iterate over iterationSteps, add parameter for backward compatibility
+	}
 
+	std::vector< std::vector<Event> >* ev = &all_ev[0];
 
     if (max_number_objects_ > 1 && with_merger_resolution_ && all_true(ev->begin(), ev->end(), has_data<Event>)) {
       cout << "-> resolving mergers" << endl;
@@ -422,8 +436,7 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts, TimestepIdCoord
       boost::shared_ptr<std::vector< std::vector<Event> > > multi_frame_moves = multi_frame_move_events(*graph);
 
       cout << "-> merging unresolved and resolved events" << endl;
-      // delete extractor; // TO DELETE FIRST CREATE VIRTUAL DTORS
-      ev = merge_event_vectors(*ev, *multi_frame_moves);
+      all_ev[0] = *merge_event_vectors(*ev, *multi_frame_moves);
     }
 
     if(event_vector_dump_filename_ != "none")
@@ -432,10 +445,10 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts, TimestepIdCoord
         std::ofstream ofs(event_vector_dump_filename_.c_str());
         boost::archive::text_oarchive out_archive(ofs);
         out_archive << ts;
-        out_archive << *ev;
+        out_archive << all_ev;
     }
 
-    return *ev;
+    return all_ev;
 }
 
 vector<map<unsigned int, bool> > ConsTracking::detections() {

@@ -82,8 +82,8 @@ BOOST_AUTO_TEST_CASE( Event_Serialization )
                   );
 
 
-    std::vector< std::vector<Event> > events = tracking(ts);
-    std::vector< std::vector<Event> > events_loaded;
+    std::vector< std::vector< std::vector<Event> > > events = tracking(ts);
+    std::vector< std::vector< std::vector<Event> > > events_loaded;
 
     {
         // now store the results
@@ -108,7 +108,10 @@ BOOST_AUTO_TEST_CASE( Event_Serialization )
 
         for(size_t j = 0; j < events[i].size(); j++)
         {
-            BOOST_CHECK(events[i][j] == events_loaded[i][j]);
+            for(size_t k = 0; k < events[i][j].size(); k++)
+            {
+                BOOST_CHECK(events[i][j][k] == events_loaded[i][j][k]);
+            }
         }
     }
 }

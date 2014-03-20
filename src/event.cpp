@@ -96,7 +96,7 @@ ostream& operator<< (ostream &out, const Event &e)
   }
   out << "(" << type << ", traxel_ids:";
   for(size_t i = 0; i < e.traxel_ids.size(); ++i) {
-    out << " " << e.traxel_ids[i]; 
+    out << " " << e.traxel_ids[i];
   }
   out << ", energy: " << e.energy() << ")";
   return out;

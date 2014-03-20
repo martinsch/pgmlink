@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Merger ) {
 
 	std::cout << "Run Conservation tracking" << std::endl;
 	std::cout << std::endl;
-	std::vector< std::vector<Event> > events = tracking(ts);
+	std::vector< std::vector<Event> > events = tracking(ts)[0];
 
 	size_t count_moves = 0;
 	size_t t = 1;
@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Division ) {
 
 	std::cout << "Run Conservation tracking" << std::endl;
 	std::cout << std::endl;
-	std::vector< std::vector<Event> > events = tracking(ts);
+	std::vector< std::vector<Event> > events = tracking(ts)[0];
 
 	size_t count_moves = 0;
 	size_t count_divisions = 0;
@@ -271,7 +271,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_SimpleMove ) {
 
 	std::cout << "Run Conservation tracking" << std::endl;
 	std::cout << std::endl;
-	std::vector< std::vector<Event> > events = tracking(ts);
+	std::vector< std::vector<Event> > events = tracking(ts)[0];
 
 	BOOST_CHECK_EQUAL(events.size(),1);
 	size_t count_moves = 0;
@@ -356,7 +356,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Merger_Volume ) {
 
 	std::cout << "Run Conservation tracking" << std::endl;
 	std::cout << std::endl;
-	std::vector< std::vector<Event> > events = tracking(ts);
+	std::vector< std::vector<Event> > events = tracking(ts)[0];
 
 	size_t count_moves = 0;
 	size_t t = 1;
@@ -446,7 +446,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Disappearance ) {
 
 	std::cout << "Run Conservation tracking" << std::endl;
 	std::cout << std::endl;
-	std::vector< std::vector<Event> > events = tracking(ts);
+	std::vector< std::vector<Event> > events = tracking(ts)[0];
 
 	size_t num_events = 0;
 	size_t t = 1;
@@ -538,7 +538,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_AppearanceAndDisappearance )
 
 	std::cout << "Run Conservation tracking" << std::endl;
 	std::cout << std::endl;
-	std::vector< std::vector<Event> > events = tracking(ts);
+	std::vector< std::vector<Event> > events = tracking(ts)[0];
 
 	size_t t = 1;
 	size_t num_events = 0;
@@ -663,7 +663,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Appearance ) {
 
 	std::cout << "Run Conservation tracking" << std::endl;
 	std::cout << std::endl;
-	std::vector< std::vector<Event> > events = tracking(ts);
+	std::vector< std::vector<Event> > events = tracking(ts)[0];
 
 	size_t t = 0;
 	size_t num_events = 0;
@@ -762,7 +762,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_AppearanceSimple ) {
 
 	std::cout << "Run Conservation tracking" << std::endl;
 	std::cout << std::endl;
-	std::vector< std::vector<Event> > events = tracking(ts);
+	std::vector< std::vector<Event> > events = tracking(ts)[0];
 
 	size_t t = 1;
 	size_t num_events = 0;
@@ -877,7 +877,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Tracklets ) {
 
 	std::cout << "Run Conservation tracking" << std::endl;
 	std::cout << std::endl;
-	std::vector< std::vector<Event> > events = tracking(ts);
+	std::vector< std::vector<Event> > events = tracking(ts)[0];
 
 	size_t moves = 0;
 	size_t t = 1;
@@ -1030,7 +1030,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Merger3 ) {
 
 	std::cout << "Run Conservation tracking" << std::endl;
 	std::cout << std::endl;
-	std::vector< std::vector<Event> > events = tracking(ts);
+	std::vector< std::vector<Event> > events = tracking(ts)[0];
 
 	size_t t = 1;
 	size_t apps = 0;
@@ -1206,7 +1206,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_TranslationVector_Traxels ) 
 
 	std::cout << "Run Conservation tracking" << std::endl;
 	std::cout << std::endl;
-	std::vector< std::vector<Event> > events = tracking(ts);
+	std::vector< std::vector<Event> > events = tracking(ts)[0];
 
 
 	size_t t = 0;
@@ -1351,7 +1351,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_TranslationVector_Tracklets 
 
 	std::cout << "Run Conservation tracking" << std::endl;
 	std::cout << std::endl;
-	std::vector< std::vector<Event> > events = tracking(ts);
+	std::vector< std::vector<Event> > events = tracking(ts)[0];
 
 
 	size_t t = 0;
@@ -1474,7 +1474,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Merger4 ) {
 
 	std::cout << "Run Conservation tracking" << std::endl;
 	std::cout << std::endl;
-	std::vector< std::vector<Event> > events = tracking(ts);
+	std::vector< std::vector<Event> > events = tracking(ts)[0];
 
 	size_t t = 1;
 	size_t apps = 0;
@@ -1610,7 +1610,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_MergerResolvingDivision ) {
 
 	std::cout << "Run Conservation tracking" << std::endl;
 	std::cout << std::endl;
-	std::vector< std::vector<Event> > events = tracking(ts);
+	std::vector< std::vector<Event> > events = tracking(ts)[0];
 
 	size_t t = 0;
 	BOOST_CHECK_EQUAL(events[t].size(), 3);
@@ -1744,7 +1744,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_TranslationVector2 ) {
 
 	std::cout << "Run Conservation tracking" << std::endl;
 	std::cout << std::endl;
-	std::vector< std::vector<Event> > events = tracking(ts);
+	std::vector< std::vector<Event> > events = tracking(ts)[0];
 
 
 	size_t t = 0;

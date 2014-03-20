@@ -136,9 +136,7 @@ namespace pgmlink {
       return g;
   }
 
-
-
-  boost::shared_ptr<std::vector< std::vector<Event> > > events(const HypothesesGraph& g) {
+  boost::shared_ptr<std::vector< std::vector<Event> > > events(const HypothesesGraph& g, int iterationStep) {
     LOG(logDEBUG) << "events(): entered";
     boost::shared_ptr<std::vector< std::vector<Event> > > ret(new vector< vector<Event> >);
     typedef property_map<node_timestep, HypothesesGraph::base_graph>::type node_timestep_map_t;
@@ -183,14 +181,21 @@ namespace pgmlink {
 //        	}
 //        	prev_mergers.clear();
 //        }
-
+	
+	property_map<arc_active_count, HypothesesGraph::base_graph>::type* active_arcs;
+	active_arcs = &g.get(arc_active_count());
+		
+	property_map<node_active_count, HypothesesGraph::base_graph>::type* active_nodes;
+	active_nodes = &g.get(node_active_count());
+	
 	map<unsigned int, vector<unsigned int> > resolver_map;
 
 	// for every node: destiny
 	LOG(logDEBUG2) << "events(): for every node: destiny";
 	for(node_timestep_map_t::ItemIt node_at(node_timestep_map, t); node_at!=lemon::INVALID; ++node_at) {
 	    assert(node_traxel_map[node_at].Timestep == t);
-
+		if (!active_nodes->operator[](node_at)[iterationStep]){continue;}
+		
 	    if (with_origin && (*origin_map)[node_at].size() > 0 && t > g.earliest_timestep()) {
 	      LOG(logINFO) << "events(): collecting resolver node ids for all merger nodes " << t << ", " << (*origin_map)[node_at][0];
 	      resolver_map[(*origin_map)[node_at][0]].push_back(node_traxel_map[node_at].Id);
@@ -244,29 +249,40 @@ namespace pgmlink {
 			(*ret)[t-g.earliest_timestep()-1].push_back(e);
 			LOG(logDEBUG3) << e;
 	    }
-
+	    
 	    // count outgoing arcs
+
 	    size_t count = 0;
-	    for(HypothesesGraph::base_graph::OutArcIt a(g, node_at); a!=lemon::INVALID; ++a) ++count;
+	    for(HypothesesGraph::base_graph::OutArcIt a(g, node_at); a!=lemon::INVALID; ++a) {
+			 if (active_arcs->operator[](a)[iterationStep]) {
+				++count;	
+			 }		
+		}
+		
 	    LOG(logDEBUG3) << "events(): counted outgoing arcs: " << count;
 	    // construct suitable Event object
 	    switch(count) {
 		// Disappearance
 		case 0: {
 		    Event e;
-		    e.type = Event::Disappearance;
-		    e.traxel_ids.push_back(node_traxel_map[node_at].Id);
-		    (*ret)[t-g.earliest_timestep()].push_back(e);
-		    LOG(logDEBUG3) << e;
-		    break;
+			e.type = Event::Disappearance;
+			e.traxel_ids.push_back(node_traxel_map[node_at].Id);
+			(*ret)[t-g.earliest_timestep()].push_back(e);
+			LOG(logDEBUG3) << e;
+			break;
 		    }
 		// Move
 		case 1: {
 		    Event e;
 		    e.type = Event::Move;
 		    e.traxel_ids.push_back(node_traxel_map[node_at].Id);
-		    HypothesesGraph::base_graph::OutArcIt a(g, node_at);
-		    e.traxel_ids.push_back(node_traxel_map[g.target(a)].Id);
+			
+			for(HypothesesGraph::base_graph::OutArcIt a(g, node_at); a != lemon::INVALID; ++a) {
+				if (!active_arcs->operator[](a)[iterationStep]) {
+					continue;
+				}
+				e.traxel_ids.push_back(node_traxel_map[g.target(a)].Id);
+			}
 		    (*ret)[t-g.earliest_timestep()].push_back(e);
 		    LOG(logDEBUG3) << e;
 		    break;
@@ -276,16 +292,25 @@ namespace pgmlink {
 			Event e;
 		    if (with_division_detection) {
 		    	if (count == 2 && (*division_node_map)[node_at]) {
-		    		e.type = Event::Division;
+					e.type = Event::Division;
 					e.traxel_ids.push_back(node_traxel_map[node_at].Id);
-					HypothesesGraph::base_graph::OutArcIt a(g, node_at);
-					e.traxel_ids.push_back(node_traxel_map[g.target(a)].Id);
-					++a;
-					e.traxel_ids.push_back(node_traxel_map[g.target(a)].Id);
+					for(HypothesesGraph::base_graph::OutArcIt a(g, node_at); a != lemon::INVALID; ++a) {
+						if (!active_arcs->operator[](a)[iterationStep]) {
+							continue;
+						}
+						
+						e.traxel_ids.push_back(node_traxel_map[g.target(a)].Id);
+					}
+					
 					(*ret)[t-g.earliest_timestep()].push_back(e);
 					LOG(logDEBUG3) << e;
 		    	} else {
+					
 					for(HypothesesGraph::base_graph::OutArcIt a(g, node_at); a != lemon::INVALID; ++a) {
+						if (!active_arcs->operator[](a)[iterationStep]) {
+							continue;
+						}
+						
 						e.type = Event::Move;
 						e.traxel_ids.clear();
 						e.traxel_ids.push_back(node_traxel_map[node_at].Id);
@@ -301,9 +326,12 @@ namespace pgmlink {
 				e.type = Event::Division;
 				e.traxel_ids.push_back(node_traxel_map[node_at].Id);
 				HypothesesGraph::base_graph::OutArcIt a(g, node_at);
-				e.traxel_ids.push_back(node_traxel_map[g.target(a)].Id);
-				++a;
-				e.traxel_ids.push_back(node_traxel_map[g.target(a)].Id);
+				for(HypothesesGraph::base_graph::OutArcIt a(g, node_at); a != lemon::INVALID; ++a) {
+					if (!active_arcs->operator[](a)[iterationStep]) {
+						continue;
+					}
+					e.traxel_ids.push_back(node_traxel_map[g.target(a)].Id);
+				}
 				(*ret)[t-g.earliest_timestep()].push_back(e);
 				LOG(logDEBUG3) << e;
 		    }
@@ -339,6 +367,9 @@ namespace pgmlink {
 	LOG(logDEBUG2) << "events(): appearances in next timestep";
 	for(node_timestep_map_t::ItemIt node_at(node_timestep_map, t+1); node_at!=lemon::INVALID; ++node_at) {
 	    // count incoming arcs
+	    if (!active_nodes->operator[](node_at)[iterationStep]){
+			continue;
+		}
 	    int count = 0;
 	    for(HypothesesGraph::base_graph::InArcIt a(g, node_at); a!=lemon::INVALID; ++a) ++count;
     	    LOG(logDEBUG3) << "events(): counted incoming arcs in next timestep: " << count;
@@ -776,55 +807,232 @@ void addArcsToGraph(const HypothesesGraph& traxel_graph, HypothesesGraph& trackl
   // write_lgf()
   //
   namespace {
-    struct TraxelToStrConverter {
-      std::string operator()(const Traxel& t) {
+    template <typename T>
+    struct TypeToStrConverter {
+      std::string operator()(const T& t) {
 	stringstream ss;
 	boost::archive::text_oarchive oa(ss);
 	oa & t;
 	return ss.str();
       }
-    };
+    };    
   }
 
-  void write_lgf( const HypothesesGraph& g, std::ostream& os, bool with_n_traxel ) {
-    lemon::DigraphWriter<HypothesesGraph> writer( g, os );
-    writer.
-      nodeMap("timestep", g.get(node_timestep())).
-      arcMap("from_timestep", g.get(arc_from_timestep())).
-      arcMap("to_timestep", g.get(arc_to_timestep()));
-    if(with_n_traxel) {
-      writer.nodeMap("traxel", g.get(node_traxel()), TraxelToStrConverter());
-    }
+  void write_lgf(const HypothesesGraph& g, std::ostream& os, std::map<std::string, bool>& config ) {
+    lemon::DigraphWriter<HypothesesGraph> writer( g, os );    
+
+    if(config["node_timestep"])
+        writer.nodeMap("node_timestep", g.get(node_timestep()));
+
+    if(config["node_active"])
+        writer.nodeMap("node_active", g.get(node_active()));
+
+    if(config["node_active2"])
+        writer.nodeMap("node_active2", g.get(node_active2()));
+
+    if(config["node_active_count"])
+        writer.nodeMap("node_active_count", g.get(node_active_count()), TypeToStrConverter<vector<long unsigned int> >());
+
+    if(config["node_offered"])
+        writer.nodeMap("node_offered", g.get(node_offered()));
+
+    if(config["split_from"])
+        writer.nodeMap("split_from", g.get(split_from()));
+
+    if(config["division_active"])
+        writer.nodeMap("division_active", g.get(division_active()));
+
+    if(config["merger_resolved_to"])
+        writer.nodeMap("merger_resolved_to", g.get(merger_resolved_to()), TypeToStrConverter<vector<unsigned int> >());
+
+    if(config["node_originated_from"])
+        writer.nodeMap("node_originated_from", g.get(node_originated_from()), TypeToStrConverter<vector<unsigned int> >());
+
+    if(config["node_resolution_candidate"])
+        writer.nodeMap("node_resolution_candidate", g.get(node_resolution_candidate()));
+
+    if(config["arc_distance"])
+        writer.arcMap("arc_distance", g.get(arc_distance()));
+
+    if(config["traxel_arc_id"])
+        writer.arcMap("traxel_arc_id", g.get(traxel_arc_id()));
+
+    if(config["arc_vol_ratio"])
+        writer.arcMap("arc_vol_ratio", g.get(arc_vol_ratio()));
+
+    if(config["arc_from_timestep"])
+        writer.arcMap("arc_from_timestep", g.get(arc_from_timestep()));
+
+    if(config["arc_to_timestep"])
+        writer.arcMap("arc_to_timestep", g.get(arc_to_timestep()));
+
+    if(config["arc_active"])
+        writer.arcMap("arc_active", g.get(arc_active()));
+
+    if(config["arc_resolution_candidate"])
+        writer.arcMap("arc_resolution_candidate", g.get(arc_resolution_candidate()));
+
+    if(config["tracklet_intern_dist"])
+        writer.nodeMap("tracklet_intern_dist", g.get(tracklet_intern_dist()), TypeToStrConverter<vector<double> >());
+
+    if(config["tracklet_intern_arc_ids"])
+        writer.nodeMap("tracklet_intern_arc_ids", g.get(tracklet_intern_arc_ids()), TypeToStrConverter<vector<int> >());
+
+    if(config["arc_active_count"])
+        writer.arcMap("arc_active_count", g.get(arc_active_count()), TypeToStrConverter<vector<bool> >());
+
+    if(config["node_traxel"])
+        writer.nodeMap("node_traxel", g.get(node_traxel()), TypeToStrConverter<Traxel>());
+
     writer.run();
   }
-
 
 
   //
   // read_lgf()
   //
   namespace {
-    struct StrToTraxelConverter {
-      Traxel operator()(const std::string& s) {
+    template <typename T>
+    struct StrToTypeConverter {
+      T operator()(const string& s) {
 	stringstream ss(s);
 	boost::archive::text_iarchive ia(ss);
-	Traxel t;
+    T t;
 	ia & t;
 	return t;
       }
     };
   }
 
-void read_lgf( HypothesesGraph& g, std::istream& is, bool with_n_traxel ) {
+void read_lgf( HypothesesGraph& g, std::istream& is, std::map<std::string, bool>& config) {
     lemon::DigraphReader<HypothesesGraph> reader( g, is );
-    reader.
-      nodeMap("timestep", g.get(node_timestep())).
-      arcMap("from_timestep", g.get(arc_from_timestep())).
-      arcMap("to_timestep", g.get(arc_to_timestep()));
-    if( with_n_traxel ) {
-      g.add(node_traxel());
-      reader.nodeMap("traxel", g.get(node_traxel()), StrToTraxelConverter());
+
+    if(config["node_timestep"])
+    {
+        g.add(node_timestep());
+        reader.nodeMap("node_timestep", g.get(node_timestep()));
     }
+
+    if(config["node_active"])
+    {
+        g.add(node_active());
+        reader.nodeMap("node_active", g.get(node_active()));
+    }
+
+    if(config["node_active2"])
+    {
+        g.add(node_active2());
+        reader.nodeMap("node_active2", g.get(node_active2()));
+    }
+
+    if(config["node_active_count"])
+    {
+        g.add(node_active_count());
+        reader.nodeMap("node_active_count", g.get(node_active_count()), StrToTypeConverter<vector<long unsigned int> >());
+    }
+
+    if(config["node_offered"])
+    {
+        g.add(node_offered());
+        reader.nodeMap("node_offered", g.get(node_offered()));
+    }
+
+    if(config["split_from"])
+    {
+        g.add(split_from());
+        reader.nodeMap("split_from", g.get(split_from()));
+    }
+
+    if(config["division_active"])
+    {
+        g.add(division_active());
+        reader.nodeMap("division_active", g.get(division_active()));
+    }
+
+    if(config["merger_resolved_to"])
+    {
+        g.add(merger_resolved_to());
+        reader.nodeMap("merger_resolved_to", g.get(merger_resolved_to()), StrToTypeConverter<vector<unsigned int> >());
+    }
+
+    if(config["node_originated_from"])
+    {
+        g.add(node_originated_from());
+        reader.nodeMap("node_originated_from", g.get(node_originated_from()), StrToTypeConverter<vector<unsigned int> >());
+    }
+
+    if(config["node_resolution_candidate"])
+    {
+        g.add(node_resolution_candidate());
+        reader.nodeMap("node_resolution_candidate", g.get(node_resolution_candidate()));
+    }
+
+    if(config["arc_distance"])
+    {
+        g.add(arc_distance());
+        reader.arcMap("arc_distance", g.get(arc_distance()));
+    }
+
+    if(config["traxel_arc_id"])
+    {
+        g.add(traxel_arc_id());
+        reader.arcMap("traxel_arc_id", g.get(traxel_arc_id()));
+    }
+
+    if(config["arc_vol_ratio"])
+    {
+        g.add(arc_vol_ratio());
+        reader.arcMap("arc_vol_ratio", g.get(arc_vol_ratio()));
+    }
+
+    if(config["arc_from_timestep"])
+    {
+        g.add(arc_from_timestep());
+        reader.arcMap("arc_from_timestep", g.get(arc_from_timestep()));
+    }
+
+    if(config["arc_to_timestep"])
+    {
+        g.add(arc_to_timestep());
+        reader.arcMap("arc_to_timestep", g.get(arc_to_timestep()));
+    }
+
+    if(config["arc_active"])
+    {
+        g.add(arc_active());
+        reader.arcMap("arc_active", g.get(arc_active()));
+    }
+
+    if(config["arc_resolution_candidate"])
+    {
+        g.add(arc_resolution_candidate());
+        reader.arcMap("arc_resolution_candidate", g.get(arc_resolution_candidate()));
+    }
+
+    if(config["tracklet_intern_dist"])
+    {
+        g.add(tracklet_intern_dist());
+        reader.nodeMap("tracklet_intern_dist", g.get(tracklet_intern_dist()), StrToTypeConverter<vector<double> >());
+    }
+
+    if(config["tracklet_intern_arc_ids"])
+    {
+        g.add(tracklet_intern_arc_ids());
+        reader.nodeMap("tracklet_intern_arc_ids", g.get(tracklet_intern_arc_ids()), StrToTypeConverter<vector<int> >());
+    }
+
+    if(config["arc_active_count"])
+    {
+        g.add(arc_active_count());
+        reader.arcMap("arc_active_count", g.get(arc_active_count()), StrToTypeConverter<vector<bool> >());
+    }
+
+    if(config["node_traxel"])
+    {
+        g.add(node_traxel());
+        reader.nodeMap("node_traxel", g.get(node_traxel()), StrToTypeConverter<Traxel>());
+    }
+
     reader.run();
   }
 

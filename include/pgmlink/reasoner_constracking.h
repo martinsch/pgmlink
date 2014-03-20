@@ -10,10 +10,42 @@
 #include "pgmlink/hypotheses.h"
 #include "pgmlink/reasoner.h"
 #include "pgmlink/feature.h"
+#include "opengm/opengm.hxx"
+#include "opengm/graphicalmodel/graphicalmodel.hxx"
+#include "opengm/functions/modelviewfunction.hxx"
+#include "opengm/functions/view.hxx"
 
-namespace pgmlink {
+//Random:
+#include <boost/random/variate_generator.hpp>
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/normal_distribution.hpp>
+#include <boost/random/uniform_real.hpp>
+
+namespace pgmlink {	
+
+typedef double ValueType;
+typedef pgm::OpengmModelDeprecated::ogmGraphicalModel::OperatorType OperatorType;
+typedef pgm::OpengmModelDeprecated::ogmGraphicalModel::LabelType LabelType;
+typedef pgm::OpengmModelDeprecated::ogmGraphicalModel::IndexType IndexType;
+
+
+typedef opengm::GraphicalModel
+		<ValueType, OperatorType,  typename opengm::meta::TypeListGenerator
+		<opengm::ModelViewFunction<pgm::OpengmModelDeprecated::ogmGraphicalModel, marray::Marray<ValueType> > >::type, 
+		opengm::DiscreteSpace<IndexType,LabelType> > 
+		SubGmType;
+		
+//typedef pgm::OpengmModelDeprecated::ogmGraphicalModel SubGmType;
+
+typedef opengm::LPCplex
+	<	SubGmType,
+			pgm::OpengmModelDeprecated::ogmAccumulator		>
+    cplex_optimizer;
+
+typedef typename boost::variate_generator<boost::mt19937, boost::normal_distribution<> > normalRNGType; 
+typedef typename boost::variate_generator<boost::mt19937, boost::uniform_real<> > uniformRNGType;    
+
 class Traxel;
-
 
 class ConservationTracking : public Reasoner {
     public:
@@ -32,8 +64,13 @@ class ConservationTracking : public Reasoner {
                              bool with_appearance = true,
                              bool with_disappearance = true,
                              double transition_parameter = 5,
-                             bool with_constraints = true
-                             )
+                             bool with_constraints = true,
+                             std::size_t number_of_iterations = 1,
+                             std::size_t distribution = 0,
+                             double distribution_param = 1,
+                             double diverse_lambda = 0,
+                             std::size_t m_in_mbest = 1
+                             ) // TODO: add parameter for distribution, parameter of distribution and number of iterations 
         : max_number_objects_(max_number_objects),
           detection_(detection),
           division_(division),
@@ -53,14 +90,24 @@ class ConservationTracking : public Reasoner {
           with_appearance_(with_appearance),
           with_disappearance_(with_disappearance),
           transition_parameter_(transition_parameter),
-          with_constraints_(with_constraints)
-    { };
+          with_constraints_(with_constraints),
+		  number_of_iterations_(number_of_iterations),
+		  distribution_(distribution),
+		  distribution_param_(distribution_param),
+		  diverse_lambda_(diverse_lambda),
+		  m_in_mbest_(m_in_mbest),  
+          isMAP_(true),
+          random_normal_(rng_,boost::normal_distribution<>(0, distribution_param_)),
+		  random_uniform_(rng_,boost::uniform_real<>(0,1))
+
+     {};
     ~ConservationTracking();
 
     virtual void formulate( const HypothesesGraph& );
     virtual void infer();
     virtual void conclude( HypothesesGraph& );
-
+    virtual void perturbedInference( HypothesesGraph&, marray::Marray<ValueType>* defaultOffset = 0);
+    
     double forbidden_cost() const;
     bool with_constraints() const;
 
@@ -86,18 +133,24 @@ class ConservationTracking : public Reasoner {
 
     private:
     // copy and assingment have to be implemented, yet
-    ConservationTracking(const ConservationTracking&) {};
+    
+    ConservationTracking(const ConservationTracking&):
+		random_normal_(rng_,boost::normal_distribution<>(0, distribution_param_)),
+		random_uniform_(rng_,boost::uniform_real<>(0, 1))
+		{};
     ConservationTracking& operator=(const ConservationTracking&) { return *this;};
 
     void reset();
-    void add_constraints( const HypothesesGraph& );
+    void add_constraints(const HypothesesGraph& );
     void add_detection_nodes( const HypothesesGraph& );
     void add_appearance_nodes( const HypothesesGraph& );
     void add_disappearance_nodes( const HypothesesGraph& );
     void add_transition_nodes( const HypothesesGraph& );
     void add_division_nodes(const HypothesesGraph& );
     void add_finite_factors( const HypothesesGraph& );
-
+    void calculateUncertainty( HypothesesGraph&);
+    double generateRandomOffset();
+    
     // helper
     size_t cplex_id(size_t opengm_id, size_t state);
 
@@ -112,8 +165,10 @@ class ConservationTracking : public Reasoner {
     double forbidden_cost_;
     
     shared_ptr<pgm::OpengmModelDeprecated> pgm_;
-    opengm::LPCplex<pgm::OpengmModelDeprecated::ogmGraphicalModel, pgm::OpengmModelDeprecated::ogmAccumulator>* optimizer_;
-
+    //opengm::LPCplex<pgm::OpengmModelDeprecated::ogmGraphicalModel, pgm::OpengmModelDeprecated::ogmAccumulator>* optimizer_;
+	cplex_optimizer* optimizer_;
+	std::vector<pgm::OpengmModelDeprecated::ogmInference::LabelType> solution_;
+	
     std::map<HypothesesGraph::Node, size_t> div_node_map_;
     std::map<HypothesesGraph::Node, size_t> app_node_map_;
     std::map<HypothesesGraph::Node, size_t> dis_node_map_;
@@ -136,8 +191,19 @@ class ConservationTracking : public Reasoner {
     double transition_parameter_;
 
     bool with_constraints_;
-
-    HypothesesGraph tracklet_graph_;
+    
+    std::size_t number_of_iterations_;
+    std::size_t distribution_;
+    double distribution_param_;
+    double diverse_lambda_;
+    std::size_t m_in_mbest_; 
+    bool isMAP_;
+    
+    boost::mt19937 rng_;
+    normalRNGType random_normal_;
+    uniformRNGType random_uniform_;
+    
+	HypothesesGraph tracklet_graph_;
     std::map<HypothesesGraph::Node, std::vector<HypothesesGraph::Node> > tracklet2traxel_node_map_;
 };
 

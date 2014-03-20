@@ -103,7 +103,8 @@ BOOST_AUTO_TEST_CASE( lgf_serialization ) {
   /*HypothesesGraph::Arc a1 =*/ g.addArc(n00, n11);
 
   cout << "without traxels\n";
-  write_lgf(g);
+  std::map<std::string, bool> config; // default value for entries == false!
+  write_lgf(g, std::cout, config);
   cout << "\n";
 
   // now with some optional node/arc maps
@@ -139,16 +140,17 @@ BOOST_AUTO_TEST_CASE( lgf_serialization ) {
   g.get(node_traxel()).set(n11, tr11);
 
   stringstream ss;
-  write_lgf(g, ss, true);
+  config["node_traxel"] = true;
+  write_lgf(g, ss, config);
   cout << "with traxels\n";
   cout << ss.str();
   cout << "\n";
 
   HypothesesGraph g_new;
-  read_lgf(g_new, ss, true);
+  read_lgf(g_new, ss, config);
   cout << "restored from lgf\n";
   stringstream ss2;
-  write_lgf(g_new, ss2, true);
+  write_lgf(g_new, ss2, config);
   cout << ss2.str();
   cout << "\n";
 
@@ -501,5 +503,129 @@ BOOST_AUTO_TEST_CASE( SingleTimestepTraxel_HypothesesGraph_generateTraxelGraph )
 	BOOST_CHECK_EQUAL(num_of_arcs,7);
 }
 
+BOOST_AUTO_TEST_CASE( HypothesesGraph_Map_Serialization )
+{
+    // build example and run conservation tracking
 
-// EOF
+    //  t=1      2      3       4
+    //  o                       o
+    //    |                    |
+    //      ---- o ---- o ----
+    //    |                    |
+    //  o                       o
+    TraxelStore ts;
+    Traxel n11, n12, n21, n31, n41, n42;
+    feature_array com(feature_array::difference_type(3));
+    feature_array divProb(feature_array::difference_type(1));
+    n11.Id = 1; n11.Timestep = 1; com[0] = 0; com[1] = 0; com[2] = 0; divProb[0] = 0.1;
+    n11.features["com"] = com; n11.features["divProb"] = divProb;
+    add(ts,n11);
+    n12.Id = 3; n12.Timestep = 1; com[0] = 2; com[1] = 2; com[2] = 2; divProb[0] = 0.1;
+    n12.features["com"] = com; n12.features["divProb"] = divProb;
+    add(ts,n12);
+    n21.Id = 10; n21.Timestep = 2; com[0] = 1; com[1] = 1; com[2] = 1; divProb[0] = 0.1;
+    n21.features["com"] = com; n21.features["divProb"] = divProb;
+    add(ts,n21);
+    n31.Id = 11; n31.Timestep = 3; com[0] = 1; com[1] = 1; com[2] = 1; divProb[0] = 0.1;
+    n31.features["com"] = com; n31.features["divProb"] = divProb;
+    add(ts,n31);
+    n41.Id = 12; n41.Timestep = 4; com[0] = 0; com[1] = 0; com[2] = 0; divProb[0] = 0.1;
+    n41.features["com"] = com; n41.features["divProb"] = divProb;
+    add(ts,n41);
+    n42.Id = 13; n42.Timestep = 4; com[0] = 0; com[1] = 0; com[2] = 0; divProb[0] = 0.1;
+    n42.features["com"] = com; n42.features["divProb"] = divProb;
+    add(ts,n42);
+
+    SingleTimestepTraxel_HypothesesBuilder::Options builder_opts(1, // max_nearest_neighbors
+                20,
+                true, // forward_backward
+                true, // consider_divisions
+                0.3
+                );
+    SingleTimestepTraxel_HypothesesBuilder hyp_builder(&ts, builder_opts);
+    HypothesesGraph* graph = hyp_builder.build();
+
+    {
+        // set some property map values
+        HypothesesGraph::NodeIt node(*graph); ++node;
+        HypothesesGraph::ArcIt arc(*graph); ++arc;
+
+        graph->add(arc_active_count());
+        property_map<arc_active_count, HypothesesGraph::base_graph>::type& map_arc_active_cout = graph->get(arc_active_count());
+        std::vector<bool> arc_active_vec; arc_active_vec.push_back(false);arc_active_vec.push_back(true);
+        map_arc_active_cout.set(arc, arc_active_vec);
+
+        graph->add(arc_active());
+        property_map<arc_active, HypothesesGraph::base_graph>::type& map_arc_active = graph->get(arc_active());
+        map_arc_active.set(arc, false);
+
+        graph->add(node_active());
+        property_map<node_active, HypothesesGraph::base_graph>::type& map_node_active = graph->get(node_active());
+        map_node_active.set(node, true);
+
+        graph->add(tracklet_intern_dist());
+        property_map<tracklet_intern_dist, HypothesesGraph::base_graph>::type& map_node_tracklet_intern_dist = graph->get(tracklet_intern_dist());
+        std::vector<double> tracklet_dist_vec; tracklet_dist_vec.push_back(7.32);
+        map_node_tracklet_intern_dist.set(node, tracklet_dist_vec);
+    }
+
+    // serialize and deserialize
+    HypothesesGraph graph_loaded;
+    std::stringstream buf;
+    {
+        // now store the results
+        boost::archive::text_oarchive out_archive(buf);
+        out_archive << *graph;
+    }
+
+    {
+        // read again
+        boost::archive::text_iarchive in_archive(buf);
+        in_archive >> graph_loaded;
+    }
+
+    // check which property maps have been read
+    BOOST_CHECK(graph_loaded.has_property(arc_active_count()));
+    BOOST_CHECK(graph_loaded.has_property(arc_active()));
+    BOOST_CHECK(graph_loaded.has_property(node_active()));
+    BOOST_CHECK(graph_loaded.has_property(tracklet_intern_dist()));
+    BOOST_CHECK(graph_loaded.has_property(division_active()) == false);
+
+    // get property maps
+    property_map<arc_active_count, HypothesesGraph::base_graph>::type& map_arc_active_cout = graph_loaded.get(arc_active_count());
+    property_map<node_active, HypothesesGraph::base_graph>::type& map_node_active = graph_loaded.get(node_active());
+    property_map<tracklet_intern_dist, HypothesesGraph::base_graph>::type& map_node_tracklet_intern_dist = graph_loaded.get(tracklet_intern_dist());
+    property_map<arc_active, HypothesesGraph::base_graph>::type& map_arc_active = graph_loaded.get(arc_active());
+
+    // check whether the properties have been read again
+    size_t arc_id = 0;
+    for(HypothesesGraph::ArcIt a(graph_loaded); a!=lemon::INVALID; ++a)
+    {
+        // check transition map stuff
+        if(arc_id == 1)
+        {
+            BOOST_CHECK(map_arc_active_cout[a].size() == 2);
+            BOOST_CHECK(map_arc_active_cout[a][0] == false);
+            BOOST_CHECK(map_arc_active_cout[a][1] == true);
+
+            BOOST_CHECK(map_arc_active[a] == false);
+        }
+
+        arc_id++;
+    }
+
+    size_t node_id = 0;
+    for(HypothesesGraph::NodeIt n(graph_loaded); n!=lemon::INVALID; ++n)
+    {
+        // check transition map stuff
+        if(node_id == 1)
+        {
+            BOOST_CHECK(map_node_active[n] == true);
+
+            BOOST_CHECK(map_node_tracklet_intern_dist[n].size() == 1);
+            BOOST_CHECK(fabs(map_node_tracklet_intern_dist[n][0] - 7.32) < 0.000001);
+        }
+
+        node_id++;
+    }
+}
