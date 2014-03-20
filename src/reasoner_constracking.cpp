@@ -326,12 +326,14 @@ void ConservationTracking::conclude( HypothesesGraph& g) {
             g.get(division_active());
     
 	// add counting properties for analysis of perturbed models
-	g.add(arc_active_count()).add(node_active_count());
+	g.add(arc_active_count()).add(node_active_count()).add(division_active_count());
 	
 	property_map<arc_active_count, HypothesesGraph::base_graph>::type& active_arcs_count =
 		g.get(arc_active_count());
 	property_map<node_active_count, HypothesesGraph::base_graph>::type& active_nodes_count =
 		g.get(node_active_count());
+    property_map<division_active_count, HypothesesGraph::base_graph>::type& active_divisions_count =
+        g.get(division_active_count());
 	
     if (!with_tracklets_) {
         tracklet_graph_.add(tracklet_intern_arc_ids()).add(traxel_arc_id());
@@ -359,6 +361,18 @@ void ConservationTracking::conclude( HypothesesGraph& g) {
 				active_nodes_count.set(it->first,std::vector<long unsigned int>());
 			}
 		}
+		for(std::map<HypothesesGraph::Node, size_t>::const_iterator it = div_node_map_.begin();
+		it != div_node_map_.end(); ++it) {
+			if (with_tracklets_) {
+				std::vector<HypothesesGraph::Node> traxel_nodes = tracklet2traxel_node_map_[it->first];
+				for (std::vector<HypothesesGraph::Node>::const_iterator tr_n_it = traxel_nodes.begin();
+						tr_n_it != traxel_nodes.end(); ++tr_n_it) {
+					active_divisions_count.set(*tr_n_it, std::vector<bool>());
+				}
+			} else {
+				active_divisions_count.set(it->first, std::vector<bool>());
+			}
+		}
 	}
 	
 	
@@ -380,6 +394,25 @@ void ConservationTracking::conclude( HypothesesGraph& g) {
 			std::vector<long unsigned int> anc = active_nodes_count[it->first];		
 			anc.resize(iterStep+1);
 			active_nodes_count.set(it->first,anc);
+		}
+	}
+
+	//initialize division active by "false"
+	for(std::map<HypothesesGraph::Node, size_t>::const_iterator it = div_node_map_.begin();
+		it != div_node_map_.end(); ++it) {
+		if(with_tracklets_) {
+			std::vector<HypothesesGraph::Node> traxel_nodes = tracklet2traxel_node_map_[it->first];
+            for (std::vector<HypothesesGraph::Node>::const_iterator tr_n_it = traxel_nodes.begin();
+                    tr_n_it != traxel_nodes.end(); ++tr_n_it) {
+				HypothesesGraph::Node n = *tr_n_it;
+				std::vector<bool> dac = active_divisions_count[n];
+				dac.resize(iterStep+1);
+				active_divisions_count.set(n,dac);
+			}
+		} else {
+			std::vector<bool> dac = active_divisions_count[it->first];
+			dac.resize(iterStep+1);
+			active_divisions_count.set(it->first, dac);
 		}
 	}
 	
@@ -511,20 +544,23 @@ void ConservationTracking::conclude( HypothesesGraph& g) {
             }
         }
     }
-    // initialize division node map
+    // write division node map
     if (with_divisions_ && isMAP_) {
-        for (std::map<HypothesesGraph::Node, size_t>::const_iterator it = div_node_map_.begin();
-                it != div_node_map_.end(); ++it) {
-            division_nodes.set(it->first, false);
-        }
         for (std::map<HypothesesGraph::Node, size_t>::const_iterator it = div_node_map_.begin();
                 it != div_node_map_.end(); ++it) {
             if (solution_[it->second] >= 1) {
                 if (with_tracklets_) {
                     // set division property for the last node in the tracklet
-                    division_nodes.set(tracklet2traxel_node_map_[it->first].back(), true);
+					HypothesesGraph::Node n = tracklet2traxel_node_map_[it->first].back();
+                    division_nodes.set(n, true);
+					std::vector<bool> dac = active_divisions_count[n];
+					dac[iterStep]=true;
+					active_divisions_count.set(n, dac);
                 } else {
                     division_nodes.set(it->first, true);
+					std::vector<bool> dac = active_divisions_count[it->first];
+					dac[iterStep]=true;
+					active_divisions_count.set(it->first, dac);
                 }
             }
         }

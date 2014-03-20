@@ -129,6 +129,17 @@ Value& IterableEditableValueMap<Graph, Key, Value>::get_value(const Key& key) {
   };
   template <typename Graph>
     const std::string property_map<arc_active_count,Graph>::name = "arc_active_count";	
+
+  // division_active_count
+  struct division_active_count {};
+  template <typename Graph>
+    struct property_map<division_active_count, Graph> {
+    typedef lemon::IterableValueMap< Graph, typename Graph::Node, std::vector<bool> > type;
+    static const std::string name;
+  };
+  template <typename Graph>
+    const std::string property_map<division_active_count,Graph>::name = "division_active_count";
+
 	
   // node_active
   struct node_active {};
