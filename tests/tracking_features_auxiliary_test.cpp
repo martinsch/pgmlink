@@ -6,8 +6,7 @@
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include "pgmlink/track_features_auxiliary.h"
-#include "pgmlink/tracks.h"
+#include "pgmlink/tracking_features.h"
 #include "pgmlink/classifier_auxiliary.h"
 
 using namespace pgmlink;

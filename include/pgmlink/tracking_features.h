@@ -17,7 +17,7 @@
 #include "pgmlink/hypotheses.h"
 #include "pgmlink/event.h"
 #include "pgmlink/classifier_auxiliary.h"
-#include "pgmlink/track_features_auxiliary.h"
+#include "pgmlink/tracking_features_auxiliary.h"
 
 // boost
 #include <boost/shared_ptr.hpp>

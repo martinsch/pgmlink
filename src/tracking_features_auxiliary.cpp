@@ -1,6 +1,6 @@
 #include <cmath>
 
-#include "pgmlink/track_features_auxiliary.h"
+#include "pgmlink/tracking_features_auxiliary.h"
 
 namespace pgmlink{
 //

@@ -6,7 +6,7 @@
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 
-#include "pgmlink/tracks.h"
+#include "pgmlink/tracking_features.h"
 
 using namespace pgmlink;
 using namespace boost;
