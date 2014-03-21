@@ -325,7 +325,7 @@ TrackFeatureExtractor::TrackFeatureExtractor(
 }
 
 feature_arrays TrackFeatureExtractor::extract(const Track& track) const {
-  assert(track.get_length - order_ > 0);
+  assert(track.get_length() - order_ > 0);
 
   feature_arrays ret;
   Traxelvector::const_iterator traxel_it;
