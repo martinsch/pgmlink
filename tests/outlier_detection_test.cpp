@@ -79,3 +79,47 @@ BOOST_AUTO_TEST_CASE( Outlier_calculate ) {
 }
 */
 
+BOOST_AUTO_TEST_CASE( OutlierCount_test ) {
+  // Set up a track with outlier in feature "feature_x"
+  feature_type x_array1[7][2] = {
+    {3., 3.},
+    {4., 3.},
+    {3., 4.},
+    {4., 4.},
+    {5., 4.},
+    {5., 5.},
+    {9., 8.}
+  };
+  Track track1;
+  for(size_t i = 0; i < 7; i++) {
+    feature_array y(x_array1[i], x_array1[i]+2);
+    Traxel traxel;
+    traxel.features["feature_x"] = y;
+    track1.traxels_.push_back(traxel);
+  }
+
+  feature_type x_array2[7][2] = {
+    {3., 3.},
+    {4., 3.},
+    {3., 4.},
+    {4., 4.},
+    {5., 4.},
+    {5., 5.},
+    {4., 5.}
+  };
+  Track track2;
+  for(size_t i = 0; i < 7; i++) {
+    feature_array y(x_array2[i], x_array2[i]+2);
+    Traxel traxel;
+    traxel.features["feature_x"] = y;
+    track2.traxels_.push_back(traxel);
+  }
+  Tracking tracking;
+  tracking.tracks_.push_back(track1);
+  tracking.tracks_.push_back(track2);
+
+  OutlierCount outliercount("feature_x");
+  BOOST_CHECK_EQUAL(outliercount(track1), 1);
+  BOOST_CHECK_EQUAL(outliercount(track2), 0);
+  BOOST_CHECK_EQUAL(outliercount(tracking), 1);
+}
