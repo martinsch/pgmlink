@@ -165,6 +165,23 @@ class TrackingFeatureExtractor {
   TrackFeatureOrder track_feature_order_;
 };
 
+////
+//// Class OutlierCount
+////
+class OutlierCount {
+ public:
+  OutlierCount(const std::string& feature_name = "com");
+  ~OutlierCount() {};
+  size_t operator()(const Tracking& tracking) const;
+  size_t operator()(const Track& track) const;
+ protected:
+  boost::shared_ptr<FeatureCalculator> feature_identity_;
+  boost::shared_ptr<FeatureAggregator> outlier_count_aggregator_;
+  boost::shared_ptr<FeatureAggregator> sum_aggregator_;
+  boost::shared_ptr<TrackFeatureExtractor> track_outlier_count_;
+  boost::shared_ptr<TrackingFeatureExtractor> tracking_outlier_count_;
+}; // Class OutlierCount
+
 } // namespace pgmlink
 
 #endif // PGMLINK_TRACKS_H

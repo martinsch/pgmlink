@@ -414,6 +414,30 @@ feature_type TrackingFeatureExtractor::extract(const Tracking& tracking) const {
   return ret;
 }
   
-
+////
+//// Class OutlierCount
+////
+OutlierCount::OutlierCount(const std::string& feature_name)
+: feature_identity_(new IdentityCalculator()),
+  outlier_count_aggregator_(new OutlierCountAggregator()),
+  sum_aggregator_(new SumAggregator()),
+  track_outlier_count_(
+    new TrackFeatureExtractor(
+      feature_identity_,
+      outlier_count_aggregator_,
+      feature_name,
+      SINGLE
+    )
+  ),
+  tracking_outlier_count_(
+    new TrackingFeatureExtractor(track_outlier_count_, sum_aggregator_, SCALAR)
+  ) {
+}
+size_t OutlierCount::operator()(const Tracking& tracking) const {
+  return floor(tracking_outlier_count_->extract(tracking) + 0.5);
+}
+size_t OutlierCount::operator()(const Track& track) const {
+  return floor(track_outlier_count_->extract_scalar(track) + 0.5);
+}
 
 } // namespace pgmlink
