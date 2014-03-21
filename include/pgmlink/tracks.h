@@ -14,6 +14,7 @@
 
 // pgmlink
 #include "pgmlink/traxels.h"
+#include "pgmlink/hypotheses.h"
 #include "pgmlink/event.h"
 #include "pgmlink/classifier_auxiliary.h"
 #include "pgmlink/track_features_auxiliary.h"
@@ -98,6 +99,7 @@ class Tracking {
  public:
   typedef std::vector<std::vector<Event> > Events;
   Tracking();
+  Tracking(const HypothesesGraph& graph, const size_t index);
   Tracking(const Events& events, const TraxelStore& traxelstore);
   void build_tracks(const Events& events, const TraxelStore& traxelstore);
 
@@ -107,6 +109,7 @@ class Tracking {
   void apply_event(const Event& event, const size_t timestep);
   void apply_events(const std::vector<Event>& events, const size_t timestep);
   size_t start_new_track(const size_t time_start, const size_t parent_id=0);
+  size_t index_;
   Events events_;
   TraxelStore traxelstore_;
   std::map<size_t, std::map<size_t, size_t> > in_track_;
