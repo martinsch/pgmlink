@@ -21,7 +21,7 @@ namespace opengm {
 
 template<class LLM>
 class StructSvmDlib
-  : public dlib::structural_svm_problem<dlib::matrix<typename LLM::ValueType> > {
+  : public dlib::structural_svm_problem<dlib::matrix<typename LLM::ValueType,0,1> > {
 public:
   typedef LLM LoglinearModelType;
 
@@ -41,7 +41,7 @@ public:
   ///
   /// interface required by dlib
   ///
-  typedef dlib::matrix<typename LLM::ValueType> matrix_type_dlib;
+  typedef dlib::matrix<typename LLM::ValueType,0,1> matrix_type_dlib;
   typedef typename matrix_type_dlib::type scalar_type_dlib;
   typedef matrix_type_dlib feature_vector_type_dlib;
 
@@ -71,7 +71,7 @@ private:
 template<class LLM>
 void StructSvmDlib<LLM>::train(std::vector<typename LoglinearModelType::ValueType>& learned_weights) {
   learned_weights.clear();
-  dlib::matrix<typename LLM::ValueType> weights;
+  dlib::matrix<typename LLM::ValueType,0,1> weights;
   dlib::oca solver;
   solver.set_subproblem_epsilon(0.0000001);
   //solver.set_subproblem_max_iterations(100);
@@ -81,10 +81,10 @@ void StructSvmDlib<LLM>::train(std::vector<typename LoglinearModelType::ValueTyp
 
   this->be_verbose();
   solver( *this, weights);
-  //assert(weights.size() == 2);
+  assert(weights.size() == 2);
   assert(weights.nc() == 1);
   for(long i = 0; i< weights.nr(); ++i) {
-    learned_weights.push_back(weights(0,i));
+    learned_weights.push_back(weights(i,0));
   }
 }
 
@@ -146,8 +146,8 @@ void StructSvmDlib<LLM>::separation_oracle(const long idx,
   }
   std::cout << "current[0]: " << optimal[0] << " label[0]: " << labels_[idx][0]  << "\n";
   std::cout << "current[1]: " << optimal[1] << " label[1]: " << labels_[idx][1]  << "\n";
-  std::cout << "current[2]: " << optimal[2] << " label[2]: " << labels_[idx][2]  << "\n";
-  std::cout << "current[3]: " << optimal[3] << " label[3]: " << labels_[idx][3]  << "\n";
+  //std::cout << "current[2]: " << optimal[2] << " label[2]: " << labels_[idx][2]  << "\n";
+  //std::cout << "current[3]: " << optimal[3] << " label[3]: " << labels_[idx][3]  << "\n";
   std::cout << "etc. etc.\n"; 
 
   std::vector<typename LLM::ValueType> feats(samples_and_loss_[idx].numberOfWeights());
