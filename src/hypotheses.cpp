@@ -215,7 +215,7 @@ namespace pgmlink {
 	      LOG(logDEBUG3) << e;
               } */
 
-	    LOG(logDEBUG3) << "Number of detected objects: " << (*node_number_of_objects)[node_at];
+	    //LOG(logDEBUG3) << "Number of detected objects: " << (*node_number_of_objects)[node_at];
 
 //	    if(with_mergers && (*node_number_of_objects)[node_at] > 1) {
 //	    	prev_mergers.clear();

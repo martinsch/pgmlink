@@ -81,7 +81,7 @@ void StructSvmDlib<LLM>::train(std::vector<typename LoglinearModelType::ValueTyp
 
   this->be_verbose();
   solver( *this, weights);
-  assert(weights.size() == 2);
+  //assert(weights.size() == 2);
   assert(weights.nc() == 1);
   for(long i = 0; i< weights.nr(); ++i) {
     learned_weights.push_back(weights(i,0));
@@ -144,11 +144,9 @@ void StructSvmDlib<LLM>::separation_oracle(const long idx,
   if(status != opengm::NORMAL) {
     throw RuntimeError("GraphicalModel::infer(): solution extraction terminated unnormally");
   }
-  std::cout << "current[0]: " << optimal[0] << " label[0]: " << labels_[idx][0]  << "\n";
-  std::cout << "current[1]: " << optimal[1] << " label[1]: " << labels_[idx][1]  << "\n";
-  //std::cout << "current[2]: " << optimal[2] << " label[2]: " << labels_[idx][2]  << "\n";
-  //std::cout << "current[3]: " << optimal[3] << " label[3]: " << labels_[idx][3]  << "\n";
-  std::cout << "etc. etc.\n"; 
+  for(int i = 0; i < optimal.size(); i++){
+    std::cout << "current["<<i<<"]: " << optimal[i] << " label["<< i <<"]: " << labels_[idx][i]  << "\n";
+  }
 
   std::vector<typename LLM::ValueType> feats(samples_and_loss_[idx].numberOfWeights());
   samples_and_loss_[idx].weightedFeatureSums( optimal, feats );

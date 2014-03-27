@@ -81,9 +81,13 @@ BOOST_AUTO_TEST_CASE( learning_from_autolabels ) {
 
   pgm::chaingraph::ModelTrainer trainer;
   weights = trainer.train(graph.get(), graph.get()+1, &node_labels, &arc_labels);
+
+  for(int i=0; i < weights.size(); i++) 
+      cout << "weight["<<i<<"]: " << weights[i]  << "\n";
+      
 }
 
-
+      
 
 // Local Variables:
 // mode: c++
