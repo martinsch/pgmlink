@@ -24,7 +24,7 @@ class OutlierCalculator {
 
 class MVNOutlierCalculator : public OutlierCalculator {
   public:
-    MVNOutlierCalculator() {};
+    MVNOutlierCalculator(const feature_type sigma_threshold = 3.0);
     ~MVNOutlierCalculator() {};
     const std::vector<size_t>& calculate(const feature_arrays& features);
     const feature_array& get_measures() const;
@@ -35,7 +35,7 @@ class MVNOutlierCalculator : public OutlierCalculator {
 
   protected:
     static const std::string name_;
-    static const feature_type sigma_threshold_;
+    feature_type sigma_threshold_;
     feature_array measures_;
     std::vector<size_t> outlier_ids_;
     arma::Col<feature_type> mean_;

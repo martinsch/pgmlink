@@ -47,7 +47,11 @@ const feature_array& OutlierCalculator::get_measures() const {
 //
 const std::string MVNOutlierCalculator::name_ = "MVNOutlierCalculator";
 
-const feature_type MVNOutlierCalculator::sigma_threshold_ = 3.0;
+MVNOutlierCalculator::MVNOutlierCalculator(
+  const feature_type sigma_threshold
+) {
+  MVNOutlierCalculator::sigma_threshold_ = sigma_threshold;
+}
 
 const std::string& MVNOutlierCalculator::name() const {
   return name_;
