@@ -83,24 +83,28 @@ const std::vector<size_t>& MVNOutlierCalculator::calculate(
     // Get covariance and inverse covariance matrix
     arma::Mat<feature_type> features_mat(to_arma_matrix(features));
     arma::Mat<feature_type> features_mat_t(trans(features_mat));
-    covariance_ = arma::cov(features_mat_t);
-    inv_covariance_ = arma::inv_sympd(covariance_);
+    try {
+      covariance_ = arma::cov(features_mat_t);
+      inv_covariance_ = arma::inv_sympd(covariance_);
   
-    // Get mean values
-    mean_ = arma::mean(features_mat, 1);
+      // Get mean values
+      mean_ = arma::mean(features_mat, 1);
   
-    // Calculate the outliers
-    outlier_ids_.clear();
-    measures_.clear();
-    feature_arrays::const_iterator features_it = features.begin();
-    for(size_t id=0; features_it != features.end(); features_it++, id++) {
-      arma::Col<feature_type> diff_vector(*features_it);
-      diff_vector -= mean_;
-      feature_type norm_residual = arma::dot(diff_vector, inv_covariance_*diff_vector);
-      measures_.push_back(norm_residual);
-      if (norm_residual >= sigma_threshold_) {
-        outlier_ids_.push_back(id);
+      // Calculate the outliers
+      outlier_ids_.clear();
+      measures_.clear();
+      feature_arrays::const_iterator features_it = features.begin();
+      for(size_t id=0; features_it != features.end(); features_it++, id++) {
+        arma::Col<feature_type> diff_vector(*features_it);
+        diff_vector -= mean_;
+        feature_type norm_residual = arma::dot(diff_vector, inv_covariance_*diff_vector);
+        measures_.push_back(norm_residual);
+        if (norm_residual >= sigma_threshold_) {
+          outlier_ids_.push_back(id);
+        }
       }
+    } catch (std::exception& exception) {
+      std::cout << "Too few data to calculate outliers" << std::endl;
     }
   } // else
   return outlier_ids_;
