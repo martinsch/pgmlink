@@ -440,4 +440,30 @@ size_t OutlierCount::operator()(const Track& track) const {
   return floor(track_outlier_count_->extract_scalar(track) + 0.5);
 }
 
+////
+//// Class DiffOutlierCount
+////
+DiffOutlierCount::DiffOutlierCount(const std::string& feature_name)
+: feature_difference_(new VectorDifferenceCalculator()),
+  outlier_count_aggregator_(new OutlierCountAggregator()),
+  sum_aggregator_(new SumAggregator()),
+  track_outlier_count_(
+    new TrackFeatureExtractor(
+      feature_difference_,
+      outlier_count_aggregator_,
+      feature_name,
+      PAIRWISE
+    )
+  ),
+  tracking_outlier_count_(
+    new TrackingFeatureExtractor(track_outlier_count_, sum_aggregator_, SCALAR)
+  ) {
+}
+size_t DiffOutlierCount::operator()(const Tracking& tracking) const {
+  return floor(tracking_outlier_count_->extract(tracking) + 0.5);
+}
+size_t DiffOutlierCount::operator()(const Track& track) const {
+  return floor(track_outlier_count_->extract_scalar(track) + 0.5);
+}
+
 } // namespace pgmlink
