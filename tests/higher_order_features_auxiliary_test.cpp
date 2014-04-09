@@ -242,6 +242,7 @@ BOOST_AUTO_TEST_CASE( OutlierBadnessAggregator_calculate ) {
   // Create outlier detection
   LOG(logINFO) << "  Set up the outlier badness aggregator";
   OutlierBadnessAggregator outlierbadness;
-  LOG(logINFO) << "  Calculate the outlier badness:";
-  LOG(logINFO) << "  " << static_cast<feature_type>(outlierbadness(x));
+  LOG(logINFO) << "  Calculate the outlier badness";
+  feature_type value = outlierbadness(x);
+  BOOST_CHECK( value > 3 );
 }
