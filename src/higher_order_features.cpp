@@ -48,6 +48,7 @@ Track* Track::get_parent() const {
 
 void Track::set_child(Track* const child) {
   if (child != NULL) {
+    LOG(logDEBUG4) << "Set child in track " << id_;
     children_.push_back(child);
   }
 }
@@ -150,7 +151,8 @@ Tracking::Tracking(const HypothesesGraph& graph, const size_t index)
     assert(graph.has_property(node_traxel()));
   }
   // make a map from node to track_id 
-  std::map<HypothesesGraph::Node, Track*> in_track;
+  std::map<int, size_t> in_track;
+  std::map<size_t, int> has_parent;
 
   // get the property maps
   node_active_map_type& node_active_map = graph.get(node_active_count());
@@ -196,15 +198,26 @@ Tracking::Tracking(const HypothesesGraph& graph, const size_t index)
         HypothesesGraph::Node last_node;
         size_t track_id = tracks_.size();
         tracks_.push_back(track_from_start_node(graph, n_it, index, last_node));
-        in_track[last_node] = &(tracks_.back());
+        in_track[graph.id(last_node)] = track_id;
+        has_parent[track_id] = graph.id(parent);
         tracks_.back().set_id(track_id);
-        // set the references to the parent track
-        if (parent != lemon::INVALID) {
-          assert( in_track.find(parent) != in_track.end() );
-          Track* parent_track = in_track[parent];
-          tracks_.back().set_parent(parent_track);
-          parent_track->set_child(&(tracks_.back()));
-        }
+      }
+    }
+  }
+  // iterate over all tracks to set the connections
+  for (
+    Trackvector::iterator t_it = tracks_.begin();
+    t_it != tracks_.end();
+    t_it++
+  ) {
+    int parent_id = has_parent[t_it->get_id()];
+    if (parent_id != -1) {
+      if (in_track.find(parent_id) == in_track.end()) {
+        LOG(logDEBUG) << "In constructor of tracking: inconsistent or unsupported graph";
+      } else {
+        Track* parent_track = &(tracks_[in_track[parent_id]]);
+        t_it->set_parent(parent_track);
+        parent_track->set_child(&(*t_it));
       }
     }
   }
