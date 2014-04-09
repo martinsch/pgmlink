@@ -39,6 +39,7 @@ class FeatureAggregator {
 class TrackFeaturesIdentity : public TrackFeatureExtractor {
  public:
   TrackFeaturesIdentity(const std::vector<std::string>& feature_names);
+  TrackFeaturesIdentity(const std::string& feature_name);
   virtual ~TrackFeaturesIdentity() {};
   virtual const std::string& name() const;
   virtual const feature_arrays operator()(const Track& track) const;
@@ -50,6 +51,7 @@ class TrackFeaturesIdentity : public TrackFeatureExtractor {
 class TrackFeaturesDiff : public TrackFeatureExtractor {
  public:
   TrackFeaturesDiff(const std::vector<std::string>& feature_names);
+  TrackFeaturesDiff(const std::string& feature_name);
   virtual ~TrackFeaturesDiff() {};
   virtual const std::string& name() const;
   virtual const feature_arrays operator()(const Track& track) const;
@@ -61,6 +63,7 @@ class TrackFeaturesDiff : public TrackFeatureExtractor {
 class TrackFeaturesCurvature : public TrackFeatureExtractor {
  public:
   TrackFeaturesCurvature(const std::vector<std::string>& feature_names);
+  TrackFeaturesCurvature(const std::string& feature_name);
   virtual ~TrackFeaturesCurvature() {};
   virtual const std::string& name() const;
   virtual const feature_arrays operator()(const Track& track) const;

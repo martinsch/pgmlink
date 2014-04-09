@@ -14,6 +14,13 @@ TrackFeaturesIdentity::TrackFeaturesIdentity(
 ) : feature_names_(feature_names) {
 }
 
+TrackFeaturesIdentity::TrackFeaturesIdentity(
+  const std::string& feature_name
+) {
+  feature_names_.resize(1);
+  feature_names_[0] = feature_name;
+}
+
 const std::string& TrackFeaturesIdentity::name() const {
   return name_;
 }
@@ -62,6 +69,13 @@ const std::string TrackFeaturesDiff::name_ = "TrackFeaturesDiff";
 TrackFeaturesDiff::TrackFeaturesDiff(
   const std::vector<std::string>& feature_names
 ) : feature_names_(feature_names) {
+}
+
+TrackFeaturesDiff::TrackFeaturesDiff(
+  const std::string& feature_name
+) {
+  feature_names_.resize(1);
+  feature_names_[0] = feature_name;
 }
 
 const std::string& TrackFeaturesDiff::name() const {
