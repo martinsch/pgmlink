@@ -236,6 +236,7 @@ feature_type OutlierBadnessAggregator::operator()(
     f_it++
   ) {
     ret += *f_it;
+    LOG(logDEBUG4) << "In OutlierBadnessAggregator. Summed up to :" << ret;
   }
   return ret;
 }
@@ -325,7 +326,12 @@ const std::vector<size_t>& MVNOutlierCalculator::calculate(
     try {
       covariance_ = arma::cov(features_mat_t);
       inv_covariance_ = arma::inv_sympd(covariance_);
-  
+
+      LOG(logDEBUG4) << "In MVNOutlierCalculator: covariance matrix";
+      LOG(logDEBUG4) << covariance_;
+      LOG(logDEBUG4) << "In MVNOutlierCalculator: inverse covariance matrix";
+      LOG(logDEBUG4) << inv_covariance_;
+
       // Get mean values
       mean_ = arma::mean(features_mat, 1);
   
@@ -343,7 +349,7 @@ const std::vector<size_t>& MVNOutlierCalculator::calculate(
         }
       }
     } catch (std::exception& exception) {
-      std::cerr << "Too few data to calculate outliers" << std::endl;
+      LOG(logDEBUG) << "In MVNOutlierCalculator: Too few data to calculate outliers" << std::endl;
     }
   } // else
   return outlier_ids_;
