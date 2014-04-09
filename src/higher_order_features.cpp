@@ -147,7 +147,7 @@ Tracking::Tracking(const HypothesesGraph& graph, const size_t index)
   assert(graph.has_property(node_active_count()));
   assert(graph.has_property(arc_active_count()));
   if (not graph.has_property(node_tracklet())) {
-    assert(graph.has_property(node_traxel));
+    assert(graph.has_property(node_traxel()));
   }
   // make a map from node to track_id 
   std::map<HypothesesGraph::Node, Track*> in_track;
@@ -200,7 +200,7 @@ Tracking::Tracking(const HypothesesGraph& graph, const size_t index)
         tracks_.back().set_id(track_id);
         // set the references to the parent track
         if (parent != lemon::INVALID) {
-          assert( in_track_id.find(parent) != in_track_id.end() );
+          assert( in_track.find(parent) != in_track.end() );
           Track* parent_track = in_track[parent];
           tracks_.back().set_parent(parent_track);
           parent_track->set_child(&(tracks_.back()));
