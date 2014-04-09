@@ -25,9 +25,9 @@ const std::string& TrackFeaturesIdentity::name() const {
   return name_;
 }
 
-const feature_arrays TrackFeaturesIdentity::operator()(
+feature_arrays TrackFeaturesIdentity::operator()(
   const Track& track
-) const {
+) {
   feature_arrays feature_matrix;
   // iterate over all traxel
   for(
@@ -82,9 +82,9 @@ const std::string& TrackFeaturesDiff::name() const {
   return name_;
 }
 
-const feature_arrays TrackFeaturesDiff::operator()(
+feature_arrays TrackFeaturesDiff::operator()(
   const Track& track
-) const {
+) {
   feature_arrays feature_matrix;
   // iterate over all traxel
   assert(track.traxels_.size() >= 2);
@@ -148,9 +148,9 @@ const std::string& TrackFeaturesCurvature::name() const {
   return name_;
 }
 
-const feature_arrays TrackFeaturesCurvature::operator()(
+feature_arrays TrackFeaturesCurvature::operator()(
   const Track& track
-) const {
+) {
   feature_arrays feature_matrix;
   // iterate over all traxel
   assert(track.traxels_.size() >= 3);
@@ -202,45 +202,33 @@ const feature_arrays TrackFeaturesCurvature::operator()(
 ////
 //// class OutlierCountAggregator
 ////
-template<typename OutlierCalculator_T>
-const std::string OutlierCountAggregator<
-  OutlierCalculator_T
->::name_ = "OutlierCountAggregator";
+const std::string OutlierCountAggregator::name_ = "OutlierCountAggregator";
 
-template<typename OutlierCalculator_T>
-const std::string& OutlierCountAggregator<OutlierCalculator_T>::name() const {
+const std::string& OutlierCountAggregator::name() const {
   return name_;
 }
 
-
-template<typename OutlierCalculator_T>
-feature_type OutlierCountAggregator<OutlierCalculator_T>::operator()(
+feature_type OutlierCountAggregator::operator()(
   const feature_arrays& features
-) const {
-  std::vector<size_t> outlier_ids = outlier_calculator_.calculate(features);
+) {
+  std::vector<size_t> outlier_ids = outlier_calculator_->calculate(features);
   return static_cast<feature_type>(outlier_ids.size());
 }
 
 ////
 //// class OutlierBadnessAggregator
 ////
-template<typename OutlierCalculator_T>
-const std::string OutlierBadnessAggregator<
-  OutlierCalculator_T
->::name_ = "OutlierBadnessAggregator";
+const std::string OutlierBadnessAggregator::name_ = "OutlierBadnessAggregator";
 
-template<typename OutlierCalculator_T>
-const std::string& OutlierBadnessAggregator<OutlierCalculator_T>::name() const {
+const std::string& OutlierBadnessAggregator::name() const {
   return name_;
 }
 
-
-template<typename OutlierCalculator_T>
-feature_type OutlierBadnessAggregator<OutlierCalculator_T>::operator()(
+feature_type OutlierBadnessAggregator::operator()(
   const feature_arrays& features
-) const {
-  outlier_calculator_.calculate(features);
-  feature_array outlier_badness = outlier_calculator_.get_measures();
+) {
+  outlier_calculator_->calculate(features);
+  feature_array outlier_badness = outlier_calculator_->get_measures();
   feature_type ret = 0.0;
   for (
     feature_array::const_iterator f_it = outlier_badness.begin();
@@ -293,53 +281,35 @@ const feature_array& OutlierCalculator::get_measures() const {
 }
 
 ////
-//// Class MVNOutlierCalculator
+//// class MVNOutlierCalculator
 ////
-template<int sigma_threshold>
-const std::string MVNOutlierCalculator<
-  sigma_threshold
->::name_ = "MVNOutlierCalculator";
+const std::string MVNOutlierCalculator::name_ = "MVNOutlierCalculator";
 
-template<int sigma_threshold>
-MVNOutlierCalculator<sigma_threshold>::MVNOutlierCalculator() {
-  sigma_threshold_ = static_cast<feature_type>(sigma_threshold) / 1000.0;
+MVNOutlierCalculator::MVNOutlierCalculator(const feature_type sigma_threshold) {
+  sigma_threshold_ = sigma_threshold;
 }
 
-template<int sigma_threshold>
-const std::string& MVNOutlierCalculator<sigma_threshold>::name() const {
+const std::string& MVNOutlierCalculator::name() const {
   return name_;
 }
 
-template<int sigma_threshold>
-const feature_array& MVNOutlierCalculator<
-  sigma_threshold
->::get_measures() const {
+const feature_array& MVNOutlierCalculator::get_measures() const {
   return measures_;
 }
 
-template<int sigma_threshold>
-const arma::Mat<feature_type>& MVNOutlierCalculator<
-  sigma_threshold
->::get_covariance() const {
+const arma::Mat<feature_type>& MVNOutlierCalculator::get_covariance() const {
   return covariance_;
 }
 
-template<int sigma_threshold>
-const arma::Mat<feature_type>& MVNOutlierCalculator<
-  sigma_threshold
->::get_inverse_covariance() const {
+const arma::Mat<feature_type>& MVNOutlierCalculator::get_inverse_covariance() const {
   return inv_covariance_;
 }
 
-template<int sigma_threshold>
-const arma::Col<feature_type>& MVNOutlierCalculator<
-  sigma_threshold
->::get_mean() const {
+const arma::Col<feature_type>& MVNOutlierCalculator::get_mean() const {
   return mean_;
 }
 
-template<int sigma_threshold>
-const std::vector<size_t>& MVNOutlierCalculator<sigma_threshold>::calculate(
+const std::vector<size_t>& MVNOutlierCalculator::calculate(
   const feature_arrays& features
 ) {
   if (features.size() <= features[0].size()) {

@@ -19,7 +19,7 @@ class TrackFeatureExtractor {
   TrackFeatureExtractor() {};
   virtual ~TrackFeatureExtractor() {};
   virtual const std::string& name() const = 0;
-  virtual const feature_arrays operator()(const Track& track) const = 0;
+  virtual feature_arrays operator()(const Track& track) = 0;
 };
 
 ////
@@ -30,9 +30,7 @@ class FeatureAggregator {
   FeatureAggregator() {};
   virtual ~FeatureAggregator() {};
   virtual const std::string& name() const = 0;
-  virtual feature_type operator()(
-    const feature_arrays& features
-  ) const = 0;
+  virtual feature_type operator()(const feature_arrays& features) = 0;
 };
 
 /*=============================================================================
@@ -47,7 +45,7 @@ class TrackFeaturesIdentity : public TrackFeatureExtractor {
   TrackFeaturesIdentity(const std::string& feature_name);
   virtual ~TrackFeaturesIdentity() {};
   virtual const std::string& name() const;
-  virtual const feature_arrays operator()(const Track& track) const;
+  virtual feature_arrays operator()(const Track& track);
  protected:
   static const std::string name_;
   std::vector<std::string> feature_names_;
@@ -62,7 +60,7 @@ class TrackFeaturesDiff : public TrackFeatureExtractor {
   TrackFeaturesDiff(const std::string& feature_name);
   virtual ~TrackFeaturesDiff() {};
   virtual const std::string& name() const;
-  virtual const feature_arrays operator()(const Track& track) const;
+  virtual feature_arrays operator()(const Track& track);
  protected:
   static const std::string name_;
   std::vector<std::string> feature_names_;
@@ -77,44 +75,10 @@ class TrackFeaturesCurvature : public TrackFeatureExtractor {
   TrackFeaturesCurvature(const std::string& feature_name);
   virtual ~TrackFeaturesCurvature() {};
   virtual const std::string& name() const;
-  virtual const feature_arrays operator()(const Track& track) const;
+  virtual feature_arrays operator()(const Track& track);
  protected:
   static const std::string name_;
   std::vector<std::string> feature_names_;
-};
-
-////
-//// class OutlierCountAggregator
-////
-template<typename OutlierCalculator_T>
-class OutlierCountAggregator : public FeatureAggregator {
- public:
-  OutlierCountAggregator() : outlier_calculator_() {};
-  virtual ~OutlierCountAggregator() {};
-  virtual const std::string& name() const;
-  virtual feature_type operator()(
-    const feature_arrays& features
-  ) const;
- protected:
-  static const std::string name_;
-  OutlierCalculator_T outlier_calculator_;
-};
-
-////
-//// class OutlierBadnessAggregator
-////
-template<typename OutlierCalculator_T>
-class OutlierBadnessAggregator : public FeatureAggregator {
- public:
-  OutlierBadnessAggregator() : outlier_calculator_() {};
-  virtual ~OutlierBadnessAggregator() {};
-  virtual const std::string& name() const;
-  virtual feature_type operator()(
-    const feature_arrays& features
-  ) const;
- protected:
-  static const std::string name_;
-  OutlierCalculator_T outlier_calculator_;
 };
 
 ////
@@ -139,10 +103,9 @@ class OutlierCalculator {
 ////
 /* the template parameter "sigma_threshold" will be scaled with factor 1/1000.
 A sigma_threshold of 3000 corresponds to an actual threshold of 3.000 */
-template<int sigma_threshold = 3000>
 class MVNOutlierCalculator : public OutlierCalculator {
   public:
-    MVNOutlierCalculator();
+    MVNOutlierCalculator(const feature_type sigma_threshold = 3.0);
     ~MVNOutlierCalculator() {};
     const std::vector<size_t>& calculate(const feature_arrays& features);
     const feature_array& get_measures() const;
@@ -159,6 +122,43 @@ class MVNOutlierCalculator : public OutlierCalculator {
     arma::Mat<feature_type> covariance_;
     arma::Mat<feature_type> inv_covariance_;
 }; // class MVNOutlierCalculator
+
+////
+//// class OutlierCountAggregator
+////
+class OutlierCountAggregator : public FeatureAggregator {
+ public:
+  OutlierCountAggregator(
+    OutlierCalculator* outlier_calculator = new MVNOutlierCalculator()
+  ) : outlier_calculator_(outlier_calculator) {};
+  virtual ~OutlierCountAggregator() {};
+  virtual const std::string& name() const;
+  virtual feature_type operator()(
+    const feature_arrays& features
+  );
+ protected:
+  static const std::string name_;
+  OutlierCalculator* outlier_calculator_;
+};
+
+////
+//// class OutlierBadnessAggregator
+////
+class OutlierBadnessAggregator : public FeatureAggregator {
+ public:
+  OutlierBadnessAggregator(
+    OutlierCalculator* outlier_calculator = new MVNOutlierCalculator()
+  ) : outlier_calculator_(outlier_calculator) {};
+  virtual ~OutlierBadnessAggregator() {};
+  virtual const std::string& name() const;
+  virtual feature_type operator()(
+    const feature_arrays& features
+  );
+ protected:
+  static const std::string name_;
+  OutlierCalculator* outlier_calculator_;
+};
+
 
 } // namespace pgmlink
 
