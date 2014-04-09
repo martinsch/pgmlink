@@ -47,25 +47,26 @@ class Track {
     const size_t id,
     const size_t time_start,
     const Traxelvector& traxels,
-    const size_t parent_id = 0,
-    const size_t left_child_id = 0,
-    const size_t right_child_id = 0
+    Track* const parent = NULL,
+    Track* const left_child = NULL,
+    Track* const right_child = NULL
   );
   void set_id(const size_t id);
   void set_time_start(const size_t time_start);
-  void set_parent_id(const size_t parent_id);
-  void set_child_ids(const size_t left, const size_t right);
+  void set_parent(Track* const parent);
+  void set_child(Track* const child);
+  void set_children(Track* const left_child, Track* const right_child);
   size_t get_id() const;
   size_t get_time_start() const;
-  size_t get_parent_id() const;
-  const std::vector<size_t>& get_child_ids() const;
+  Track* get_parent() const;
+  const std::vector<Track*>& get_children() const;
   size_t get_length() const;
 
   size_t id_;
   size_t time_start_;
   Traxelvector traxels_;
-  size_t parent_id_;
-  std::vector<size_t> child_ids_;
+  Track* parent_;
+  std::vector<Track*> children_;
  private:
   friend class boost::serialization::access;
   template<class Archive>
@@ -74,8 +75,6 @@ class Track {
     archive & id_;
     archive & time_start_;
     archive & traxels_;
-    archive & parent_id_;
-    archive & child_ids_;
   }
 }; // class Track
 
@@ -144,6 +143,24 @@ class OutlierCalculator {
 /*=============================================================================
   specific functors
 =============================================================================*/
+////
+//// class TrackValue
+////
+class TrackValue {
+ public:
+  TrackValue(
+    TrackFeatureExtractor* track_feature_extractor,
+    FeatureAggregator* feature_aggregator
+  ) :
+    track_feature_extractor_(track_feature_extractor),
+    feature_aggregator_(feature_aggregator)
+  {};
+  feature_type operator()(const Track& track);
+ protected:
+  TrackFeatureExtractor* track_feature_extractor_;
+  FeatureAggregator* feature_aggregator_;
+};
+
 ////
 //// class TrackFeaturesIdentity
 ////

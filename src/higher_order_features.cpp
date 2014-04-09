@@ -6,19 +6,20 @@ namespace pgmlink {
 //// class track
 ////
 Track::Track() {
-  parent_id_ = 0;
-  child_ids_.resize(2,0);
+  parent_ = NULL;
+  children_.clear();
 }
 
 Track::Track(
   const size_t id,
   const size_t time_start,
   const Traxelvector& traxels,
-  const size_t parent_id,
-  const size_t left_child_id,
-  const size_t right_child_id
-) : id_(id), time_start_(time_start), traxels_(traxels), parent_id_(parent_id) {
-  Track::set_child_ids(left_child_id, right_child_id);
+  Track* const parent,
+  Track* const left_child,
+  Track* const right_child
+) : id_(id), time_start_(time_start), traxels_(traxels), parent_(parent) {
+  Track::set_child(left_child);
+  Track::set_child(right_child);
 }
 
 void Track::set_id(const size_t id) {
@@ -37,22 +38,28 @@ size_t Track::get_time_start() const {
   return Track::time_start_;
 }
 
-void Track::set_parent_id(const size_t parent_id) {
-  parent_id_ = parent_id;
+void Track::set_parent(Track* const parent) {
+  parent_ = parent;
 }
 
-size_t Track::get_parent_id() const {
-  return Track::parent_id_;
+Track* Track::get_parent() const {
+  return Track::parent_;
 }
 
-void Track::set_child_ids(const size_t left, const size_t right) {
-  child_ids_.resize(2);
-  child_ids_[0] = left;
-  child_ids_[1] = right;
+void Track::set_child(Track* const child) {
+  if (child != NULL) {
+    children_.push_back(child);
+  }
 }
 
-const std::vector<size_t>& Track::get_child_ids() const {
-  return Track::child_ids_;
+void Track::set_children(Track* const left_child, Track* const right_child) {
+  children_.resize(2);
+  children_[0] = left_child;
+  children_[1] = right_child;
+}
+
+const std::vector<Track*>& Track::get_children() const {
+  return Track::children_;
 }
 
 size_t Track::get_length() const {
@@ -87,7 +94,8 @@ typedef typename HypothesesGraph::OutArcIt OutArcIt;
 Track track_from_start_node(
   const HypothesesGraph& graph,
   const HypothesesGraph::Node& node,
-  const size_t index
+  const size_t index,
+  HypothesesGraph::Node& last_node
 ) {
   bool tracklet_graph = graph.has_property(node_tracklet());
   node_timestep_type& timestep_map = graph.get(node_timestep());
@@ -95,24 +103,24 @@ Track track_from_start_node(
 
   Traxelvector traxels;
   bool terminate = false;
-  HypothesesGraph::Node n = node;
+  last_node = node;
   while(not terminate) {
     // append the current traxel/tracklet to the end of the traxel vector
     if(tracklet_graph) {
       node_tracklet_type& tracklet_map = graph.get(node_tracklet());
       traxels.insert(
         traxels.end(),
-        tracklet_map[n].begin(),
-        tracklet_map[n].end()
+        tracklet_map[last_node].begin(),
+        tracklet_map[last_node].end()
       );
     } else {
       node_traxel_type& traxel_map = graph.get(node_traxel());
-      traxels.push_back(traxel_map[n]);
+      traxels.push_back(traxel_map[last_node]);
     } // end if(tracklet_graph)
 
     std::vector<HypothesesGraph::Node> to_nodes;
     // get all outgoing arcs
-    for(OutArcIt oa_it(graph, n); oa_it != lemon::INVALID; ++oa_it) {
+    for(OutArcIt oa_it(graph, last_node); oa_it != lemon::INVALID; ++oa_it) {
       if(arc_active_map[oa_it][index]){
         to_nodes.push_back(graph.target(oa_it));
       }
@@ -121,7 +129,7 @@ Track track_from_start_node(
     if(to_nodes.size() != 1) {
       terminate = true;
     } else {
-      n = to_nodes.back();
+      last_node = to_nodes.back();
     }// end if(to_nodes.size() !=1)
   } // end while(not terminate)
   return Track(0, timestep_map[node], traxels);
@@ -141,6 +149,9 @@ Tracking::Tracking(const HypothesesGraph& graph, const size_t index)
   if (not graph.has_property(node_tracklet())) {
     assert(graph.has_property(node_traxel));
   }
+  // make a map from node to track_id 
+  std::map<HypothesesGraph::Node, Track*> in_track;
+
   // get the property maps
   node_active_map_type& node_active_map = graph.get(node_active_count());
   arc_active_map_type& arc_active_map = graph.get(arc_active_count());
@@ -161,8 +172,9 @@ Tracking::Tracking(const HypothesesGraph& graph, const size_t index)
       }
       size_t num_in = from_nodes.size();
       bool parent_division_active = false;
+      HypothesesGraph::Node parent = lemon::INVALID;
       if (num_in==1) {
-        HypothesesGraph::Node parent = from_nodes.front();
+        parent = from_nodes.front();
         if (has_div_active_map) {
           // if the graph has the division active property read the
           // parent_division_active property from this map
@@ -181,8 +193,18 @@ Tracking::Tracking(const HypothesesGraph& graph, const size_t index)
       } // end if (num_in==1)
       if ((num_in==0) or (parent_division_active)) {
         // push back the track that starts from this node
-        tracks_.push_back(track_from_start_node(graph, n_it, index));
-        tracks_.back().set_id(tracks_.size());
+        HypothesesGraph::Node last_node;
+        size_t track_id = tracks_.size();
+        tracks_.push_back(track_from_start_node(graph, n_it, index, last_node));
+        in_track[last_node] = &(tracks_.back());
+        tracks_.back().set_id(track_id);
+        // set the references to the parent track
+        if (parent != lemon::INVALID) {
+          assert( in_track_id.find(parent) != in_track_id.end() );
+          Track* parent_track = in_track[parent];
+          tracks_.back().set_parent(parent_track);
+          parent_track->set_child(&(tracks_.back()));
+        }
       }
     }
   }
@@ -191,6 +213,12 @@ Tracking::Tracking(const HypothesesGraph& graph, const size_t index)
 /*=============================================================================
   specific functors
 =============================================================================*/
+////
+//// class TrackValue
+////
+feature_type TrackValue::operator()(const Track& track) {
+  return (*feature_aggregator_) ( (*track_feature_extractor_) (track) );
+}
 
 ////
 //// class TrackFeaturesIdentity
