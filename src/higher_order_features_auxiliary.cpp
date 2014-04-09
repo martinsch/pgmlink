@@ -127,4 +127,76 @@ const feature_arrays TrackFeaturesDiff::operator()(
   return feature_matrix;
 }
 
+////
+//// class TrackFeaturesCurvature
+////
+const std::string TrackFeaturesCurvature::name_ = "TrackFeaturesCurvature";
+
+TrackFeaturesCurvature::TrackFeaturesCurvature(
+  const std::vector<std::string>& feature_names
+) : feature_names_(feature_names) {
+}
+
+TrackFeaturesCurvature::TrackFeaturesCurvature(
+  const std::string& feature_name
+) {
+  feature_names_.resize(1);
+  feature_names_[0] = feature_name;
+}
+
+const std::string& TrackFeaturesCurvature::name() const {
+  return name_;
+}
+
+const feature_arrays TrackFeaturesCurvature::operator()(
+  const Track& track
+) const {
+  feature_arrays feature_matrix;
+  // iterate over all traxel
+  assert(track.traxels_.size() >= 3);
+  Traxelvector::const_iterator t1_it, t2_it, t3_it;
+  t1_it = track.traxels_.begin()+2;
+  t2_it = track.traxels_.begin()+1;
+  t3_it = track.traxels_.begin();
+  for(; t1_it != track.traxels_.end(); t1_it++, t2_it++, t3_it++) {
+    // fetch the features which are stored in a map
+    const FeatureMap& fmap1 = t1_it->features;
+    const FeatureMap& fmap2 = t2_it->features;
+    const FeatureMap& fmap3 = t3_it->features;
+    feature_array feature_vector;
+    // iterate over all feature names
+    for(
+      std::vector<std::string>::const_iterator fname_it = feature_names_.begin();
+      fname_it != feature_names_.end();
+      fname_it++
+    ) {
+      // check if the feature name exists
+      FeatureMap::const_iterator fmap1_it = fmap1.find(*fname_it);
+      FeatureMap::const_iterator fmap2_it = fmap2.find(*fname_it);
+      FeatureMap::const_iterator fmap3_it = fmap3.find(*fname_it);
+      assert(fmap1_it != fmap1.end());
+      assert(fmap2_it != fmap2.end());
+      assert(fmap3_it != fmap3.end());
+      // check if the feature vectors have the same size
+      assert((fmap1_it->second).size() == (fmap2_it->second).size());
+      assert((fmap1_it->second).size() == (fmap3_it->second).size());
+      // append the curvature to the feature vector
+      feature_array::const_iterator farray1_it, farray2_it, farray3_it;
+      farray1_it = (fmap1_it->second).begin();
+      farray2_it = (fmap2_it->second).begin();
+      farray3_it = (fmap3_it->second).begin();
+      for (
+        ;
+        farray1_it != (fmap1_it->second).end();
+        farray1_it++, farray2_it++, farray3_it++
+      ) {
+        feature_vector.push_back(*farray1_it - 2 * *farray2_it + *farray3_it);
+      }
+    }
+    // append feature_vector to the feature matrix
+    feature_matrix.push_back(feature_vector);
+  }
+  return feature_matrix;
+}
+
 } // namespace pgmlink
