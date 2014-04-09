@@ -235,8 +235,7 @@ feature_type OutlierBadnessAggregator::operator()(
     f_it != outlier_badness.end();
     f_it++
   ) {
-    ret += *f_it;
-    LOG(logDEBUG4) << "In OutlierBadnessAggregator. Summed up to :" << ret;
+    ret = *f_it > ret ? *f_it : ret;
   }
   return ret;
 }
