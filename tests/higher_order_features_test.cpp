@@ -6,7 +6,7 @@
 #include <boost/test/floating_point_comparison.hpp>
 
 #include "pgmlink/log.h"
-#include "pgmlink/higher_order_features_auxiliary.h"
+#include "pgmlink/higher_order_features.h"
 
 using namespace pgmlink;
 // using namespace boost;
