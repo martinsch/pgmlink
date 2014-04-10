@@ -124,6 +124,39 @@ class FeatureAggregator {
 };
 
 ////
+//// class SubsetsOfInterest
+////
+class SubsetsOfInterest {
+ public:
+  SubsetsOfInterest() {};
+  virtual ~SubsetsOfInterest() {};
+  virtual const std::string& name() const = 0;
+  virtual std::vector<Trackvector> operator()(const Tracking& tracking) = 0;
+};
+
+////
+//// class SubsetFeatureExtractor
+////
+class SubsetFeatureExtractor {
+ public:
+  SubsetFeatureExtractor() {};
+  virtual ~SubsetFeatureExtractor() {};
+  virtual const std::string& name() const = 0;
+  virtual std::vector<feature_arrays> operator()(const Tracking& tracking) = 0;
+};
+
+////
+//// class SubsetFeatureAggregator
+////
+class SubsetFeatureAggregator {
+ public:
+  SubsetFeatureAggregator() {};
+  virtual ~SubsetFeatureAggregator() {};
+  virtual const std::string& name() const = 0;
+  virtual feature_array operator()(const feature_arrays& features) = 0;
+};
+
+////
 //// class OutlierCalculator
 ////
 class OutlierCalculator {
@@ -204,6 +237,35 @@ class TrackFeaturesCurvature : public TrackFeatureExtractor {
  protected:
   static const std::string name_;
   std::vector<std::string> feature_names_;
+};
+
+////
+//// class DivisionSubsets
+////
+class DivisionSubsets : public SubsetsOfInterest {
+ public:
+  DivisionSubsets() {};
+  virtual ~DivisionSubsets() {};
+  virtual const std::string& name() const;
+  virtual std::vector<Trackvector> operator()(const Tracking& tracking);
+ protected:
+  static const std::string name_;
+};
+
+////
+//// class SubsetFeatureAggregatorFromFA
+////
+class SubsetAggregatorFromFA : public SubsetFeatureAggregator {
+ public:
+  SubsetAggregatorFromFA(
+    FeatureAggregator* feature_aggregator
+  ) : feature_aggregator_(feature_aggregator) {};
+  virtual ~SubsetAggregatorFromFA() {};
+  virtual const std::string& name() const;
+  virtual feature_array operator()(const feature_arrays& features);
+ protected:
+  static const std::string name_;
+  FeatureAggregator* feature_aggregator_;
 };
 
 ////

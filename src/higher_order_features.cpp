@@ -443,6 +443,50 @@ feature_arrays TrackFeaturesCurvature::operator()(
 }
 
 ////
+//// class DivisionSubsets
+////
+const std::string DivisionSubsets::name_ = "DivisionSubsets";
+
+const std::string& DivisionSubsets::name() const {
+  return name_;
+}
+
+std::vector<Trackvector> DivisionSubsets::operator()(const Tracking& tracking) {
+  const Trackvector& tracks = tracking.tracks_;
+  std::vector<Trackvector> ret;
+  for(
+    Trackvector::const_iterator t_it = tracks.begin();
+    t_it != tracks.end();
+    t_it++
+  ) {
+    if ((t_it->children_).size() == 2) {
+      Trackvector t;
+      t.push_back(*t_it);
+      t.push_back(*((t_it->children_)[0]));
+      t.push_back(*((t_it->children_)[1]));
+      ret.push_back(t);
+    }
+  }
+  return ret;
+}
+
+////
+//// class SubsetAggregatorFromFA
+////
+const std::string SubsetAggregatorFromFA::name_ = "SubsetAggregatorFromFA";
+
+const std::string& SubsetAggregatorFromFA::name() const {
+  return name_;
+}
+
+feature_array SubsetAggregatorFromFA::operator()(
+  const feature_arrays& features
+) {
+  feature_array f(1, (*feature_aggregator_)(features));
+  return f;
+}
+
+////
 //// class OutlierCountAggregator
 ////
 const std::string OutlierCountAggregator::name_ = "OutlierCountAggregator";
