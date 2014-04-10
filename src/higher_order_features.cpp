@@ -150,9 +150,10 @@ Tracking::Tracking(const HypothesesGraph& graph, const size_t index)
   if (not graph.has_property(node_tracklet())) {
     assert(graph.has_property(node_traxel()));
   }
-  // make a map from node to track_id 
-  std::map<int, size_t> in_track;
-  std::map<size_t, int> has_parent;
+  // stores reference to the track with the last node of the track as the key
+  std::map<HypothesesGraph::Node, Track*> node_in_track;
+  // stores the parent node of a track with the track as the key
+  std::map<Track*, HypothesesGraph::Node> has_parent_node;
 
   // get the property maps
   node_active_map_type& node_active_map = graph.get(node_active_count());
@@ -174,8 +175,11 @@ Tracking::Tracking(const HypothesesGraph& graph, const size_t index)
       }
       size_t num_in = from_nodes.size();
       bool parent_division_active = false;
+      // set the parent node to lemon::INVALID. If there is an active parent
+      // node this variable will be updated.
       HypothesesGraph::Node parent = lemon::INVALID;
       if (num_in==1) {
+        // update the parent node
         parent = from_nodes.front();
         if (has_div_active_map) {
           // if the graph has the division active property read the
@@ -194,13 +198,18 @@ Tracking::Tracking(const HypothesesGraph& graph, const size_t index)
         }
       } // end if (num_in==1)
       if ((num_in==0) or (parent_division_active)) {
-        // push back the track that starts from this node
+        // initialize the track id and the variable in which the last node will
+        // be stored
         HypothesesGraph::Node last_node;
         size_t track_id = tracks_.size();
+        // create the track and get the last node of it
         tracks_.push_back(track_from_start_node(graph, n_it, index, last_node));
-        in_track[graph.id(last_node)] = track_id;
-        has_parent[track_id] = graph.id(parent);
-        tracks_.back().set_id(track_id);
+        // get reference to track and set its id
+        Track* track_ref = &(tracks_.back());
+        track_ref->set_id(track_id);
+        // update the maps "node_in_track" and "has_parent_node"
+        node_in_track[last_node] = track_ref;
+        has_parent_node[track_ref] = parent;
       }
     }
   }
@@ -210,14 +219,19 @@ Tracking::Tracking(const HypothesesGraph& graph, const size_t index)
     t_it != tracks_.end();
     t_it++
   ) {
-    int parent_id = has_parent[t_it->get_id()];
-    if (parent_id != -1) {
-      if (in_track.find(parent_id) == in_track.end()) {
+    // get the parent node
+    HypothesesGraph::Node parent = has_parent_node[&(*t_it)];
+    if (parent != lemon::INVALID) {
+      // get the map iterator to the parent track and check if it exists
+      std::map<HypothesesGraph::Node, Track*>::iterator parent_track_it;
+      parent_track_it = node_in_track.find(parent);
+      if (parent_track_it == node_in_track.end()) {
         LOG(logDEBUG) << "In constructor of tracking: inconsistent or unsupported graph";
       } else {
-        Track* parent_track = &(tracks_[in_track[parent_id]]);
-        t_it->set_parent(parent_track);
-        parent_track->set_child(&(*t_it));
+        // set the references
+        Track* parent_track_ref = parent_track_it->second;
+        t_it->set_parent(parent_track_ref);
+        parent_track_ref->set_child(&(*t_it));
       }
     }
   }
