@@ -262,6 +262,23 @@ TrackingValue::TrackingValue(
   feature_aggregator_(feature_aggregator) {
 }
 
+const feature_type& TrackingValue::operator()(const Tracking& tracking) {
+  const std::vector<Trackvector>& subsets = (*subsets_of_interest_)(tracking);
+  feature_arrays feature_matrix;
+  ret_ = 0.0;
+  for (
+    std::vector<Trackvector>::const_iterator subset_it = subsets.begin();
+    subset_it != subsets.end();
+    subset_it++
+  ) {
+    feature_matrix.push_back(
+      (*subset_feature_aggregator_)((*subset_feature_extractor_)(*subset_it))
+    );
+  }
+  ret_ = (*feature_aggregator_)(feature_matrix);
+  return ret_;
+}
+
 ////
 //// class TrackFeaturesIdentity
 ////
