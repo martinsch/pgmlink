@@ -752,31 +752,26 @@ const arma::Col<feature_type>& MVNOutlierCalculator::get_mean() const {
 const std::vector<size_t>& MVNOutlierCalculator::calculate(
   const feature_arrays& features
 ) {
-  bool bad_data = false;
+  measures_.clear();
+  outlier_ids_.clear();
+  mean_.clear();
+  covariance_.clear();
+  inv_covariance_.clear();
+
+  bool good_data = true;
   if (features.size() == 0) {
-    bad_data = true;
-  } else if (features.size() <= features[0].size()) {
-    bad_data = true;
+    good_data = false;
+  } else if (features.size() <= features[0].size()+1) {
+    good_data = false;
   } 
-  if (bad_data) {
-    measures_.clear();
-    outlier_ids_.clear();
-    mean_.clear();
-    covariance_.clear();
-    inv_covariance_.clear();
-  } else {
+  if (good_data) {
     // Get covariance and inverse covariance matrix
     arma::Mat<feature_type> features_mat(to_arma_matrix(features));
     arma::Mat<feature_type> features_mat_t(trans(features_mat));
-    try {
-      covariance_ = arma::cov(features_mat_t);
-      inv_covariance_ = arma::inv_sympd(covariance_);
+    covariance_ = arma::cov(features_mat_t);
+    bool invertible = arma::inv_sympd(inv_covariance_, covariance_);
 
-      LOG(logDEBUG4) << "In MVNOutlierCalculator: covariance matrix";
-      LOG(logDEBUG4) << covariance_;
-      LOG(logDEBUG4) << "In MVNOutlierCalculator: inverse covariance matrix";
-      LOG(logDEBUG4) << inv_covariance_;
-
+    if (invertible) {
       // Get mean values
       mean_ = arma::mean(features_mat, 1);
   
@@ -793,8 +788,6 @@ const std::vector<size_t>& MVNOutlierCalculator::calculate(
           outlier_ids_.push_back(id);
         }
       }
-    } catch (std::exception& exception) {
-      LOG(logDEBUG) << "In MVNOutlierCalculator: Too few data to calculate outliers" << std::endl;
     }
   } // else
   return outlier_ids_;
