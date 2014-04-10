@@ -151,9 +151,9 @@ Tracking::Tracking(const HypothesesGraph& graph, const size_t index)
     assert(graph.has_property(node_traxel()));
   }
   // stores reference to the track with the last node of the track as the key
-  std::map<HypothesesGraph::Node, Track*> node_in_track;
+  std::map<int, size_t> node_in_track;
   // stores the parent node of a track with the track as the key
-  std::map<Track*, HypothesesGraph::Node> has_parent_node;
+  std::map<size_t, int> has_parent_node;
 
   // get the property maps
   node_active_map_type& node_active_map = graph.get(node_active_count());
@@ -202,14 +202,12 @@ Tracking::Tracking(const HypothesesGraph& graph, const size_t index)
         // be stored
         HypothesesGraph::Node last_node;
         size_t track_id = tracks_.size();
-        // create the track and get the last node of it
+        // create the track and get the last node of it and set the id
         tracks_.push_back(track_from_start_node(graph, n_it, index, last_node));
-        // get reference to track and set its id
-        Track* track_ref = &(tracks_.back());
-        track_ref->set_id(track_id);
+        tracks_.back().set_id(track_id);
         // update the maps "node_in_track" and "has_parent_node"
-        node_in_track[last_node] = track_ref;
-        has_parent_node[track_ref] = parent;
+        node_in_track[graph.id(last_node)] = track_id;
+        has_parent_node[track_id] = graph.id(parent);
       }
     }
   }
@@ -220,16 +218,17 @@ Tracking::Tracking(const HypothesesGraph& graph, const size_t index)
     t_it++
   ) {
     // get the parent node
-    HypothesesGraph::Node parent = has_parent_node[&(*t_it)];
-    if (parent != lemon::INVALID) {
+    int parent_node_id = has_parent_node[t_it->get_id()];
+    if (parent_node_id != -1) {
       // get the map iterator to the parent track and check if it exists
-      std::map<HypothesesGraph::Node, Track*>::iterator parent_track_it;
-      parent_track_it = node_in_track.find(parent);
+      std::map<int, size_t>::iterator parent_track_it;
+      parent_track_it = node_in_track.find(parent_node_id);
       if (parent_track_it == node_in_track.end()) {
         LOG(logDEBUG) << "In constructor of tracking: inconsistent or unsupported graph";
+        LOG(logDEBUG) << "Node " << parent_node_id << " doesn't terminate track (although it should)";
       } else {
         // set the references
-        Track* parent_track_ref = parent_track_it->second;
+        Track* parent_track_ref = &(tracks_[parent_track_it->second]);
         t_it->set_parent(parent_track_ref);
         parent_track_ref->set_child(&(*t_it));
       }
