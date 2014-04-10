@@ -202,6 +202,26 @@ class TrackValue {
 };
 
 ////
+//// class TrackingValue
+////
+class TrackingValue {
+ public:
+  TrackingValue(
+    SubsetsOfInterest* subsets_of_interest,
+    SubsetFeatureExtractor* subset_feature_extractor,
+    SubsetFeatureAggregator* subset_feature_aggregator,
+    FeatureAggregator* feature_aggregator
+  );
+  const feature_type& operator()(const Tracking& tracking);
+ protected:
+  SubsetsOfInterest* subsets_of_interest_;
+  SubsetFeatureExtractor* subset_feature_extractor_;
+  SubsetFeatureAggregator* subset_feature_aggregator_;
+  FeatureAggregator* feature_aggregator_;
+  feature_type ret_;
+};
+
+////
 //// class TrackFeaturesIdentity
 ////
 class TrackFeaturesIdentity : public TrackFeatureExtractor {
@@ -247,6 +267,20 @@ class TrackFeaturesCurvature : public TrackFeatureExtractor {
   static const std::string name_;
   std::vector<std::string> feature_names_;
   feature_arrays ret_;
+};
+
+////
+//// class SumAggregator
+////
+class SumAggregator : public FeatureAggregator {
+ public:
+  SumAggregator() {};
+  virtual ~SumAggregator() {};
+  virtual const std::string& name() const;
+  virtual const feature_type& operator()(const feature_arrays& features);
+ protected:
+  static const std::string name_;
+  feature_type ret_;
 };
 
 ////

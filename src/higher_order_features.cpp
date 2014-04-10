@@ -248,6 +248,21 @@ const feature_type& TrackValue::operator()(const Track& track) {
 }
 
 ////
+//// class TrackingValue
+////
+TrackingValue::TrackingValue(
+  SubsetsOfInterest* subsets_of_interest,
+  SubsetFeatureExtractor* subset_feature_extractor,
+  SubsetFeatureAggregator* subset_feature_aggregator,
+  FeatureAggregator* feature_aggregator
+) :
+  subsets_of_interest_(subsets_of_interest),
+  subset_feature_extractor_(subset_feature_extractor),
+  subset_feature_aggregator_(subset_feature_aggregator),
+  feature_aggregator_(feature_aggregator) {
+}
+
+////
 //// class TrackFeaturesIdentity
 ////
 const std::string TrackFeaturesIdentity::name_ = "TrackFeaturesIdentity";
@@ -442,6 +457,34 @@ const feature_arrays& TrackFeaturesCurvature::operator()(
   return ret_;
 }
 
+////
+//// class SumAggregator
+////
+const std::string SumAggregator::name_ = "SumAggregator";
+
+const std::string& SumAggregator::name() const {
+  return name_;
+}
+
+const feature_type& SumAggregator::operator()(
+  const feature_arrays& features
+) {
+  ret_ = 0;
+  for (
+    feature_arrays::const_iterator farray = features.begin();
+    farray != features.end();
+    farray++
+  ) {
+    for (
+      feature_array::const_iterator f = farray->begin();
+      f != farray->end();
+      f++
+    ) {
+      ret_ += *f;
+    }
+  }
+  return ret_;
+}
 ////
 //// class SingleTrackSubsets
 ////
