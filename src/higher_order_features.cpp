@@ -243,7 +243,7 @@ Tracking::Tracking(const HypothesesGraph& graph, const size_t index)
 ////
 //// class TrackValue
 ////
-feature_type TrackValue::operator()(const Track& track) {
+const feature_type& TrackValue::operator()(const Track& track) {
   return (*feature_aggregator_) ( (*track_feature_extractor_) (track) );
 }
 
@@ -268,10 +268,10 @@ const std::string& TrackFeaturesIdentity::name() const {
   return name_;
 }
 
-feature_arrays TrackFeaturesIdentity::operator()(
+const feature_arrays& TrackFeaturesIdentity::operator()(
   const Track& track
 ) {
-  feature_arrays feature_matrix;
+  ret_.clear();
   // iterate over all traxel
   for(
     Traxelvector::const_iterator traxel_it = track.traxels_.begin();
@@ -298,9 +298,9 @@ feature_arrays TrackFeaturesIdentity::operator()(
       );
     }
     // append feature_vector to the feature matrix
-    feature_matrix.push_back(feature_vector);
+    ret_.push_back(feature_vector);
   }
-  return feature_matrix;
+  return ret_;
 }
 
 
@@ -325,10 +325,10 @@ const std::string& TrackFeaturesDiff::name() const {
   return name_;
 }
 
-feature_arrays TrackFeaturesDiff::operator()(
+const feature_arrays& TrackFeaturesDiff::operator()(
   const Track& track
 ) {
-  feature_arrays feature_matrix;
+  ret_.clear();
   // iterate over all traxel
   assert(track.traxels_.size() >= 2);
   Traxelvector::const_iterator t1_it, t2_it;
@@ -365,9 +365,9 @@ feature_arrays TrackFeaturesDiff::operator()(
       }
     }
     // append feature_vector to the feature matrix
-    feature_matrix.push_back(feature_vector);
+    ret_.push_back(feature_vector);
   }
-  return feature_matrix;
+  return ret_;
 }
 
 ////
@@ -391,10 +391,10 @@ const std::string& TrackFeaturesCurvature::name() const {
   return name_;
 }
 
-feature_arrays TrackFeaturesCurvature::operator()(
+const feature_arrays& TrackFeaturesCurvature::operator()(
   const Track& track
 ) {
-  feature_arrays feature_matrix;
+  ret_.clear();
   // iterate over all traxel
   assert(track.traxels_.size() >= 3);
   Traxelvector::const_iterator t1_it, t2_it, t3_it;
@@ -437,9 +437,9 @@ feature_arrays TrackFeaturesCurvature::operator()(
       }
     }
     // append feature_vector to the feature matrix
-    feature_matrix.push_back(feature_vector);
+    ret_.push_back(feature_vector);
   }
-  return feature_matrix;
+  return ret_;
 }
 
 ////
@@ -451,11 +451,11 @@ const std::string& SingleTrackSubsets::name() const {
   return name_;
 }
 
-std::vector<Trackvector> SingleTrackSubsets::operator()(
+const std::vector<Trackvector>& SingleTrackSubsets::operator()(
   const Tracking& tracking
 ) {
   const Trackvector& tracks = tracking.tracks_;
-  std::vector<Trackvector> ret;
+  ret_.clear();
   for(
     Trackvector::const_iterator t_it = tracks.begin();
     t_it != tracks.end();
@@ -463,9 +463,9 @@ std::vector<Trackvector> SingleTrackSubsets::operator()(
   ) {
     Trackvector t;
     t.push_back(*t_it);
-    ret.push_back(t);
+    ret_.push_back(t);
   }
-  return ret;
+  return ret_;
 }
 
 
@@ -478,9 +478,11 @@ const std::string& DivisionSubsets::name() const {
   return name_;
 }
 
-std::vector<Trackvector> DivisionSubsets::operator()(const Tracking& tracking) {
+const std::vector<Trackvector>& DivisionSubsets::operator()(
+  const Tracking& tracking
+) {
   const Trackvector& tracks = tracking.tracks_;
-  std::vector<Trackvector> ret;
+  ret_.clear();
   for(
     Trackvector::const_iterator t_it = tracks.begin();
     t_it != tracks.end();
@@ -491,10 +493,10 @@ std::vector<Trackvector> DivisionSubsets::operator()(const Tracking& tracking) {
       t.push_back(*t_it);
       t.push_back(*((t_it->children_)[0]));
       t.push_back(*((t_it->children_)[1]));
-      ret.push_back(t);
+      ret_.push_back(t);
     }
   }
-  return ret;
+  return ret_;
 }
 
 ////
@@ -506,11 +508,12 @@ const std::string& SubsetAggregatorFromFA::name() const {
   return name_;
 }
 
-feature_array SubsetAggregatorFromFA::operator()(
+const feature_array& SubsetAggregatorFromFA::operator()(
   const feature_arrays& features
 ) {
-  feature_array f(1, (*feature_aggregator_)(features));
-  return f;
+  ret_.clear();
+  ret_.push_back((*feature_aggregator_)(features));
+  return ret_;
 }
 
 ////
@@ -522,11 +525,12 @@ const std::string& OutlierCountAggregator::name() const {
   return name_;
 }
 
-feature_type OutlierCountAggregator::operator()(
+const feature_type& OutlierCountAggregator::operator()(
   const feature_arrays& features
 ) {
   std::vector<size_t> outlier_ids = outlier_calculator_->calculate(features);
-  return static_cast<feature_type>(outlier_ids.size());
+  ret_ = static_cast<feature_type>(outlier_ids.size());
+  return ret_;
 }
 
 ////
@@ -538,20 +542,20 @@ const std::string& OutlierBadnessAggregator::name() const {
   return name_;
 }
 
-feature_type OutlierBadnessAggregator::operator()(
+const feature_type& OutlierBadnessAggregator::operator()(
   const feature_arrays& features
 ) {
   outlier_calculator_->calculate(features);
   feature_array outlier_badness = outlier_calculator_->get_measures();
-  feature_type ret = 0.0;
+  ret_ = 0.0;
   for (
     feature_array::const_iterator f_it = outlier_badness.begin();
     f_it != outlier_badness.end();
     f_it++
   ) {
-    ret = *f_it > ret ? *f_it : ret;
+    ret_ = *f_it > ret_ ? *f_it : ret_;
   }
-  return ret;
+  return ret_;
 }
 
 
