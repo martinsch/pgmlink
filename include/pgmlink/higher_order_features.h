@@ -144,8 +144,8 @@ class SubsetFeatureExtractor {
   SubsetFeatureExtractor() {};
   virtual ~SubsetFeatureExtractor() {};
   virtual const std::string& name() const = 0;
-  virtual const std::vector<feature_arrays>& operator()(
-    const Tracking& tracking
+  virtual const feature_arrays& operator()(
+    const Trackvector& trackvector
   ) = 0;
 };
 
@@ -275,6 +275,28 @@ class DivisionSubsets : public SubsetsOfInterest {
  protected:
   static const std::string name_;
   std::vector<Trackvector> ret_;
+};
+
+////
+//// class DivisionFeatureExtractor
+////
+class DivisionFeatureExtractor : public SubsetFeatureExtractor {
+ public:
+  DivisionFeatureExtractor(const std::string& feature_name, size_t depth=1);
+  DivisionFeatureExtractor(
+    const std::vector<std::string>& feature_names,
+    size_t depth=1
+  );
+  virtual ~DivisionFeatureExtractor() {};
+  virtual const std::string& name() const;
+  virtual const feature_arrays& operator()(
+    const Trackvector& tracks
+  );
+ protected:
+  static const std::string name_;
+  TrackFeaturesIdentity features_identity_;
+  size_t depth_;
+  feature_arrays ret_;
 };
 
 ////

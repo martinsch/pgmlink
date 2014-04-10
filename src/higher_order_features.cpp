@@ -500,6 +500,53 @@ const std::vector<Trackvector>& DivisionSubsets::operator()(
 }
 
 ////
+//// class DivisionFeatureExtractor
+////
+const std::string DivisionFeatureExtractor::name_ = "DivisionFeatureExtractor";
+
+const std::string& DivisionFeatureExtractor::name() const {
+  return name_;
+}
+
+DivisionFeatureExtractor::DivisionFeatureExtractor(
+  const std::string& feature_name,
+  size_t depth
+) : features_identity_(feature_name), depth_(depth) {
+}
+ 
+DivisionFeatureExtractor::DivisionFeatureExtractor(
+  const std::vector<std::string>& feature_names,
+  size_t depth
+) : features_identity_(feature_names), depth_(depth) {
+}
+
+const feature_arrays& DivisionFeatureExtractor::operator()(
+    const Trackvector& tracks
+) {
+  Track tmp;
+  const Track& parent = tracks[0];
+  const Track& left_child = tracks[1];
+  const Track& right_child = tracks[2];
+  if(
+    (parent.get_length() >= depth_) and 
+    (left_child.get_length() >= depth_) and
+    (right_child.get_length() >= depth_)
+  ) {
+    Traxelvector::const_iterator p_it = parent.traxels_.end() - depth_;
+    Traxelvector::const_iterator l_it = left_child.traxels_.begin();
+    Traxelvector::const_iterator r_it = right_child.traxels_.begin();
+
+    tmp.traxels_.resize(depth_ * 3);
+    for (size_t i = 0; i < depth_; i++, p_it++, l_it++, r_it++) {
+      tmp.traxels_[i] = *p_it;
+      tmp.traxels_[i+depth_] = *l_it;
+      tmp.traxels_[i+2*depth_] = *r_it;
+    }
+  }
+  return features_identity_(tmp);
+}
+
+////
 //// class SubsetAggregatorFromFA
 ////
 const std::string SubsetAggregatorFromFA::name_ = "SubsetAggregatorFromFA";
