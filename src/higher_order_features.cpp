@@ -559,6 +559,21 @@ const std::vector<Trackvector>& DivisionSubsets::operator()(
 }
 
 ////
+//// class SubsetFeatureExtractorFromFE
+////
+const std::string SubsetFeatureExtractorFromFE::name_ = "SubsetFeatureExtractorFromFE";
+
+const std::string& SubsetFeatureExtractorFromFE::name() const {
+  return name_;
+}
+
+const feature_arrays& SubsetFeatureExtractorFromFE::operator()(
+  const Trackvector& tracks
+) {
+  return (*track_feature_extractor_)(tracks.front());
+}
+
+////
 //// class DivisionFeatureExtractor
 ////
 const std::string DivisionFeatureExtractor::name_ = "DivisionFeatureExtractor";

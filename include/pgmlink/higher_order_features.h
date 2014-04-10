@@ -312,6 +312,25 @@ class DivisionSubsets : public SubsetsOfInterest {
 };
 
 ////
+//// class SubsetFeatureExtractorFromFE
+////
+class SubsetFeatureExtractorFromFE : public SubsetFeatureExtractor {
+ public:
+  SubsetFeatureExtractorFromFE(
+    TrackFeatureExtractor* track_feature_extractor
+  ) : track_feature_extractor_(track_feature_extractor) {};
+  virtual ~SubsetFeatureExtractorFromFE() {};
+  virtual const std::string& name() const;
+  virtual const feature_arrays& operator()(
+    const Trackvector& tracks
+  );
+ protected:
+  static const std::string name_;
+  TrackFeatureExtractor* track_feature_extractor_;
+  feature_arrays ret_;
+};
+
+////
 //// class DivisionFeatureExtractor
 ////
 class DivisionFeatureExtractor : public SubsetFeatureExtractor {
