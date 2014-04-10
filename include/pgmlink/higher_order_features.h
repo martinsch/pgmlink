@@ -240,6 +240,19 @@ class TrackFeaturesCurvature : public TrackFeatureExtractor {
 };
 
 ////
+//// class SingleTrackSubset
+////
+class SingleTrackSubsets : public SubsetsOfInterest {
+ public:
+  SingleTrackSubsets() {};
+  virtual ~SingleTrackSubsets() {};
+  virtual const std::string& name() const;
+  virtual std::vector<Trackvector> operator()(const Tracking& tracking);
+ protected:
+  static const std::string name_;
+};
+
+////
 //// class DivisionSubsets
 ////
 class DivisionSubsets : public SubsetsOfInterest {

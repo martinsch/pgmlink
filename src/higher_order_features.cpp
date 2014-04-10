@@ -443,6 +443,33 @@ feature_arrays TrackFeaturesCurvature::operator()(
 }
 
 ////
+//// class SingleTrackSubsets
+////
+const std::string SingleTrackSubsets::name_ = "SingleTrackSubsets";
+
+const std::string& SingleTrackSubsets::name() const {
+  return name_;
+}
+
+std::vector<Trackvector> SingleTrackSubsets::operator()(
+  const Tracking& tracking
+) {
+  const Trackvector& tracks = tracking.tracks_;
+  std::vector<Trackvector> ret;
+  for(
+    Trackvector::const_iterator t_it = tracks.begin();
+    t_it != tracks.end();
+    t_it++
+  ) {
+    Trackvector t;
+    t.push_back(*t_it);
+    ret.push_back(t);
+  }
+  return ret;
+}
+
+
+////
 //// class DivisionSubsets
 ////
 const std::string DivisionSubsets::name_ = "DivisionSubsets";
