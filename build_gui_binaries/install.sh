@@ -1,4 +1,5 @@
-ILASTIK_BUILD=$(dirname $0)/ilastik-build
+SCRIPT=$(readlink -f "$0")
+ILASTIK_BUILD=$(dirname $SCRIPT)/ilastik-build
 CPLEX_ROOT_DIR=$HOME/local
 
 sudo apt-get install build-essential g++ gcc git cmake cmake-curses-gui gfortran libxext-dev libfontconfig1-dev&&
