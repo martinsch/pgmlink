@@ -639,6 +639,55 @@ const feature_array& SubsetAggregatorFromFA::operator()(
 }
 
 ////
+//// class ChildRatioAggregator
+////
+const std::string ChildRatioAggregator::name_ = "ChildRatioAggregator";
+
+const std::string& ChildRatioAggregator::name() const {
+  return name_;
+}
+
+const feature_array& ChildRatioAggregator::operator()(
+  const feature_arrays& features
+) {
+  ret_.resize(features.front().size());
+  feature_array::iterator ret_it = ret_.begin();
+
+  feature_arrays::const_iterator left_it = features.begin() + depth_;
+  feature_arrays::const_iterator right_it = features.begin() + 2 * depth_;
+  feature_array::const_iterator l_val_it, r_val_it;
+
+  feature_array l_sum(features.front().size(), 0);
+  feature_array r_sum(features.front().size(), 0);
+  feature_array::iterator l_sum_it, r_sum_it;
+
+  for(size_t i = 0; i < depth_; i++, left_it++, right_it++, ret_it++) {
+    l_val_it = left_it->begin();
+    r_val_it = right_it->begin();
+    l_sum_it = l_sum.begin();
+    r_sum_it = r_sum.begin();
+    for(
+      ;
+      l_val_it != left_it->end();
+      l_val_it++, r_val_it++, l_sum_it++, r_sum_it++
+    ) {
+      *l_sum_it += *l_val_it;
+      *r_sum_it += *r_val_it;
+    }
+  }
+  l_sum_it = l_sum.begin();
+  r_sum_it = r_sum.begin();
+  for(; l_sum_it != l_sum.end(); l_sum_it++, r_sum_it++, ret_it++) {
+    if (*l_sum_it > *r_sum_it) {
+      *ret_it = *r_sum_it / *l_sum_it;
+    } else {
+      *ret_it = *l_sum_it / *r_sum_it;
+    }
+  }
+  return ret_;
+}
+
+////
 //// class OutlierCountAggregator
 ////
 const std::string OutlierCountAggregator::name_ = "OutlierCountAggregator";
@@ -652,7 +701,10 @@ const feature_type& OutlierCountAggregator::operator()(
 ) {
   std::vector<size_t> outlier_ids = outlier_calculator_->calculate(features);
   ret_ = static_cast<feature_type>(outlier_ids.size());
-  ret_ = ret_ / static_cast<feature_type>(features.size());
+  // prevent divide by 0 error
+  if (features.size()) {
+    ret_ = ret_ / static_cast<feature_type>(features.size());
+  }
   return ret_;
 }
 

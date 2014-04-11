@@ -370,6 +370,21 @@ class SubsetAggregatorFromFA : public SubsetFeatureAggregator {
 };
 
 ////
+//// class ChildRatioAggregator
+////
+class ChildRatioAggregator : public SubsetFeatureAggregator {
+ public:
+  ChildRatioAggregator(const size_t depth=1) : depth_(depth) {};
+  virtual ~ChildRatioAggregator() {};
+  virtual const std::string& name() const;
+  virtual const feature_array& operator()(const feature_arrays& features);
+ protected:
+  static const std::string name_;
+  size_t depth_;
+  feature_array ret_;
+};
+
+////
 //// class MVNOutlierCalculator
 ////
 /* the template parameter "sigma_threshold" will be scaled with factor 1/1000.
