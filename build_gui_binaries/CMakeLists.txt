@@ -16,7 +16,7 @@ endif ()
 
 set (BUILDEM_REPO_DIR "None" CACHE TYPE STRING)
 if (${BUILDEM_REPO_DIR} STREQUAL "None")
-  get_filename_component(BUILDEM_REPO_DIR ../buildem ABSOLUTE)
+  get_filename_component(BUILDEM_REPO_DIR ./buildem ABSOLUTE)
 endif(${BUILDEM_REPO_DIR} STREQUAL "None")
 if (NOT EXISTS ${BUILDEM_REPO_DIR}/python.cmake)
     message ("Downloading buildem repository ...")
