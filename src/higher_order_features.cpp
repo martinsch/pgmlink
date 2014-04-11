@@ -652,6 +652,7 @@ const feature_type& OutlierCountAggregator::operator()(
 ) {
   std::vector<size_t> outlier_ids = outlier_calculator_->calculate(features);
   ret_ = static_cast<feature_type>(outlier_ids.size());
+  ret_ = ret_ / static_cast<feature_type>(features.size());
   return ret_;
 }
 
