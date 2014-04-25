@@ -1,6 +1,91 @@
 #include "pgmlink/higher_order_features.h"
+#include <lemon/adaptors.h> // for SubDigraph
+#include <boost/pending/disjoint_sets.hpp>
 
 namespace pgmlink {
+
+////
+//// Some useful typedefinitions
+////
+typedef typename
+  property_map<node_active, HypothesesGraph::base_graph>::type
+  node_active_map_type;
+typedef typename
+  property_map<arc_active, HypothesesGraph::base_graph>::type
+  arc_active_map_type;
+typedef typename
+  property_map<node_timestep, HypothesesGraph::base_graph>::type
+  node_timestep_type;
+typedef typename
+  property_map<node_active_count, HypothesesGraph::base_graph>::type
+  nodes_active_map_type;
+typedef typename
+  property_map<arc_active_count, HypothesesGraph::base_graph>::type
+  arcs_active_map_type;
+typedef typename
+  property_map<division_active_count, HypothesesGraph::base_graph>::type
+  divs_active_count_map_type;
+typedef typename
+  property_map<node_traxel, HypothesesGraph::base_graph>::type
+  node_traxel_type;
+typedef typename
+  property_map<node_tracklet, HypothesesGraph::base_graph>::type
+  node_tracklet_type;
+typedef typename HypothesesGraph::NodeIt NodeIt;
+typedef typename HypothesesGraph::ArcIt ArcIt;
+typedef typename HypothesesGraph::InArcIt InArcIt;
+typedef typename HypothesesGraph::OutArcIt OutArcIt;
+
+typedef typename node_active_map_type::TrueIt NodeActiveIt;
+typedef typename arc_active_map_type::TrueIt ArcActiveIt;
+
+
+////
+//// function set_solution
+////
+void set_solution(HypothesesGraph& graph, const size_t solution_index) {
+  // check if the graph has the necessary property maps
+  if (not graph.has_property(node_active_count())) {
+    throw std::runtime_error(
+      "Graph doesn't have a \"node_active_count\" property map"
+    );
+  }
+  if (not graph.has_property(arc_active_count())) {
+    throw std::runtime_error(
+      "Graph doesn't have an \"arc_active_count\" property map"
+    );
+  }
+
+  // Get the property maps
+  nodes_active_map_type& nodes_active_map = graph.get(node_active_count());
+  arcs_active_map_type& arcs_active_map = graph.get(arc_active_count());
+
+  // check if the solution_index is legal
+  if (nodes_active_map.beginValue()->size() <= solution_index) {
+    throw std::runtime_error("Index of solution out of range");
+  }
+
+  // create the a node_active and arc_active map
+  if (not graph.has_property(node_active())) {
+    graph.add(node_active());
+  }
+  if (not graph.has_property(arc_active())) {
+    graph.add(arc_active());
+  }
+
+  // Get the property maps (caution: "node_active_map" not "nodes_active_map")
+  node_active_map_type& node_active_map = graph.get(node_active());
+  arc_active_map_type& arc_active_map = graph.get(arc_active());
+
+  // Now we can start the with writing the solution with the index
+  // solution_index into the node_active_map
+  for (NodeIt n_it(graph); n_it != lemon::INVALID; ++n_it) {
+    node_active_map[n_it] = nodes_active_map[n_it][solution_index];
+  }
+  for (ArcIt a_it(graph); a_it != lemon::INVALID; ++a_it) {
+    arc_active_map[a_it] = arcs_active_map[a_it][solution_index];
+  }
+}
 
 ////
 //// class track
@@ -67,31 +152,6 @@ size_t Track::get_length() const {
   return Track::traxels_.size();
 }
 
-////
-//// Some auxiliary for building a tracking out of the hypotheses graph
-////
-typedef typename
-  property_map<node_timestep, HypothesesGraph::base_graph>::type
-  node_timestep_type;
-typedef typename
-  property_map<node_active_count, HypothesesGraph::base_graph>::type
-  node_active_map_type;
-typedef typename
-  property_map<arc_active_count, HypothesesGraph::base_graph>::type
-  arc_active_map_type;
-typedef typename
-  property_map<division_active_count, HypothesesGraph::base_graph>::type
-  div_active_map_type;
-typedef typename
-  property_map<node_traxel, HypothesesGraph::base_graph>::type
-  node_traxel_type;
-typedef typename
-  property_map<node_tracklet, HypothesesGraph::base_graph>::type
-  node_tracklet_type;
-typedef typename HypothesesGraph::NodeIt NodeIt;
-typedef typename HypothesesGraph::InArcIt InArcIt;
-typedef typename HypothesesGraph::OutArcIt OutArcIt;
-
 Track track_from_start_node(
   const HypothesesGraph& graph,
   const HypothesesGraph::Node& node,
@@ -100,7 +160,7 @@ Track track_from_start_node(
 ) {
   bool tracklet_graph = graph.has_property(node_tracklet());
   node_timestep_type& timestep_map = graph.get(node_timestep());
-  arc_active_map_type& arc_active_map = graph.get(arc_active_count());
+  arcs_active_map_type& arcs_active_map = graph.get(arc_active_count());
 
   Traxelvector traxels;
   bool terminate = false;
@@ -122,7 +182,7 @@ Track track_from_start_node(
     std::vector<HypothesesGraph::Node> to_nodes;
     // get all outgoing arcs
     for(OutArcIt oa_it(graph, last_node); oa_it != lemon::INVALID; ++oa_it) {
-      if(arc_active_map[oa_it][index]){
+      if(arcs_active_map[oa_it][index]){
         to_nodes.push_back(graph.target(oa_it));
       }
     }
@@ -156,8 +216,8 @@ Tracking::Tracking(const HypothesesGraph& graph, const size_t index)
   std::map<size_t, int> has_parent_node;
 
   // get the property maps
-  node_active_map_type& node_active_map = graph.get(node_active_count());
-  arc_active_map_type& arc_active_map = graph.get(arc_active_count());
+  nodes_active_map_type& nodes_active_map = graph.get(node_active_count());
+  arcs_active_map_type& arcs_active_map = graph.get(arc_active_count());
   bool has_div_active_map = graph.has_property(division_active_count());
 
   // Check for every node if we have to start a new track. Condition is:
@@ -165,11 +225,11 @@ Tracking::Tracking(const HypothesesGraph& graph, const size_t index)
   // AND
   // node has no incoming arc OR exactly one incoming arc from cell division
   for(NodeIt n_it(graph); n_it != lemon::INVALID; ++n_it) {
-    if(node_active_map[n_it][index_]) {
+    if(nodes_active_map[n_it][index_]) {
       std::vector<HypothesesGraph::Node> from_nodes;
       // check for active incoming arcs
       for(InArcIt ia_it(graph, n_it); ia_it != lemon::INVALID; ++ia_it) {
-        if(arc_active_map[ia_it][index_]){
+        if(arcs_active_map[ia_it][index_]){
           from_nodes.push_back(graph.source(ia_it));
         }
       }
@@ -192,7 +252,7 @@ Tracking::Tracking(const HypothesesGraph& graph, const size_t index)
           // there is a cell division
           size_t active_out_arcs = 0;
           for(OutArcIt oa_it(graph, parent); oa_it != lemon::INVALID; ++oa_it) {
-            if(arc_active_map[oa_it][index_]) active_out_arcs++;
+            if(arcs_active_map[oa_it][index_]) active_out_arcs++;
           }
           if (active_out_arcs==2) parent_division_active=true;
         }
@@ -261,20 +321,21 @@ TrackingValue::TrackingValue(
   feature_aggregator_(feature_aggregator) {
 }
 
-const feature_type& TrackingValue::operator()(const Tracking& tracking) {
-  const std::vector<Trackvector>& subsets = (*subsets_of_interest_)(tracking);
-  feature_arrays feature_matrix;
-  ret_ = 0.0;
-  for (
-    std::vector<Trackvector>::const_iterator subset_it = subsets.begin();
-    subset_it != subsets.end();
-    subset_it++
-  ) {
-    feature_matrix.push_back(
-      (*subset_feature_aggregator_)((*subset_feature_extractor_)(*subset_it))
-    );
-  }
-  ret_ = (*feature_aggregator_)(feature_matrix);
+// TODO Rewrite TrackingValue
+const feature_type& TrackingValue::operator()(const Tracking& /*tracking*/) {
+//  const std::vector<Trackvector>& subsets = (*subsets_of_interest_)(tracking);
+//  feature_arrays feature_matrix;
+//  ret_ = 0.0;
+//  for (
+//    std::vector<Trackvector>::const_iterator subset_it = subsets.begin();
+//    subset_it != subsets.end();
+//    subset_it++
+//  ) {
+//    feature_matrix.push_back(
+//      (*subset_feature_aggregator_)((*subset_feature_extractor_)(*subset_it))
+//    );
+//  }
+//  ret_ = (*feature_aggregator_)(feature_matrix);
   return ret_;
 }
 
@@ -502,28 +563,78 @@ const feature_type& SumAggregator::operator()(
   }
   return ret_;
 }
-////
-//// class SingleTrackSubsets
-////
-const std::string SingleTrackSubsets::name_ = "SingleTrackSubsets";
 
-const std::string& SingleTrackSubsets::name() const {
+////
+//// class TrackSubsets
+////
+const std::string TrackSubsets::name_ = "TrackSubsets";
+
+const std::string& TrackSubsets::name() const {
   return name_;
 }
 
-const std::vector<Trackvector>& SingleTrackSubsets::operator()(
-  const Tracking& tracking
+const std::vector<Nodevector>& TrackSubsets::operator()(
+  const HypothesesGraph& graph
 ) {
-  const Trackvector& tracks = tracking.tracks_;
   ret_.clear();
-  for(
-    Trackvector::const_iterator t_it = tracks.begin();
-    t_it != tracks.end();
-    t_it++
+
+  // Check if the graph has the necessary attributes
+  if (not graph.has_property(node_active())) {
+    throw std::runtime_error(
+      "Graph doesn't have a \"node_active\" property map"
+    );
+  }
+  if (not graph.has_property(arc_active())) {
+    throw std::runtime_error(
+      "Graph doesn't have an \"arc_active\" property map"
+    );
+  }
+
+  // Get the property maps
+  node_active_map_type& node_active_map = graph.get(node_active());
+  arc_active_map_type& arc_active_map = graph.get(arc_active());
+
+  // Make maps from child to parent and parent to child
+  typedef std::map<HypothesesGraph::Node, HypothesesGraph::Node> NodeNodeMap;
+  NodeNodeMap parent;
+  NodeNodeMap child;
+  // Initialize
+  for (NodeActiveIt n_it(node_active_map); n_it != lemon::INVALID; ++n_it) {
+    parent[n_it] = n_it;
+    child[n_it] = n_it;
+  }
+
+  // Set connections
+  for (ArcActiveIt a_it(arc_active_map); a_it != lemon::INVALID; ++a_it) {
+    // count the active arcs with the same source
+    size_t out_arcs = 0;
+    for (OutArcIt o_it(graph, graph.source(a_it)); o_it != lemon::INVALID; ++o_it) {
+      out_arcs += (arc_active_map[o_it] ? 1 : 0);
+    }
+    // union the nodes if there are no other active arcs with the same source
+    if (out_arcs == 1) {
+      parent[graph.target(a_it)] = graph.source(a_it);
+      child[graph.source(a_it)] = graph.target(a_it);
+    }
+  }
+  
+  // Compose return vector of node vectors
+  for (
+    NodeNodeMap::const_iterator nmap_it = parent.begin();
+    nmap_it != parent.end();
+    ++nmap_it
   ) {
-    Trackvector t;
-    t.push_back(*t_it);
-    ret_.push_back(t);
+    HypothesesGraph::Node current_node = nmap_it->first;
+    LOG(logDEBUG4) << "Is parent node invalid?";
+    LOG(logDEBUG4) << (parent[current_node] == lemon::INVALID);
+    if (parent[current_node] == current_node) {
+      // resize the return vector
+      ret_.resize(ret_.size()+1);
+      do {
+        current_node = child[current_node];
+        ret_.back().push_back(current_node);
+      } while(child[current_node] != child[current_node]);
+    }
   }
   return ret_;
 }
@@ -538,23 +649,43 @@ const std::string& DivisionSubsets::name() const {
   return name_;
 }
 
-const std::vector<Trackvector>& DivisionSubsets::operator()(
-  const Tracking& tracking
+const std::vector<Nodevector>& DivisionSubsets::operator()(
+  const HypothesesGraph& graph
 ) {
-  const Trackvector& tracks = tracking.tracks_;
   ret_.clear();
-  for(
-    Trackvector::const_iterator t_it = tracks.begin();
-    t_it != tracks.end();
-    t_it++
-  ) {
-    if ((t_it->children_).size() == 2) {
-      Trackvector t;
-      t.push_back(*t_it);
-      t.push_back(*((t_it->children_)[0]));
-      t.push_back(*((t_it->children_)[1]));
-      ret_.push_back(t);
+  // Check if the graph has the necessary attributes
+  if (not graph.has_property(node_active())) {
+    throw std::runtime_error(
+      "Graph doesn't have a \"node_active\" property map"
+    );
+  }
+  if (not graph.has_property(arc_active())) {
+    throw std::runtime_error(
+      "Graph doesn't have an \"arc_active\" property map"
+    );
+  }
+
+  // Get the property maps
+  node_active_map_type& node_active_map = graph.get(node_active());
+  arc_active_map_type& arc_active_map = graph.get(arc_active());
+
+  // Find the divisions
+  for (NodeActiveIt n_it(node_active_map); n_it != lemon::INVALID; ++n_it) {
+    // Count the active outgoing arcs
+    std::vector<HypothesesGraph::Arc> out_arcs;
+    for (OutArcIt o_it(graph, n_it); o_it != lemon::INVALID; ++o_it) {
+      if (arc_active_map[o_it]) {
+        out_arcs.push_back(o_it);
+      }
     }
+    // Two outgoing arcs: division
+    if (out_arcs.size() == 2) {
+      ret_.resize(ret_.size()+1);
+      ret_.back().push_back(graph.source(out_arcs.front()));
+      ret_.back().push_back(graph.target(out_arcs.front()));
+      ret_.back().push_back(graph.target(out_arcs.back()));
+    }
+    
   }
   return ret_;
 }

@@ -33,6 +33,12 @@ class Track;
 =============================================================================*/
 typedef std::vector<Traxel> Traxelvector;
 typedef std::vector<Track> Trackvector;
+typedef std::vector<HypothesesGraph::Node> Nodevector;
+
+/*=============================================================================
+ function definitions
+=============================================================================*/
+void set_solution(HypothesesGraph& graph);
 
 /*=============================================================================
  class definitions
@@ -101,7 +107,7 @@ class Tracking{
 /*=============================================================================
   pure virtual functors
 =============================================================================*/
-////
+//// TODO: deprecated / use FeatureExtractor
 //// class TrackFeatureExtractor
 ////
 class TrackFeatureExtractor {
@@ -131,8 +137,8 @@ class SubsetsOfInterest {
   SubsetsOfInterest() {};
   virtual ~SubsetsOfInterest() {};
   virtual const std::string& name() const = 0;
-  virtual const std::vector<Trackvector>& operator()(
-    const Tracking& tracking
+  virtual const std::vector<Nodevector>& operator()(
+    const HypothesesGraph& graph
   ) = 0;
 };
 
@@ -145,7 +151,8 @@ class SubsetFeatureExtractor {
   virtual ~SubsetFeatureExtractor() {};
   virtual const std::string& name() const = 0;
   virtual const feature_arrays& operator()(
-    const Trackvector& trackvector
+    const Trackvector& trackvector,
+    const size_t& subgraph_index
   ) = 0;
 };
 
@@ -284,17 +291,19 @@ class SumAggregator : public FeatureAggregator {
 };
 
 ////
-//// class SingleTrackSubset
+//// class TrackSubsets
 ////
-class SingleTrackSubsets : public SubsetsOfInterest {
+class TrackSubsets : public SubsetsOfInterest {
  public:
-  SingleTrackSubsets() {};
-  virtual ~SingleTrackSubsets() {};
+  TrackSubsets() {};
+  virtual ~TrackSubsets() {};
   virtual const std::string& name() const;
-  virtual const std::vector<Trackvector>& operator()(const Tracking& tracking);
+  virtual const std::vector<Nodevector>& operator()(
+    const HypothesesGraph& graph
+  );
  protected:
   static const std::string name_;
-  std::vector<Trackvector> ret_;
+  std::vector<Nodevector> ret_;
 };
 
 ////
@@ -305,10 +314,12 @@ class DivisionSubsets : public SubsetsOfInterest {
   DivisionSubsets() {};
   virtual ~DivisionSubsets() {};
   virtual const std::string& name() const;
-  virtual const std::vector<Trackvector>& operator()(const Tracking& tracking);
+  virtual const std::vector<Nodevector>& operator()(
+    const HypothesesGraph& graph
+  );
  protected:
   static const std::string name_;
-  std::vector<Trackvector> ret_;
+  std::vector<Nodevector> ret_;
 };
 
 ////
