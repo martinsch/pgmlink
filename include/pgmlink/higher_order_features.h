@@ -23,6 +23,9 @@
 // armadillo
 #include <armadillo> /* for MVNOutlierCalculator */
 
+// vigra
+#include <vigra/multi_array.hxx> /* for the feature extractors */
+
 namespace pgmlink {
 
 // forward declaration of class Track
@@ -34,6 +37,10 @@ class Track;
 typedef std::vector<Traxel> Traxelvector;
 typedef std::vector<Track> Trackvector;
 typedef std::vector<HypothesesGraph::Node> Nodevector;
+
+typedef feature_type FeatureScalar;
+typedef vigra::MultiArray<1, feature_type> FeatureVector;
+typedef vigra::MultiArray<2, feature_type> FeatureMatrix;
 
 /*=============================================================================
  function definitions
@@ -105,7 +112,7 @@ class Tracking{
 }; // class Tracking
 
 /*=============================================================================
-  pure virtual functors
+  pure virtual classes
 =============================================================================*/
 //// TODO: deprecated / use FeatureExtractor
 //// class TrackFeatureExtractor
@@ -150,10 +157,18 @@ class SubsetFeatureExtractor {
   SubsetFeatureExtractor() {};
   virtual ~SubsetFeatureExtractor() {};
   virtual const std::string& name() const = 0;
-  virtual const feature_arrays& operator()(
-    const Trackvector& trackvector,
-    const size_t& subgraph_index
-  ) = 0;
+  virtual const FeatureMatrix& extract_matrix(
+    const Nodevector& nodevector,
+    const HypothesesGraph& graph
+  );
+  virtual const FeatureVector& extract_vector(
+    const Nodevector& nodevector,
+    const HypothesesGraph& graph
+  );
+  virtual const FeatureScalar& extract_scalar(
+    const Nodevector& nodevector,
+    const HypothesesGraph& graph
+  );
 };
 
 ////
@@ -231,17 +246,20 @@ class TrackingValue {
 ////
 //// class TrackFeaturesIdentity
 ////
-class TrackFeaturesIdentity : public TrackFeatureExtractor {
+class SubsetFeaturesIdentity : public SubsetFeatureExtractor {
  public:
-  TrackFeaturesIdentity(const std::vector<std::string>& feature_names);
-  TrackFeaturesIdentity(const std::string& feature_name);
-  virtual ~TrackFeaturesIdentity() {};
+  SubsetFeaturesIdentity(const std::vector<std::string>& feature_names);
+  SubsetFeaturesIdentity(const std::string& feature_name);
+  virtual ~SubsetFeaturesIdentity() {};
   virtual const std::string& name() const;
-  virtual const feature_arrays& operator()(const Track& track);
+  virtual const FeatureMatrix& extract_matrix(
+    const Nodevector& nodevector,
+    const HypothesesGraph& graph
+  );
  protected:
   static const std::string name_;
   std::vector<std::string> feature_names_;
-  feature_arrays ret_;
+  FeatureMatrix ret_matrix_;
 }; // class TrackFeaturesIdentity
 
 ////
@@ -344,24 +362,24 @@ class SubsetFeatureExtractorFromFE : public SubsetFeatureExtractor {
 ////
 //// class DivisionFeatureExtractor
 ////
-class DivisionFeatureExtractor : public SubsetFeatureExtractor {
- public:
-  DivisionFeatureExtractor(const std::string& feature_name, size_t depth=1);
-  DivisionFeatureExtractor(
-    const std::vector<std::string>& feature_names,
-    size_t depth=1
-  );
-  virtual ~DivisionFeatureExtractor() {};
-  virtual const std::string& name() const;
-  virtual const feature_arrays& operator()(
-    const Trackvector& tracks
-  );
- protected:
-  static const std::string name_;
-  TrackFeaturesIdentity features_identity_;
-  size_t depth_;
-  feature_arrays ret_;
-};
+// class DivisionFeatureExtractor : public SubsetFeatureExtractor {
+//  public:
+//   DivisionFeatureExtractor(const std::string& feature_name, size_t depth=1);
+//   DivisionFeatureExtractor(
+//     const std::vector<std::string>& feature_names,
+//     size_t depth=1
+//   );
+//   virtual ~DivisionFeatureExtractor() {};
+//   virtual const std::string& name() const;
+//   virtual const feature_arrays& operator()(
+//     const Trackvector& tracks
+//   );
+//  protected:
+//   static const std::string name_;
+//   TrackFeaturesIdentity features_identity_;
+//   size_t depth_;
+//   feature_arrays ret_;
+// };
 
 ////
 //// class SubsetFeatureAggregatorFromFA

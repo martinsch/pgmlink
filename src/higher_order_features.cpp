@@ -297,6 +297,40 @@ Tracking::Tracking(const HypothesesGraph& graph, const size_t index)
 }
 
 /*=============================================================================
+  pure virtual classes
+=============================================================================*/
+////
+//// class SubsetFeatureExtractor
+////
+const FeatureMatrix& SubsetFeatureExtractor::extract_matrix(
+  const Nodevector& /*nodevector*/,
+  const HypothesesGraph& /*graph*/
+) {
+  throw std::runtime_error(
+    "Feature extractor " + name() + " doesn't provide a matrix valued result"
+  );
+  return *(new FeatureMatrix);
+}
+const FeatureVector& SubsetFeatureExtractor::extract_vector(
+  const Nodevector& /*nodevector*/,
+  const HypothesesGraph& /*graph*/
+) {
+  throw std::runtime_error(
+    "Feature extractor " + name() + " doesn't provide a vector valued result"
+  );
+  return *(new FeatureVector);
+}
+const FeatureScalar& SubsetFeatureExtractor::extract_scalar(
+  const Nodevector& /*nodevector*/,
+  const HypothesesGraph& /*graph*/
+) {
+  throw std::runtime_error(
+    "Feature extractor " + name() + " doesn't provide a scalar valued result"
+  );
+  return *(new FeatureScalar);
+}
+
+/*=============================================================================
   specific functors
 =============================================================================*/
 ////
@@ -340,59 +374,83 @@ const feature_type& TrackingValue::operator()(const Tracking& /*tracking*/) {
 }
 
 ////
-//// class TrackFeaturesIdentity
+//// class SubsetFeaturesIdentity
 ////
-const std::string TrackFeaturesIdentity::name_ = "TrackFeaturesIdentity";
+const std::string SubsetFeaturesIdentity::name_ = "SubsetFeaturesIdentity";
 
-TrackFeaturesIdentity::TrackFeaturesIdentity(
+SubsetFeaturesIdentity::SubsetFeaturesIdentity(
   const std::vector<std::string>& feature_names
 ) : feature_names_(feature_names) {
 }
 
-TrackFeaturesIdentity::TrackFeaturesIdentity(
+SubsetFeaturesIdentity::SubsetFeaturesIdentity(
   const std::string& feature_name
 ) {
   feature_names_.resize(1);
   feature_names_[0] = feature_name;
 }
 
-const std::string& TrackFeaturesIdentity::name() const {
+const std::string& SubsetFeaturesIdentity::name() const {
   return name_;
 }
 
-const feature_arrays& TrackFeaturesIdentity::operator()(
-  const Track& track
+const FeatureMatrix& SubsetFeaturesIdentity::extract_matrix(
+  const Nodevector& nodevector,
+  const HypothesesGraph& graph
 ) {
-  ret_.clear();
-  // iterate over all traxel
-  for(
-    Traxelvector::const_iterator traxel_it = track.traxels_.begin();
-    traxel_it != track.traxels_.end();
-    traxel_it++
-  ) {
-    // fetch the features which are stored in a map
-    FeatureMap feature_map = traxel_it->features;
-    feature_array feature_vector;
-    // iterate over all feature names
-    for(
-      std::vector<std::string>::const_iterator fname_it = feature_names_.begin();
-      fname_it != feature_names_.end();
-      fname_it++
-    ) {
-      // assert if the feature name exists
-      FeatureMap::const_iterator f = feature_map.find(*fname_it);
-      assert(f != feature_map.end());
-      // append the features to the feature vector
-      feature_vector.insert(
-        feature_vector.end(),
-        (f->second).begin(),
-        (f->second).end()
-      );
-    }
-    // append feature_vector to the feature matrix
-    ret_.push_back(feature_vector);
+  // TODO initilize the return value
+  ret_matrix_.reshape(vigra::Shape2(1, 1));
+
+  // check if we have a tracklet graph
+  bool with_tracklets = graph.has_property(node_tracklet());
+  // check if the graph is legal
+  if (not (graph.has_property(node_traxel()) or with_tracklets)) {
+    throw std::runtime_error(
+      "HypothesesGraph has neither traxel nor tracklet property map"
+    );
   }
-  return ret_;
+
+  // iterate over all nodes
+  for(
+    Nodevector::const_iterator node_it = nodevector.begin();
+    node_it != nodevector.end();
+    node_it++
+  ) {
+    if (with_tracklets) {
+      // append the traxel to the traxelvector
+    } else {
+    // get the traxel
+    }
+  }
+//   // iterate over all traxel
+//   for(
+//     Traxelvector::const_iterator traxel_it = track.traxels_.begin();
+//     traxel_it != track.traxels_.end();
+//     traxel_it++
+//   ) {
+//     // fetch the features which are stored in a map
+//     FeatureMap feature_map = traxel_it->features;
+//     feature_array feature_vector;
+//     // iterate over all feature names
+//     for(
+//       std::vector<std::string>::const_iterator fname_it = feature_names_.begin();
+//       fname_it != feature_names_.end();
+//       fname_it++
+//     ) {
+//       // assert if the feature name exists
+//       FeatureMap::const_iterator f = feature_map.find(*fname_it);
+//       assert(f != feature_map.end());
+//       // append the features to the feature vector
+//       feature_vector.insert(
+//         feature_vector.end(),
+//         (f->second).begin(),
+//         (f->second).end()
+//       );
+//     }
+//     // append feature_vector to the feature matrix
+//     ret_.push_back(feature_vector);
+//   }
+  return ret_matrix_;
 }
 
 
@@ -708,49 +766,49 @@ const feature_arrays& SubsetFeatureExtractorFromFE::operator()(
 ////
 //// class DivisionFeatureExtractor
 ////
-const std::string DivisionFeatureExtractor::name_ = "DivisionFeatureExtractor";
-
-const std::string& DivisionFeatureExtractor::name() const {
-  return name_;
-}
-
-DivisionFeatureExtractor::DivisionFeatureExtractor(
-  const std::string& feature_name,
-  size_t depth
-) : features_identity_(feature_name), depth_(depth) {
-}
- 
-DivisionFeatureExtractor::DivisionFeatureExtractor(
-  const std::vector<std::string>& feature_names,
-  size_t depth
-) : features_identity_(feature_names), depth_(depth) {
-}
-
-const feature_arrays& DivisionFeatureExtractor::operator()(
-    const Trackvector& tracks
-) {
-  Track tmp;
-  const Track& parent = tracks[0];
-  const Track& left_child = tracks[1];
-  const Track& right_child = tracks[2];
-  if(
-    (parent.get_length() >= depth_) and 
-    (left_child.get_length() >= depth_) and
-    (right_child.get_length() >= depth_)
-  ) {
-    Traxelvector::const_iterator p_it = parent.traxels_.end() - depth_;
-    Traxelvector::const_iterator l_it = left_child.traxels_.begin();
-    Traxelvector::const_iterator r_it = right_child.traxels_.begin();
-
-    tmp.traxels_.resize(depth_ * 3);
-    for (size_t i = 0; i < depth_; i++, p_it++, l_it++, r_it++) {
-      tmp.traxels_[i] = *p_it;
-      tmp.traxels_[i+depth_] = *l_it;
-      tmp.traxels_[i+2*depth_] = *r_it;
-    }
-  }
-  return features_identity_(tmp);
-}
+// const std::string DivisionFeatureExtractor::name_ = "DivisionFeatureExtractor";
+// 
+// const std::string& DivisionFeatureExtractor::name() const {
+//   return name_;
+// }
+// 
+// DivisionFeatureExtractor::DivisionFeatureExtractor(
+//   const std::string& feature_name,
+//   size_t depth
+// ) : features_identity_(feature_name), depth_(depth) {
+// }
+//  
+// DivisionFeatureExtractor::DivisionFeatureExtractor(
+//   const std::vector<std::string>& feature_names,
+//   size_t depth
+// ) : features_identity_(feature_names), depth_(depth) {
+// }
+// 
+// const feature_arrays& DivisionFeatureExtractor::operator()(
+//     const Trackvector& tracks
+// ) {
+//   Track tmp;
+//   const Track& parent = tracks[0];
+//   const Track& left_child = tracks[1];
+//   const Track& right_child = tracks[2];
+//   if(
+//     (parent.get_length() >= depth_) and 
+//     (left_child.get_length() >= depth_) and
+//     (right_child.get_length() >= depth_)
+//   ) {
+//     Traxelvector::const_iterator p_it = parent.traxels_.end() - depth_;
+//     Traxelvector::const_iterator l_it = left_child.traxels_.begin();
+//     Traxelvector::const_iterator r_it = right_child.traxels_.begin();
+// 
+//     tmp.traxels_.resize(depth_ * 3);
+//     for (size_t i = 0; i < depth_; i++, p_it++, l_it++, r_it++) {
+//       tmp.traxels_[i] = *p_it;
+//       tmp.traxels_[i+depth_] = *l_it;
+//       tmp.traxels_[i+2*depth_] = *r_it;
+//     }
+//   }
+//   return features_identity_(tmp);
+// }
 
 ////
 //// class SubsetAggregatorFromFA
