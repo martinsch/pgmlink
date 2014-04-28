@@ -127,3 +127,12 @@ After installation of `libxml2-dev`, create a softlink to `libxml` in your `incl
 ```
 sudo ln -s /usr/include/libxml2/libxml /usr/include/
 ```
+
+
+# Build GUI
+
+Pgmlink has been integrated into a [fork of ilastik](https://github.com/martinsch/ilastik). In particular, for both Chaingraph tracking and Conservation tracking, ilastik workflows have been implemented to ease use of these algorithms in a user-friendly software. For user documentation, please see the [official ilastik homepage](http://www.ilastik.org).
+
+Binaries for an ilastik copy where Conservation tracking is integrated, are available on request. However, with the tools provided here, it is easy to automatically build ilastik-for-conservation-tracking yourself:
+
+For this, it is enough to clone the [(modified) ilastik build repository](https://github.com/martinsch/ilastik-build-Linux.git) and follow the instructions in the readme there. It is essential to install CPLEX before building the binaries and to specify the CPLEX location as a build macro, as described in the said readme.
