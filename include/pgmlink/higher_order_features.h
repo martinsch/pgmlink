@@ -42,6 +42,8 @@ typedef feature_type FeatureScalar;
 typedef vigra::MultiArray<1, feature_type> FeatureVector;
 typedef vigra::MultiArray<2, feature_type> FeatureMatrix;
 
+typedef vigra::MultiArrayView<1, feature_type> FeatureVectorView;
+
 /*=============================================================================
  function definitions
 =============================================================================*/

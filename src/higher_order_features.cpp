@@ -398,11 +398,9 @@ const FeatureMatrix& SubsetFeaturesIdentity::extract_matrix(
   const Nodevector& nodevector,
   const HypothesesGraph& graph
 ) {
-  // TODO initilize the return value
-  ret_matrix_.reshape(vigra::Shape2(1, 1));
-
   // check if we have a tracklet graph
   bool with_tracklets = graph.has_property(node_tracklet());
+
   // check if the graph is legal
   if (not (graph.has_property(node_traxel()) or with_tracklets)) {
     throw std::runtime_error(
@@ -410,46 +408,99 @@ const FeatureMatrix& SubsetFeaturesIdentity::extract_matrix(
     );
   }
 
-  // iterate over all nodes
-  for(
-    Nodevector::const_iterator node_it = nodevector.begin();
-    node_it != nodevector.end();
-    node_it++
-  ) {
-    if (with_tracklets) {
-      // append the traxel to the traxelvector
-    } else {
-    // get the traxel
+  std::vector<const Traxel*> traxels_ref;
+
+  // get all feature maps
+  if (with_tracklets) {
+    node_tracklet_type& tracklet_map = graph.get(node_tracklet());
+    for(
+      Nodevector::const_iterator node_it = nodevector.begin();
+      node_it != nodevector.end();
+      node_it++
+    ) {
+      for (
+        Traxelvector::const_iterator traxel_it = tracklet_map[*node_it].begin();
+        traxel_it != tracklet_map[*node_it].end();
+        traxel_it++
+      ) {
+        traxels_ref.push_back(&(*traxel_it));
+      }
+    }
+  } else {
+    node_traxel_type& traxel_map = graph.get(node_traxel());
+    for(
+      Nodevector::const_iterator node_it = nodevector.begin();
+      node_it != nodevector.end();
+      node_it++
+    ) {
+      traxels_ref.push_back(&(traxel_map[*node_it]));
     }
   }
-//   // iterate over all traxel
-//   for(
-//     Traxelvector::const_iterator traxel_it = track.traxels_.begin();
-//     traxel_it != track.traxels_.end();
-//     traxel_it++
-//   ) {
-//     // fetch the features which are stored in a map
-//     FeatureMap feature_map = traxel_it->features;
-//     feature_array feature_vector;
-//     // iterate over all feature names
-//     for(
-//       std::vector<std::string>::const_iterator fname_it = feature_names_.begin();
-//       fname_it != feature_names_.end();
-//       fname_it++
-//     ) {
-//       // assert if the feature name exists
-//       FeatureMap::const_iterator f = feature_map.find(*fname_it);
-//       assert(f != feature_map.end());
-//       // append the features to the feature vector
-//       feature_vector.insert(
-//         feature_vector.end(),
-//         (f->second).begin(),
-//         (f->second).end()
-//       );
-//     }
-//     // append feature_vector to the feature matrix
-//     ret_.push_back(feature_vector);
-//   }
+
+  // get the size of the return matrix
+  size_t x_size = traxels_ref.size();
+
+  // get y-size
+  size_t y_size = 0;
+  // get the feature map of the first traxel and iterate over the feature names
+  const FeatureMap& feature_map = traxels_ref.front()->features;
+  for (
+    std::vector<std::string>::const_iterator fname_it = feature_names_.begin();
+    fname_it != feature_names_.end();
+    ++fname_it
+  ) {
+    FeatureMap::const_iterator feature_map_it = feature_map.find(*fname_it);
+    if (feature_map_it != feature_map.end()) {
+      y_size += feature_map_it->second.size();
+    } else {
+      LOG(logDEBUG) << "In SubsetFeaturesIdentity: Feature \"" << *fname_it << "\" not found";
+    }
+  }
+  
+  // initialize the return matrix
+  ret_matrix_.reshape(vigra::Shape2(x_size, y_size));
+
+  // iterate over all traxel
+  size_t column_index = 0;
+  for(
+    std::vector<const Traxel*>::const_iterator traxel_it = traxels_ref.begin();
+    traxel_it != traxels_ref.end();
+    traxel_it++, column_index++
+  ) {
+    // fetch the features which are stored in a map
+    const FeatureMap feature_map = (*traxel_it)->features;
+
+    // get the current column as a view
+    FeatureVectorView column = ret_matrix_.bind<0>(column_index);
+
+    // reset the row_index
+    size_t row_index = 0;
+
+    // iterate over all feature names
+    for(
+      std::vector<std::string>::const_iterator fname_it = feature_names_.begin();
+      fname_it != feature_names_.end();
+      fname_it++
+    ) {
+      // check if the feature name exists
+      FeatureMap::const_iterator fmap_it = feature_map.find(*fname_it);
+      if ( fmap_it != feature_map.end()) {
+        // iterate over the elements of the feature vector
+        for (
+          feature_array::const_iterator f_it = fmap_it->second.begin();
+          f_it != fmap_it->second.end();
+          f_it++, row_index++
+        ) {
+          if (row_index >= y_size) {
+            throw std::runtime_error(
+              "In SubsetFeaturesIdentity: Invalid row index"
+            );
+          }
+          column(row_index) = *f_it;
+        }
+      } // if (fmap_it != feature_map.end())"
+    } // for (fname_it = ... )
+  } // for(traxels_it = .. )
   return ret_matrix_;
 }
 
@@ -743,7 +794,6 @@ const std::vector<Nodevector>& DivisionSubsets::operator()(
       ret_.back().push_back(graph.target(out_arcs.front()));
       ret_.back().push_back(graph.target(out_arcs.back()));
     }
-    
   }
   return ret_;
 }
