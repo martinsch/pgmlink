@@ -246,7 +246,7 @@ class TrackingValue {
 };
 
 ////
-//// class TrackFeaturesIdentity
+//// class SubsetFeaturesIdentity
 ////
 class SubsetFeaturesIdentity : public SubsetFeatureExtractor {
  public:
@@ -262,7 +262,7 @@ class SubsetFeaturesIdentity : public SubsetFeatureExtractor {
   static const std::string name_;
   std::vector<std::string> feature_names_;
   FeatureMatrix ret_matrix_;
-}; // class TrackFeaturesIdentity
+}; // class SubsetFeaturesIdentity
 
 ////
 //// class TrackFeaturesDiff
