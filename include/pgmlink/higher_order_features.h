@@ -47,7 +47,7 @@ typedef vigra::MultiArrayView<1, feature_type> FeatureVectorView;
 /*=============================================================================
  function definitions
 =============================================================================*/
-void set_solution(HypothesesGraph& graph);
+void set_solution(HypothesesGraph& graph, const size_t solution_index);
 
 /*=============================================================================
  class definitions

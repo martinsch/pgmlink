@@ -720,7 +720,7 @@ const std::vector<Nodevector>& TrackSubsets::operator()(
     for (OutArcIt o_it(graph, graph.source(a_it)); o_it != lemon::INVALID; ++o_it) {
       out_arcs += (arc_active_map[o_it] ? 1 : 0);
     }
-    // union the nodes if there are no other active arcs with the same source
+    // link those nodes if there are no other active arcs with the same source
     if (out_arcs == 1) {
       parent[graph.target(a_it)] = graph.source(a_it);
       child[graph.source(a_it)] = graph.target(a_it);
@@ -739,10 +739,12 @@ const std::vector<Nodevector>& TrackSubsets::operator()(
     if (parent[current_node] == current_node) {
       // resize the return vector
       ret_.resize(ret_.size()+1);
-      do {
-        current_node = child[current_node];
+      bool loop = true;
+      while (loop) {
         ret_.back().push_back(current_node);
-      } while(child[current_node] != child[current_node]);
+        loop = current_node != child[current_node];
+        current_node = child[current_node];
+      };
     }
   }
   return ret_;
