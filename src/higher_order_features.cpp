@@ -1,6 +1,4 @@
 #include "pgmlink/higher_order_features.h"
-#include <lemon/adaptors.h> // for SubDigraph
-#include <boost/pending/disjoint_sets.hpp>
 
 namespace pgmlink {
 
@@ -15,7 +13,7 @@ typedef typename
   arc_active_map_type;
 typedef typename
   property_map<node_timestep, HypothesesGraph::base_graph>::type
-  node_timestep_type;
+  node_timestep_map_type;
 typedef typename
   property_map<node_active_count, HypothesesGraph::base_graph>::type
   nodes_active_map_type;
@@ -27,10 +25,10 @@ typedef typename
   divs_active_count_map_type;
 typedef typename
   property_map<node_traxel, HypothesesGraph::base_graph>::type
-  node_traxel_type;
+  node_traxel_map_type;
 typedef typename
   property_map<node_tracklet, HypothesesGraph::base_graph>::type
-  node_tracklet_type;
+  node_tracklet_map_type;
 typedef typename HypothesesGraph::NodeIt NodeIt;
 typedef typename HypothesesGraph::ArcIt ArcIt;
 typedef typename HypothesesGraph::InArcIt InArcIt;
@@ -84,6 +82,22 @@ void set_solution(HypothesesGraph& graph, const size_t solution_index) {
   }
   for (ArcIt a_it(graph); a_it != lemon::INVALID; ++a_it) {
     arc_active_map[a_it] = arcs_active_map[a_it][solution_index];
+  }
+}
+
+////
+//// function out_nodes
+////
+void get_out_nodes(
+  const HypothesesGraph::Node& node,
+  const HypothesesGraph& graph,
+  Nodevector& out_nodes
+) {
+  out_nodes.clear();
+  for (OutArcIt oa_it(graph, node); oa_it != lemon::INVALID; ++oa_it) {
+    if (graph.get(arc_active())[oa_it]) {
+      out_nodes.push_back(graph.target(oa_it));
+    }
   }
 }
 
@@ -159,7 +173,7 @@ Track track_from_start_node(
   HypothesesGraph::Node& last_node
 ) {
   bool tracklet_graph = graph.has_property(node_tracklet());
-  node_timestep_type& timestep_map = graph.get(node_timestep());
+  node_timestep_map_type& timestep_map = graph.get(node_timestep());
   arcs_active_map_type& arcs_active_map = graph.get(arc_active_count());
 
   Traxelvector traxels;
@@ -168,14 +182,14 @@ Track track_from_start_node(
   while(not terminate) {
     // append the current traxel/tracklet to the end of the traxel vector
     if(tracklet_graph) {
-      node_tracklet_type& tracklet_map = graph.get(node_tracklet());
+      node_tracklet_map_type& tracklet_map = graph.get(node_tracklet());
       traxels.insert(
         traxels.end(),
         tracklet_map[last_node].begin(),
         tracklet_map[last_node].end()
       );
     } else {
-      node_traxel_type& traxel_map = graph.get(node_traxel());
+      node_traxel_map_type& traxel_map = graph.get(node_traxel());
       traxels.push_back(traxel_map[last_node]);
     } // end if(tracklet_graph)
 
@@ -754,8 +768,6 @@ const std::vector<ConstTraxelRefVector>& DivisionSubsets::operator()(
   const HypothesesGraph& graph,
   size_t depth
 ) {
-  ret_.clear();
-
   // Check if the graph has the necessary attributes
   if (not graph.has_property(node_active())) {
     throw std::runtime_error(
@@ -778,29 +790,147 @@ const std::vector<ConstTraxelRefVector>& DivisionSubsets::operator()(
     );
   }
 
+  // make shure the depth is a valid value
+  if (depth <=0 ) {
+    depth = 1;
+  }
+
+  // call calculation functions regarding what kind of graph we have
+  if (with_tracklets) {
+    return from_tracklet_graph(graph, depth);
+  } else {
+    return from_traxel_graph(graph, depth);
+  }
+}
+
+const std::vector<ConstTraxelRefVector>& DivisionSubsets::from_traxel_graph(
+  const HypothesesGraph& graph,
+  size_t depth
+) {
+  ret_.clear();
   // Get the property maps
   node_active_map_type& node_active_map = graph.get(node_active());
-  arc_active_map_type& arc_active_map = graph.get(arc_active());
+  node_traxel_map_type& node_traxel_map = graph.get(node_traxel());
 
   // Find the divisions
   for (NodeActiveIt n_it(node_active_map); n_it != lemon::INVALID; ++n_it) {
     // Count the active outgoing arcs
-    std::vector<HypothesesGraph::Arc> out_arcs;
-    for (OutArcIt o_it(graph, n_it); o_it != lemon::INVALID; ++o_it) {
-      if (arc_active_map[o_it]) {
-        out_arcs.push_back(o_it);
-      }
-    }
+    std::vector<HypothesesGraph::Node> out_nodes;
+    get_out_nodes(n_it, graph, out_nodes);
     // Two outgoing arcs: division
-    if (out_arcs.size() == 2) {
-      if (with_tracklets) {
-        // %TODO
-      } else {
-        // %TODO
+    ConstTraxelRefVector l_children;
+    ConstTraxelRefVector r_children;
+    if (out_nodes.size() == 2) {
+      bool valid_division = true;
+      size_t curr_depth = depth;
+      HypothesesGraph::Node l_node = out_nodes[0];
+      HypothesesGraph::Node r_node = out_nodes[1];
+      Nodevector l_out;
+      Nodevector r_out;
+      while ((curr_depth != 0) and valid_division) {
+        l_children.push_back( &(node_traxel_map[l_node]) );
+        r_children.push_back( &(node_traxel_map[r_node]) );
+        get_out_nodes(l_node, graph, l_out);
+        get_out_nodes(r_node, graph, r_out);
+
+        valid_division = (l_out.size() == 1) and (r_out.size() == 1);
+        curr_depth--;
+        l_node = l_out.front();
+        r_node = r_out.front();
+      }
+      if (valid_division) {
+        ret_.resize(ret_.size() + 1);
+        ret_.back().insert(
+          ret_.back().end(),
+          l_children.begin(),
+          l_children.end()
+        );
+        ret_.back().insert(
+          ret_.back().end(),
+          r_children.begin(),
+          r_children.end()
+        );
       }
     }
   }
   return ret_;
+}
+
+const std::vector<ConstTraxelRefVector>& DivisionSubsets::from_tracklet_graph(
+  const HypothesesGraph& graph,
+  size_t depth
+) {
+  ret_.clear();
+  // Get the property maps
+  node_active_map_type& node_active_map = graph.get(node_active());
+
+  // Find the divisions
+  for (NodeActiveIt n_it(node_active_map); n_it != lemon::INVALID; ++n_it) {
+    // Count the active outgoing arcs
+    std::vector<HypothesesGraph::Node> out_nodes;
+    get_out_nodes(n_it, graph, out_nodes);
+    // Two outgoing arcs: division
+    if (out_nodes.size() == 2) {
+      // TODO
+      ConstTraxelRefVector l_children;
+      ConstTraxelRefVector r_children;
+      bool valid_division = true;
+
+      valid_division &= get_children_to_depth(
+        out_nodes[0],
+        graph,
+        depth,
+        l_children
+      );
+      valid_division &= get_children_to_depth(
+        out_nodes[1],
+        graph,
+        depth,
+        r_children
+      );
+      if (valid_division) {
+        ret_.resize(ret_.size() + 1);
+        ret_.back().insert(
+          ret_.back().end(),
+          l_children.begin(),
+          l_children.end()
+        );
+        ret_.back().insert(
+          ret_.back().end(),
+          r_children.begin(),
+          r_children.end()
+        );
+      }
+    }
+  }
+  return ret_;
+}
+
+bool DivisionSubsets::get_children_to_depth(
+  const HypothesesGraph::Node& node,
+  const HypothesesGraph& graph,
+  size_t depth,
+  ConstTraxelRefVector& traxelrefs
+) {
+  HypothesesGraph::Node curr_node = node;
+  size_t curr_tracklet_index = 0;
+  bool valid_division = true;
+  node_tracklet_map_type& tracklet_map = graph.get(node_tracklet());
+
+  while (valid_division and (depth != 0)) {
+    traxelrefs.push_back( &(tracklet_map[curr_node][curr_tracklet_index]) );
+
+    curr_tracklet_index++;
+    depth--;
+    if (curr_tracklet_index == tracklet_map[curr_node].size()) {
+      Nodevector out_nodes;
+      get_out_nodes(curr_node, graph, out_nodes);
+      valid_division = (out_nodes.size() == 1);
+      curr_node = out_nodes[0];
+      curr_tracklet_index = 0;
+    }
+  }
+  return valid_division;
 }
 
 ////

@@ -339,6 +339,20 @@ class DivisionSubsets : public SubsetsOfInterest {
     size_t depth = 1
   );
  protected:
+  const std::vector<ConstTraxelRefVector>& from_tracklet_graph(
+    const HypothesesGraph& graph,
+    size_t depth
+  );
+  const std::vector<ConstTraxelRefVector>& from_traxel_graph(
+    const HypothesesGraph& graph,
+    size_t depth
+  );
+  bool get_children_to_depth(
+    const HypothesesGraph::Node& node,
+    const HypothesesGraph& graph,
+    size_t depth,
+    ConstTraxelRefVector& traxelrefs
+  );
   static const std::string name_;
   std::vector<ConstTraxelRefVector> ret_;
 };
