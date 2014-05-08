@@ -682,7 +682,7 @@ const std::string& TrackSubsets::name() const {
   return name_;
 }
 
-const std::vector<Nodevector>& TrackSubsets::operator()(
+const std::vector<ConstTraxelRefVector>& TrackSubsets::operator()(
   const HypothesesGraph& graph
 ) {
   ret_.clear();
@@ -696,6 +696,16 @@ const std::vector<Nodevector>& TrackSubsets::operator()(
   if (not graph.has_property(arc_active())) {
     throw std::runtime_error(
       "Graph doesn't have an \"arc_active\" property map"
+    );
+  }
+
+  // check if we have a tracklet graph
+  bool with_tracklets = graph.has_property(node_tracklet());
+
+  // check if the graph is legal
+  if (not (graph.has_property(node_traxel()) or with_tracklets)) {
+    throw std::runtime_error(
+      "HypothesesGraph has neither traxel nor tracklet property map"
     );
   }
 
@@ -717,7 +727,11 @@ const std::vector<Nodevector>& TrackSubsets::operator()(
   for (ArcActiveIt a_it(arc_active_map); a_it != lemon::INVALID; ++a_it) {
     // count the active arcs with the same source
     size_t out_arcs = 0;
-    for (OutArcIt o_it(graph, graph.source(a_it)); o_it != lemon::INVALID; ++o_it) {
+    for (
+      OutArcIt o_it(graph, graph.source(a_it));
+      o_it != lemon::INVALID;
+      ++o_it
+    ) {
       out_arcs += (arc_active_map[o_it] ? 1 : 0);
     }
     // link those nodes if there are no other active arcs with the same source
@@ -727,7 +741,7 @@ const std::vector<Nodevector>& TrackSubsets::operator()(
     }
   }
   
-  // Compose return vector of node vectors
+  // Compose return vector of traxel reference vectors
   for (
     NodeNodeMap::const_iterator nmap_it = parent.begin();
     nmap_it != parent.end();
@@ -740,11 +754,24 @@ const std::vector<Nodevector>& TrackSubsets::operator()(
       // resize the return vector
       ret_.resize(ret_.size()+1);
       bool loop = true;
+      // loop as long as the track isn't finished
       while (loop) {
-        ret_.back().push_back(current_node);
+        if (with_tracklets) {
+          // get the traxel vector of this node
+          const std::vector<Traxel>& t_vec = graph.get(node_tracklet())[current_node];
+          for (
+            std::vector<Traxel>::const_iterator t_it = t_vec.begin();
+            t_it != t_vec.end();
+            t_it++
+          ) {
+            ret_.back().push_back( &(*t_it) );
+          }
+        } else {
+          ret_.back().push_back( &(graph.get(node_traxel())[current_node]) );
+        }
         loop = current_node != child[current_node];
         current_node = child[current_node];
-      };
+      }
     }
   }
   return ret_;
@@ -760,10 +787,17 @@ const std::string& DivisionSubsets::name() const {
   return name_;
 }
 
-const std::vector<Nodevector>& DivisionSubsets::operator()(
+const std::vector<ConstTraxelRefVector>& DivisionSubsets::operator()(
   const HypothesesGraph& graph
 ) {
+  return operator()(graph, 1);
+}
+const std::vector<ConstTraxelRefVector>& DivisionSubsets::operator()(
+  const HypothesesGraph& graph,
+  size_t depth
+) {
   ret_.clear();
+
   // Check if the graph has the necessary attributes
   if (not graph.has_property(node_active())) {
     throw std::runtime_error(
@@ -773,6 +807,16 @@ const std::vector<Nodevector>& DivisionSubsets::operator()(
   if (not graph.has_property(arc_active())) {
     throw std::runtime_error(
       "Graph doesn't have an \"arc_active\" property map"
+    );
+  }
+
+  // check if we have a tracklet graph
+  bool with_tracklets = graph.has_property(node_tracklet());
+
+  // check if the graph is legal
+  if (not (graph.has_property(node_traxel()) or with_tracklets)) {
+    throw std::runtime_error(
+      "HypothesesGraph has neither traxel nor tracklet property map"
     );
   }
 
@@ -791,10 +835,11 @@ const std::vector<Nodevector>& DivisionSubsets::operator()(
     }
     // Two outgoing arcs: division
     if (out_arcs.size() == 2) {
-      ret_.resize(ret_.size()+1);
-      ret_.back().push_back(graph.source(out_arcs.front()));
-      ret_.back().push_back(graph.target(out_arcs.front()));
-      ret_.back().push_back(graph.target(out_arcs.back()));
+      if (with_tracklets) {
+        // %TODO
+      } else {
+        // %TODO
+      }
     }
   }
   return ret_;

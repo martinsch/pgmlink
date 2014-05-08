@@ -37,6 +37,7 @@ class Track;
 typedef std::vector<Traxel> Traxelvector;
 typedef std::vector<Track> Trackvector;
 typedef std::vector<HypothesesGraph::Node> Nodevector;
+typedef std::vector<const Traxel*> ConstTraxelRefVector;
 
 typedef feature_type FeatureScalar;
 typedef vigra::MultiArray<1, feature_type> FeatureVector;
@@ -146,7 +147,7 @@ class SubsetsOfInterest {
   SubsetsOfInterest() {};
   virtual ~SubsetsOfInterest() {};
   virtual const std::string& name() const = 0;
-  virtual const std::vector<Nodevector>& operator()(
+  virtual const std::vector<ConstTraxelRefVector>& operator()(
     const HypothesesGraph& graph
   ) = 0;
 };
@@ -318,12 +319,12 @@ class TrackSubsets : public SubsetsOfInterest {
   TrackSubsets() {};
   virtual ~TrackSubsets() {};
   virtual const std::string& name() const;
-  virtual const std::vector<Nodevector>& operator()(
+  virtual const std::vector<ConstTraxelRefVector>& operator()(
     const HypothesesGraph& graph
   );
  protected:
   static const std::string name_;
-  std::vector<Nodevector> ret_;
+  std::vector<ConstTraxelRefVector> ret_;
 };
 
 ////
@@ -334,12 +335,16 @@ class DivisionSubsets : public SubsetsOfInterest {
   DivisionSubsets() {};
   virtual ~DivisionSubsets() {};
   virtual const std::string& name() const;
-  virtual const std::vector<Nodevector>& operator()(
+  virtual const std::vector<ConstTraxelRefVector>& operator()(
     const HypothesesGraph& graph
+  );
+  virtual const std::vector<ConstTraxelRefVector>& operator()(
+    const HypothesesGraph& graph,
+    size_t depth = 1
   );
  protected:
   static const std::string name_;
-  std::vector<Nodevector> ret_;
+  std::vector<ConstTraxelRefVector> ret_;
 };
 
 ////
