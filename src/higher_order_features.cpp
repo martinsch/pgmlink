@@ -303,8 +303,7 @@ Tracking::Tracking(const HypothesesGraph& graph, const size_t index)
 //// class SubsetFeatureExtractor
 ////
 const FeatureMatrix& SubsetFeatureExtractor::extract_matrix(
-  const Nodevector& /*nodevector*/,
-  const HypothesesGraph& /*graph*/
+  const ConstTraxelRefVector& /*traxelrefs*/
 ) {
   throw std::runtime_error(
     "Feature extractor " + name() + " doesn't provide a matrix valued result"
@@ -312,8 +311,7 @@ const FeatureMatrix& SubsetFeatureExtractor::extract_matrix(
   return *(new FeatureMatrix);
 }
 const FeatureVector& SubsetFeatureExtractor::extract_vector(
-  const Nodevector& /*nodevector*/,
-  const HypothesesGraph& /*graph*/
+  const ConstTraxelRefVector& /*traxelrefs*/
 ) {
   throw std::runtime_error(
     "Feature extractor " + name() + " doesn't provide a vector valued result"
@@ -321,8 +319,7 @@ const FeatureVector& SubsetFeatureExtractor::extract_vector(
   return *(new FeatureVector);
 }
 const FeatureScalar& SubsetFeatureExtractor::extract_scalar(
-  const Nodevector& /*nodevector*/,
-  const HypothesesGraph& /*graph*/
+  const ConstTraxelRefVector& /*traxelrefs*/
 ) {
   throw std::runtime_error(
     "Feature extractor " + name() + " doesn't provide a scalar valued result"
@@ -395,55 +392,16 @@ const std::string& SubsetFeaturesIdentity::name() const {
 }
 
 const FeatureMatrix& SubsetFeaturesIdentity::extract_matrix(
-  const Nodevector& nodevector,
-  const HypothesesGraph& graph
+  const ConstTraxelRefVector& traxelrefs
 ) {
-  // check if we have a tracklet graph
-  bool with_tracklets = graph.has_property(node_tracklet());
-
-  // check if the graph is legal
-  if (not (graph.has_property(node_traxel()) or with_tracklets)) {
-    throw std::runtime_error(
-      "HypothesesGraph has neither traxel nor tracklet property map"
-    );
-  }
-
-  std::vector<const Traxel*> traxels_ref;
-
-  // get all feature maps
-  if (with_tracklets) {
-    node_tracklet_type& tracklet_map = graph.get(node_tracklet());
-    for(
-      Nodevector::const_iterator node_it = nodevector.begin();
-      node_it != nodevector.end();
-      node_it++
-    ) {
-      for (
-        Traxelvector::const_iterator traxel_it = tracklet_map[*node_it].begin();
-        traxel_it != tracklet_map[*node_it].end();
-        traxel_it++
-      ) {
-        traxels_ref.push_back(&(*traxel_it));
-      }
-    }
-  } else {
-    node_traxel_type& traxel_map = graph.get(node_traxel());
-    for(
-      Nodevector::const_iterator node_it = nodevector.begin();
-      node_it != nodevector.end();
-      node_it++
-    ) {
-      traxels_ref.push_back(&(traxel_map[*node_it]));
-    }
-  }
-
   // get the size of the return matrix
-  size_t x_size = traxels_ref.size();
+  size_t x_size = traxelrefs.size();
 
   // get y-size
   size_t y_size = 0;
+
   // get the feature map of the first traxel and iterate over the feature names
-  const FeatureMap& feature_map = traxels_ref.front()->features;
+  const FeatureMap& feature_map = traxelrefs.front()->features;
   for (
     std::vector<std::string>::const_iterator fname_it = feature_names_.begin();
     fname_it != feature_names_.end();
@@ -463,12 +421,12 @@ const FeatureMatrix& SubsetFeaturesIdentity::extract_matrix(
   // iterate over all traxel
   size_t column_index = 0;
   for(
-    std::vector<const Traxel*>::const_iterator traxel_it = traxels_ref.begin();
-    traxel_it != traxels_ref.end();
-    traxel_it++, column_index++
+    ConstTraxelRefVector::const_iterator tref_it = traxelrefs.begin();
+    tref_it != traxelrefs.end();
+    tref_it++, column_index++
   ) {
     // fetch the features which are stored in a map
-    const FeatureMap feature_map = (*traxel_it)->features;
+    const FeatureMap feature_map = (*tref_it)->features;
 
     // get the current column as a view
     FeatureVectorView column = ret_matrix_.bind<0>(column_index);

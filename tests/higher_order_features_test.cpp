@@ -184,10 +184,10 @@ BOOST_AUTO_TEST_CASE( SubsetFeaturesIdentity_extract_matrix_traxelgraph ) {
   get_graph(graph);
 
   // get the subset of all traxels in the order of their traxel ids
-  std::vector<HypothesesGraph::Node> subset(6);
+  ConstTraxelRefVector subset(6);
   for (NodeIt n_it(graph); n_it != lemon::INVALID; ++n_it) {
-    Traxel trx = graph.get(node_traxel())[n_it];
-    subset[trx.Id-1] = n_it;
+    const Traxel* tref = &(graph.get(node_traxel())[n_it]);
+    subset[tref->Id-1] = tref;
   }
 
   set_solution(graph, 0);
@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE( SubsetFeaturesIdentity_extract_matrix_traxelgraph ) {
   {
     SubsetFeaturesIdentity identity("com");
 
-    FeatureMatrix com_matrix = identity.extract_matrix(subset, graph);
+    FeatureMatrix com_matrix = identity.extract_matrix(subset);
     
     BOOST_CHECK_EQUAL(com_matrix.shape(0), 6);
     BOOST_CHECK_EQUAL(com_matrix.shape(1), 2);
@@ -214,7 +214,7 @@ BOOST_AUTO_TEST_CASE( SubsetFeaturesIdentity_extract_matrix_traxelgraph ) {
     std::vector<std::string> feature_names(1, "com");
     SubsetFeaturesIdentity identity(feature_names);
 
-    FeatureMatrix com_matrix = identity.extract_matrix(subset, graph);
+    FeatureMatrix com_matrix = identity.extract_matrix(subset);
     
     BOOST_CHECK_EQUAL(com_matrix.shape(0), 6);
     BOOST_CHECK_EQUAL(com_matrix.shape(1), 2);
@@ -235,7 +235,7 @@ BOOST_AUTO_TEST_CASE( SubsetFeaturesIdentity_extract_matrix_traxelgraph ) {
 
     SubsetFeaturesIdentity identity(feature_names);
 
-    FeatureMatrix com_matrix = identity.extract_matrix(subset, graph);
+    FeatureMatrix com_matrix = identity.extract_matrix(subset);
     
     BOOST_CHECK_EQUAL(com_matrix.shape(0), 6);
     BOOST_CHECK_EQUAL(com_matrix.shape(1), 3);
@@ -251,57 +251,7 @@ BOOST_AUTO_TEST_CASE( SubsetFeaturesIdentity_extract_matrix_traxelgraph ) {
   }
 }
 
-BOOST_AUTO_TEST_CASE( SubsetFeaturesIdentity_extract_matrix_trackletgraph ) {
-  LOG(logINFO) << "test case: SubsetFeaturesIdentity_operator_trackletgraph";
-
-  // set up the graph
-  HypothesesGraph graph;
-  get_tracklet_graph(graph);
-
-  // get the subset of all traxels in the order of their traxel ids
-  std::vector<HypothesesGraph::Node> subset;
-  for (NodeIt n_it(graph); n_it != lemon::INVALID; ++n_it) {
-    subset.push_back(n_it);
-  }
-
-  set_solution(graph, 0);
-
-  LOG(logINFO) << "  test \"SubsetFeaturesIdentity\" with string as constructor argument";
-  {
-    SubsetFeaturesIdentity identity("com");
-
-    FeatureMatrix com_matrix = identity.extract_matrix(subset, graph);
-    
-    BOOST_CHECK_EQUAL(com_matrix.shape(0), 6);
-    BOOST_CHECK_EQUAL(com_matrix.shape(1), 2);
-  }
-
-  LOG(logINFO) << "  test \"SubsetFeaturesIdentity\" with length one vector as constructor argument";
-  {
-    std::vector<std::string> feature_names(1, "com");
-    SubsetFeaturesIdentity identity(feature_names);
-
-    FeatureMatrix com_matrix = identity.extract_matrix(subset, graph);
-    
-    BOOST_CHECK_EQUAL(com_matrix.shape(0), 6);
-    BOOST_CHECK_EQUAL(com_matrix.shape(1), 2);
-  }
-
-  LOG(logINFO) << "  test \"SubsetFeaturesIdentity\" with length two vector as constructor argument";
-  {
-    std::vector<std::string> feature_names;
-    feature_names.push_back("com");
-    feature_names.push_back("id");
-
-    SubsetFeaturesIdentity identity(feature_names);
-
-    FeatureMatrix com_matrix = identity.extract_matrix(subset, graph);
-    
-    BOOST_CHECK_EQUAL(com_matrix.shape(0), 6);
-    BOOST_CHECK_EQUAL(com_matrix.shape(1), 3);
-  }
-}
-BOOST_AUTO_TEST_CASE( TrackSubsets_operator ) {
+BOOST_AUTO_TEST_CASE( TrackSubsets_operator_traxelgraph ) {
   
   LOG(logINFO) << "test case: SubsetFeaturesIdentity_operator";
 
@@ -314,24 +264,23 @@ BOOST_AUTO_TEST_CASE( TrackSubsets_operator ) {
   
   // get the track subsets
   TrackSubsets get_track_subsets;
-  std::vector<Nodevector> track_subsets = get_track_subsets(graph);
+  std::vector<ConstTraxelRefVector> track_subsets = get_track_subsets(graph);
 
   LOG(logINFO) << "  there are " << track_subsets.size() << " tracks";
   for (
-    std::vector<Nodevector>::iterator nodevec_it = track_subsets.begin();
-    nodevec_it != track_subsets.end();
-    nodevec_it++
+    std::vector<ConstTraxelRefVector>::iterator tvec_it = track_subsets.begin();
+    tvec_it != track_subsets.end();
+    tvec_it++
   ) {
-    LOG(logINFO) << "    count of nodes in track: " << nodevec_it->size();
+    LOG(logINFO) << "    count of nodes in track: " << tvec_it->size();
     std::stringstream sstream;
     sstream << "    the ids are: ";
     for (
-      Nodevector::iterator n_it = nodevec_it->begin();
-      n_it != nodevec_it->end();
-      n_it++
+      ConstTraxelRefVector::iterator tref_it = tvec_it->begin();
+      tref_it != tvec_it->end();
+      tref_it++
     ) {
-      Traxel trx = graph.get(node_traxel())[*n_it];
-      sstream << trx.Id << " ";
+      sstream << (*tref_it)->Id << " ";
     }
     LOG(logINFO) << sstream.str();
   }

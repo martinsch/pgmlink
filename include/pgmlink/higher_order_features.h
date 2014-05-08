@@ -161,16 +161,13 @@ class SubsetFeatureExtractor {
   virtual ~SubsetFeatureExtractor() {};
   virtual const std::string& name() const = 0;
   virtual const FeatureMatrix& extract_matrix(
-    const Nodevector& nodevector,
-    const HypothesesGraph& graph
+    const ConstTraxelRefVector& traxelrefs
   );
   virtual const FeatureVector& extract_vector(
-    const Nodevector& nodevector,
-    const HypothesesGraph& graph
+    const ConstTraxelRefVector& traxelrefs
   );
   virtual const FeatureScalar& extract_scalar(
-    const Nodevector& nodevector,
-    const HypothesesGraph& graph
+    const ConstTraxelRefVector& traxelrefs
   );
 };
 
@@ -256,8 +253,7 @@ class SubsetFeaturesIdentity : public SubsetFeatureExtractor {
   virtual ~SubsetFeaturesIdentity() {};
   virtual const std::string& name() const;
   virtual const FeatureMatrix& extract_matrix(
-    const Nodevector& nodevector,
-    const HypothesesGraph& graph
+    const ConstTraxelRefVector& traxelrefs
   );
  protected:
   static const std::string name_;
