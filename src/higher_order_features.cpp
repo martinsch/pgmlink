@@ -115,7 +115,7 @@ void get_in_nodes(
   in_nodes.clear();
   for (InArcIt ia_it(graph, node); ia_it != lemon::INVALID; ++ia_it) {
     if (graph.get(arc_active())[ia_it]) {
-      in_nodes.push_back(graph.target(ia_it));
+      in_nodes.push_back(graph.source(ia_it));
     }
   }
 }
@@ -592,8 +592,10 @@ bool DivisionSubsets::get_children_to_depth(
       Nodevector out_nodes;
       get_out_nodes(curr_node, graph, out_nodes);
       valid_division = (out_nodes.size() == 1);
-      curr_node = out_nodes[0];
-      curr_tracklet_index = 0;
+      if (valid_division) {
+        curr_node = out_nodes[0];
+        curr_tracklet_index = 0;
+      }
     }
   }
   return (depth == 0);
@@ -605,10 +607,11 @@ bool DivisionSubsets::get_parents_to_depth(
   size_t depth,
   ConstTraxelRefVector& traxelrefs
 ) {
-  HypothesesGraph::Node curr_node = node;
-  size_t curr_tracklet_index = 0;
-  bool valid_division = true;
   node_tracklet_map_type& tracklet_map = graph.get(node_tracklet());
+
+  HypothesesGraph::Node curr_node = node;
+  size_t curr_tracklet_index = tracklet_map[node].size()-1;
+  bool valid_division = true;
 
   while (valid_division and (depth != 0)) {
     traxelrefs.push_back( &(tracklet_map[curr_node][curr_tracklet_index]) );
@@ -617,8 +620,10 @@ bool DivisionSubsets::get_parents_to_depth(
       Nodevector in_nodes;
       get_in_nodes(curr_node, graph, in_nodes);
       valid_division = (in_nodes.size() == 1);
-      curr_node = in_nodes[0];
-      curr_tracklet_index = graph.get(node_tracklet())[in_nodes[0]].size();
+      if (valid_division) {
+        curr_node = in_nodes[0];
+        curr_tracklet_index = tracklet_map[in_nodes[0]].size();
+      }
     }
     curr_tracklet_index--;
     depth--;
