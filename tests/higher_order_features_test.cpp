@@ -39,14 +39,19 @@ void get_graph(HypothesesGraph& graph) {
   HypothesesGraph::Node n11 = graph.add_node(2);
   HypothesesGraph::Node n20 = graph.add_node(3);
   HypothesesGraph::Node n21 = graph.add_node(3);
+  HypothesesGraph::Node n30 = graph.add_node(4);
+  HypothesesGraph::Node n31 = graph.add_node(4);
 
   HypothesesGraph::Arc a13 = graph.addArc(n00, n10);
+  HypothesesGraph::Arc a24 = graph.addArc(n01, n11);
   HypothesesGraph::Arc a35 = graph.addArc(n10, n20);
   HypothesesGraph::Arc a36 = graph.addArc(n10, n21);
-  HypothesesGraph::Arc a24 = graph.addArc(n01, n11);
+  HypothesesGraph::Arc a57 = graph.addArc(n20, n30);
+  HypothesesGraph::Arc a68 = graph.addArc(n21, n31);
+
 
   // corresponding traxels
-  Traxel t00, t01, t10, t11, t20, t21;
+  Traxel t00, t01, t10, t11, t20, t21, t30, t31;
   t00.Id = 1;
   t00.Timestep = 1;
   t00.features["com"].push_back(0.);
@@ -77,6 +82,16 @@ void get_graph(HypothesesGraph& graph) {
   t21.features["com"].push_back(2.);
   t21.features["com"].push_back(1.);
   t21.features["id"].push_back(6.);
+  t30.Id = 7;
+  t30.Timestep = 4;
+  t30.features["com"].push_back(3.);
+  t30.features["com"].push_back(0.);
+  t30.features["id"].push_back(7.);
+  t31.Id = 8;
+  t31.Timestep = 4;
+  t31.features["com"].push_back(3.);
+  t31.features["com"].push_back(1.);
+  t31.features["id"].push_back(8.);
 
   graph.add(node_traxel());
   graph.get(node_traxel()).set(n00, t00);
@@ -85,6 +100,8 @@ void get_graph(HypothesesGraph& graph) {
   graph.get(node_traxel()).set(n11, t11);
   graph.get(node_traxel()).set(n20, t20);
   graph.get(node_traxel()).set(n21, t21);
+  graph.get(node_traxel()).set(n30, t30);
+  graph.get(node_traxel()).set(n31, t31);
 
   graph.add(node_active_count());
   graph.get(node_active_count()).set(n00, std::vector<size_t>(1,1));
@@ -93,12 +110,16 @@ void get_graph(HypothesesGraph& graph) {
   graph.get(node_active_count()).set(n11, std::vector<size_t>(1,0));
   graph.get(node_active_count()).set(n20, std::vector<size_t>(1,1));
   graph.get(node_active_count()).set(n21, std::vector<size_t>(1,1));
+  graph.get(node_active_count()).set(n30, std::vector<size_t>(1,1));
+  graph.get(node_active_count()).set(n31, std::vector<size_t>(1,1));
 
   graph.add(arc_active_count());
   graph.get(arc_active_count()).set(a13, std::vector<bool>(1,true));
+  graph.get(arc_active_count()).set(a24, std::vector<bool>(1,false));
   graph.get(arc_active_count()).set(a35, std::vector<bool>(1,true));
   graph.get(arc_active_count()).set(a36, std::vector<bool>(1,true));
-  graph.get(arc_active_count()).set(a24, std::vector<bool>(1,false));
+  graph.get(arc_active_count()).set(a57, std::vector<bool>(1,true));
+  graph.get(arc_active_count()).set(a68, std::vector<bool>(1,true));
 
   graph.add(division_active_count());
   graph.get(division_active_count()).set(n00, std::vector<bool>(1,false));
@@ -107,19 +128,23 @@ void get_graph(HypothesesGraph& graph) {
   graph.get(division_active_count()).set(n11, std::vector<bool>(1,false));
   graph.get(division_active_count()).set(n20, std::vector<bool>(1,false));
   graph.get(division_active_count()).set(n21, std::vector<bool>(1,false));
+  graph.get(division_active_count()).set(n30, std::vector<bool>(1,false));
+  graph.get(division_active_count()).set(n31, std::vector<bool>(1,false));
 }
 
 void get_tracklet_graph(HypothesesGraph& graph) {
   HypothesesGraph::Node n00 = graph.add_node(1);
   HypothesesGraph::Node n01 = graph.add_node(1);
-  HypothesesGraph::Node n10 = graph.add_node(2);
-  HypothesesGraph::Node n11 = graph.add_node(2);
+  HypothesesGraph::Node n10 = graph.add_node(3);
+  HypothesesGraph::Node n11 = graph.add_node(3);
+  HypothesesGraph::Node n21 = graph.add_node(4);
 
   HypothesesGraph::Arc a13 = graph.addArc(n00, n10);
   HypothesesGraph::Arc a14 = graph.addArc(n00, n11);
+  HypothesesGraph::Arc a45 = graph.addArc(n11, n21);
 
   // corresponding traxels
-  Traxel t00, t01, t10, t11, t20, t21;
+  Traxel t00, t01, t10, t11, t20, t21, t30, t31;
   t00.Id = 1;
   t00.Timestep = 1;
   t00.features["com"].push_back(0.);
@@ -150,47 +175,60 @@ void get_tracklet_graph(HypothesesGraph& graph) {
   t21.features["com"].push_back(2.);
   t21.features["com"].push_back(1.);
   t21.features["id"].push_back(6.);
+  t30.Id = 7;
+  t30.Timestep = 4;
+  t30.features["com"].push_back(3.);
+  t30.features["com"].push_back(0.);
+  t30.features["id"].push_back(7.);
+  t31.Id = 8;
+  t31.Timestep = 4;
+  t31.features["com"].push_back(3.);
+  t31.features["com"].push_back(1.);
+  t31.features["id"].push_back(8.);
 
   graph.add(node_tracklet());
   std::vector<Traxel> t1; t1.push_back(t00); t1.push_back(t10);
   graph.get(node_tracklet()).set(n00, t1);
   std::vector<Traxel> t2; t2.push_back(t01); t2.push_back(t11);
   graph.get(node_tracklet()).set(n01, t2);
-  graph.get(node_tracklet()).set(n10, std::vector<Traxel>(1,t20));
+  std::vector<Traxel> t3; t3.push_back(t20); t3.push_back(t30);
+  graph.get(node_tracklet()).set(n10, t3);
   graph.get(node_tracklet()).set(n11, std::vector<Traxel>(1,t21));
+  graph.get(node_tracklet()).set(n21, std::vector<Traxel>(1,t31));
 
   graph.add(node_active_count());
   graph.get(node_active_count()).set(n00, std::vector<size_t>(1,1));
   graph.get(node_active_count()).set(n01, std::vector<size_t>(1,0));
   graph.get(node_active_count()).set(n10, std::vector<size_t>(1,1));
   graph.get(node_active_count()).set(n11, std::vector<size_t>(1,1));
+  graph.get(node_active_count()).set(n21, std::vector<size_t>(1,1));
 
   graph.add(arc_active_count());
   graph.get(arc_active_count()).set(a13, std::vector<bool>(1,true));
   graph.get(arc_active_count()).set(a14, std::vector<bool>(1,true));
+  graph.get(arc_active_count()).set(a45, std::vector<bool>(1,true));
 
   graph.add(division_active_count());
   graph.get(division_active_count()).set(n00, std::vector<bool>(1,true));
   graph.get(division_active_count()).set(n01, std::vector<bool>(1,false));
   graph.get(division_active_count()).set(n10, std::vector<bool>(1,false));
   graph.get(division_active_count()).set(n11, std::vector<bool>(1,false));
+  graph.get(division_active_count()).set(n21, std::vector<bool>(1,false));
 }
 
-BOOST_AUTO_TEST_CASE( SubsetFeaturesIdentity_extract_matrix_traxelgraph ) {
-  LOG(logINFO) << "test case: SubsetFeaturesIdentity_operator_traxelgraph";
+BOOST_AUTO_TEST_CASE( SubsetFeaturesIdentity_extract_matrix ) {
+  LOG(logINFO) << "test case: SubsetFeaturesIdentity_operator";
 
   // set up the graph
   HypothesesGraph graph;
   get_graph(graph);
 
   // get the subset of all traxels in the order of their traxel ids
-  ConstTraxelRefVector subset(6);
+  ConstTraxelRefVector subset(8);
   for (NodeIt n_it(graph); n_it != lemon::INVALID; ++n_it) {
     const Traxel* tref = &(graph.get(node_traxel())[n_it]);
     subset[tref->Id-1] = tref;
   }
-
-  set_solution(graph, 0);
 
   LOG(logINFO) << "  test \"SubsetFeaturesIdentity\" with string as constructor argument";
   {
@@ -198,9 +236,9 @@ BOOST_AUTO_TEST_CASE( SubsetFeaturesIdentity_extract_matrix_traxelgraph ) {
 
     FeatureMatrix com_matrix = identity.extract_matrix(subset);
     
-    BOOST_CHECK_EQUAL(com_matrix.shape(0), 6);
+    BOOST_CHECK_EQUAL(com_matrix.shape(0), 8);
     BOOST_CHECK_EQUAL(com_matrix.shape(1), 2);
-    for (size_t i = 0; i != 3; ++i) {
+    for (size_t i = 0; i != 4; ++i) {
       size_t x = 2*i;
       BOOST_CHECK_EQUAL(com_matrix(x  ,0), static_cast<feature_type>(i));
       BOOST_CHECK_EQUAL(com_matrix(x  ,1), 0);
@@ -216,9 +254,9 @@ BOOST_AUTO_TEST_CASE( SubsetFeaturesIdentity_extract_matrix_traxelgraph ) {
 
     FeatureMatrix com_matrix = identity.extract_matrix(subset);
     
-    BOOST_CHECK_EQUAL(com_matrix.shape(0), 6);
+    BOOST_CHECK_EQUAL(com_matrix.shape(0), 8);
     BOOST_CHECK_EQUAL(com_matrix.shape(1), 2);
-    for (size_t i = 0; i != 3; ++i) {
+    for (size_t i = 0; i != 4; ++i) {
       size_t x = 2*i;
       BOOST_CHECK_EQUAL(com_matrix(x  ,0), static_cast<feature_type>(i));
       BOOST_CHECK_EQUAL(com_matrix(x  ,1), 0);
@@ -237,9 +275,9 @@ BOOST_AUTO_TEST_CASE( SubsetFeaturesIdentity_extract_matrix_traxelgraph ) {
 
     FeatureMatrix com_matrix = identity.extract_matrix(subset);
     
-    BOOST_CHECK_EQUAL(com_matrix.shape(0), 6);
+    BOOST_CHECK_EQUAL(com_matrix.shape(0), 8);
     BOOST_CHECK_EQUAL(com_matrix.shape(1), 3);
-    for (size_t i = 0; i != 3; ++i) {
+    for (size_t i = 0; i != 4; ++i) {
       size_t x = 2*i;
       BOOST_CHECK_EQUAL(com_matrix(x  ,0), static_cast<feature_type>(i));
       BOOST_CHECK_EQUAL(com_matrix(x  ,1), 0);
@@ -253,7 +291,7 @@ BOOST_AUTO_TEST_CASE( SubsetFeaturesIdentity_extract_matrix_traxelgraph ) {
 
 BOOST_AUTO_TEST_CASE( TrackSubsets_operator_traxelgraph ) {
   
-  LOG(logINFO) << "test case: SubsetFeaturesIdentity_operator";
+  LOG(logINFO) << "test case: TrackSubsets_operator_traxelgraph";
 
   // set up the graph
   HypothesesGraph graph;
@@ -287,11 +325,49 @@ BOOST_AUTO_TEST_CASE( TrackSubsets_operator_traxelgraph ) {
   LOG(logINFO) << "  test sizes";
   BOOST_CHECK_EQUAL(track_subsets.size(), 3);
   BOOST_CHECK_EQUAL(track_subsets[0].size(), 2);
-  BOOST_CHECK_EQUAL(track_subsets[1].size(), 1);
-  BOOST_CHECK_EQUAL(track_subsets[2].size(), 1);
+  BOOST_CHECK_EQUAL(track_subsets[1].size(), 2);
+  BOOST_CHECK_EQUAL(track_subsets[2].size(), 2);
 }
 
-// TODO Test case "TrackSubsets_operator_trackletgraph"
+BOOST_AUTO_TEST_CASE( TrackSubsets_operator_trackletgraph ) {
+  
+  LOG(logINFO) << "test case: TrackSubsets_operator_trackletgraph";
+
+  // set up the graph
+  HypothesesGraph graph;
+  get_tracklet_graph(graph);
+
+  // set the solution index
+  set_solution(graph, 0);
+  
+  // get the track subsets
+  TrackSubsets get_track_subsets;
+  std::vector<ConstTraxelRefVector> track_subsets = get_track_subsets(graph);
+
+  LOG(logINFO) << "  there are " << track_subsets.size() << " tracks";
+  for (
+    std::vector<ConstTraxelRefVector>::iterator tvec_it = track_subsets.begin();
+    tvec_it != track_subsets.end();
+    tvec_it++
+  ) {
+    LOG(logINFO) << "    count of nodes in track: " << tvec_it->size();
+    std::stringstream sstream;
+    sstream << "    the ids are: ";
+    for (
+      ConstTraxelRefVector::iterator tref_it = tvec_it->begin();
+      tref_it != tvec_it->end();
+      tref_it++
+    ) {
+      sstream << (*tref_it)->Id << " ";
+    }
+    LOG(logINFO) << sstream.str();
+  }
+  LOG(logINFO) << "  test sizes";
+  BOOST_CHECK_EQUAL(track_subsets.size(), 3);
+  BOOST_CHECK_EQUAL(track_subsets[0].size(), 2);
+  BOOST_CHECK_EQUAL(track_subsets[1].size(), 2);
+  BOOST_CHECK_EQUAL(track_subsets[2].size(), 2);
+}
 
 BOOST_AUTO_TEST_CASE( DivisionSubsets_operator_traxelgraph ) {
   LOG(logINFO) << "test case: DivisionSubsets_operator_traxelgraph";
@@ -304,18 +380,108 @@ BOOST_AUTO_TEST_CASE( DivisionSubsets_operator_traxelgraph ) {
   set_solution(graph, 0);
 
   // get the division subsets to depth 1
-  DivisionSubsets get_div_subsets;
-  std::vector<ConstTraxelRefVector> div_subsets = get_div_subsets(graph);
+  LOG(logINFO) << "  get division subsets to depth 1";
+  {
+    DivisionSubsets get_div_subsets;
+    std::vector<ConstTraxelRefVector> div_subsets = get_div_subsets(graph);
 
-  LOG(logINFO) << "  count of division subsets: " << div_subsets.size();
-  BOOST_CHECK_EQUAL(div_subsets.size(), 1);
-  ConstTraxelRefVector traxelrefs = div_subsets[0];
-  BOOST_CHECK_EQUAL(traxelrefs[0]->Id, 3);
-  BOOST_CHECK((traxelrefs[1]->Id == 5) or (traxelrefs[1]->Id == 6));
-  BOOST_CHECK((traxelrefs[2]->Id == 5) or (traxelrefs[2]->Id == 6));
+    LOG(logINFO) << "  count of division subsets: " << div_subsets.size();
+    LOG(logINFO) << "  check size and indices";
+    BOOST_CHECK_EQUAL(div_subsets.size(), 1);
+    ConstTraxelRefVector traxelrefs = div_subsets[0];
+    BOOST_CHECK_EQUAL(traxelrefs.size(), 3);
+    BOOST_CHECK_EQUAL(traxelrefs[0]->Id, 3);
+    BOOST_CHECK((traxelrefs[1]->Id == 5) or (traxelrefs[1]->Id == 6));
+    BOOST_CHECK((traxelrefs[2]->Id == 5) or (traxelrefs[2]->Id == 6));
+  }
+
+  // get the division subsets to depth 2
+  LOG(logINFO) << "  get division subsets to depth 2";
+  {
+    DivisionSubsets get_div_subsets(2);
+    std::vector<ConstTraxelRefVector> div_subsets = get_div_subsets(graph);
+
+    LOG(logINFO) << "  count of division subsets: " << div_subsets.size();
+    LOG(logINFO) << "  check size and indices";
+    BOOST_CHECK_EQUAL(div_subsets.size(), 1);
+
+    ConstTraxelRefVector traxelrefs = div_subsets[0];
+    std::stringstream sstream;
+    sstream << "    indices in division: ";
+    for (
+      ConstTraxelRefVector::iterator tref = traxelrefs.begin();
+      tref != traxelrefs.end();
+      tref++
+    ) {
+      sstream << (*tref)->Id << " ";
+    }
+    LOG(logINFO) << sstream.str();
+    BOOST_CHECK_EQUAL(traxelrefs.size(), 6);
+    BOOST_CHECK_EQUAL(traxelrefs[0]->Id, 3);
+    BOOST_CHECK_EQUAL(traxelrefs[1]->Id, 1);
+    BOOST_CHECK((traxelrefs[2]->Id == 5) or (traxelrefs[2]->Id == 6));
+    BOOST_CHECK_EQUAL(traxelrefs[3]->Id - traxelrefs[2]->Id, 2);
+    BOOST_CHECK((traxelrefs[4]->Id == 5) or (traxelrefs[4]->Id == 6));
+    BOOST_CHECK_EQUAL(traxelrefs[5]->Id - traxelrefs[4]->Id, 2);
+  }
 }
 
-// TODO Test case "DivisionSubsets_operator_traxelgraph"
+BOOST_AUTO_TEST_CASE( DivisionSubsets_operator_trackletgraph ) {
+  LOG(logINFO) << "test case: DivisionSubsets_operator_trackletgraph";
+
+  // set up the graph
+  HypothesesGraph graph;
+  get_tracklet_graph(graph);
+
+  // set the solution index
+  set_solution(graph, 0);
+
+  // get the division subsets to depth 1
+  LOG(logINFO) << "  get division subsets to depth 1";
+  {
+    DivisionSubsets get_div_subsets;
+    std::vector<ConstTraxelRefVector> div_subsets = get_div_subsets(graph);
+
+    LOG(logINFO) << "  count of division subsets: " << div_subsets.size();
+    LOG(logINFO) << "  check size and indices";
+    BOOST_CHECK_EQUAL(div_subsets.size(), 1);
+    ConstTraxelRefVector traxelrefs = div_subsets[0];
+    BOOST_CHECK_EQUAL(traxelrefs.size(), 3);
+    BOOST_CHECK_EQUAL(traxelrefs[0]->Id, 3);
+    BOOST_CHECK((traxelrefs[1]->Id == 5) or (traxelrefs[1]->Id == 6));
+    BOOST_CHECK((traxelrefs[2]->Id == 5) or (traxelrefs[2]->Id == 6));
+  }
+
+  // get the division subsets to depth 2
+  LOG(logINFO) << "  get division subsets to depth 2";
+  {
+    DivisionSubsets get_div_subsets(2);
+    std::vector<ConstTraxelRefVector> div_subsets = get_div_subsets(graph);
+
+    LOG(logINFO) << "  count of division subsets: " << div_subsets.size();
+    LOG(logINFO) << "  check size and indices";
+    BOOST_CHECK_EQUAL(div_subsets.size(), 1);
+
+    ConstTraxelRefVector traxelrefs = div_subsets[0];
+    std::stringstream sstream;
+    sstream << "    indices in division: ";
+    for (
+      ConstTraxelRefVector::iterator tref = traxelrefs.begin();
+      tref != traxelrefs.end();
+      tref++
+    ) {
+      sstream << (*tref)->Id << " ";
+    }
+    LOG(logINFO) << sstream.str();
+    BOOST_CHECK_EQUAL(traxelrefs.size(), 6);
+    BOOST_CHECK_EQUAL(traxelrefs[0]->Id, 3);
+    BOOST_CHECK_EQUAL(traxelrefs[1]->Id, 1);
+    BOOST_CHECK((traxelrefs[2]->Id == 5) or (traxelrefs[2]->Id == 6));
+    BOOST_CHECK_EQUAL(traxelrefs[3]->Id - traxelrefs[2]->Id, 2);
+    BOOST_CHECK((traxelrefs[4]->Id == 5) or (traxelrefs[4]->Id == 6));
+    BOOST_CHECK_EQUAL(traxelrefs[5]->Id - traxelrefs[4]->Id, 2);
+  }
+}
 
 BOOST_AUTO_TEST_CASE( MVNOutlierCalculator_calculate ) {
   LOG(logINFO) << "test case: MVNOutlierCalculator_calculate";
