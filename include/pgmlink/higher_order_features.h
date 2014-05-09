@@ -86,24 +86,32 @@ class SubsetFeatureExtractor {
   virtual const FeatureVector& extract_vector(
     const ConstTraxelRefVector& traxelrefs
   );
-  virtual const FeatureScalar& extract_scalar(
+  virtual FeatureScalar extract_scalar(
     const ConstTraxelRefVector& traxelrefs
   );
 };
 
 ////
-//// class SubsetFeatureAggregator
+//// class SubsetFeatureCalculator
 ////
-class SubsetFeatureAggregator {
+class SubsetFeatureCalculator {
  public:
-  SubsetFeatureAggregator() {};
-  virtual ~SubsetFeatureAggregator() {};
+  SubsetFeatureCalculator() {};
+  virtual ~ SubsetFeatureCalculator() {};
   virtual const std::string& name() const = 0;
-  virtual const feature_array& operator()(
-    const feature_arrays& features
-  ) = 0;
+  virtual const FeatureMatrix& calculate_matrix(
+    const FeatureMatrix& feature_matrix
+  );
+  virtual const FeatureVector& calculate_vector(
+    const FeatureMatrix& feature_matrix
+  );
+  virtual FeatureScalar calculate_scalar(
+    const FeatureMatrix& feature_matrix
+  );
 };
 
+/*
+TODO clean file from needless code
 ////
 //// class OutlierCalculator
 ////
@@ -120,6 +128,7 @@ class OutlierCalculator {
     static const std::string name_;
     feature_array measures_;
 }; // class OutlierCalculator
+*/
 
 /*=============================================================================
   specific classes
@@ -141,20 +150,6 @@ class SubsetFeaturesIdentity : public SubsetFeatureExtractor {
   std::vector<std::string> feature_names_;
   FeatureMatrix ret_matrix_;
 }; // class SubsetFeaturesIdentity
-
-////
-//// class SumAggregator
-////
-class SumAggregator : public FeatureAggregator {
- public:
-  SumAggregator() {};
-  virtual ~SumAggregator() {};
-  virtual const std::string& name() const;
-  virtual const feature_type& operator()(const feature_arrays& features);
- protected:
-  static const std::string name_;
-  feature_type ret_;
-};
 
 ////
 //// class TrackSubsets
@@ -214,42 +209,60 @@ class DivisionSubsets : public SubsetsOfInterest {
 };
 
 ////
-//// class SubsetFeatureAggregatorFromFA
+//// class SumCalculator
 ////
-class SubsetAggregatorFromFA : public SubsetFeatureAggregator {
+class SumCalculator : public SubsetFeatureCalculator {
  public:
-  SubsetAggregatorFromFA(
-    FeatureAggregator* feature_aggregator
-  ) : feature_aggregator_(feature_aggregator) {};
-  virtual ~SubsetAggregatorFromFA() {};
+  SumCalculator() {};
+  virtual ~SumCalculator() {};
   virtual const std::string& name() const;
-  virtual const feature_array& operator()(const feature_arrays& features);
+  virtual const FeatureVector& calculate_vector(
+    const FeatureMatrix& feature_matrix
+  );
+  virtual FeatureScalar calculate_scalar(
+    const FeatureMatrix& feature_matrix
+  );
  protected:
   static const std::string name_;
-  FeatureAggregator* feature_aggregator_;
-  feature_array ret_;
+  FeatureVector ret_;
 };
 
 ////
-//// class ChildRatioAggregator
+//// class DiffCalculator
 ////
-class ChildRatioAggregator : public SubsetFeatureAggregator {
+class DiffCalculator : public SubsetFeatureCalculator {
  public:
-  ChildRatioAggregator(const size_t depth=1) : depth_(depth) {};
-  virtual ~ChildRatioAggregator() {};
+  DiffCalculator() {};
+  virtual ~DiffCalculator() {};
   virtual const std::string& name() const;
-  virtual const feature_array& operator()(const feature_arrays& features);
+  virtual const FeatureMatrix& calculate_matrix(
+    const FeatureMatrix& feature_matrix
+  );
  protected:
   static const std::string name_;
-  size_t depth_;
-  feature_array ret_;
+  FeatureMatrix ret_;
 };
 
+////
+//// class CurveCalculator
+////
+class CurveCalculator : public SubsetFeatureCalculator {
+ public:
+  CurveCalculator() {};
+  virtual ~CurveCalculator() {};
+  virtual const std::string& name() const;
+  virtual const FeatureMatrix& calculate_matrix(
+    const FeatureMatrix& feature_matrix
+  );
+ protected:
+  static const std::string name_;
+  FeatureMatrix ret_;
+};
+
+/*
 ////
 //// class MVNOutlierCalculator
 ////
-/* the template parameter "sigma_threshold" will be scaled with factor 1/1000.
-A sigma_threshold of 3000 corresponds to an actual threshold of 3.000 */
 class MVNOutlierCalculator : public OutlierCalculator {
   public:
     MVNOutlierCalculator(const feature_type sigma_threshold = 3.0);
@@ -307,6 +320,7 @@ class OutlierBadnessAggregator : public FeatureAggregator {
   OutlierCalculator* outlier_calculator_;
   feature_type ret_;
 };
+*/
 
 } // namespace pgmlink
 

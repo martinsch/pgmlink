@@ -1,4 +1,5 @@
 #include "pgmlink/higher_order_features.h"
+#include <vigra/multi_math.hxx> /* for operator+ */
 
 namespace pgmlink {
 
@@ -142,13 +143,43 @@ const FeatureVector& SubsetFeatureExtractor::extract_vector(
   );
   return *(new FeatureVector);
 }
-const FeatureScalar& SubsetFeatureExtractor::extract_scalar(
+FeatureScalar SubsetFeatureExtractor::extract_scalar(
   const ConstTraxelRefVector& /*traxelrefs*/
 ) {
   throw std::runtime_error(
     "Feature extractor " + name() + " doesn't provide a scalar valued result"
   );
-  return *(new FeatureScalar);
+  FeatureScalar ret_ = 0.;
+  return ret_;
+}
+
+////
+//// class SubsetFeatureCalculator
+////
+const FeatureMatrix& SubsetFeatureCalculator::calculate_matrix(
+  const FeatureMatrix& /*feature_matrix*/
+) {
+  throw std::runtime_error(
+    "Feature calculator " + name() + " doesn't provide a matrix valued result"
+  );
+  return *(new FeatureMatrix);
+}
+const FeatureVector& SubsetFeatureCalculator::calculate_vector(
+  const FeatureMatrix& /*feature_matrix*/
+) {
+  throw std::runtime_error(
+    "Feature calculator " + name() + " doesn't provide a vector valued result"
+  );
+  return *(new FeatureVector);
+}
+FeatureScalar SubsetFeatureCalculator::calculate_scalar(
+  const FeatureMatrix& /*feature_matrix*/
+) {
+  throw std::runtime_error(
+    "Feature calculator " + name() + " doesn't provide a scalar valued result"
+  );
+  FeatureScalar ret_ = 0.;
+  return ret_;
 }
 
 /*=============================================================================
@@ -244,35 +275,6 @@ const FeatureMatrix& SubsetFeaturesIdentity::extract_matrix(
     } // for (fname_it = ... )
   } // for(traxels_it = .. )
   return ret_matrix_;
-}
-
-////
-//// class SumAggregator
-////
-const std::string SumAggregator::name_ = "SumAggregator";
-
-const std::string& SumAggregator::name() const {
-  return name_;
-}
-
-const feature_type& SumAggregator::operator()(
-  const feature_arrays& features
-) {
-  ret_ = 0;
-  for (
-    feature_arrays::const_iterator farray = features.begin();
-    farray != features.end();
-    farray++
-  ) {
-    for (
-      feature_array::const_iterator f = farray->begin();
-      f != farray->end();
-      f++
-    ) {
-      ret_ += *f;
-    }
-  }
-  return ret_;
 }
 
 ////
@@ -632,71 +634,101 @@ bool DivisionSubsets::get_parents_to_depth(
 }
 
 ////
-//// class SubsetAggregatorFromFA
+//// class SumCalculator
 ////
-const std::string SubsetAggregatorFromFA::name_ = "SubsetAggregatorFromFA";
+const std::string SumCalculator::name_ = "SumCalculator";
 
-const std::string& SubsetAggregatorFromFA::name() const {
+const std::string& SumCalculator::name() const {
   return name_;
 }
 
-const feature_array& SubsetAggregatorFromFA::operator()(
-  const feature_arrays& features
+const FeatureVector& SumCalculator::calculate_vector(
+  const FeatureMatrix& features
 ) {
-  ret_.clear();
-  ret_.push_back((*feature_aggregator_)(features));
+  size_t col_count = features.shape(0);
+  size_t row_count = features.shape(1);
+  ret_.reshape(vigra::Shape1(row_count));
+  ret_.init(0);
+  for (size_t col = 0; col < col_count; col++) {
+    ret_ += features.bind<0>(col);
+  }
+  return ret_;
+}
+
+FeatureScalar SumCalculator::calculate_scalar(
+  const FeatureMatrix& features
+) {
+  FeatureScalar ret_ = 0;
+  for (int i = 0; i < features.size(); i++) {
+    ret_ += features[i];
+  }
   return ret_;
 }
 
 ////
-//// class ChildRatioAggregator
+//// class DiffCalculator
 ////
-const std::string ChildRatioAggregator::name_ = "ChildRatioAggregator";
+const std::string DiffCalculator::name_ = "DiffCalculator";
 
-const std::string& ChildRatioAggregator::name() const {
+const std::string& DiffCalculator::name() const {
   return name_;
 }
 
-const feature_array& ChildRatioAggregator::operator()(
-  const feature_arrays& features
+const FeatureMatrix& DiffCalculator::calculate_matrix(
+  const FeatureMatrix& feature_matrix
 ) {
-  ret_.resize(features.front().size());
-  feature_array::iterator ret_it = ret_.begin();
-
-  feature_arrays::const_iterator left_it = features.begin() + depth_;
-  feature_arrays::const_iterator right_it = features.begin() + 2 * depth_;
-  feature_array::const_iterator l_val_it, r_val_it;
-
-  feature_array l_sum(features.front().size(), 0);
-  feature_array r_sum(features.front().size(), 0);
-  feature_array::iterator l_sum_it, r_sum_it;
-
-  for(size_t i = 0; i < depth_; i++, left_it++, right_it++, ret_it++) {
-    l_val_it = left_it->begin();
-    r_val_it = right_it->begin();
-    l_sum_it = l_sum.begin();
-    r_sum_it = r_sum.begin();
-    for(
-      ;
-      l_val_it != left_it->end();
-      l_val_it++, r_val_it++, l_sum_it++, r_sum_it++
-    ) {
-      *l_sum_it += *l_val_it;
-      *r_sum_it += *r_val_it;
-    }
-  }
-  l_sum_it = l_sum.begin();
-  r_sum_it = r_sum.begin();
-  for(; l_sum_it != l_sum.end(); l_sum_it++, r_sum_it++, ret_it++) {
-    if (*l_sum_it > *r_sum_it) {
-      *ret_it = *r_sum_it / *l_sum_it;
-    } else {
-      *ret_it = *l_sum_it / *r_sum_it;
+  size_t col_count = feature_matrix.shape(0);
+  size_t row_count = feature_matrix.shape(1);
+  if (col_count <= 1) {
+    LOG(logDEBUG) << "In DiffCalculator: matrix in argument has less than one column";
+    LOG(logDEBUG) << "Returning a 0-vector";
+    ret_.reshape(vigra::Shape2(1, row_count));
+    ret_.init(0);
+  } else {
+    ret_.reshape(vigra::Shape2(col_count-1, row_count));
+    for (size_t col = 0; col < col_count-1; col++) {
+      FeatureVectorView a = feature_matrix.bind<0>(col);
+      FeatureVectorView b = feature_matrix.bind<0>(col+1);
+      using namespace vigra::multi_math;
+      ret_.bind<0>(col) = b - a;
     }
   }
   return ret_;
 }
 
+////
+//// class CurveCalculator
+////
+const std::string CurveCalculator::name_ = "CurveCalculator";
+
+const std::string& CurveCalculator::name() const {
+  return name_;
+}
+
+const FeatureMatrix& CurveCalculator::calculate_matrix(
+  const FeatureMatrix& feature_matrix
+) {
+  size_t col_count = feature_matrix.shape(0);
+  size_t row_count = feature_matrix.shape(1);
+  if (col_count <= 2) {
+    LOG(logDEBUG) << "In CurveCalculator: matrix in argument has less than two columns";
+    LOG(logDEBUG) << "Returning a 0-vector";
+    ret_.reshape(vigra::Shape2(1, row_count));
+    ret_.init(0);
+  } else {
+    ret_.reshape(vigra::Shape2(col_count-2, row_count));
+    for (size_t col = 0; col < col_count-2; col++) {
+      using namespace vigra::multi_math;
+      FeatureVectorView a = feature_matrix.bind<0>(col);
+      FeatureVectorView b = feature_matrix.bind<0>(col+1);
+      FeatureVectorView c = feature_matrix.bind<0>(col+2);
+      ret_.bind<0>(col) = a - 2*b + c;
+    }
+  }
+  return ret_;
+}
+
+/*
 ////
 //// class OutlierCountAggregator
 ////
@@ -855,5 +887,5 @@ const std::vector<size_t>& MVNOutlierCalculator::calculate(
   } // else
   return outlier_ids_;
 }
-
+*/
 } // namespace pgmlink
