@@ -177,7 +177,7 @@ class TrackSubsets : public SubsetsOfInterest {
 ////
 class DivisionSubsets : public SubsetsOfInterest {
  public:
-  DivisionSubsets() {};
+  DivisionSubsets(size_t depth = 1) : depth_(depth) {};
   virtual ~DivisionSubsets() {};
   virtual const std::string& name() const;
   virtual const std::vector<ConstTraxelRefVector>& operator()(
@@ -185,7 +185,7 @@ class DivisionSubsets : public SubsetsOfInterest {
   );
   virtual const std::vector<ConstTraxelRefVector>& operator()(
     const HypothesesGraph& graph,
-    size_t depth = 1
+    size_t depth
   );
  protected:
   const std::vector<ConstTraxelRefVector>& from_tracklet_graph(
@@ -202,8 +202,15 @@ class DivisionSubsets : public SubsetsOfInterest {
     size_t depth,
     ConstTraxelRefVector& traxelrefs
   );
+  bool get_parents_to_depth(
+    const HypothesesGraph::Node& node,
+    const HypothesesGraph& graph,
+    size_t depth,
+    ConstTraxelRefVector& traxelrefs
+  );
   static const std::string name_;
   std::vector<ConstTraxelRefVector> ret_;
+  size_t depth_;
 };
 
 ////

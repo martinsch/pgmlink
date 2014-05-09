@@ -89,7 +89,7 @@ void set_solution(HypothesesGraph& graph, const size_t solution_index) {
 }
 
 ////
-//// function out_nodes
+//// function get_out_nodes
 ////
 void get_out_nodes(
   const HypothesesGraph::Node& node,
@@ -100,6 +100,22 @@ void get_out_nodes(
   for (OutArcIt oa_it(graph, node); oa_it != lemon::INVALID; ++oa_it) {
     if (graph.get(arc_active())[oa_it]) {
       out_nodes.push_back(graph.target(oa_it));
+    }
+  }
+}
+
+////
+//// function get_in_nodes
+////
+void get_in_nodes(
+  const HypothesesGraph::Node& node,
+  const HypothesesGraph& graph,
+  Nodevector& in_nodes
+) {
+  in_nodes.clear();
+  for (InArcIt ia_it(graph, node); ia_it != lemon::INVALID; ++ia_it) {
+    if (graph.get(arc_active())[ia_it]) {
+      in_nodes.push_back(graph.target(ia_it));
     }
   }
 }
@@ -375,7 +391,7 @@ const std::string& DivisionSubsets::name() const {
 const std::vector<ConstTraxelRefVector>& DivisionSubsets::operator()(
   const HypothesesGraph& graph
 ) {
-  return operator()(graph, 1);
+  return operator()(graph, depth_);
 }
 const std::vector<ConstTraxelRefVector>& DivisionSubsets::operator()(
   const HypothesesGraph& graph,
@@ -430,29 +446,54 @@ const std::vector<ConstTraxelRefVector>& DivisionSubsets::from_traxel_graph(
     // Count the active outgoing arcs
     std::vector<HypothesesGraph::Node> out_nodes;
     get_out_nodes(n_it, graph, out_nodes);
-    // Two outgoing arcs: division
+    ConstTraxelRefVector parents;
     ConstTraxelRefVector l_children;
     ConstTraxelRefVector r_children;
+    // Two outgoing arcs: division
     if (out_nodes.size() == 2) {
+      // Initialize the variables that change during the while loop
+      // Now follows some ugly code
       bool valid_division = true;
       size_t curr_depth = depth;
+      // These variables are the current parent node and the child nodes
+      HypothesesGraph::Node parent = n_it;
       HypothesesGraph::Node l_node = out_nodes[0];
       HypothesesGraph::Node r_node = out_nodes[1];
+      // Reserve some space for the vectors in which the incoming and out going
+      // nodes are written
+      Nodevector in;
       Nodevector l_out;
       Nodevector r_out;
       while ((curr_depth != 0) and valid_division) {
+        // Save the reference to the traxel corresponding to the nodes
+        parents.push_back( &(node_traxel_map[parent]) );
         l_children.push_back( &(node_traxel_map[l_node]) );
         r_children.push_back( &(node_traxel_map[r_node]) );
+
+        // Get the following nodes
+        get_in_nodes(parent, graph, in);
         get_out_nodes(l_node, graph, l_out);
         get_out_nodes(r_node, graph, r_out);
 
-        valid_division = (l_out.size() == 1) and (r_out.size() == 1);
+        // Check if the track is long enough to return the division to the full
+        // depth
+        valid_division  = (in.size() == 1);
+        valid_division &= (l_out.size() == 1);
+        valid_division &= (r_out.size() == 1);
+
+        // If all sizes fit get the following nodes
+        if (valid_division) {
+          parent = in.front();
+          l_node = l_out.front();
+          r_node = r_out.front();
+        }
         curr_depth--;
-        l_node = l_out.front();
-        r_node = r_out.front();
       }
-      if (valid_division) {
+
+      // store the results if the while loop ran over the whole depth
+      if (curr_depth == 0) {
         ret_.resize(ret_.size() + 1);
+        ret_.back().insert(ret_.back().end(), parents.begin(), parents.end());
         ret_.back().insert(
           ret_.back().end(),
           l_children.begin(),
@@ -484,11 +525,17 @@ const std::vector<ConstTraxelRefVector>& DivisionSubsets::from_tracklet_graph(
     get_out_nodes(n_it, graph, out_nodes);
     // Two outgoing arcs: division
     if (out_nodes.size() == 2) {
-      // TODO
+      ConstTraxelRefVector parents;
       ConstTraxelRefVector l_children;
       ConstTraxelRefVector r_children;
       bool valid_division = true;
 
+      valid_division &= get_parents_to_depth(
+        n_it,
+        graph,
+        depth,
+        parents
+      );
       valid_division &= get_children_to_depth(
         out_nodes[0],
         graph,
@@ -501,8 +548,14 @@ const std::vector<ConstTraxelRefVector>& DivisionSubsets::from_tracklet_graph(
         depth,
         r_children
       );
+
       if (valid_division) {
         ret_.resize(ret_.size() + 1);
+        ret_.back().insert(
+          ret_.back().end(),
+          parents.begin(),
+          parents.end()
+        );
         ret_.back().insert(
           ret_.back().end(),
           l_children.begin(),
@@ -543,7 +596,34 @@ bool DivisionSubsets::get_children_to_depth(
       curr_tracklet_index = 0;
     }
   }
-  return valid_division;
+  return (depth == 0);
+}
+
+bool DivisionSubsets::get_parents_to_depth(
+  const HypothesesGraph::Node& node,
+  const HypothesesGraph& graph,
+  size_t depth,
+  ConstTraxelRefVector& traxelrefs
+) {
+  HypothesesGraph::Node curr_node = node;
+  size_t curr_tracklet_index = 0;
+  bool valid_division = true;
+  node_tracklet_map_type& tracklet_map = graph.get(node_tracklet());
+
+  while (valid_division and (depth != 0)) {
+    traxelrefs.push_back( &(tracklet_map[curr_node][curr_tracklet_index]) );
+
+    if (curr_tracklet_index == 0) {
+      Nodevector in_nodes;
+      get_in_nodes(curr_node, graph, in_nodes);
+      valid_division = (in_nodes.size() == 1);
+      curr_node = in_nodes[0];
+      curr_tracklet_index = graph.get(node_tracklet())[in_nodes[0]].size();
+    }
+    curr_tracklet_index--;
+    depth--;
+  }
+  return (depth == 0);
 }
 
 ////
