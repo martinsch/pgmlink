@@ -259,6 +259,22 @@ class CurveCalculator : public SubsetFeatureCalculator {
   FeatureMatrix ret_;
 };
 
+////
+//// class InverseCovarianceCalculator
+////
+class InverseCovarianceCalculator : public SubsetFeatureCalculator {
+ public:
+  InverseCovarianceCalculator() {};
+  virtual ~InverseCovarianceCalculator() {};
+  virtual const std::string& name() const;
+  virtual const FeatureMatrix& calculate_matrix(
+    const FeatureMatrix& feature_matrix
+  );
+ protected:
+  static const std::string name_;
+  FeatureMatrix ret_;
+};
+
 /*
 ////
 //// class MVNOutlierCalculator
