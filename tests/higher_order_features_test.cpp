@@ -483,6 +483,7 @@ BOOST_AUTO_TEST_CASE( DivisionSubsets_operator_trackletgraph ) {
   }
 }
 
+/*
 BOOST_AUTO_TEST_CASE( MVNOutlierCalculator_calculate ) {
   LOG(logINFO) << "test case: MVNOutlierCalculator_calculate";
   // Set up the test data with outlier x6
@@ -563,3 +564,4 @@ BOOST_AUTO_TEST_CASE( OutlierBadnessAggregator_calculate ) {
   feature_type value = outlierbadness(x);
   BOOST_CHECK( value > 3 );
 }
+*/
