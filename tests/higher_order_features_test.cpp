@@ -291,6 +291,32 @@ BOOST_AUTO_TEST_CASE( TrackSubsets_operator_traxelgraph ) {
   BOOST_CHECK_EQUAL(track_subsets[2].size(), 1);
 }
 
+// TODO Test case "TrackSubsets_operator_trackletgraph"
+
+BOOST_AUTO_TEST_CASE( DivisionSubsets_operator_traxelgraph ) {
+  LOG(logINFO) << "test case: DivisionSubsets_operator_traxelgraph";
+
+  // set up the graph
+  HypothesesGraph graph;
+  get_graph(graph);
+
+  // set the solution index
+  set_solution(graph, 0);
+
+  // get the division subsets to depth 1
+  DivisionSubsets get_div_subsets;
+  std::vector<ConstTraxelRefVector> div_subsets = get_div_subsets(graph);
+
+  LOG(logINFO) << "  count of division subsets: " << div_subsets.size();
+  BOOST_CHECK_EQUAL(div_subsets.size(), 1);
+  ConstTraxelRefVector traxelrefs = div_subsets[0];
+  BOOST_CHECK_EQUAL(traxelrefs[0]->Id, 3);
+  BOOST_CHECK((traxelrefs[1]->Id == 5) or (traxelrefs[1]->Id == 6));
+  BOOST_CHECK((traxelrefs[2]->Id == 5) or (traxelrefs[2]->Id == 6));
+}
+
+// TODO Test case "DivisionSubsets_operator_traxelgraph"
+
 BOOST_AUTO_TEST_CASE( MVNOutlierCalculator_calculate ) {
   LOG(logINFO) << "test case: MVNOutlierCalculator_calculate";
   // Set up the test data with outlier x6
