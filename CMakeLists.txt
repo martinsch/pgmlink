@@ -53,6 +53,7 @@ find_package( Armadillo REQUIRED )
 find_package( Mlpack REQUIRED )
 find_package( Opengm REQUIRED )
 find_package( Xml2 REQUIRED )
+find_package( Dlib REQUIRED )
 
 message(STATUS "  found: ${Boost_LIBRARIES}")
 
