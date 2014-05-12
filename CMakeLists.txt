@@ -148,7 +148,9 @@ if(WIN32)
 endif()
 
 file(GLOB LIB_SOURCES src/*.cpp)
-add_library(pgmlink SHARED ${LIB_SOURCES})
+file(GLOB_RECURSE HEADERS include/*.h*)
+
+add_library(pgmlink SHARED ${LIB_SOURCES} ${HEADERS})
 
 file( MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/pgmlink )
 if(WIN32)
