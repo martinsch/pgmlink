@@ -9,6 +9,7 @@
 #include "pgmlink/log.h"
 #include "pgmlink/reasoner_constracking.h"
 #include "pgmlink/traxels.h"
+#include "pgmlink/pgm_constracking.h"
 
 using namespace std;
 
@@ -406,27 +407,61 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
         table.add_to(*(pgm_->Model()));
     }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     ////
     //// add transition factors
     ////
-    LOG(logDEBUG) << "ConservationTracking::add_finite_factors: add transition factors";
-    property_map<arc_distance, HypothesesGraph::base_graph>::type& arc_distances = g.get(
-            arc_distance());
+    LOG(logDEBUG) << "ConservationTracking::add_finite_factors: add transition factors";    
+//    property_map<arc_distance, HypothesesGraph::base_graph>::type& arc_distances = g.get(
+//            arc_distance());
+
+    pgmlink::Event::EventType event_name = Event::Move;
+    pgm::OpengmEventExplicitFunction<double>::EventMap factor_event_map;
+    // TODO: make global event map (available from python as event_feature_names_)
+    // TOOD: make weights and couple with event map
+    factor_event_map[event_name] = event_map_[event_name];
+
     for (HypothesesGraph::ArcIt a(g); a != lemon::INVALID; ++a) {
         size_t vi[] = { arc_map_[a] };
-        vector<size_t> coords(1, 0); // number of variables
-        // ITER first_ogm_idx, ITER last_ogm_idx, VALUE init, size_t states_per_var
-        pgm::OpengmExplicitFactor<double> table(vi, vi + 1, forbidden_cost_, (max_number_objects_ + 1));
-        for (size_t state = 0; state <= max_number_objects_; ++state) {
-            double energy = transition_(get_transition_prob(arc_distances[a], state, transition_parameter_));
-            LOG(logDEBUG2) << "ConservationTracking::add_finite_factors: transition[" << state
-                    << "] = " << energy;
-            coords[0] = state;
-            table.set_value(coords, energy);
-            coords[0] = 0;
-        }
-        table.add_to(*(pgm_->Model()));
+
+        // TODO: write event_features class/function (based on classifier_auxiliary??)
+        std::map<std::string,double> transition_features = event_features_(event_feature_names_[event_name], g.source(a), g.target(a));
+        pgm::OneEventExplicitFunction<double> transition_function(vi, vi + 1, forbidden_cost_, transition_features,
+                                              weights_, factor_event_map);
+
+
+        // TODO: make add_to available for event explicit fct
+        transition_function.add_to(*(pgm_->Model()));
     }
+
+
+    // TODO: convert all other factors into this new format
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     ////
     //// add division factors

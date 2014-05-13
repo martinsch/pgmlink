@@ -22,6 +22,7 @@
 #include "pgmlink/hypotheses.h"
 #include "pgmlink/graph.h"
 #include "pgmlink/util.h"
+#include "event.h"
 
 namespace pgmlink {
   namespace pgm {
@@ -107,6 +108,61 @@ namespace pgmlink {
       void init_( VALUE init, std::vector<size_t> states_vars );
     };    
  
+
+   template <typename VALUE>
+      class OpengmEventExplicitFunction: public opengm::ExplicitFunction<VALUE> {
+
+      public:
+          typedef typename std::map<std::string,VALUE> FeatureMap;
+          typedef typename std::vector<VALUE> WeightVector;
+          typedef std::pair<size_t,std::string > WeightFeaturePair;
+          typedef std::map<pgmlink::Event::EventType,std::vector<WeightFeaturePair > > EventMap;
+
+          typedef typename opengm::ExplicitFunction<VALUE> FunctionType;
+
+          template <class SHAPE_ITERATOR>
+          OpengmEventExplicitFunction(SHAPE_ITERATOR shapeBegin, SHAPE_ITERATOR shapeEnd, const VALUE & value,
+                                      const FeatureMap& features, const WeightVector& weights,
+                                      const EventMap& event_map) :
+              opengm::ExplicitFunction<VALUE> (shapeBegin, shapeEnd, value),
+              feature_map_(features), weight_vector_(weights), event_map_(event_map)  { }
+
+          FunctionType& get_instance() {
+              std::vector<size_t> configuration(this->shape(1)); // the number of variables must be equal to the marray width
+              for(Marray::iterator it = this->begin(); it != this->end(); ++it) {
+                std::vector<size_t>::iterator states_it = configuration.begin();
+                it.coordinate(states_it);
+                *it = get_energy_of_configuration(configuration);
+              }
+          }
+
+      protected:
+          virtual VALUE get_energy_of_configuration(const std::vector<size_t>&) = 0;
+
+            // returns inner product of <w,f(x)> for given event
+          VALUE get_event_energy(std::string event) {
+             VALUE energy = 0;
+             EventMap::const_iterator event_it = event_map_.find(event);
+             if (event_it == event_map_.end()) {
+                 throw std::exception("event not found");
+             }
+             std::vector<WeightFeaturePair>& weight_feature_index_pairs = *event_it;
+
+             for(std::vector<WeightFeaturePair>::const_iterator it = weight_feature_index_pairs.begin();
+                 it != weight_feature_index_pairs.end(); ++it) {
+                 energy += weight_vector_[it->first] * feature_map_[it->second];
+             }
+
+             return energy;
+          }
+
+
+        FeatureMap feature_map_;
+        WeightVector& weight_vector_;
+        EventMap event_map_;
+
+      };
+
     template <typename VALUE>
       class OpengmWeightedFeature
       : public OpengmFactor< opengm::FunctionDecoratorWeighted< opengm::IndicatorFunction<VALUE> > >
