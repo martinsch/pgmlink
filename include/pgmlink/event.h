@@ -51,6 +51,9 @@ namespace pgmlink {
     const std::vector<double>& weights() const { return weights_; }
     Event& weights( const std::vector<double>& );
     
+    const std::vector<size_t>& number_of_objects() const { return number_of_objects_; }
+    Event& number_of_objects( const std::vector<size_t>& );
+
     // Beware: doesn't compare by energy!
     bool operator==(const Event& other) const;
     bool operator!=(const Event& other) const;
@@ -60,6 +63,13 @@ namespace pgmlink {
     unsigned int n_features_;
     std::vector<double> weights_;
     std::vector<double> features_;
+
+    // contains the number of objects participating in the event,
+    // e.g. for division of 1 cell into two single cells, it is (1, 1, 1),
+    // for an appearance of 3 cells, it is (3,),
+    // for disappearance of 1 cell, it is (1,),
+    // for a move of 2 cells, it is (2,).
+    std::vector<size_t> number_of_objects_;
   };
 
   struct PGMLINK_EXPORT EventsStatistics {

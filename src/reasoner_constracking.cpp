@@ -441,10 +441,10 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
 
         // TODO: write event_features class/function (based on classifier_auxiliary??)
         std::map<std::string,double> transition_features = event_features_(event_feature_names_[event_name], g.source(a), g.target(a));
-        pgm::OneEventExplicitFunction<double> transition_function(shape.begin(), shape.end(), forbidden_cost_, transition_features,
+        pgm::UnaryEventExplicitFunction<double> transition_function(shape.begin(), shape.end(), forbidden_cost_, transition_features,
                                               weights_, factor_event_map);
 
-        pgm::OpengmFactor<pgm::OneEventExplicitFunction<double> > table(transition_function, vi, vi+1);
+        pgm::OpengmFactor<pgm::UnaryEventExplicitFunction<double> > table(transition_function, vi, vi+1);
         table.add_to(*(pgm_->Model()));
     }
 

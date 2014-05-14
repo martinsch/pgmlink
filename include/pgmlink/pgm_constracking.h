@@ -7,7 +7,7 @@
 namespace pgm {
 
 template <typename VALUE>
-   class OneEventExplicitFunction: public OpengmEventExplicitFunction<VALUE> {
+   class UnaryEventExplicitFunction: public OpengmEventExplicitFunction<VALUE> {
 
        template <class SHAPE_ITERATOR>
        OneEventExplicitFunction(SHAPE_ITERATOR shapeBegin, SHAPE_ITERATOR shapeEnd, const VALUE & value,
@@ -20,12 +20,16 @@ template <typename VALUE>
        }
 
        virtual VALUE get_energy_of_configuration(const std::vector<size_t>& configuration) {
-           return get_event_energy(event_map_.begin()->first);
+           assert( configuration.size() == 1 && "only unaries are allowed" );
+
+           return get_event_energy(event_map_.begin()->first, configuration[0]);
        }
    };
 
 
+
    //TODO: Specific event functions for outgoing, etc.
+
 
 
 } // namespace pgm

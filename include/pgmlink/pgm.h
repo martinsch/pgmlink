@@ -124,7 +124,8 @@ namespace pgmlink {
           typedef typename std::map<std::string,VALUE> FeatureMap;
           typedef typename std::vector<VALUE> WeightVector;
           typedef std::pair<size_t,std::string > WeightFeaturePair;
-          typedef std::map<pgmlink::Event::EventType,std::vector<WeightFeaturePair > > EventMap;
+          typedef std::map<pgmlink::Event::EventType,EventConfigurationMap > EventMap;
+          typedef std::map<size_t,std::vector<WeightFeaturePair > > EventConfigurationMap;
 
           typedef typename opengm::ExplicitFunction<VALUE> FunctionType;
 
@@ -147,14 +148,21 @@ namespace pgmlink {
       protected:
           virtual VALUE get_energy_of_configuration(const std::vector<size_t>&) = 0;
 
-            // returns inner product of <w,f(x)> for given event
-          VALUE get_event_energy(std::string event) {
+            // returns inner product of <w,f(x)> for given event with its specific configuration
+          VALUE get_event_energy(Event::EventType event_name, size_t event_configuration) {
              VALUE energy = 0;
-             EventMap::const_iterator event_it = event_map_.find(event);
+             EventMap::const_iterator event_it = event_map_.find(event_name);
              if (event_it == event_map_.end()) {
                  throw std::exception("event not found");
              }
-             std::vector<WeightFeaturePair>& weight_feature_index_pairs = *event_it;
+             EventConfigurationMap& ev_config_map = *event_it;
+
+             EventConfigurationMap::const_iterator ev_config_it = ev_config_map.find(event_configuration);
+             if (ev_config_it == ev_config_map.end()) {
+                 throw std::exception("event configuration not found");
+             }
+
+             std::vector<WeightFeaturePair>& weight_feature_index_pairs = *ev_config_it;
 
              for(std::vector<WeightFeaturePair>::const_iterator it = weight_feature_index_pairs.begin();
                  it != weight_feature_index_pairs.end(); ++it) {
