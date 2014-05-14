@@ -425,13 +425,8 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
     //// add transition factors
     ////
     LOG(logDEBUG) << "ConservationTracking::add_finite_factors: add transition factors";    
-//    property_map<arc_distance, HypothesesGraph::base_graph>::type& arc_distances = g.get(
-//            arc_distance());
-
     pgmlink::Event::EventType event_name = Event::Move;
-    pgm::OpengmEventExplicitFunction<double>::EventMap factor_event_map;
-    // TODO: make global event map (available from python as event_feature_names_)
-    // TOOD: make weights and couple with event map
+    pgm::OpengmEventExplicitFunction<double>::EventMap factor_event_map;        
     factor_event_map[event_name] = event_map_[event_name];
 
     for (HypothesesGraph::ArcIt a(g); a != lemon::INVALID; ++a) {
@@ -440,7 +435,7 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
         std::vector<size_t> shape( vi.size(), num_states_vars );
 
         // TODO: write event_features class/function (based on classifier_auxiliary??)
-        std::map<std::string,double> transition_features = event_features_(event_feature_names_[event_name], g.source(a), g.target(a));
+        std::map<std::string,feature_array> transition_features = event_features_(event_to_feature_names_[event_name], g.source(a), g.target(a));
         pgm::UnaryEventExplicitFunction<double> transition_function(shape.begin(), shape.end(), forbidden_cost_, transition_features,
                                               weights_, factor_event_map);
 

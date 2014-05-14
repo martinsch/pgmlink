@@ -20,7 +20,8 @@ class ConservationTracking : public Reasoner {
     typedef pgm::OpengmEventExplicitFunction<double>::EventMap EventMap;
     typedef pgm::OpengmEventExplicitFunction<double>::EventConfigurationMap EventConfigurationMap;
     typedef pgm::OpengmEventExplicitFunction<double>::WeightVector WeightVector;
-    typedef std::map<Event::EventType, std::vector<string> > EventToFeatureNameMap;
+    typedef std::map<std::string, std::vector<std::string> > FeatureOperatorNames;
+    typedef std::map<Event::EventType, FeatureOperatorNames> EventToFeatureNameMap;
     typedef std::map<Event::EventType, std::vector<size_t> > EventToConfigurationsMap;
 
 	ConservationTracking(
@@ -61,7 +62,8 @@ class ConservationTracking : public Reasoner {
           with_appearance_(with_appearance),
           with_disappearance_(with_disappearance),
           transition_parameter_(transition_parameter),
-          with_constraints_(with_constraints)
+          with_constraints_(with_constraints),
+          event_to_feature_names_(event_to_feature_names)
     {
         for(EventToFeatureNameMap::const_iterator it = event_to_feature_names.begin();
             it != event_to_feature_names.end(); ++it) {
@@ -77,13 +79,19 @@ class ConservationTracking : public Reasoner {
             for (std::vector<size_t>::const_iterator config_it = ev_config_it->second.begin();
                  config_it != ev_config_it->second.end(); ++config_it) {
 
-                for (std::vector<std::string>::const_iterator feat_name_it = it->second.begin(); feat_name_it != it->second.end(); ++feat_name_it) {
-                    const std::string& feat_name = *feat_name_it;
+                for (FeatureOperatorNames::const_iterator feat_op_name_it = it->second.begin();
+                     feat_op_name_it != it->second.end(); ++feat_op_name_it) {
 
-                    // initialize weight with zero and store the event_config->weight_index mapping
-                    weight_vector_.push_back(0.);
-                    event_config_map[*config_it].push_back(std::make_pair(weight_vector_.size()-1, feat_name));
+                    for (std::vector<std::string>::const_iterator feat_name_it = feat_op_name_it->second.begin();
+                         feat_name_it != feat_op_name_it->second.end(); ++feat_name_it) {
+                        const std::string& feat_name = *feat_name_it;
+
+                        // initialize weight with zero and store the event_config->weight_index mapping
+                        weight_vector_.push_back(0.);
+                        event_config_map[*config_it].push_back(std::make_pair(weight_vector_.size()-1, std::make_pair(*feat_op_name_it, feat_name)));
+                    }
                 }
+
             }
 
             event_map_[event_name] = event_config_map;
@@ -176,6 +184,7 @@ class ConservationTracking : public Reasoner {
 
     EventMap event_map_;
     WeightVector weight_vector_;
+    const EventToFeatureNameMap event_to_feature_names_;
 
 };
 
