@@ -431,13 +431,23 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
 
     for (HypothesesGraph::ArcIt a(g); a != lemon::INVALID; ++a) {
         size_t vi[] = { arc_map_[a] };
-        std::vector<size_t> num_states_vars(pgm_->get_number_of_labels(vi));
-        std::vector<size_t> shape( vi.size(), num_states_vars );
+        std::vector<size_t> num_states_vars(pgm_->get_number_of_labels(std::vector<size_t>(vi, vi+1)));
+        assert(num_states_vars.size() == 1);
 
         // TODO: write event_features class/function (based on classifier_auxiliary??)
-        std::map<std::string,feature_array> transition_features = event_features_(event_to_feature_names_[event_name], g.source(a), g.target(a));
-        pgm::UnaryEventExplicitFunction<double> transition_function(shape.begin(), shape.end(), forbidden_cost_, transition_features,
-                                              weight_vector_, factor_event_map);
+        std::map<std::pair<std::string,std::string>,feature_array> transition_features;
+        if (with_tracklets_) {
+           transition_features = event_features_pair_(event_to_feature_names_[event_name],
+                                                  tracklet_map[g.source(a)].back(),
+                                                  tracklet_map[g.target(a)].front());
+        } else {
+            transition_features = event_features_pair_(event_to_feature_names_[event_name],
+                                                  traxel_map[g.source(a)],
+                                                  traxel_map[g.target(a)]);
+        }
+        pgm::UnaryEventExplicitFunction<double> transition_function(num_states_vars.begin(), num_states_vars.end(),
+                                                          (double) forbidden_cost_, transition_features,
+                                                          weight_vector_, factor_event_map);
 
         pgm::OpengmFactor<pgm::UnaryEventExplicitFunction<double> > table(transition_function.get_instance(), vi, vi+1);
         table.add_to(*(pgm_->Model()));
@@ -476,14 +486,24 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
             indexsorter::sort_indices(distances.begin(), distances.end(), order);
             indexsorter::reorder(outarcs, order);
 
-            std::map<std::string,feature_array> division_features = event_features_(event_to_feature_names[event_name], g.source(outarcs[0]), g.target(outarcs[0]), g.target(outarcs[1]));
+            std::map<std::pair<std::string,std::string>,feature_array> division_features;
+            if (with_tracklets_) {
+               division_features = event_features_triplet_(event_to_feature_names_[event_name],
+                                                      tracklet_map[g.source(outarcs[0])].back(),
+                                                      tracklet_map[g.target(outarcs[0])].front(),
+                                                      tracklet_map[g.target(outarcs[1])].front());
+            } else {
+                division_features = event_features_triplet_(event_to_feature_names_[event_name],
+                                                      traxel_map[g.source(outarcs[0])],
+                                                      traxel_map[g.target(outarcs[0])],
+                                                      traxel_map[g.target(outarcs[1])]);
+            }
 
             size_t vi[] = { div_node_map_[n] };
-            std::vector<size_t> num_states_vars(pgm_->get_number_of_labels(vi));
-            std::vector<size_t> shape( vi.size(), num_states_vars );
+            std::vector<size_t> num_states_vars(pgm_->get_number_of_labels(std::vector<size_t>(vi, vi+1)));
             assert(num_states_vars.size() == 1);
             assert(num_states_vars[0] == 2);
-            pgm::UnaryEventExplicitFunction<double> division_function(shape.begin(), shape.end(), forbidden_cost_, division_features,
+            pgm::UnaryEventExplicitFunction<double> division_function(num_states_vars.begin(), num_states_vars.end(), forbidden_cost_, division_features,
                                                   weight_vector_, factor_event_map);
 
             pgm::OpengmFactor<pgm::UnaryEventExplicitFunction<double> > table(division_function.get_instance(), vi, vi+1);

@@ -68,11 +68,11 @@ class ConservationTracking : public Reasoner {
         for(EventToFeatureNameMap::const_iterator it = event_to_feature_names.begin();
             it != event_to_feature_names.end(); ++it) {
 
-            pgmlink::Event::EventType event_name = *it;
+            pgmlink::Event::EventType event_name = it->first;
 
             EventToConfigurationsMap::const_iterator ev_config_it = event_configurations.find(event_name);
             if (ev_config_it == event_configurations.end()) {
-                throw std::exception("the event configurations map must contain the same keys as the event to feature map");
+                throw std::runtime_error("the event configurations map must contain the same keys as the event to feature map");
             }
 
             EventConfigurationMap event_config_map;
@@ -131,6 +131,9 @@ class ConservationTracking : public Reasoner {
     ConservationTracking(const ConservationTracking&) {};
     ConservationTracking& operator=(const ConservationTracking&) { return *this;};
 
+    boost::function<std::map<std::pair<std::string,std::string>,feature_array> (const FeatureOperatorNames&, const Traxel&, const Traxel&)> event_features_pair_;
+    boost::function<std::map<std::pair<std::string,std::string>,feature_array> (const FeatureOperatorNames&, const Traxel&, const Traxel&, const Traxel&)> event_features_triplet_;
+
     void reset();
     void add_constraints( const HypothesesGraph& );
     void add_detection_nodes( const HypothesesGraph& );
@@ -184,7 +187,7 @@ class ConservationTracking : public Reasoner {
 
     EventMap event_map_;
     WeightVector weight_vector_;
-    const EventToFeatureNameMap event_to_feature_names_;
+    EventToFeatureNameMap event_to_feature_names_;
 
 };
 

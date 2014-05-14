@@ -122,11 +122,12 @@ namespace pgmlink {
 
       public:
           typedef std::pair<std::string, std::string> FeatureName;
-          typedef typename std::map<FeatureName,VALUE> FeatureMap;
+          typedef typename std::map<FeatureName,pgmlink::feature_array> FeatureMap;
           typedef typename std::vector<VALUE> WeightVector;
           typedef std::pair<size_t,FeatureName > WeightFeaturePair;
-          typedef std::map<pgmlink::Event::EventType,EventConfigurationMap > EventMap;
           typedef std::map<size_t,std::vector<WeightFeaturePair > > EventConfigurationMap;
+          typedef std::map<pgmlink::Event::EventType,EventConfigurationMap > EventMap;
+          typedef typename opengm::ExplicitFunction<VALUE>::Marray Marray;
 
           typedef typename opengm::ExplicitFunction<VALUE> FunctionType;
 
@@ -141,7 +142,7 @@ namespace pgmlink {
           // function does not know about updates on weights)
           FunctionType& get_instance() {
               std::vector<size_t> configuration(this->shape(1)); // the number of variables must be equal to the marray width
-              for(Marray::iterator it = this->begin(); it != this->end(); ++it) {
+              for(typename Marray::iterator it = this->begin(); it != this->end(); ++it) {
                 std::vector<size_t>::iterator states_it = configuration.begin();
                 it.coordinate(states_it);
                 *it = get_energy_of_configuration(configuration);
