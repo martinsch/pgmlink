@@ -436,15 +436,16 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
 
     for (HypothesesGraph::ArcIt a(g); a != lemon::INVALID; ++a) {
         size_t vi[] = { arc_map_[a] };
+        std::vector<size_t> num_states_vars(pgm_->get_number_of_labels(vi));
+        std::vector<size_t> shape( vi.size(), num_states_vars );
 
         // TODO: write event_features class/function (based on classifier_auxiliary??)
         std::map<std::string,double> transition_features = event_features_(event_feature_names_[event_name], g.source(a), g.target(a));
-        pgm::OneEventExplicitFunction<double> transition_function(vi, vi + 1, forbidden_cost_, transition_features,
+        pgm::OneEventExplicitFunction<double> transition_function(shape.begin(), shape.end(), forbidden_cost_, transition_features,
                                               weights_, factor_event_map);
 
-
-        // TODO: make add_to available for event explicit fct
-        transition_function.add_to(*(pgm_->Model()));
+        pgm::OpengmFactor<pgm::OneEventExplicitFunction<double> > table(transition_function, vi, vi+1);
+        table.add_to(*(pgm_->Model()));
     }
 
 
@@ -526,7 +527,7 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
 				  //size_t table_dim = count + 1 + int(has_div_node); 		// n * transition var + detection var (+ division var)
 				  std::vector<size_t> coords;
 				  // ITER first_ogm_idx, ITER last_ogm_idx, VALUE init, size_t states_vars
-				  pgm::OpengmExplicitFactor<double> table( vi.begin(), vi.end(), 0, states_vars);
+                  pgm::OpengmExplicitFactor<double> table( vi.begin(), vi.end(), 0, states_vars);
 
 				  //assert(table_dim - trans_idx == count);
 

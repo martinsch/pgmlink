@@ -58,10 +58,18 @@ namespace pgmlink {
       ogmGraphicalModel* Model() {return model_; }
       const ogmGraphicalModel* Model() const {return model_; }
       
+      std::vector<size_t> get_number_of_labels(const std::vector<size_t>& var_idxes) {
+          std::vector<size_t> result;
+          for(std::vector<size_t>::const_iterator it = var_idxes.begin(); it != var_idxes.end(); ++it) {
+              result.push_back(model_->numberOfLabels(*it));
+          }
+          return result;
+      }
+
     private:
       OpengmModelDeprecated(const OpengmModelDeprecated&);
       OpengmModelDeprecated& operator=(const OpengmModelDeprecated&);
-      
+            
       ogmGraphicalModel* model_;
     };
 
