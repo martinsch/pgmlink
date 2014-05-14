@@ -15,10 +15,18 @@ namespace pgmlink {
 class Traxel;
 
 
-class ConservationTracking : public Reasoner {
+class ConservationTracking : public Reasoner {    
     public:
+    typedef pgm::OpengmEventExplicitFunction<double>::EventMap EventMap;
+    typedef pgm::OpengmEventExplicitFunction<double>::EventConfigurationMap EventConfigurationMap;
+    typedef pgm::OpengmEventExplicitFunction<double>::WeightVector WeightVector;
+    typedef std::map<Event::EventType, std::vector<string> > EventToFeatureNameMap;
+    typedef std::map<Event::EventType, std::vector<size_t> > EventToConfigurationsMap;
+
 	ConservationTracking(
                              unsigned int max_number_objects,
+                             const EventToFeatureNameMap& event_to_feature_names,
+                             const EventToConfigurationsMap& event_configurations,
                              boost::function<double (const Traxel&, const size_t)> detection,
                              boost::function<double (const Traxel&, const size_t)> division,
                              boost::function<double (const double)> transition,
@@ -54,7 +62,33 @@ class ConservationTracking : public Reasoner {
           with_disappearance_(with_disappearance),
           transition_parameter_(transition_parameter),
           with_constraints_(with_constraints)
-    { };
+    {
+        for(EventToFeatureNameMap::const_iterator it = event_to_feature_names.begin();
+            it != event_to_feature_names.end(); ++it) {
+
+            pgmlink::Event::EventType event_name = *it;
+
+            EventToConfigurationsMap::const_iterator ev_config_it = event_configurations.find(event_name);
+            if (ev_config_it == event_configurations.end()) {
+                throw std::exception("the event configurations map must contain the same keys as the event to feature map");
+            }
+
+            EventConfigurationMap event_config_map;
+            for (std::vector<size_t>::const_iterator config_it = ev_config_it->second.begin();
+                 config_it != ev_config_it->second.end(); ++config_it) {
+
+                for (std::vector<std::string>::const_iterator feat_name_it = it->second.begin(); feat_name_it != it->second.end(); ++feat_name_it) {
+                    const std::string& feat_name = *feat_name_it;
+
+                    // initialize weight with zero and store the event_config->weight_index mapping
+                    weight_vector_.push_back(0.);
+                    event_config_map[*config_it].push_back(std::make_pair(weight_vector_.size()-1, feat_name));
+                }
+            }
+
+            event_map_[event_name] = event_config_map;
+        }
+    };
     ~ConservationTracking();
 
     virtual void formulate( const HypothesesGraph& );
@@ -138,7 +172,11 @@ class ConservationTracking : public Reasoner {
     bool with_constraints_;
 
     HypothesesGraph tracklet_graph_;
-    std::map<HypothesesGraph::Node, std::vector<HypothesesGraph::Node> > tracklet2traxel_node_map_;
+    std::map<HypothesesGraph::Node, std::vector<HypothesesGraph::Node> > tracklet2traxel_node_map_;    
+
+    EventMap event_map_;
+    WeightVector weight_vector_;
+
 };
 
 
