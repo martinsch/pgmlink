@@ -136,6 +136,8 @@ namespace pgmlink {
               opengm::ExplicitFunction<VALUE> (shapeBegin, shapeEnd, value),
               feature_map_(features), weight_vector_(weights), event_map_(event_map)  { }
 
+          // TODO: inherit from FunctionBase rather than ExplicitFunction for on-demand-computation (otherwise, the
+          // function does not know about updates on weights)
           FunctionType& get_instance() {
               std::vector<size_t> configuration(this->shape(1)); // the number of variables must be equal to the marray width
               for(Marray::iterator it = this->begin(); it != this->end(); ++it) {

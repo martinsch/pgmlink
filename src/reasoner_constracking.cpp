@@ -437,60 +437,65 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
         // TODO: write event_features class/function (based on classifier_auxiliary??)
         std::map<std::string,feature_array> transition_features = event_features_(event_to_feature_names_[event_name], g.source(a), g.target(a));
         pgm::UnaryEventExplicitFunction<double> transition_function(shape.begin(), shape.end(), forbidden_cost_, transition_features,
-                                              weights_, factor_event_map);
+                                              weight_vector_, factor_event_map);
 
-        pgm::OpengmFactor<pgm::UnaryEventExplicitFunction<double> > table(transition_function, vi, vi+1);
+        pgm::OpengmFactor<pgm::UnaryEventExplicitFunction<double> > table(transition_function.get_instance(), vi, vi+1);
         table.add_to(*(pgm_->Model()));
     }
 
 
-    // TODO: convert all other factors into this new format
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     ////
     //// add division factors
-    ////
+    ////    
     if (with_divisions_) {
         LOG(logDEBUG) << "ConservationTracking::add_finite_factors: add division factors";
+        pgmlink::Event::EventType event_name = Event::Division;
+        pgm::OpengmEventExplicitFunction<double>::EventMap factor_event_map;
+        factor_event_map[event_name] = event_map_[event_name];
+
         for (HypothesesGraph::NodeIt n(g); n != lemon::INVALID; ++n) {
             if (div_node_map_.count(n) == 0) {
                 continue;
             }
-            size_t vi[] = { div_node_map_[n] };
-            vector<size_t> coords(1, 0); // number of variables
-            // ITER first_ogm_idx, ITER last_ogm_idx, VALUE init, size_t states_per_var
-            pgm::OpengmExplicitFactor<double> table(vi, vi + 1, forbidden_cost_, 2);
-            for (size_t state = 0; state <= 1; ++state) {
-                double energy = 0;
-                if (with_tracklets_) {
-                    energy = division_(tracklet_map[n].back(), state);
-                } else {
-                    energy = division_(traxel_map[n], state);
-                }
-                LOG(logDEBUG2) << "ConservationTracking::add_finite_factors: division[" << state
-                        << "] = " << energy;
-                coords[0] = state;
-                table.set_value(coords, energy);
-                coords[0] = 0;
+
+            // add the features of the nearest two daughter candidates only!
+
+            // TODO: add one division variable for each possible pair of divisions to allow for
+            //       divisions out of mergers!
+
+            // sort the incoming arcs by their distance
+            property_map<arc_distance, HypothesesGraph::base_graph>::type& arc_distances = g.get(arc_distance());
+            std::vector<HypothesesGraph::Arc> outarcs;
+            std::vector<size_t> distances;
+            for(HypothesesGraph::OutArcIt outarc_it(n); outarc_it != lemon::INVALID; ++outarc_it) {
+                outarcs.push_back(*outarc_it);
+                distances.push_back(arc_distances[*outarc_it]);
             }
+            assert(outarcs.size() >= 2);
+            std::vector<size_t> order;
+            indexsorter::sort_indices(distances.begin(), distances.end(), order);
+            indexsorter::reorder(outarcs, order);
+
+            std::map<std::string,feature_array> division_features = event_features_(event_to_feature_names[event_name], g.source(outarcs[0]), g.target(outarcs[0]), g.target(outarcs[1]));
+
+            size_t vi[] = { div_node_map_[n] };
+            std::vector<size_t> num_states_vars(pgm_->get_number_of_labels(vi));
+            std::vector<size_t> shape( vi.size(), num_states_vars );
+            assert(num_states_vars.size() == 1);
+            assert(num_states_vars[0] == 2);
+            pgm::UnaryEventExplicitFunction<double> division_function(shape.begin(), shape.end(), forbidden_cost_, division_features,
+                                                  weight_vector_, factor_event_map);
+
+            pgm::OpengmFactor<pgm::UnaryEventExplicitFunction<double> > table(division_function.get_instance(), vi, vi+1);
             table.add_to(*(pgm_->Model()));
         }
     }
 
 
+
     if (!with_constraints_) {
+        throw std::exception("not yet implemented");
+
     	for (HypothesesGraph::NodeIt n(g); n != lemon::INVALID; ++n) {
 			LOG(logDEBUG) << "ConservationTracking::add_finite_factors: add soft-constraints for outgoing";
 
