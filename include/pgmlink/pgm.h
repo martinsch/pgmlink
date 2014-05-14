@@ -121,9 +121,10 @@ namespace pgmlink {
       class OpengmEventExplicitFunction: public opengm::ExplicitFunction<VALUE> {
 
       public:
-          typedef typename std::map<std::string,VALUE> FeatureMap;
+          typedef std::pair<std::string, std::string> FeatureName;
+          typedef typename std::map<FeatureName,VALUE> FeatureMap;
           typedef typename std::vector<VALUE> WeightVector;
-          typedef std::pair<size_t,std::pair<std::string, std::string> > WeightFeaturePair;
+          typedef std::pair<size_t,FeatureName > WeightFeaturePair;
           typedef std::map<pgmlink::Event::EventType,EventConfigurationMap > EventMap;
           typedef std::map<size_t,std::vector<WeightFeaturePair > > EventConfigurationMap;
 
