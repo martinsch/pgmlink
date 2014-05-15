@@ -5,6 +5,7 @@
 #include <string>
 #include <map>
 #include <utility>
+#include <numeric>
 
 // boost
 #include <boost/shared_ptr.hpp>
@@ -37,6 +38,87 @@ class FeatureCalculator {
 
 
 ////
+//// IdentityCalculator
+////
+class IdentityCalculator : public FeatureCalculator {
+ public:
+  static const std::string name_;
+
+  virtual ~IdentityCalculator();
+  virtual feature_array calculate(const feature_array& f1) const;
+  virtual const std::string& name() const;
+
+};
+
+
+////
+//// AbsoluteDifferenceCalculator
+////
+class AbsoluteDifferenceCalculator : public FeatureCalculator {
+ public:
+  static const std::string name_;
+
+  virtual ~AbsoluteDifferenceCalculator();
+  virtual feature_array calculate(const feature_array& f1, const feature_array& f2) const;
+  virtual const std::string& name() const;
+};
+
+
+////
+//// SquareRootSquaredDifferenceCalculator
+////
+class SquareRootSquaredDifferenceCalculator : public FeatureCalculator {
+ public:
+  static const std::string name_;
+
+  virtual ~SquareRootSquaredDifferenceCalculator();
+  virtual feature_array calculate(const feature_array& f1, const feature_array& f2) const;
+  virtual const std::string& name() const;
+};
+
+
+////
+//// RatioCalculator
+////
+class RatioCalculator : public FeatureCalculator {
+ public:
+  static const std::string name_;
+
+  virtual ~RatioCalculator();
+  virtual feature_array calculate(const feature_array& f1, const feature_array& f2) const;
+  virtual feature_array calculate(const feature_array& f1, const feature_array& f2, const feature_array& f3) const;
+  virtual const std::string& name() const;
+};
+
+
+////
+//// AssymetricRatioCalculator
+////
+class AsymmetricRatioCalculator : public FeatureCalculator {
+ public:
+  static const std::string name_;
+
+  virtual ~AsymmetricRatioCalculator();
+  virtual feature_array calculate(const feature_array& f1, const feature_array& f2) const;
+  virtual feature_array calculate(const feature_array& f1, const feature_array& f2, const feature_array& f3) const;
+  virtual const std::string& name() const;
+};
+
+
+////
+//// SquaredDifferenceCalculator
+////
+class SquaredDifferenceCalculator : public FeatureCalculator {
+ public:
+  static const std::string name_;
+
+  virtual ~SquaredDifferenceCalculator();
+  virtual feature_array calculate(const feature_array& f1, const feature_array& f2) const;
+  virtual const std::string& name() const;
+};
+
+
+////
 //// class ElementWiseSquaredDistanceCalculator
 ////
 class ElementWiseSquaredDistanceCalculator : public FeatureCalculator {
@@ -49,6 +131,8 @@ class ElementWiseSquaredDistanceCalculator : public FeatureCalculator {
  private:
   static const std::string name_;
 };
+
+
 
 
 ////
