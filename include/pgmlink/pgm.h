@@ -14,6 +14,7 @@
 #include <pgmlink/ext_opengm/loglinearmodel.hxx>
 #include <opengm/inference/inference.hxx>
 #include <opengm/functions/explicit_function.hxx>
+#include <opengm/functions/function_properties_base.hxx>
 #include <pgmlink/ext_opengm/decorator_weighted.hxx>
 #include <pgmlink/ext_opengm/indicator_function.hxx>
 #include <opengm/operations/adder.hxx>
@@ -31,43 +32,66 @@ namespace pgmlink {
 
 
   template <typename VALUE>
-     class OpengmEventExplicitFunction: public opengm::ExplicitFunction<VALUE, /*INDEX_TYPE*/ size_t, /*LABEL_TYPE*/ size_t> {
+     class OpengmEventExplicitFunction:
+             public opengm::FunctionBase<OpengmEventExplicitFunction<VALUE>,
+                                         VALUE, /*INDEX_TYPE*/ size_t, /*LABEL_TYPE*/ size_t> {
 
      public:
+         typedef VALUE ValueType;
+         typedef size_t LabelType;
+         typedef size_t IndexType;
+
+         typedef typename opengm::FunctionBase<OpengmEventExplicitFunction<VALUE>, VALUE, /*INDEX_TYPE*/ size_t, /*LABEL_TYPE*/ size_t> FunctionBaseType;
+
          typedef std::pair<std::string, std::string> FeatureName;
          typedef std::map<FeatureName,pgmlink::feature_array> FeatureOperatorMap;
          typedef typename std::vector<VALUE> WeightVector;
          typedef std::pair<size_t,FeatureName > WeightFeaturePair;
          typedef std::map<size_t,std::vector<WeightFeaturePair > > EventConfigurationMap;
          typedef std::map<pgmlink::Event::EventType,EventConfigurationMap > EventMap;
-         typedef typename opengm::ExplicitFunction<VALUE>::Marray Marray;
 
          template <class SHAPE_ITERATOR>
          OpengmEventExplicitFunction(SHAPE_ITERATOR shapeBegin, SHAPE_ITERATOR shapeEnd, const VALUE & value,
                                      const FeatureOperatorMap& features, WeightVector* weights,
                                      const EventMap& event_map) :
-             opengm::ExplicitFunction<VALUE> (shapeBegin, shapeEnd, value),
-             feature_map_(features), weight_vector_(weights), event_map_(event_map)  { }
+             FunctionBaseType(),
+             feature_map_(features), weight_vector_(weights), event_map_(event_map), value_(value), shape_(shapeBegin,shapeEnd)
+             {   }
 
-         // TODO: inherit from FunctionBase rather than ExplicitFunction for on-demand-computation (otherwise, the
-         // function does not know about updates on weights)
-         typename pgm::OpengmEventExplicitFunction<VALUE>& get_instance() {
-             std::vector<size_t> configuration(this->shape(1)); // the number of variables must be equal to the marray width
-             for(typename Marray::iterator it = this->begin(); it != this->end(); ++it) {
-               std::vector<size_t>::iterator states_it = configuration.begin();
-               it.coordinate(states_it);
-               *it = get_energy_of_configuration(configuration);
+         template <typename ITERATOR>
+         VALUE operator()(ITERATOR begin) const {
+             std::vector<size_t> configuration;
+             for(ITERATOR it = begin; it < begin + this->dimension(); ++it) {
+                 configuration.push_back(*it);
              }
-             return *this;
+             return get_energy_of_configuration(configuration);
          }
 
+
+         size_t shape(const size_t var_idx) const {
+            return shape[var_idx];
+         }
+
+         size_t size() const {
+             size_t res = 1;
+             for(std::vector<std::size_t>::const_iterator it = shape_.begin(); it != shape_.end(); ++it ) {
+                 res *= (*it);
+             }
+             return res;
+         }
+
+         size_t dimension() const {
+             return shape_.size();
+         }
+
+
      protected:
-         virtual VALUE get_energy_of_configuration(const std::vector<size_t>&) {
+         virtual VALUE get_energy_of_configuration(const std::vector<size_t>&) const {
              throw std::runtime_error("not implemented");
          }
 
            // returns inner product of <w,f(x)> for given event with its specific configuration
-         VALUE get_event_energy(Event::EventType event_name, size_t event_configuration) {
+         VALUE get_event_energy(Event::EventType event_name, size_t event_configuration) const {
             VALUE energy = 0;
             EventMap::const_iterator event_it = event_map_.find(event_name);
             if (event_it == event_map_.end()) {
@@ -84,7 +108,7 @@ namespace pgmlink {
 
             for(std::vector<WeightFeaturePair>::const_iterator it = weight_feature_index_pairs.begin();
                 it != weight_feature_index_pairs.end(); ++it) {
-                const pgmlink::feature_array& feats = feature_map_[it->second];
+                const pgmlink::feature_array& feats = feature_map_.at(it->second); // access by at() for const
                 for(pgmlink::feature_array::const_iterator feat_it = feats.begin(); feat_it != feats.end(); ++feat_it) {
                     energy += ((*weight_vector_)[it->first]) * (*feat_it);
                 }
@@ -97,7 +121,8 @@ namespace pgmlink {
        FeatureOperatorMap feature_map_;
        WeightVector* weight_vector_;
        EventMap event_map_;
-
+       VALUE value_;
+       std::vector<std::size_t> shape_;
      };
 
 

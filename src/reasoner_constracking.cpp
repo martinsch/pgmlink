@@ -448,7 +448,7 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
         pgm::UnaryEventExplicitFunction<double> transition_function(num_states_vars.begin(), num_states_vars.end(),
                                                            (double) forbidden_cost_, transition_features, &weight_vector_, factor_event_map);
 
-        pgm::OpengmFactor<pgm::OpengmEventExplicitFunction<double> > table(transition_function.get_instance(), vi, vi+1);
+        pgm::OpengmFactor<pgm::OpengmEventExplicitFunction<double> > table(transition_function, vi, vi+1);
         table.add_to(*(pgm_->Model()));
     }
 
@@ -505,7 +505,7 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
             pgm::UnaryEventExplicitFunction<double> division_function(num_states_vars.begin(), num_states_vars.end(), forbidden_cost_, division_features,
                                                   &weight_vector_, factor_event_map);
 
-            pgm::OpengmFactor<pgm::OpengmEventExplicitFunction<double> > table(division_function.get_instance(), vi, vi+1);
+            pgm::OpengmFactor<pgm::OpengmEventExplicitFunction<double> > table(division_function, vi, vi+1);
             table.add_to(*(pgm_->Model()));
         }
     }

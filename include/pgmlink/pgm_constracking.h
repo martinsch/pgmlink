@@ -23,7 +23,7 @@ public:
         }
     }
 
-    virtual VALUE get_energy_of_configuration(const std::vector<size_t>& configuration)
+    virtual VALUE get_energy_of_configuration(const std::vector<size_t>& configuration) const
     {
         assert( configuration.size() == 1 && "only unaries are allowed" );
 
@@ -49,9 +49,9 @@ public:
         OpengmEventExplicitFunction<VALUE>(shapeBegin, shapeEnd, value, features, weights, event_map)
     {}
 
-    EventConfigurationVector determine_event_configurations(const std::vector<size_t>&);
+    EventConfigurationVector determine_event_configurations(const std::vector<size_t>&) const;
 
-    virtual VALUE get_energy_of_configuration(const std::vector<size_t>& configuration)
+    virtual VALUE get_energy_of_configuration(const std::vector<size_t>& configuration) const
     {
         assert( configuration.size() == 2 && "only pairwise interactions are allowed");
 
@@ -72,7 +72,7 @@ public:
 
 template <typename VALUE>
 typename PairwiseDetectionExplicitFunction<VALUE>::EventConfigurationVector PairwiseDetectionExplicitFunction<VALUE>::determine_event_configurations(
-        const std::vector<size_t>& configuration)
+        const std::vector<size_t>& configuration) const
 {
     EventConfigurationVector event_configurations;
 
