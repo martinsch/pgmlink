@@ -748,12 +748,11 @@ const FeatureMatrix& MVNOutlierCalculator::calculate_matrix(
   if (col_count <= row_count) {
     LOG(logDEBUG) << "In MVNOutlierCalculator: too few data to calculate covariance matrix";
     LOG(logDEBUG) << "Returning a Matrix filled with zeros";
-    ret_matrix_.reshape(vigra::Shape2(row_count, row_count));
     ret_matrix_.init(0);
   }
-  FeatureMatrixView covariance_matrix;
-  vigra::linalg::covarianceMatrixOfRows(feature_matrix, covariance_matrix);
-  bool invertible = vigra::linalg::inverse(feature_matrix, ret_matrix_);
+  FeatureMatrix covariance_matrix(vigra::Shape2(row_count, row_count), 0.0);
+  vigra::linalg::covarianceMatrixOfColumns(feature_matrix, covariance_matrix);
+  bool invertible = vigra::linalg::inverse(covariance_matrix, ret_matrix_);
   if (not invertible) {
     ret_matrix_.init(0);
   }
@@ -766,8 +765,8 @@ const FeatureVector& MVNOutlierCalculator::calculate_vector(
   size_t col_count = feature_matrix.shape(0);
   ret_vector_.reshape(vigra::Shape1(col_count));
 
-  FeatureMatrixView temp1;
-  FeatureMatrixView temp2;
+  FeatureMatrix temp1(vigra::Shape2(1, col_count));
+  FeatureMatrix temp2(vigra::Shape2(1,1));
   FeatureMatrixView column;
   const FeatureMatrix& inv_cov = calculate_matrix(feature_matrix);
   for (size_t col = 0; col < col_count; col++) {
