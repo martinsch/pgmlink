@@ -746,16 +746,16 @@ const FeatureMatrix& MVNOutlierCalculator::calculate_matrix(
   size_t col_count = feature_matrix.shape(0);
   size_t row_count = feature_matrix.shape(1);
   ret_matrix_.reshape(vigra::Shape2(row_count, row_count));
+  ret_matrix_.init(0.0);
   if (col_count <= row_count) {
     LOG(logDEBUG) << "In MVNOutlierCalculator: too few data to calculate covariance matrix";
     LOG(logDEBUG) << "Returning a Matrix filled with zeros";
-    ret_matrix_.init(0);
   }
   FeatureMatrix covariance_matrix(vigra::Shape2(row_count, row_count), 0.0);
   vigra::linalg::covarianceMatrixOfColumns(feature_matrix, covariance_matrix);
   bool invertible = vigra::linalg::inverse(covariance_matrix, ret_matrix_);
   if (not invertible) {
-    ret_matrix_.init(0);
+    ret_matrix_.init(0.0);
   }
   return ret_matrix_;
 }
@@ -766,10 +766,12 @@ const FeatureVector& MVNOutlierCalculator::calculate_vector(
   size_t col_count = feature_matrix.shape(0);
   size_t row_count = feature_matrix.shape(1);
   ret_vector_.reshape(vigra::Shape1(col_count));
+  ret_vector_.init(0.0);
 
   FeatureMatrix temp1(vigra::Shape2(row_count, 1));
   FeatureMatrix temp2(vigra::Shape2(1,1));
-  FeatureMatrixView row;
+  // TODO calculate_vector fails if the row is of type FeatureMatrixView > Why?
+  FeatureMatrix row;
   const FeatureMatrix& inv_cov = calculate_matrix(feature_matrix);
   for (size_t col = 0; col < col_count; col++) {
     row = vigra::linalg::rowVector(feature_matrix, col);
@@ -779,6 +781,28 @@ const FeatureVector& MVNOutlierCalculator::calculate_vector(
   }
 
   return ret_vector_;
+}
+
+FeatureScalar MVNOutlierCalculator::calculate_scalar(
+  const FeatureMatrix& feature_matrix
+) {
+  return calculate_scalar(feature_matrix, 3.0);
+}
+
+FeatureScalar MVNOutlierCalculator::calculate_scalar(
+  const FeatureMatrix& feature_matrix,
+  FeatureScalar sigma_threshold
+) {
+  size_t col_count = feature_matrix.shape(0);
+  FeatureScalar ret_scalar = 0;
+
+  ret_vector_ = calculate_vector(feature_matrix);
+  for (size_t col = 0; col < col_count; col++) {
+    if(ret_vector_(col) > sigma_threshold) {
+      ret_scalar += 1.0 / static_cast<FeatureScalar>(col_count);
+    }
+  }
+  return ret_scalar;
 }
 
 } // namespace pgmlink

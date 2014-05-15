@@ -111,26 +111,6 @@ class SubsetFeatureCalculator {
   );
 };
 
-/*
-TODO clean file from needless code
-////
-//// class OutlierCalculator
-////
-class OutlierCalculator {
-  public:
-    OutlierCalculator() {};
-    ~OutlierCalculator() {};
-    virtual const std::vector<size_t>& calculate(
-      const feature_arrays& features
-    ) = 0;
-    virtual const feature_array& get_measures() const;
-    virtual const std::string& name() const;
-  protected:
-    static const std::string name_;
-    feature_array measures_;
-}; // class OutlierCalculator
-*/
-
 /*=============================================================================
   specific classes
 =============================================================================*/
@@ -273,6 +253,13 @@ class MVNOutlierCalculator : public SubsetFeatureCalculator {
   );
   virtual const FeatureVector& calculate_vector(
     const FeatureMatrix& feature_matrix
+  );
+  virtual FeatureScalar calculate_scalar(
+    const FeatureMatrix& feature_matrix
+  );
+  virtual FeatureScalar calculate_scalar(
+    const FeatureMatrix& feature_matrix,
+    FeatureScalar sigma_threshold
   );
  protected:
   static const std::string name_;
