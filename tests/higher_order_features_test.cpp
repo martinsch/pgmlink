@@ -531,7 +531,7 @@ BOOST_AUTO_TEST_CASE( MVNOutlierCalculator_calculate_vector ) {
   // Create outlier detection
   LOG(logINFO) << "  set up the outlier calculator";
   MVNOutlierCalculator mvnoutlier;
-  LOG(logINFO) << "  calculate inverse covariance vector";
+  LOG(logINFO) << "  calculate vector";
   FeatureVector vec = mvnoutlier.calculate_vector(x);
 
   LOG(logINFO) << "  vector of outlier badnesses:";
@@ -545,4 +545,22 @@ BOOST_AUTO_TEST_CASE( MVNOutlierCalculator_calculate_vector ) {
   BOOST_CHECK(( 2.43 < vec(4)) and (vec(4) <  2.44));
   BOOST_CHECK(( 3.02 < vec(5)) and (vec(5) <  3.03));
   BOOST_CHECK(( 4.65 < vec(6)) and (vec(6) <  4.66));
+}
+
+BOOST_AUTO_TEST_CASE( MVNOutlierCalculator_calculate_scalar ) {
+  LOG(logINFO) << "test case: MVNOutlierCalculator_calculate_scalar";
+
+  // get the test data with outlier in x6
+  FeatureMatrix x;
+  get_feature_matrix(x);
+
+  // Create outlier detection
+  LOG(logINFO) << "  set up the outlier calculator";
+  MVNOutlierCalculator mvnoutlier;
+  LOG(logINFO) << "  calculate count of outliers normalized to the length";
+  FeatureScalar s3 = mvnoutlier.calculate_scalar(x);
+  FeatureScalar s4 = mvnoutlier.calculate_scalar(x, 4.0);
+
+  BOOST_CHECK_EQUAL(s3, static_cast<FeatureScalar>(3./7.));
+  BOOST_CHECK_EQUAL(s4, static_cast<FeatureScalar>(1./7.));
 }
