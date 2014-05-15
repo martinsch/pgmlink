@@ -151,8 +151,10 @@ if(WIN32)
   add_compiler_export_flags() # enable dynamic symbol export/import for shared libs (on Windows)
 endif()
 
-file(GLOB LIB_SOURCES src/*.cpp)
+file(GLOB LIB_SOURCES src/*.cpp src/feature_calculator/*.cpp)
 add_library(pgmlink SHARED ${LIB_SOURCES})
+
+
 
 file( MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/pgmlink )
 if(WIN32)
