@@ -538,59 +538,11 @@ BOOST_AUTO_TEST_CASE( MVNOutlierCalculator_calculate_vector ) {
   for(size_t i = 0; i < 7; i++) {
     LOG(logINFO) << "  " << i << " : " << vec(i);
   }
+  BOOST_CHECK(( 1.81 < vec(0)) and (vec(0) <  1.82));
+  BOOST_CHECK(( 1.95 < vec(1)) and (vec(1) <  1.96));
+  BOOST_CHECK(( 3.09 < vec(2)) and (vec(2) <  3.10));
+  BOOST_CHECK(( 2.42 < vec(3)) and (vec(3) <  2.43));
+  BOOST_CHECK(( 2.43 < vec(4)) and (vec(4) <  2.44));
+  BOOST_CHECK(( 3.02 < vec(5)) and (vec(5) <  3.03));
+  BOOST_CHECK(( 4.65 < vec(6)) and (vec(6) <  4.66));
 }
-/*
-BOOST_AUTO_TEST_CASE( OutlierCountAggregator_calculate ) {
-  LOG(logINFO) << "test case: OutlierCountAggregator_calculate";
-  // Set up the test data with outlier x6
-  feature_type x_array[7][2] = {
-    {3., 3.},
-    {4., 3.},
-    {3., 4.},
-    {4., 4.},
-    {5., 4.},
-    {5., 5.},
-    {9., 8.}
-  };
-  feature_arrays x;
-  for(size_t i = 0; i < 7; i++) {
-    feature_array y(x_array[i], x_array[i]+2);
-    x.push_back(y);
-  }
-
-  // Create outlier detection
-  LOG(logINFO) << "  Set up the outlier count aggregator";
-  OutlierCountAggregator outliercount;
-  LOG(logINFO) << "  Calculate the outlier count";
-  size_t outlier = outliercount(x);
-  LOG(logINFO) << "  outlier count: " << outlier;
-
-  BOOST_CHECK_EQUAL(outlier, 1);
-}
-
-BOOST_AUTO_TEST_CASE( OutlierBadnessAggregator_calculate ) {
-  LOG(logINFO) << "test case: OutlierBadnessAggregator_calculate";
-  // Set up the test data with outlier x6
-  feature_type x_array[7][2] = {
-    {3., 3.},
-    {4., 3.},
-    {3., 4.},
-    {4., 4.},
-    {5., 4.},
-    {5., 5.},
-    {9., 8.}
-  };
-  feature_arrays x;
-  for(size_t i = 0; i < 7; i++) {
-    feature_array y(x_array[i], x_array[i]+2);
-    x.push_back(y);
-  }
-
-  // Create outlier detection
-  LOG(logINFO) << "  Set up the outlier badness aggregator";
-  OutlierBadnessAggregator outlierbadness;
-  LOG(logINFO) << "  Calculate the outlier badness";
-  feature_type value = outlierbadness(x);
-  BOOST_CHECK( value > 3 );
-}
-*/
