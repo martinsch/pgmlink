@@ -290,7 +290,6 @@ BOOST_AUTO_TEST_CASE( SubsetFeaturesIdentity_extract_matrix ) {
 }
 
 BOOST_AUTO_TEST_CASE( TrackSubsets_operator_traxelgraph ) {
-  
   LOG(logINFO) << "test case: TrackSubsets_operator_traxelgraph";
 
   // set up the graph
@@ -330,7 +329,6 @@ BOOST_AUTO_TEST_CASE( TrackSubsets_operator_traxelgraph ) {
 }
 
 BOOST_AUTO_TEST_CASE( TrackSubsets_operator_trackletgraph ) {
-  
   LOG(logINFO) << "test case: TrackSubsets_operator_trackletgraph";
 
   // set up the graph
@@ -483,9 +481,8 @@ BOOST_AUTO_TEST_CASE( DivisionSubsets_operator_trackletgraph ) {
   }
 }
 
-/*
-BOOST_AUTO_TEST_CASE( MVNOutlierCalculator_calculate ) {
-  LOG(logINFO) << "test case: MVNOutlierCalculator_calculate";
+BOOST_AUTO_TEST_CASE( MVNOutlierCalculator_calculate_matrix ) {
+  LOG(logINFO) << "test case: MVNOutlierCalculator_calculate_matrix";
   // Set up the test data with outlier x6
   feature_type x_array[7][2] = {
     {3., 3.},
@@ -496,21 +493,26 @@ BOOST_AUTO_TEST_CASE( MVNOutlierCalculator_calculate ) {
     {5., 5.},
     {9., 8.}
   };
-  feature_arrays x;
+
+  FeatureMatrix x;
+  x.reshape(vigra::Shape2(7,2));
   for(size_t i = 0; i < 7; i++) {
-    feature_array y(x_array[i], x_array[i]+2);
-    x.push_back(y);
+    for(size_t j = 0; j < 2; j++) {
+      x(i, j) = x_array[i][j];
+    }
   }
 
   // Create outlier detection
   LOG(logINFO) << "  set up the outlier calculator";
   MVNOutlierCalculator mvnoutlier;
-  LOG(logINFO) << "  test outliers";
-  std::vector<size_t> outlier(mvnoutlier.calculate(x));
-  BOOST_CHECK_EQUAL(outlier.size(), 1);
-  BOOST_CHECK_EQUAL(outlier[0], 6);
+  LOG(logINFO) << "  calculate inverse covariance matrix:";
+  FeatureMatrix inv_cov = mvnoutlier.calculate_matrix(x);
+  
+  LOG(logINFO) << "  " << inv_cov(0, 0) << "\t" << inv_cov(0, 1);
+  LOG(logINFO) << "  " << inv_cov(1, 0) << "\t" << inv_cov(1, 1);
 }
 
+/*
 BOOST_AUTO_TEST_CASE( OutlierCountAggregator_calculate ) {
   LOG(logINFO) << "test case: OutlierCountAggregator_calculate";
   // Set up the test data with outlier x6
