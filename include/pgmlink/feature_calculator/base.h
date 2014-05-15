@@ -1,5 +1,5 @@
-#ifndef FEATURE_CALCULATOR_SQUARE_ROOT_SQUARE_DIFFERENCE_H
-#define FEATURE_CALCULATOR_SQUARE_ROOT_SQUARE_DIFFERENCE_H
+#ifndef FEATURE_CALCULATOR_BASE_H
+#define FEATURE_CALCULATOR_BASE_H
 
 // stl
 #include <string>
@@ -31,26 +31,10 @@ class FeatureCalculator {
   static const std::string name_;
 };
 
-namespace helpers {
-
-////
-//// class CalculatorLookup
-////
-class CalculatorLookup {
- public:
-  static boost::shared_ptr<FeatureCalculator> extract_calculator(const std::string& name);
-  
- private:
-  static const std::map<std::string, boost::shared_ptr<FeatureCalculator> > calculator_map_;
-};
-
-} // namespace helpers
-
-
 } // namespace feature_extraction
 
 } // namespace pgmlink
 
 
-#endif /* FEATURE_CALCULATOR_SQUARE_ROOT_SQUARE_DIFFERENCE_H */
+#endif /* FEATURE_CALCULATOR_BASE_H */
 
