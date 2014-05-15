@@ -774,7 +774,7 @@ const FeatureVector& MVNOutlierCalculator::calculate_vector(
     column = vigra::linalg::columnVector(feature_matrix, col);
     vigra::linalg::mmul(inv_cov, column, temp1);
     vigra::linalg::mmul(column.transpose(), inv_cov, temp2);
-    ret_vector_(k) = temp2(0,0);
+    ret_vector_(col) = temp2(0,0);
   }
 
   return ret_vector_;
