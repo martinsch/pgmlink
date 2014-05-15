@@ -5,6 +5,7 @@
 #include <string>
 #include <stdexcept>
 #include <iostream>
+#include <utility>
 
 // boost
 #include <boost/shared_ptr.hpp>
@@ -83,4 +84,53 @@ BOOST_AUTO_TEST_CASE( CalculatorLookup ) {
   BOOST_CHECK_THROW( fe::helpers::CalculatorLookup::extract_calculator("SomeOtherCalculator"), std::runtime_error );
 }
 
+
+BOOST_AUTO_TEST_CASE( MultipleFeatureExtraction ) {
+  
+  fe::MultipleFeatureExtraction ex;
+  fe::MultipleFeatureExtraction::FeatureList unary_flist, pairwise_flist, ternary_flist;
+  unary_flist["ElementWiseSquaredDistance"].push_back( "feat" );
+
+  fe::MultipleFeatureExtraction::CombinedFeatureMap unary_result, pairwise_result, ternary_result;
+  pairwise_result[std::make_pair("ElementWiseSquaredDistance", "feat")] = pgmlink::feature_array(2, 2.);
+  
+  pgmlink::Traxel t1;
+  pgmlink::Traxel t2;
+  pgmlink::Traxel t3;
+
+  pgmlink::feature_array f1( 2, 1. );
+  pgmlink::feature_array f2( 2, 3. );
+  pgmlink::feature_array f3( 2, 4. );
+
+  t1.features["feat"] = f1;
+  t2.features["feat"] = f2;
+  t3.features["feat"] = f3;
+
+  // unary and ternary to be done!!!
+  // fe::MultipleFeatureExtraction::CombinedFeatureMap unary_cmap = ex( unary_flist, t1 );
+  fe::MultipleFeatureExtraction::CombinedFeatureMap pairwise_cmap = ex( pairwise_flist, t1, t2 );
+  // fe::MultipleFeatureExtraction::CombinedFeatureMap ternary_cmap = ex( ternary_flist, t1, t2, t3 );
+
+  
+  // binary
+  BOOST_REQUIRE( pairwise_cmap.size() == pairwise_flist.size() );
+  for ( fe::MultipleFeatureExtraction::CombinedFeatureMap::const_iterator res = pairwise_cmap.begin(), comp = pairwise_result.begin();
+        res != pairwise_cmap.end();
+        ++res ) {
+    BOOST_REQUIRE( res->first == comp->first );
+    BOOST_CHECK_EQUAL_COLLECTIONS( res->second.begin(), res->second.end(), comp->second.begin(), comp->second.end() );
+  }
+
+  
+  // convenience checks
+  // binary
+  fe::MultipleFeatureExtraction::CombinedFeatureMap pairwise_convenient = fe::helpers::convenience_feature_extraction( pairwise_flist, t1, t2 );
+  BOOST_REQUIRE( pairwise_convenient.size() == pairwise_flist.size() );
+  for ( fe::MultipleFeatureExtraction::CombinedFeatureMap::const_iterator res = pairwise_convenient.begin(), comp = pairwise_result.begin();
+        res != pairwise_convenient.end();
+        ++res ) {
+    BOOST_REQUIRE( res->first == comp->first );
+    BOOST_CHECK_EQUAL_COLLECTIONS( res->second.begin(), res->second.end(), comp->second.begin(), comp->second.end() );
+  }
+}
 

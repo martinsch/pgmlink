@@ -4,6 +4,7 @@
 // stl
 #include <string>
 #include <map>
+#include <utility>
 
 // boost
 #include <boost/shared_ptr.hpp>
@@ -73,7 +74,14 @@ class FeatureExtractor {
 //// class MultipleFeaturesExtraction
 ////
 class MultipleFeatureExtraction {
-  
+ public:
+  typedef std::pair<std::string, std::string> CombinedFeatureName;
+  typedef std::map<CombinedFeatureName, feature_array> CombinedFeatureMap;
+  typedef std::map< std::string, std::vector< std::string > > FeatureList;
+
+  CombinedFeatureMap operator() ( const FeatureList& features, const Traxel& trax ) const;
+  CombinedFeatureMap operator() ( const FeatureList& features, const Traxel& trax1, const Traxel& trax2 ) const;
+  CombinedFeatureMap operator() ( const FeatureList& features, const Traxel& trax1, const Traxel& trax2, const Traxel& trax3 ) const;
 };
 
 
@@ -83,7 +91,9 @@ class MultipleFeatureExtraction {
 ////
 namespace helpers 
 {
-
+////
+//// class CalculatorLookup
+////
 class CalculatorLookup {
  public:
   static boost::shared_ptr<FeatureCalculator> extract_calculator(const std::string& name);
@@ -91,6 +101,21 @@ class CalculatorLookup {
  private:
   static const std::map<std::string, boost::shared_ptr<FeatureCalculator> > calculator_map_;
 };
+
+
+////
+//// function convenience_feature_extraction
+////
+MultipleFeatureExtraction::CombinedFeatureMap convenience_feature_extraction( const MultipleFeatureExtraction::FeatureList& features,
+                                                                              const Traxel& trax );
+MultipleFeatureExtraction::CombinedFeatureMap convenience_feature_extraction( const MultipleFeatureExtraction::FeatureList& features,
+                                                                              const Traxel& trax1,
+                                                                              const Traxel& trax2 );
+MultipleFeatureExtraction::CombinedFeatureMap convenience_feature_extraction( const MultipleFeatureExtraction::FeatureList& features,
+                                                                              const Traxel& trax1,
+                                                                              const Traxel& trax2,
+                                                                              const Traxel& trax3 );
+
 
 } /* namespace helpers */
 
