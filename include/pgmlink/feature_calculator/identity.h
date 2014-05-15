@@ -17,12 +17,11 @@ namespace feature_extraction {
 ////
 class IdentityCalculator : public FeatureCalculator {
  public:
-  static const std::string name_;
-
   virtual ~IdentityCalculator();
   virtual feature_array calculate(const feature_array& f1) const;
   virtual const std::string& name() const;
-
+private:
+static const std::string name_;
 };
 
 } // namespace feature_extraction
