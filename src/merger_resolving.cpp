@@ -709,8 +709,14 @@ void resolve_graph(HypothesesGraph& src,
 
   // Construct conservation tracking and
   // do inference.
+
+  // FIXME: need the two new maps
+  throw std::runtime_error("merger resolution not supported yet.");
+
   ConservationTracking pgm(
-      1, //max_number_objects_,
+      1, //max_number_objects_,              
+      ConservationTracking::EventToFeatureNameMap(),  // FIXME
+      ConservationTracking::EventToConfigurationsMap(), // FIXME
       detection, //detection,
       division, // division
       transition, // transition

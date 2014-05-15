@@ -153,7 +153,9 @@ namespace pgmlink {
 		  double transition_parameter = 5.,
 		  double border_width = 0,
 		  FieldOfView fov = FieldOfView(),
-		  bool with_constraints = true
+          bool with_constraints = true,
+          const ConservationTracking::EventToFeatureNameMap& event_to_feature_names=ConservationTracking::EventToFeatureNameMap(),
+          const ConservationTracking::EventToConfigurationsMap& event_configurations=ConservationTracking::EventToConfigurationsMap()
   	      )
         : max_number_objects_(max_number_objects),
         	max_dist_(max_neighbor_distance), division_threshold_(division_threshold),
@@ -173,7 +175,9 @@ namespace pgmlink {
 		transition_parameter_(transition_parameter),
 		border_width_(border_width),
 		fov_(fov),
-		with_constraints_(with_constraints){}
+        with_constraints_(with_constraints),
+      event_to_feature_names_(event_to_feature_names),
+      event_configurations_(event_configurations){}
     std::vector< std::vector<Event> > operator()(TraxelStore& ts,
                                                  TimestepIdCoordinateMapPtr coordinates = TimestepIdCoordinateMapPtr());
 
@@ -204,6 +208,8 @@ namespace pgmlink {
       double border_width_;
       FieldOfView fov_;
       bool with_constraints_;
+      ConservationTracking::EventToFeatureNameMap event_to_feature_names_;
+      ConservationTracking::EventToConfigurationsMap event_configurations_;
     };
 }
 

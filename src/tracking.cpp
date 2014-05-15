@@ -360,6 +360,8 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts, TimestepIdCoord
 	cout << "-> init ConservationTracking reasoner" << endl;
 	ConservationTracking pgm(
 			max_number_objects_,
+            event_to_feature_names_,
+            event_configurations_,
 			detection,
 			division,
 			transition,

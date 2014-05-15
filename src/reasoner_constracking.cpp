@@ -82,10 +82,10 @@ void ConservationTracking::formulate(const HypothesesGraph& hypotheses) {
 }
 
 void ConservationTracking::infer() {
-	if (!with_constraints_) {
-		opengm::hdf5::save(optimizer_->graphicalModel(), "./conservationTracking.h5", "conservationTracking");
-		throw std::runtime_error("GraphicalModel::infer(): inference with soft constraints is not implemented yet. The conservation tracking factor graph has been saved to file");
-	}
+//	if (!with_constraints_) {
+//		opengm::hdf5::save(optimizer_->graphicalModel(), "./conservationTracking.h5", "conservationTracking");
+//		throw std::runtime_error("GraphicalModel::infer(): inference with soft constraints is not implemented yet. The conservation tracking factor graph has been saved to file");
+//	}
     opengm::InferenceTermination status = optimizer_->infer();
     if (status != opengm::NORMAL) {
         throw std::runtime_error("GraphicalModel::infer(): optimizer terminated abnormally");
@@ -435,7 +435,7 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
         assert(num_states_vars.size() == 1);
 
         // TODO: write event_features class/function (based on classifier_auxiliary??)
-        std::map<std::pair<std::string,std::string>,feature_array> transition_features;
+        pgm::OpengmEventExplicitFunction<double>::FeatureOperatorMap transition_features;
         if (with_tracklets_) {
            transition_features = event_features_pair_(event_to_feature_names_[event_name],
                                                   tracklet_map[g.source(a)].back(),
@@ -446,10 +446,9 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
                                                   traxel_map[g.target(a)]);
         }
         pgm::UnaryEventExplicitFunction<double> transition_function(num_states_vars.begin(), num_states_vars.end(),
-                                                          (double) forbidden_cost_, transition_features,
-                                                          weight_vector_, factor_event_map);
+                                                           (double) forbidden_cost_, transition_features, &weight_vector_, factor_event_map);
 
-        pgm::OpengmFactor<pgm::UnaryEventExplicitFunction<double> > table(transition_function.get_instance(), vi, vi+1);
+        pgm::OpengmFactor<pgm::OpengmEventExplicitFunction<double> > table(transition_function.get_instance(), vi, vi+1);
         table.add_to(*(pgm_->Model()));
     }
 
@@ -477,9 +476,9 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
             property_map<arc_distance, HypothesesGraph::base_graph>::type& arc_distances = g.get(arc_distance());
             std::vector<HypothesesGraph::Arc> outarcs;
             std::vector<size_t> distances;
-            for(HypothesesGraph::OutArcIt outarc_it(n); outarc_it != lemon::INVALID; ++outarc_it) {
-                outarcs.push_back(*outarc_it);
-                distances.push_back(arc_distances[*outarc_it]);
+            for(HypothesesGraph::OutArcIt outarc_it(g, n); outarc_it != lemon::INVALID; ++outarc_it) {
+                outarcs.push_back(outarc_it);
+                distances.push_back(arc_distances[outarc_it]);
             }
             assert(outarcs.size() >= 2);
             std::vector<size_t> order;
@@ -504,9 +503,9 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
             assert(num_states_vars.size() == 1);
             assert(num_states_vars[0] == 2);
             pgm::UnaryEventExplicitFunction<double> division_function(num_states_vars.begin(), num_states_vars.end(), forbidden_cost_, division_features,
-                                                  weight_vector_, factor_event_map);
+                                                  &weight_vector_, factor_event_map);
 
-            pgm::OpengmFactor<pgm::UnaryEventExplicitFunction<double> > table(division_function.get_instance(), vi, vi+1);
+            pgm::OpengmFactor<pgm::OpengmEventExplicitFunction<double> > table(division_function.get_instance(), vi, vi+1);
             table.add_to(*(pgm_->Model()));
         }
     }
@@ -514,7 +513,7 @@ void ConservationTracking::add_finite_factors(const HypothesesGraph& g) {
 
 
     if (!with_constraints_) {
-        throw std::exception("not yet implemented");
+        throw std::runtime_error("not yet implemented");
 
     	for (HypothesesGraph::NodeIt n(g); n != lemon::INVALID; ++n) {
 			LOG(logDEBUG) << "ConservationTracking::add_finite_factors: add soft-constraints for outgoing";

@@ -1,6 +1,6 @@
 #define PY_ARRAY_UNIQUE_SYMBOL pgmlink_pyarray
 #define NO_IMPORT_ARRAY
-#define BOOST_PYTHON_MAX_ARITY 22
+#define BOOST_PYTHON_MAX_ARITY 25
 
 #include <vector>
 
@@ -54,6 +54,26 @@ void export_track() {
 	.def(vector_indexing_suite<vector<vector<Event> > >())
     ;
 
+    class_<std::vector<std::string> >("StringVector")
+            .def(vector_indexing_suite<vector<string> >())
+            ;
+
+    class_<ConservationTracking::FeatureOperatorNames>("FeatureOperatorNames")
+            .def(map_indexing_suite<ConservationTracking::FeatureOperatorNames>())
+            ;
+
+    class_<ConservationTracking::EventToFeatureNameMap>("EventToFeatureNameMap")
+            .def(map_indexing_suite<ConservationTracking::EventToFeatureNameMap>())
+            ;
+
+    class_<std::vector<std::size_t> >("UintVector")
+            .def(vector_indexing_suite<vector<size_t> >())
+            ;
+
+    class_<ConservationTracking::EventToConfigurationsMap>("EventToConfigurationsMap")
+            .def(map_indexing_suite<ConservationTracking::EventToConfigurationsMap>())
+            ;
+
     class_<map<unsigned int, bool> >("DetectionMap")
       .def(map_indexing_suite<map<unsigned int, bool> >())
     ;
@@ -77,7 +97,9 @@ void export_track() {
     ;
 
     class_<ConsTracking>("ConsTracking",
-                         init<int,double,double,string,bool,double,double,double,bool,double,double,bool,double,double, bool, int, double, double, FieldOfView, bool>(
+                         init<int,double,double,string,bool,double,double,double,bool,double,double,bool,double,double,
+                         bool, int, double, double, FieldOfView, bool, ConservationTracking::EventToFeatureNameMap,
+                         ConservationTracking::EventToConfigurationsMap>(
 						args("max_number_objects", "max_neighbor_distance", "division_threshold",
 							"detection_rf_filename", "size_dependent_detection_prob", "forbidden_cost",
 							"ep_gap", "avg_obj_size",
@@ -85,7 +107,8 @@ void export_track() {
 							"division_weight", "transition_weight",
 							"with_divisions",
 							 "disappearance_cost", "appearance_cost", "with_merger_resolution", "number_of_dimensions",
-							 "transition_parameter", "border_width", "fov", "with_constraints")))
+                             "transition_parameter", "border_width", "fov", "with_constraints",
+                             "eventToFeatureNameMap", "eventToConfigurationsMap")))
 	  .def("__call__", &pythonConsTracking)
 	  .def("detections", &ConsTracking::detections)
 	;

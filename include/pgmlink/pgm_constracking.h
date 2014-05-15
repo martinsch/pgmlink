@@ -13,8 +13,8 @@ class UnaryEventExplicitFunction: public OpengmEventExplicitFunction<VALUE> {
 public:
     template <class SHAPE_ITERATOR>
     UnaryEventExplicitFunction(SHAPE_ITERATOR shapeBegin, SHAPE_ITERATOR shapeEnd, const VALUE & value,
-                             const FeatureMap& features,
-                             const typename OpengmEventExplicitFunction<VALUE>::WeightVector& weights,
+                             const typename OpengmEventExplicitFunction<VALUE>::FeatureOperatorMap& features,
+                             typename OpengmEventExplicitFunction<VALUE>::WeightVector* weights,
                              const typename OpengmEventExplicitFunction<VALUE>::EventMap& event_map):
         OpengmEventExplicitFunction<VALUE>(shapeBegin, shapeEnd, value, features, weights, event_map)
     {
@@ -27,7 +27,7 @@ public:
     {
         assert( configuration.size() == 1 && "only unaries are allowed" );
 
-        return get_event_energy(this->event_map_.begin()->first, configuration[0]);
+        return this->get_event_energy(this->event_map_.begin()->first, configuration[0]);
     }
 };
 
@@ -43,8 +43,8 @@ public:
     PairwiseDetectionExplicitFunction(SHAPE_ITERATOR shapeBegin,
                                       SHAPE_ITERATOR shapeEnd,
                                       const VALUE & value,
-                                      const FeatureMap& features,
-                                      const typename OpengmEventExplicitFunction<VALUE>::WeightVector& weights,
+                                      const typename OpengmEventExplicitFunction<VALUE>::FeatureOperatorMap& features,
+                                      typename OpengmEventExplicitFunction<VALUE>::WeightVector* weights,
                                       const typename OpengmEventExplicitFunction<VALUE>::EventMap& event_map):
         OpengmEventExplicitFunction<VALUE>(shapeBegin, shapeEnd, value, features, weights, event_map)
     {}
