@@ -261,19 +261,23 @@ class CurveCalculator : public SubsetFeatureCalculator {
 };
 
 ////
-//// class InvCovarianceCalculator
+//// class MVNOutlierCalculator
 ////
-class InvCovarianceCalculator : public SubsetFeatureCalculator {
+class MVNOutlierCalculator : public SubsetFeatureCalculator {
  public:
-  InvCovarianceCalculator() {};
-  virtual ~InvCovarianceCalculator() {};
+  MVNOutlierCalculator() {};
+  virtual ~MVNOutlierCalculator() {};
   virtual const std::string& name() const;
   virtual const FeatureMatrix& calculate_matrix(
     const FeatureMatrix& feature_matrix
   );
+  virtual const FeatureVector& calculate_vector(
+    const FeatureMatrix& feature_matrix
+  );
  protected:
   static const std::string name_;
-  FeatureMatrix ret_;
+  FeatureMatrix ret_matrix_;
+  FeatureVector ret_vector_;
 };
 
 /*

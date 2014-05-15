@@ -731,33 +731,53 @@ const FeatureMatrix& CurveCalculator::calculate_matrix(
 }
 
 ////
-//// class InvCovarianceCalculator
+//// class MVNOutlierCalculator
 ////
-const std::string InvCovarianceCalculator::name_ = "InvCovaricaneCalculator";
+const std::string MVNOutlierCalculator::name_ = "MVNOutlierCalculator";
 
-const std::string& InvCovarianceCalculator::name() const {
+const std::string& MVNOutlierCalculator::name() const {
   return name_;
 }
 
-const FeatureMatrix& InvCovarianceCalculator::calculate_matrix(
+const FeatureMatrix& MVNOutlierCalculator::calculate_matrix(
   const FeatureMatrix& feature_matrix
 ) {
   size_t col_count = feature_matrix.shape(0);
   size_t row_count = feature_matrix.shape(1);
-  ret_.reshape(vigra::Shape2(row_count, row_count));
+  ret_matrix_.reshape(vigra::Shape2(row_count, row_count));
   if (col_count <= row_count) {
-    LOG(logDEBUG) << "In InvCovarianceCalculator: too few data to calculate covariance matrix";
+    LOG(logDEBUG) << "In MVNOutlierCalculator: too few data to calculate covariance matrix";
     LOG(logDEBUG) << "Returning a Matrix filled with zeros";
-    ret_.reshape(vigra::Shape2(row_count, row_count));
-    ret_.init(0);
+    ret_matrix_.reshape(vigra::Shape2(row_count, row_count));
+    ret_matrix_.init(0);
   }
   FeatureMatrixView covariance_matrix;
   vigra::linalg::covarianceMatrixOfRows(feature_matrix, covariance_matrix);
-  bool invertible = vigra::linalg::inverse(feature_matrix, ret_);
+  bool invertible = vigra::linalg::inverse(feature_matrix, ret_matrix_);
   if (not invertible) {
-    ret_.init(0);
+    ret_matrix_.init(0);
   }
-  return ret_;
+  return ret_matrix_;
+}
+
+const FeatureVector& MVNOutlierCalculator::calculate_vector(
+  const FeatureMatrix& feature_matrix
+) {
+  size_t col_count = feature_matrix.shape(0);
+  ret_vector_.reshape(vigra::Shape1(col_count));
+
+  FeatureMatrixView temp1;
+  FeatureMatrixView temp2;
+  FeatureMatrixView column;
+  const FeatureMatrix& inv_cov = calculate_matrix(feature_matrix);
+  for (size_t col = 0; col < col_count; col++) {
+    column = vigra::linalg::columnVector(feature_matrix, col);
+    vigra::linalg::mmul(inv_cov, column, temp1);
+    vigra::linalg::mmul(column.transpose(), inv_cov, temp2);
+    ret_vector_(k) = temp2(0,0);
+  }
+
+  return ret_vector_;
 }
 
 /*
