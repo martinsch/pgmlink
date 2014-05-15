@@ -280,69 +280,6 @@ class MVNOutlierCalculator : public SubsetFeatureCalculator {
   FeatureVector ret_vector_;
 };
 
-/*
-////
-//// class MVNOutlierCalculator
-////
-class MVNOutlierCalculator : public OutlierCalculator {
-  public:
-    MVNOutlierCalculator(const feature_type sigma_threshold = 3.0);
-    ~MVNOutlierCalculator() {};
-    const std::vector<size_t>& calculate(const feature_arrays& features);
-    const feature_array& get_measures() const;
-    const arma::Mat<feature_type>& get_covariance() const;
-    const arma::Mat<feature_type>& get_inverse_covariance() const;
-    const arma::Col<feature_type>& get_mean() const;
-    virtual const std::string& name() const;
-  protected:
-    feature_type sigma_threshold_;
-    static const std::string name_;
-    feature_array measures_;
-    std::vector<size_t> outlier_ids_;
-    arma::Col<feature_type> mean_;
-    arma::Mat<feature_type> covariance_;
-    arma::Mat<feature_type> inv_covariance_;
-}; // class MVNOutlierCalculator
-
-////
-//// class OutlierCountAggregator
-////
-class OutlierCountAggregator : public FeatureAggregator {
- public:
-  OutlierCountAggregator(
-    OutlierCalculator* outlier_calculator = new MVNOutlierCalculator()
-  ) : outlier_calculator_(outlier_calculator) {};
-  virtual ~OutlierCountAggregator() {};
-  virtual const std::string& name() const;
-  virtual const feature_type& operator()(
-    const feature_arrays& features
-  );
- protected:
-  static const std::string name_;
-  OutlierCalculator* outlier_calculator_;
-  feature_type ret_;
-};
-
-////
-//// class OutlierBadnessAggregator
-////
-class OutlierBadnessAggregator : public FeatureAggregator {
- public:
-  OutlierBadnessAggregator(
-    OutlierCalculator* outlier_calculator = new MVNOutlierCalculator()
-  ) : outlier_calculator_(outlier_calculator) {};
-  virtual ~OutlierBadnessAggregator() {};
-  virtual const std::string& name() const;
-  virtual const feature_type& operator()(
-    const feature_arrays& features
-  );
- protected:
-  static const std::string name_;
-  OutlierCalculator* outlier_calculator_;
-  feature_type ret_;
-};
-*/
-
 } // namespace pgmlink
 
 #endif // PGMLINK_HIGHER_ORDER_FEATURES_H

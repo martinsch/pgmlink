@@ -1,4 +1,5 @@
 #include "pgmlink/higher_order_features.h"
+#include <cmath>
 #include <vigra/multi_math.hxx> /* for operator+ */
 #include <vigra/matrix.hxx> /* for covariance calculation */
 #include <vigra/linear_algebra.hxx> /* for matrix inverse calculation */
@@ -763,180 +764,21 @@ const FeatureVector& MVNOutlierCalculator::calculate_vector(
   const FeatureMatrix& feature_matrix
 ) {
   size_t col_count = feature_matrix.shape(0);
+  size_t row_count = feature_matrix.shape(1);
   ret_vector_.reshape(vigra::Shape1(col_count));
 
-  FeatureMatrix temp1(vigra::Shape2(1, col_count));
+  FeatureMatrix temp1(vigra::Shape2(row_count, 1));
   FeatureMatrix temp2(vigra::Shape2(1,1));
-  FeatureMatrixView column;
+  FeatureMatrixView row;
   const FeatureMatrix& inv_cov = calculate_matrix(feature_matrix);
   for (size_t col = 0; col < col_count; col++) {
-    column = vigra::linalg::columnVector(feature_matrix, col);
-    vigra::linalg::mmul(inv_cov, column, temp1);
-    vigra::linalg::mmul(column.transpose(), inv_cov, temp2);
-    ret_vector_(col) = temp2(0,0);
+    row = vigra::linalg::rowVector(feature_matrix, col);
+    vigra::linalg::mmul(inv_cov, row.transpose(), temp1);
+    vigra::linalg::mmul(row, temp1, temp2);
+    ret_vector_(col) = sqrt(temp2(0,0));
   }
 
   return ret_vector_;
 }
 
-/*
-////
-//// class OutlierCountAggregator
-////
-const std::string OutlierCountAggregator::name_ = "OutlierCountAggregator";
-
-const std::string& OutlierCountAggregator::name() const {
-  return name_;
-}
-
-const feature_type& OutlierCountAggregator::operator()(
-  const feature_arrays& features
-) {
-  std::vector<size_t> outlier_ids = outlier_calculator_->calculate(features);
-  ret_ = static_cast<feature_type>(outlier_ids.size());
-  // prevent divide by 0 error
-  if (features.size()) {
-    ret_ = ret_ / static_cast<feature_type>(features.size());
-  }
-  return ret_;
-}
-
-////
-//// class OutlierBadnessAggregator
-////
-const std::string OutlierBadnessAggregator::name_ = "OutlierBadnessAggregator";
-
-const std::string& OutlierBadnessAggregator::name() const {
-  return name_;
-}
-
-const feature_type& OutlierBadnessAggregator::operator()(
-  const feature_arrays& features
-) {
-  outlier_calculator_->calculate(features);
-  feature_array outlier_badness = outlier_calculator_->get_measures();
-  ret_ = 0.0;
-  for (
-    feature_array::const_iterator f_it = outlier_badness.begin();
-    f_it != outlier_badness.end();
-    f_it++
-  ) {
-    ret_ = *f_it > ret_ ? *f_it : ret_;
-  }
-  return ret_;
-}
-
-
-////
-//// function to_arma_matrix
-////
-arma::Mat<feature_type> to_arma_matrix(const feature_arrays& features) {
-  assert(features.empty() == false);
-  size_t cols = features.size();
-  size_t rows = features[0].size();
-  arma::Mat<feature_type> ret(rows, cols);
-
-  typename std::vector<feature_array>::const_iterator feature_array_it;
-  feature_array_it = features.begin();
-  for (
-    size_t j=0;
-    feature_array_it != features.end();
-    feature_array_it++, j++
-  ) {
-    assert(feature_array_it->size() == rows);
-    arma::Col<feature_type> column(*feature_array_it);
-    ret.col(j) = column;
-  }
-  return ret;
-}
-
-////
-//// class OutlierCalculator
-////
-const std::string OutlierCalculator::name_ = "OutlierCalculator";
-
-const std::string& OutlierCalculator::name() const {
-  return name_;
-}
-
-const feature_array& OutlierCalculator::get_measures() const {
-  throw std::runtime_error(
-    "OutlierCalculator \"" + name() + "\"doesn't provide a measure"
-  );
-  return measures_;
-}
-
-////
-//// class MVNOutlierCalculator
-////
-const std::string MVNOutlierCalculator::name_ = "MVNOutlierCalculator";
-
-MVNOutlierCalculator::MVNOutlierCalculator(const feature_type sigma_threshold) {
-  sigma_threshold_ = sigma_threshold;
-}
-
-const std::string& MVNOutlierCalculator::name() const {
-  return name_;
-}
-
-const feature_array& MVNOutlierCalculator::get_measures() const {
-  return measures_;
-}
-
-const arma::Mat<feature_type>& MVNOutlierCalculator::get_covariance() const {
-  return covariance_;
-}
-
-const arma::Mat<feature_type>& MVNOutlierCalculator::get_inverse_covariance() const {
-  return inv_covariance_;
-}
-
-const arma::Col<feature_type>& MVNOutlierCalculator::get_mean() const {
-  return mean_;
-}
-
-const std::vector<size_t>& MVNOutlierCalculator::calculate(
-  const feature_arrays& features
-) {
-  measures_.clear();
-  outlier_ids_.clear();
-  mean_.clear();
-  covariance_.clear();
-  inv_covariance_.clear();
-
-  bool good_data = true;
-  if (features.size() == 0) {
-    good_data = false;
-  } else if (features.size() <= features[0].size()+1) {
-    good_data = false;
-  } 
-  if (good_data) {
-    // Get covariance and inverse covariance matrix
-    arma::Mat<feature_type> features_mat(to_arma_matrix(features));
-    arma::Mat<feature_type> features_mat_t(trans(features_mat));
-    covariance_ = arma::cov(features_mat_t);
-    bool invertible = arma::inv_sympd(inv_covariance_, covariance_);
-
-    if (invertible) {
-      // Get mean values
-      mean_ = arma::mean(features_mat, 1);
-  
-      // Calculate the outliers
-      outlier_ids_.clear();
-      measures_.clear();
-      feature_arrays::const_iterator features_it = features.begin();
-      for(size_t id=0; features_it != features.end(); features_it++, id++) {
-        arma::Col<feature_type> diff_vector(*features_it);
-        diff_vector -= mean_;
-        feature_type norm_residual = arma::dot(diff_vector, inv_covariance_*diff_vector);
-        measures_.push_back(norm_residual);
-        if (norm_residual >= sigma_threshold_) {
-          outlier_ids_.push_back(id);
-        }
-      }
-    }
-  } // else
-  return outlier_ids_;
-}
-*/
 } // namespace pgmlink
