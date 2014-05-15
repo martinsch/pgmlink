@@ -84,6 +84,24 @@ namespace pgmlink {
              return shape_.size();
          }
 
+         size_t numberOfParameters() const {
+             std::set<size_t> weight_indexes;
+             for (EventMap::const_iterator ev_type_it = event_map_.begin(); ev_type_it != event_map_.end(); ++ev_type_it) {
+                 for (EventConfigurationMap::const_iterator ev_config_it = ev_type_it->second.begin();
+                      ev_config_it != ev_type_it->second.end(); ++ev_config_it) {
+                     for (std::vector<WeightFeaturePair>::const_iterator wtf_it = ev_config_it->second.begin();
+                          wtf_it != ev_config_it->second.end(); ++wtf_it) {
+                         weight_indexes.insert(wtf_it->first);
+                     }
+                 }
+             }
+             return weight_indexes.size();
+         }
+
+         IndexType parameterIndex(const size_t /*paramNumber*/) const {
+             // returns the global weight index for the local paramNumber
+             throw std::runtime_error("not implemented");
+         }
 
      protected:
          virtual VALUE get_energy_of_configuration(const std::vector<size_t>&) const {
