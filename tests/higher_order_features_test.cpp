@@ -216,6 +216,25 @@ void get_tracklet_graph(HypothesesGraph& graph) {
   graph.get(division_active_count()).set(n21, std::vector<bool>(1,false));
 }
 
+void get_feature_matrix(FeatureMatrix& x) {
+  feature_type x_array[7][2] = {
+    {3., 3.},
+    {4., 3.},
+    {3., 4.},
+    {4., 4.},
+    {5., 4.},
+    {5., 5.},
+    {9., 8.}
+  };
+
+  x.reshape(vigra::Shape2(7,2));
+  for(size_t i = 0; i < 7; i++) {
+    for(size_t j = 0; j < 2; j++) {
+      x(i, j) = x_array[i][j];
+    }
+  }
+}
+
 BOOST_AUTO_TEST_CASE( SubsetFeaturesIdentity_extract_matrix ) {
   LOG(logINFO) << "test case: SubsetFeaturesIdentity_operator";
 
@@ -483,24 +502,10 @@ BOOST_AUTO_TEST_CASE( DivisionSubsets_operator_trackletgraph ) {
 
 BOOST_AUTO_TEST_CASE( MVNOutlierCalculator_calculate_matrix ) {
   LOG(logINFO) << "test case: MVNOutlierCalculator_calculate_matrix";
-  // Set up the test data with outlier x6
-  feature_type x_array[7][2] = {
-    {3., 3.},
-    {4., 3.},
-    {3., 4.},
-    {4., 4.},
-    {5., 4.},
-    {5., 5.},
-    {9., 8.}
-  };
 
+  // get the test data with outlier in x6
   FeatureMatrix x;
-  x.reshape(vigra::Shape2(7,2));
-  for(size_t i = 0; i < 7; i++) {
-    for(size_t j = 0; j < 2; j++) {
-      x(i, j) = x_array[i][j];
-    }
-  }
+  get_feature_matrix(x);
 
   // Create outlier detection
   LOG(logINFO) << "  set up the outlier calculator";
@@ -508,10 +513,32 @@ BOOST_AUTO_TEST_CASE( MVNOutlierCalculator_calculate_matrix ) {
   LOG(logINFO) << "  calculate inverse covariance matrix:";
   FeatureMatrix inv_cov = mvnoutlier.calculate_matrix(x);
   
-  LOG(logINFO) << "  " << inv_cov(0, 0) << "\t" << inv_cov(0, 1);
-  LOG(logINFO) << "  " << inv_cov(1, 0) << "\t" << inv_cov(1, 1);
+  LOG(logINFO) << "  " << inv_cov(0, 0) << "\t" << inv_cov(1, 0);
+  LOG(logINFO) << "  " << inv_cov(0, 1) << "\t" << inv_cov(1, 1);
+  BOOST_CHECK(( 1.89 < inv_cov(0,0)) and (inv_cov(0,0) <  1.90));
+  BOOST_CHECK((-2.13 < inv_cov(1,0)) and (inv_cov(1,0) < -2.12));
+  BOOST_CHECK((-2.13 < inv_cov(0,1)) and (inv_cov(0,1) < -2.12));
+  BOOST_CHECK(( 2.71 < inv_cov(1,1)) and (inv_cov(1,1) <  2.72));
 }
 
+BOOST_AUTO_TEST_CASE( MVNOutlierCalculator_calculate_vector ) {
+  LOG(logINFO) << "test case: MVNOutlierCalculator_calculate_vector";
+
+  // get the test data with outlier in x6
+  FeatureMatrix x;
+  get_feature_matrix(x);
+
+  // Create outlier detection
+  LOG(logINFO) << "  set up the outlier calculator";
+  MVNOutlierCalculator mvnoutlier;
+  LOG(logINFO) << "  calculate inverse covariance vector";
+  FeatureVector vec = mvnoutlier.calculate_vector(x);
+
+  LOG(logINFO) << "  vector of outlier badnesses:";
+  for(size_t i = 0; i < 7; i++) {
+    LOG(logINFO) << "  " << i << " : " << vec(i);
+  }
+}
 /*
 BOOST_AUTO_TEST_CASE( OutlierCountAggregator_calculate ) {
   LOG(logINFO) << "test case: OutlierCountAggregator_calculate";
