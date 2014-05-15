@@ -14,6 +14,7 @@
 
 // pgmlink
 #include "pgmlink/feature.h"
+#include "pgmlink/feature_calculator.h"
 #include "pgmlink/feature_extraction.h"
 #include "pgmlink/traxels.h"
 
