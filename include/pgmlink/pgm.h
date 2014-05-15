@@ -59,17 +59,17 @@ namespace pgmlink {
              {   }
 
          template <typename ITERATOR>
-         VALUE operator()(ITERATOR begin) const {
+         VALUE operator()(ITERATOR it) const {
              std::vector<size_t> configuration;
-             for(ITERATOR it = begin; it < begin + this->dimension(); ++it) {
-                 configuration.push_back(*it);
+             for(size_t i = 0; i < this->dimension(); ++i) {
+                 configuration.push_back(it[i]);
              }
              return get_energy_of_configuration(configuration);
          }
 
 
          size_t shape(const size_t var_idx) const {
-            return shape[var_idx];
+            return shape_[var_idx];
          }
 
          size_t size() const {
