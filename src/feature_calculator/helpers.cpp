@@ -4,7 +4,6 @@
 
 // pgmlink
 #include "pgmlink/feature_calculator.h"
-#include "pgmlink/feature_calculator/base.h"
 #include "pgmlink/feature_calculator/helpers.h"
 
 
@@ -25,23 +24,23 @@ std::map<std::string, boost::shared_ptr<FeatureCalculator> > define_features() {
   boost::shared_ptr<FeatureCalculator> calc( new ElementWiseSquaredDistanceCalculator );
   feature_map.insert(std::make_pair( "ElementWiseSquaredDistance", calc) );
 
-  // calc = boost::shared_ptr<FeatureCalculator>( new IdentityCalculator );
-  // feature_map.insert( std::make_pair( "Identity", calc ) );
+  calc = boost::shared_ptr<FeatureCalculator>( new IdentityCalculator );
+  feature_map.insert( std::make_pair( "Identity", calc ) );
 
-  // calc = boost::shared_ptr<FeatureCalculator>( new AbsoluteDifferenceCalculator );
-  // feature_map.insert( std::make_pair( "AbsoluteDifference", calc ) );
+  calc = boost::shared_ptr<FeatureCalculator>( new AbsoluteDifferenceCalculator );
+  feature_map.insert( std::make_pair( "AbsoluteDifference", calc ) );
 
-  // // calc = boost::shared_ptr<FeatureCalculator>( new SquareRootSquaredDifferenceCalculator );
-  // // feature_map.insert( std::make_pair( "SquareRooteSquaredDifference", calc ) );
+  calc = boost::shared_ptr<FeatureCalculator>( new SquareRootSquaredDifferenceCalculator );
+  feature_map.insert( std::make_pair( "SquareRooteSquaredDifference", calc ) );
 
-  // calc = boost::shared_ptr<FeatureCalculator>( new RatioCalculator );
-  // feature_map.insert( std::make_pair( "Ratio", calc ) );
+  calc = boost::shared_ptr<FeatureCalculator>( new RatioCalculator );
+  feature_map.insert( std::make_pair( "Ratio", calc ) );
 
-  // calc = boost::shared_ptr<FeatureCalculator>( new AsymmetricRatioCalculator );
-  // feature_map.insert( std::make_pair( "AsymmetricRatio", calc ) );
+  calc = boost::shared_ptr<FeatureCalculator>( new AsymmetricRatioCalculator );
+  feature_map.insert( std::make_pair( "AsymmetricRatio", calc ) );
 
-  // calc = boost::shared_ptr<FeatureCalculator>( new SquaredDifferenceCalculator );
-  // feature_map.insert( std::make_pair( "SquaredDifference", calc ) );
+  calc = boost::shared_ptr<FeatureCalculator>( new SquaredDifferenceCalculator );
+  feature_map.insert( std::make_pair( "SquaredDifference", calc ) );
 
   return feature_map;
 }

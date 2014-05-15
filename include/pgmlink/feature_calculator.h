@@ -6,9 +6,11 @@
 #include "pgmlink/feature_calculator/asymmetric_ratio.h"
 #include "pgmlink/feature_calculator/elementwise_squared_difference.h"
 #include "pgmlink/feature_calculator/identity.h"
+#include "pgmlink/feature_calculator/helpers.h"
 #include "pgmlink/feature_calculator/ratio.h"
 #include "pgmlink/feature_calculator/squared_difference.h"
 #include "pgmlink/feature_calculator/square_root_squared_difference.h"
+
 
 
 
