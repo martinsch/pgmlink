@@ -39,6 +39,7 @@ typedef vigra::MultiArray<1, feature_type> FeatureVector;
 typedef vigra::MultiArray<2, feature_type> FeatureMatrix;
 
 typedef vigra::MultiArrayView<1, feature_type> FeatureVectorView;
+typedef vigra::MultiArrayView<2, feature_type> FeatureMatrixView;
 
 /*=============================================================================
  functions
@@ -260,12 +261,12 @@ class CurveCalculator : public SubsetFeatureCalculator {
 };
 
 ////
-//// class InverseCovarianceCalculator
+//// class InvCovarianceCalculator
 ////
-class InverseCovarianceCalculator : public SubsetFeatureCalculator {
+class InvCovarianceCalculator : public SubsetFeatureCalculator {
  public:
-  InverseCovarianceCalculator() {};
-  virtual ~InverseCovarianceCalculator() {};
+  InvCovarianceCalculator() {};
+  virtual ~InvCovarianceCalculator() {};
   virtual const std::string& name() const;
   virtual const FeatureMatrix& calculate_matrix(
     const FeatureMatrix& feature_matrix

@@ -1,5 +1,7 @@
 #include "pgmlink/higher_order_features.h"
 #include <vigra/multi_math.hxx> /* for operator+ */
+#include <vigra/matrix.hxx> /* for covariance calculation */
+#include <vigra/linear_algebra.hxx> /* for matrix inverse calculation */
 
 namespace pgmlink {
 
@@ -724,6 +726,36 @@ const FeatureMatrix& CurveCalculator::calculate_matrix(
       FeatureVectorView c = feature_matrix.bind<0>(col+2);
       ret_.bind<0>(col) = a - 2*b + c;
     }
+  }
+  return ret_;
+}
+
+////
+//// class InvCovarianceCalculator
+////
+const std::string InvCovarianceCalculator::name_ = "InvCovaricaneCalculator";
+
+const std::string& InvCovarianceCalculator::name() const {
+  return name_;
+}
+
+const FeatureMatrix& InvCovarianceCalculator::calculate_matrix(
+  const FeatureMatrix& feature_matrix
+) {
+  size_t col_count = feature_matrix.shape(0);
+  size_t row_count = feature_matrix.shape(1);
+  ret_.reshape(vigra::Shape2(row_count, row_count));
+  if (col_count <= row_count) {
+    LOG(logDEBUG) << "In InvCovarianceCalculator: too few data to calculate covariance matrix";
+    LOG(logDEBUG) << "Returning a Matrix filled with zeros";
+    ret_.reshape(vigra::Shape2(row_count, row_count));
+    ret_.init(0);
+  }
+  FeatureMatrixView covariance_matrix;
+  vigra::linalg::covarianceMatrixOfRows(feature_matrix, covariance_matrix);
+  bool invertible = vigra::linalg::inverse(feature_matrix, ret_);
+  if (not invertible) {
+    ret_.init(0);
   }
   return ret_;
 }
