@@ -87,34 +87,14 @@ std::string FeatureExtractor::name() const {
 ////
 MultipleFeatureExtraction::CombinedFeatureMap MultipleFeatureExtraction::operator() ( const FeatureList& features,
                                                                                       const Traxel& trax ) const {
-  CombinedFeatureMap res;
-  for ( FeatureList::const_iterator outer_features = features.begin(); outer_features != features.end(); ++outer_features) {
-    boost::shared_ptr<FeatureCalculator> calc = helpers::CalculatorLookup::extract_calculator(outer_features->first );
-    for ( std::vector<std::string>::const_iterator inner_features = outer_features->second.begin();
-          inner_features != outer_features->second.end();
-          ++inner_features ) {
-      FeatureExtractor extractor( calc, *inner_features );
-      res[std::make_pair(outer_features->first, *inner_features)] = extractor.extract( trax );
-    }
-  }
-  return res;
+  return helpers::convenience_feature_extraction( features, trax );
 }
 
 
 MultipleFeatureExtraction::CombinedFeatureMap MultipleFeatureExtraction::operator() ( const FeatureList& features,
                                                                                       const Traxel& trax1,
                                                                                       const Traxel& trax2 ) const {
-  CombinedFeatureMap res;
-  for ( FeatureList::const_iterator outer_features = features.begin(); outer_features != features.end(); ++outer_features) {
-    boost::shared_ptr<FeatureCalculator> calc = helpers::CalculatorLookup::extract_calculator(outer_features->first );
-    for ( std::vector<std::string>::const_iterator inner_features = outer_features->second.begin();
-          inner_features != outer_features->second.end();
-          ++inner_features ) {
-      FeatureExtractor extractor( calc, *inner_features );
-      res[std::make_pair(outer_features->first, *inner_features)] = extractor.extract( trax1, trax2 );
-    }
-  }
-  return res;
+  return helpers::convenience_feature_extraction( features, trax1, trax2 );
 }
 
 
@@ -122,17 +102,7 @@ MultipleFeatureExtraction::CombinedFeatureMap MultipleFeatureExtraction::operato
                                                                                       const Traxel& trax1,
                                                                                       const Traxel& trax2,
                                                                                       const Traxel& trax3 ) const {
-  CombinedFeatureMap res;
-  for ( FeatureList::const_iterator outer_features = features.begin(); outer_features != features.end(); ++outer_features) {
-    boost::shared_ptr<FeatureCalculator> calc = helpers::CalculatorLookup::extract_calculator(outer_features->first );
-    for ( std::vector<std::string>::const_iterator inner_features = outer_features->second.begin();
-          inner_features != outer_features->second.end();
-          ++inner_features ) {
-      FeatureExtractor extractor( calc, *inner_features );
-      res[std::make_pair(outer_features->first, *inner_features)] = extractor.extract( trax1, trax2, trax3 );
-    }
-  }
-  return res;
+  return helpers::convenience_feature_extraction( features, trax1, trax2, trax3 );
 }
 
 
@@ -145,14 +115,38 @@ namespace helpers {
 ////
 MultipleFeatureExtraction::CombinedFeatureMap convenience_feature_extraction( const MultipleFeatureExtraction::FeatureList& features,
                                                                               const Traxel& trax ) {
-  return MultipleFeatureExtraction()( features, trax );
+  MultipleFeatureExtraction::CombinedFeatureMap res;
+  for ( MultipleFeatureExtraction::FeatureList::const_iterator outer_features = features.begin();
+        outer_features != features.end();
+        ++outer_features) {
+    boost::shared_ptr<FeatureCalculator> calc = helpers::CalculatorLookup::extract_calculator(outer_features->first );
+    for ( std::vector<std::string>::const_iterator inner_features = outer_features->second.begin();
+          inner_features != outer_features->second.end();
+          ++inner_features ) {
+      FeatureExtractor extractor( calc, *inner_features );
+      res[std::make_pair(outer_features->first, *inner_features)] = extractor.extract( trax );
+    }
+  }
+  return res;
 }
 
 
 MultipleFeatureExtraction::CombinedFeatureMap convenience_feature_extraction( const MultipleFeatureExtraction::FeatureList& features,
                                                                               const Traxel& trax1,
                                                                               const Traxel& trax2 ) {
-  return MultipleFeatureExtraction()( features, trax1, trax2 );
+  MultipleFeatureExtraction::CombinedFeatureMap res;
+  for ( MultipleFeatureExtraction::FeatureList::const_iterator outer_features = features.begin();
+        outer_features != features.end();
+        ++outer_features) {
+    boost::shared_ptr<FeatureCalculator> calc = helpers::CalculatorLookup::extract_calculator(outer_features->first );
+    for ( std::vector<std::string>::const_iterator inner_features = outer_features->second.begin();
+          inner_features != outer_features->second.end();
+          ++inner_features ) {
+      FeatureExtractor extractor( calc, *inner_features );
+      res[std::make_pair(outer_features->first, *inner_features)] = extractor.extract( trax1, trax2 );
+    }
+  }
+  return res;
 }
 
 
@@ -160,7 +154,19 @@ MultipleFeatureExtraction::CombinedFeatureMap convenience_feature_extraction( co
                                                                               const Traxel& trax1,
                                                                               const Traxel& trax2,
                                                                               const Traxel& trax3 ) {
-  return MultipleFeatureExtraction()( features, trax1, trax2, trax3 );
+  MultipleFeatureExtraction::CombinedFeatureMap res;
+  for ( MultipleFeatureExtraction::FeatureList::const_iterator outer_features = features.begin();
+        outer_features != features.end();
+        ++outer_features) {
+    boost::shared_ptr<FeatureCalculator> calc = helpers::CalculatorLookup::extract_calculator(outer_features->first );
+    for ( std::vector<std::string>::const_iterator inner_features = outer_features->second.begin();
+          inner_features != outer_features->second.end();
+          ++inner_features ) {
+      FeatureExtractor extractor( calc, *inner_features );
+      res[std::make_pair(outer_features->first, *inner_features)] = extractor.extract( trax1, trax2, trax3 );
+    }
+  }
+  return res;
 }
 
 
