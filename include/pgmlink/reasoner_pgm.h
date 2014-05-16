@@ -110,7 +110,7 @@ namespace pgmlink {
     double ep_gap_;
     double cplex_timeout_;
     pgm::chaingraph::ModelBuilder* builder_;
-};
+  };
 
 } /* namespace pgmlink */
 #endif /* REASONER_PGM_H */

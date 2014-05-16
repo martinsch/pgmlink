@@ -53,6 +53,7 @@ find_package( Armadillo REQUIRED )
 find_package( Mlpack REQUIRED )
 find_package( Opengm REQUIRED )
 find_package( Xml2 REQUIRED )
+find_package( Dlib REQUIRED )
 
 message(STATUS "  found: ${Boost_LIBRARIES}")
 
@@ -117,7 +118,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif(NOT CMAKE_BUILD_TYPE)
 
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-  set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wfatal-errors -std=c++98 -pedantic -pthread -fopenmp ${CMAKE_CXX_FLAGS}")
+  set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wfatal-errors -std=c++98  -pthread -fopenmp ${CMAKE_CXX_FLAGS}")
   set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 ${CMAKE_CXX_FLAGS_DEBUG}")
   set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Werror ${CMAKE_CXX_FLAGS_RELEASE}")
 endif()
@@ -152,7 +153,9 @@ if(WIN32)
 endif()
 
 file(GLOB LIB_SOURCES src/*.cpp src/feature_calculator/*.cpp)
-add_library(pgmlink SHARED ${LIB_SOURCES})
+file(GLOB_RECURSE HEADERS include/*.h*)
+
+add_library(pgmlink SHARED ${LIB_SOURCES} ${HEADERS})
 
 
 
