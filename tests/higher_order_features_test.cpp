@@ -500,6 +500,144 @@ BOOST_AUTO_TEST_CASE( DivisionSubsets_operator_trackletgraph ) {
   }
 }
 
+BOOST_AUTO_TEST_CASE( SumCalculator_test ) {
+  LOG(logINFO) << "test case: SumCalculator_test";
+
+  // get the test data
+  FeatureMatrix x(vigra::Shape2(0,0));
+  get_feature_matrix(x);
+
+  // set up the reference data
+  FeatureVector x_sum_vec_ref(vigra::Shape1(2));
+  x_sum_vec_ref(0) = 33;
+  x_sum_vec_ref(1) = 31;
+
+  FeatureScalar x_sum_scalar_ref = 64;
+
+  // set up the SumCalculator
+  SumCalculator sum_calculator;
+
+  FeatureVector x_sum_vec = sum_calculator.calculate_vector(x);
+  BOOST_CHECK_EQUAL(x_sum_vec.shape(0), 2);
+  BOOST_CHECK_EQUAL(x_sum_vec(0), x_sum_vec_ref(0));
+  BOOST_CHECK_EQUAL(x_sum_vec(1), x_sum_vec_ref(1));
+
+  FeatureScalar x_sum_scalar = sum_calculator.calculate_scalar(x);
+  BOOST_CHECK_EQUAL(x_sum_scalar, x_sum_scalar_ref);
+
+  // with an empty feature matrix
+  FeatureMatrix y(vigra::Shape2(0,0));
+  FeatureVector y_sum_vec = sum_calculator.calculate_vector(y);
+  BOOST_CHECK_EQUAL(y_sum_vec.shape(0), 0);
+
+  FeatureScalar y_sum_scalar = sum_calculator.calculate_scalar(y);
+  BOOST_CHECK_EQUAL(y_sum_scalar, 0.0);
+}
+
+BOOST_AUTO_TEST_CASE( DiffCalculator_test ) {
+  LOG(logINFO) << "test case: DiffCalculator_test";
+
+  // get the test data
+  FeatureMatrix x;
+  get_feature_matrix(x);
+
+  // set up the reference data
+  FeatureMatrix ref_matrix(vigra::Shape2(6,2));
+  ref_matrix(0, 0) =  1.; ref_matrix(0, 1) =  0.;
+  ref_matrix(1, 0) = -1.; ref_matrix(1, 1) =  1.;
+  ref_matrix(2, 0) =  1.; ref_matrix(2, 1) =  0.;
+  ref_matrix(3, 0) =  1.; ref_matrix(3, 1) =  0.;
+  ref_matrix(4, 0) =  0.; ref_matrix(4, 1) =  1.;
+  ref_matrix(5, 0) =  4.; ref_matrix(5, 1) =  3.;
+
+  // set up the DiffCalculator and run the calculation
+  DiffCalculator difference_calculator;
+  FeatureMatrix matrix = difference_calculator.calculate_matrix(x);
+  
+  BOOST_CHECK_EQUAL(matrix.shape(0), 6);
+  BOOST_CHECK_EQUAL(matrix.shape(1), 2);
+  for(size_t i = 0; i < 6; i++) {
+    for(size_t j = 0; j < 2; j++) {
+      BOOST_CHECK_EQUAL(ref_matrix(i,j), matrix(i,j));
+    }
+  }
+
+  // with an empty feature matrix
+  FeatureMatrix y(vigra::Shape2(0,0));
+  matrix  = difference_calculator.calculate_matrix(y);
+  BOOST_CHECK_EQUAL(matrix.shape(0), 1);
+  BOOST_CHECK_EQUAL(matrix.shape(1), 0);
+}
+
+BOOST_AUTO_TEST_CASE( CurveCalculator_test ) {
+  LOG(logINFO) << "test case: CurveCalculator_test";
+
+  // get the test data
+  FeatureMatrix x;
+  get_feature_matrix(x);
+
+  // set up the reference data
+  FeatureMatrix ref_matrix(vigra::Shape2(5,2));
+  ref_matrix(0, 0) = -2.; ref_matrix(0, 1) =  1.;
+  ref_matrix(1, 0) =  2.; ref_matrix(1, 1) = -1.;
+  ref_matrix(2, 0) =  0.; ref_matrix(2, 1) =  0.;
+  ref_matrix(3, 0) = -1.; ref_matrix(3, 1) =  1.;
+  ref_matrix(4, 0) =  4.; ref_matrix(4, 1) =  2.;
+
+  // set up the CurveCalculator and run the calculation
+  CurveCalculator curvature_calculator;
+  FeatureMatrix matrix = curvature_calculator.calculate_matrix(x);
+
+  BOOST_CHECK_EQUAL(matrix.shape(0), 5);
+  BOOST_CHECK_EQUAL(matrix.shape(1), 2);
+  for(size_t i = 0; i < 5; i++) {
+    for(size_t j = 0; j < 2; j++) {
+      BOOST_CHECK_EQUAL(ref_matrix(i,j), matrix(i,j));
+    }
+  }
+  
+  // with an empty feature matrix
+  FeatureMatrix y(vigra::Shape2(0,0));
+  matrix  = curvature_calculator.calculate_matrix(y);
+  BOOST_CHECK_EQUAL(matrix.shape(0), 1);
+  BOOST_CHECK_EQUAL(matrix.shape(1), 0);
+}
+
+BOOST_AUTO_TEST_CASE( ChildParentDiffCalculator_test ) {
+  LOG(logINFO) << "test case: ChildParentDiffCalculator_test";
+  // get the test data
+  FeatureMatrix x;
+  get_feature_matrix(x);
+  
+  // reshape
+  FeatureMatrixView y = x.subarray(vigra::Shape2(0,0), vigra::Shape2(6,2));
+
+  // set up the reference data
+  FeatureMatrix ref_matrix(vigra::Shape2(2,2));
+  ref_matrix(0,0) =  0.; ref_matrix(0,1) =  1.;
+  ref_matrix(1,0) =  2.; ref_matrix(1,1) =  1.;
+
+  // set up ChildParentDiffCalculator and calculate the result
+  ChildParentDiffCalculator cp_diff;
+  FeatureMatrix matrix = cp_diff.calculate_matrix(y);
+  BOOST_CHECK_EQUAL(matrix.shape(0), 2);
+  BOOST_CHECK_EQUAL(matrix.shape(1), 2);
+  BOOST_CHECK_EQUAL(matrix(0,0), ref_matrix(0,0));
+  BOOST_CHECK_EQUAL(matrix(0,1), ref_matrix(0,1));
+  BOOST_CHECK_EQUAL(matrix(1,0), ref_matrix(1,0));
+  BOOST_CHECK_EQUAL(matrix(1,1), ref_matrix(1,1));
+
+  // calculate with wrong dimension of x
+  // should return 2x2 matrix filled with zeros
+  matrix = cp_diff.calculate_matrix(x);
+  BOOST_CHECK_EQUAL(matrix.shape(0), 2);
+  BOOST_CHECK_EQUAL(matrix.shape(1), 2);
+  BOOST_CHECK_EQUAL(matrix(0,0), 0.);
+  BOOST_CHECK_EQUAL(matrix(0,1), 0.);
+  BOOST_CHECK_EQUAL(matrix(1,0), 0.);
+  BOOST_CHECK_EQUAL(matrix(1,1), 0.);
+}
+
 BOOST_AUTO_TEST_CASE( MVNOutlierCalculator_calculate_matrix ) {
   LOG(logINFO) << "test case: MVNOutlierCalculator_calculate_matrix";
 
