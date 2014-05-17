@@ -732,6 +732,93 @@ const FeatureMatrix& CurveCalculator::calculate_matrix(
 }
 
 ////
+//// class ChildParentDiffCalculator
+////
+const std::string ChildParentDiffCalculator::name_ = "ChildParentDiffCalculator";
+
+const std::string& ChildParentDiffCalculator::name() const {
+  return name_;
+}
+
+const FeatureMatrix& ChildParentDiffCalculator::calculate_matrix(
+  const FeatureMatrix& feature_matrix
+) {
+  size_t col_count = feature_matrix.shape(0);
+  if(col_count % 3 != 0) {
+    calculate_matrix(feature_matrix, 0);
+    return ret_;
+  } else {
+    calculate_matrix(feature_matrix, col_count / 3);
+    return ret_;
+  }
+}
+
+const FeatureMatrix& ChildParentDiffCalculator::calculate_matrix(
+  const FeatureMatrix& feature_matrix,
+  size_t division_depth
+) {
+  size_t col_count = feature_matrix.shape(0);
+  size_t row_count = feature_matrix.shape(1);
+  ret_.reshape(vigra::Shape2(2, row_count));
+  if ((col_count < division_depth * 3) or (division_depth == 0)) {
+    LOG(logDEBUG) << "In ChildParentDiffCalculator: Invalid division depth";
+    LOG(logDEBUG) << "Return two 0-vectors";
+    ret_.init(0);
+  } else {
+    ret_.bind<0>(0) = vigra::multi_math::operator-(
+      feature_matrix.bind<0>(division_depth),
+      feature_matrix.bind<0>(0)
+    );
+    ret_.bind<0>(1) = vigra::multi_math::operator-(
+      feature_matrix.bind<0>(2*division_depth),
+      feature_matrix.bind<0>(0)
+    );
+  }
+  return ret_;
+}
+
+////
+//// class DotProductCalculator
+////
+const std::string DotProductCalculator::name_ = "DotProductCalculator";
+
+const std::string& DotProductCalculator::name() const {
+  return name_;
+}
+
+FeatureScalar DotProductCalculator::calculate_scalar(
+  const FeatureMatrix& feature_matrix
+) {
+  size_t col_count = feature_matrix.shape(0);
+  // Calculate the dot product depending on the size of the input matrix
+  if (col_count == 0) {
+    // empty matrix
+    LOG(logDEBUG) << "In DotProductCalculator: matrix is empty";
+    LOG(logDEBUG) << "Return zero";
+    return 0.0;
+  } else if (col_count == 1) {
+    // matrix with one column
+    LOG(logDEBUG) << "In DotProductCalculator: matrix has only one column";
+    LOG(logDEBUG) << "Calculate the norm of this vector";
+    return vigra::linalg::dot(feature_matrix, feature_matrix);
+  } else if (col_count == 2) {
+    // matrix with two columns
+    return vigra::linalg::dot(
+      feature_matrix.bind<0>(0),
+      feature_matrix.bind<0>(1)
+    );
+  } else {
+    // matrix with more than two columns
+    LOG(logDEBUG) << "In DotProductCalculator: matrix has more than two columns";
+    LOG(logDEBUG) << "Calculate the dot product of the first and second column";
+    return vigra::linalg::dot(
+      feature_matrix.bind<0>(0),
+      feature_matrix.bind<0>(1)
+    );
+  }
+}
+
+////
 //// class MVNOutlierCalculator
 ////
 const std::string MVNOutlierCalculator::name_ = "MVNOutlierCalculator";

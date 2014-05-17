@@ -50,17 +50,6 @@ void set_solution(HypothesesGraph& graph, const size_t solution_index);
   pure virtual classes
 =============================================================================*/
 ////
-//// class FeatureAggregator
-////
-class FeatureAggregator {
- public:
-  FeatureAggregator() {};
-  virtual ~FeatureAggregator() {};
-  virtual const std::string& name() const = 0;
-  virtual const feature_type& operator()(const feature_arrays& features) = 0;
-};
-
-////
 //// class SubsetsOfInterest
 ////
 class SubsetsOfInterest {
@@ -238,6 +227,41 @@ class CurveCalculator : public SubsetFeatureCalculator {
  protected:
   static const std::string name_;
   FeatureMatrix ret_;
+};
+
+////
+//// class ChildParentDiffCalculator
+////
+class ChildParentDiffCalculator : public SubsetFeatureCalculator {
+ public:
+  ChildParentDiffCalculator() {};
+  virtual ~ChildParentDiffCalculator() {};
+  virtual const std::string& name() const;
+  virtual const FeatureMatrix& calculate_matrix(
+    const FeatureMatrix& feature_matrix
+  );
+  virtual const FeatureMatrix& calculate_matrix(
+    const FeatureMatrix& feature_matrix,
+    size_t division_depth
+  );
+ protected:
+  static const std::string name_;
+  FeatureMatrix ret_;
+};
+
+////
+//// class DotProductCalculator
+////
+class DotProductCalculator : public SubsetFeatureCalculator {
+ public:
+  DotProductCalculator() {};
+  virtual ~DotProductCalculator() {};
+  virtual const std::string& name() const;
+  virtual FeatureScalar calculate_scalar(
+    const FeatureMatrix& feature_matrix
+  );
+ protected:
+  static const std::string name_;
 };
 
 ////
