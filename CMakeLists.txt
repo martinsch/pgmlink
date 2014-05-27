@@ -80,6 +80,9 @@ ADD_DEFINITIONS(-DIL_STD)
 
 if(WIN32)
   add_definitions(-DBOOST_ALL_DYN_LINK)
+  if("${Boost_LIBRARIES}" MATCHES "boost_serialization\\.lib")
+    ADD_DEFINITIONS(-DBOOST_AUTO_LINK_NOMANGLE)
+  endif()
 endif()
 
 ## vigra defines
@@ -126,10 +129,12 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   set(CMAKE_CXX_FLAGS_RELEASE "-O3 ${CMAKE_CXX_FLAGS_RELEASE}")
 endif()
 
-set(WITH_CHECKED_STL "True" CACHE BOOL "Build with checked stl for more robust code (may degrade performance; gcc only).")
-if(WITH_CHECKED_STL)
-  add_definitions(-D_GLIBCXX_DEBUG)
-endif()
+IF(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+  set(WITH_CHECKED_STL "True" CACHE BOOL "Build with checked stl for more robust code (may degrade performance; gcc only).")
+  if(WITH_CHECKED_STL)
+    add_definitions(-D_GLIBCXX_DEBUG)
+  endif()
+ENDIF(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin") 
 
 # global logging level
 logging_level_to_define(LOGGING_LEVEL LOG_DEFINE)
@@ -146,8 +151,10 @@ if(WIN32)
   add_compiler_export_flags() # enable dynamic symbol export/import for shared libs (on Windows)
 endif()
 
-file(GLOB LIB_SOURCES src/*.cpp)
+file(GLOB LIB_SOURCES src/*.cpp src/feature_calculator/*.cpp)
 add_library(pgmlink SHARED ${LIB_SOURCES})
+
+
 
 file( MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/pgmlink )
 if(WIN32)

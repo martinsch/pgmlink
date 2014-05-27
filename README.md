@@ -84,6 +84,14 @@ g++ -fpic -shared -Wl,-whole-archive libcplex.a -Wl,-no-whole-archive -o libcple
 g++ -fpic -shared -Wl,-whole-archive libilocplex.a -Wl,-no-whole-archive -o libilocplex.so
 g++ -fpic -shared -Wl,-whole-archive libconcert.a -Wl,-no-whole-archive -o libconcert.so
 ```
+on Linux and
+
+```
+g++ -fpic -shared -Wl,-all_load libcplex.a -Wl,-noall_load -o libcplex.dylib
+g++ -fpic -shared -Wl,-all_load libilocplex.a -Wl,-noall_load -o libilocplex.dylib
+g++ -fpic -shared -Wl,-all_load libconcert.a -Wl,-noall_load -o libconcert.dylib
+```
+on Mac respectively.
 
 on Mac:
 ```

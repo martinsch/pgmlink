@@ -9,10 +9,11 @@
 #include <vector>
 #include <ostream>
 #include <stdexcept>
+#include <stdint.h>
 
 #include "pgmlink/pgmlink_export.h"
-
-
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
 
 template class PGMLINK_EXPORT std::vector<unsigned int>;
 
@@ -57,9 +58,26 @@ namespace pgmlink {
     friend std::ostream& operator<< (std::ostream &out, const Event &e);
     
   private:
-    unsigned int n_features_;
+    uint32_t n_features_;
     std::vector<double> weights_;
     std::vector<double> features_;
+
+  private:
+    // serialization interface
+    friend class boost::serialization::access;
+
+    // When the class Archive corresponds to an output archive, the
+    // & operator is defined similar to <<.  Likewise, when the class Archive
+    // is a type of input archive the & operator is defined similar to >>.
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int /*version*/)
+    {
+        ar & type;
+        ar & traxel_ids;
+        ar & n_features_;
+        ar & weights_;
+        ar & features_;
+    }
   };
 
   struct PGMLINK_EXPORT EventsStatistics {

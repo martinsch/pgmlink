@@ -18,7 +18,7 @@
 using namespace pgmlink;
 using namespace boost::python;
 
-typedef property_map<node_traxel, typename HypothesesGraph::base_graph>::type node_traxel_m;
+typedef property_map<node_traxel, HypothesesGraph::base_graph>::type node_traxel_m;
 
 
 node_traxel_m& addNodeTraxelMap(HypothesesGraph* g) {
@@ -82,12 +82,12 @@ struct IterableValueMap_ValueIterator {
 
 
 void export_hypotheses() {
-  class_<typename HypothesesGraph::Arc>("Arc");
-  class_<typename HypothesesGraph::ArcIt>("ArcIt");
-  class_<typename HypothesesGraph::Node>("Node");
-  class_<typename HypothesesGraph::NodeIt>("NodeIt");
-  class_<typename HypothesesGraph::InArcIt>("InArcIt");
-  class_<typename HypothesesGraph::OutArcIt>("OutArcIt");
+  class_<HypothesesGraph::Arc>("Arc");
+  class_<HypothesesGraph::ArcIt>("ArcIt");
+  class_<HypothesesGraph::Node>("Node");
+  class_<HypothesesGraph::NodeIt>("NodeIt");
+  class_<HypothesesGraph::InArcIt>("InArcIt");
+  class_<HypothesesGraph::OutArcIt>("OutArcIt");
 
 
   IterableValueMap_ValueIterator<node_traxel_m>::wrap("NodeTraxelMap_ValueIt");
