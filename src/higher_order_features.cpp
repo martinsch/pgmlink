@@ -716,7 +716,7 @@ const FeatureMatrix& CurveCalculator::calculate_matrix(
   size_t col_count = feature_matrix.shape(0);
   size_t row_count = feature_matrix.shape(1);
   if (col_count <= 2) {
-    LOG(logDEBUG) << "In CurveCalculator: matrix in argument has less than two columns";
+    LOG(logDEBUG) << "In CurveCalculator: matrix in argument has less than three columns";
     LOG(logDEBUG) << "Returning a 0-vector";
     ret_.reshape(vigra::Shape2(1, row_count));
     ret_.init(0);
@@ -731,6 +731,55 @@ const FeatureMatrix& CurveCalculator::calculate_matrix(
     }
   }
   return ret_;
+}
+
+////
+//// class SquaredDiffCalculator
+////
+const std::string SquaredDiffCalculator::name_ = "SquaredDiffCalculator";
+
+const std::string& SquaredDiffCalculator::name() const {
+  return name_;
+}
+
+const FeatureVector& SquaredDiffCalculator::calculate_vector(
+  const FeatureMatrix& feature_matrix
+) {
+  size_t col_count = feature_matrix.shape(0);
+  if (col_count <= 1) {
+    LOG(logDEBUG) << "In SquaredDiffCalculator: matrix in argument has less than two columns";
+    LOG(logDEBUG) << "Returning a 0-vector";
+    ret_.reshape(vigra::Shape1(1, col_count));
+    ret_.init(0);
+  } else {
+    ret_.reshape(vigra::Shape1(col_count-1));
+    FeatureVectorView temp = diff_calculator_.calculate_vector(feature_matrix);
+    for (size_t col = 0; col < col_count-1; col++) {
+      ret_(col) = vigra::squaredNorm(
+        temp.bind<0>(col)
+      );
+    }
+  }
+  return ret_;
+}
+
+////
+//// class DiffusionCalculator
+////
+const std::string DiffusionCalculator::name_ = "DiffusionCalculator";
+
+const std::string& DiffusionCalculator::name() const {
+  return name_;
+}
+
+FeatureScalar DiffusionCalculator::calculate_scalar(
+  const FeatureMatrix& feature_matrix
+) {
+  FeatureVectorView sq_diff = squared_diff_calculator_.calculate_vector(
+    feature_matrix
+  );
+  FeatureScalar sq_diff_sum = vigra::multi_math::sum<FeatureScalar>(sq_diff);
+  return sq_diff_sum / static_cast<FeatureScalar>(feature_matrix.shape(0));
 }
 
 ////

@@ -227,6 +227,39 @@ class CurveCalculator : public SubsetFeatureCalculator {
 };
 
 ////
+//// class SquaredDiffCalculator
+////
+class SquaredDiffCalculator : public SubsetFeatureCalculator {
+ public:
+  SquaredDiffCalculator() {};
+  virtual ~SquaredDiffCalculator() {};
+  virtual const std::string& name() const;
+  virtual const FeatureVector& calculate_vector(
+    const FeatureMatrix& feature_matrix
+  );
+ protected:
+  DiffCalculator diff_calculator_;
+  static const std::string name_;
+  FeatureVector ret_;
+};
+
+////
+//// class DiffusionCalculator
+////
+class DiffusionCalculator : public SubsetFeatureCalculator {
+ public:
+  DiffusionCalculator() {};
+  virtual ~DiffusionCalculator() {};
+  virtual const std::string& name() const;
+  virtual FeatureScalar calculate_scalar(
+    const FeatureMatrix& feature_matrix
+  );
+ protected:
+  SquaredDiffCalculator squared_diff_calculator_;
+  static const std::string name_;
+};
+
+////
 //// class ChildParentDiffCalculator
 ////
 class ChildParentDiffCalculator : public SubsetFeatureCalculator {
