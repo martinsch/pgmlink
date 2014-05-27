@@ -20,9 +20,6 @@
 // boost
 #include <boost/serialization/serialization.hpp> /* for serialization */
 
-// armadillo
-#include <armadillo> /* for MVNOutlierCalculator */
-
 // vigra
 #include <vigra/multi_array.hxx> /* for the feature extractors */
 

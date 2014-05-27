@@ -4,6 +4,8 @@
 #include <vigra/matrix.hxx> /* for covariance calculation */
 #include <vigra/linear_algebra.hxx> /* for matrix inverse calculation */
 
+#include <sstream> /* for printing a matrix on the debug level */
+
 namespace pgmlink {
 
 ////
@@ -855,16 +857,23 @@ const FeatureVector& MVNOutlierCalculator::calculate_vector(
   ret_vector_.reshape(vigra::Shape1(col_count));
   ret_vector_.init(0.0);
 
+  FeatureMatrix mean(vigra::Shape2(1, row_count));
   FeatureMatrix temp1(vigra::Shape2(row_count, 1));
   FeatureMatrix temp2(vigra::Shape2(1,1));
   // TODO calculate_vector fails if the row is of type FeatureMatrixView > Why?
   FeatureMatrix row;
   const FeatureMatrix& inv_cov = calculate_matrix(feature_matrix);
+  for (size_t i = 0; i < row_count; i++) {
+    mean(0,i) = vigra::multi_math::sum<FeatureScalar>(
+      feature_matrix.bind<1>(i)
+    ) / static_cast<FeatureScalar>(col_count);
+  }
   for (size_t col = 0; col < col_count; col++) {
     row = vigra::linalg::rowVector(feature_matrix, col);
+    row = vigra::multi_math::operator-(row, mean);
     vigra::linalg::mmul(inv_cov, row.transpose(), temp1);
     vigra::linalg::mmul(row, temp1, temp2);
-    ret_vector_(col) = sqrt(temp2(0,0));
+    ret_vector_(col) = temp2(0,0);
   }
 
   return ret_vector_;
