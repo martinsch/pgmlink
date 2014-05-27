@@ -638,6 +638,40 @@ BOOST_AUTO_TEST_CASE( ChildParentDiffCalculator_test ) {
   BOOST_CHECK_EQUAL(matrix(1,1), 0.);
 }
 
+BOOST_AUTO_TEST_CASE( SquaredDiffCalculator_calculate_vector ) {
+  LOG(logINFO) << "test case: SquaredDiffCalculator_calculate_vector";
+
+  // get the test data
+  FeatureMatrix x;
+  get_feature_matrix(x);
+
+  // set up calculator
+  SquaredDiffCalculator squared_diff_calculator;
+  FeatureVector sq_diff = squared_diff_calculator.calculate_vector(x);
+
+  BOOST_CHECK_EQUAL(sq_diff.shape(0), 6);
+  BOOST_CHECK_EQUAL(sq_diff(0), 1.);
+  BOOST_CHECK_EQUAL(sq_diff(1), 2.);
+  BOOST_CHECK_EQUAL(sq_diff(2), 1.);
+  BOOST_CHECK_EQUAL(sq_diff(3), 1.);
+  BOOST_CHECK_EQUAL(sq_diff(4), 1.);
+  BOOST_CHECK_EQUAL(sq_diff(5),25.);
+}
+
+BOOST_AUTO_TEST_CASE( DiffusionCalculator_calculate_scalar ) {
+  LOG(logINFO) << "test case: DiffusionCalculator_calculate_scalar";
+
+  // get the test data
+  FeatureMatrix x;
+  get_feature_matrix(x);
+
+  // set up calculator
+  DiffusionCalculator diffusion_calculator;
+  FeatureScalar diffusion = diffusion_calculator.calculate_scalar(x);
+
+  BOOST_CHECK_EQUAL(diffusion, static_cast<FeatureScalar>(31./6.));
+}
+
 BOOST_AUTO_TEST_CASE( MVNOutlierCalculator_calculate_matrix ) {
   LOG(logINFO) << "test case: MVNOutlierCalculator_calculate_matrix";
 

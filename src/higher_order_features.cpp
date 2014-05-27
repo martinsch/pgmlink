@@ -753,7 +753,7 @@ const FeatureVector& SquaredDiffCalculator::calculate_vector(
     ret_.init(0);
   } else {
     ret_.reshape(vigra::Shape1(col_count-1));
-    FeatureVectorView temp = diff_calculator_.calculate_vector(feature_matrix);
+    FeatureMatrixView temp = diff_calculator_.calculate_matrix(feature_matrix);
     for (size_t col = 0; col < col_count-1; col++) {
       ret_(col) = vigra::squaredNorm(
         temp.bind<0>(col)
@@ -779,7 +779,7 @@ FeatureScalar DiffusionCalculator::calculate_scalar(
     feature_matrix
   );
   FeatureScalar sq_diff_sum = vigra::multi_math::sum<FeatureScalar>(sq_diff);
-  return sq_diff_sum / static_cast<FeatureScalar>(feature_matrix.shape(0));
+  return sq_diff_sum / static_cast<FeatureScalar>(sq_diff.shape(0));
 }
 
 ////
