@@ -676,13 +676,13 @@ BOOST_AUTO_TEST_CASE( MVNOutlierCalculator_calculate_vector ) {
   for(size_t i = 0; i < 7; i++) {
     LOG(logINFO) << "  " << i << " : " << vec(i);
   }
-  BOOST_CHECK(( 1.81 < vec(0)) and (vec(0) <  1.82));
-  BOOST_CHECK(( 1.95 < vec(1)) and (vec(1) <  1.96));
-  BOOST_CHECK(( 3.09 < vec(2)) and (vec(2) <  3.10));
-  BOOST_CHECK(( 2.42 < vec(3)) and (vec(3) <  2.43));
-  BOOST_CHECK(( 2.43 < vec(4)) and (vec(4) <  2.44));
-  BOOST_CHECK(( 3.02 < vec(5)) and (vec(5) <  3.03));
-  BOOST_CHECK(( 4.65 < vec(6)) and (vec(6) <  4.66));
+  BOOST_CHECK(( 0.7153 < vec(0)) and (vec(0) <  0.7154));
+  BOOST_CHECK(( 2.1810 < vec(1)) and (vec(1) <  2.1811));
+  BOOST_CHECK(( 2.9443 < vec(2)) and (vec(2) <  2.9444));
+  BOOST_CHECK(( 0.1657 < vec(3)) and (vec(3) <  0.1658));
+  BOOST_CHECK(( 1.1733 < vec(4)) and (vec(4) <  1.1734));
+  BOOST_CHECK(( 0.3489 < vec(5)) and (vec(5) <  0.3490));
+  BOOST_CHECK(( 4.4711 < vec(6)) and (vec(6) <  4.4712));
 }
 
 BOOST_AUTO_TEST_CASE( MVNOutlierCalculator_calculate_scalar ) {
@@ -699,6 +699,6 @@ BOOST_AUTO_TEST_CASE( MVNOutlierCalculator_calculate_scalar ) {
   FeatureScalar s3 = mvnoutlier.calculate_scalar(x);
   FeatureScalar s4 = mvnoutlier.calculate_scalar(x, 4.0);
 
-  BOOST_CHECK_EQUAL(s3, static_cast<FeatureScalar>(3./7.));
+  BOOST_CHECK_EQUAL(s3, static_cast<FeatureScalar>(1./7.));
   BOOST_CHECK_EQUAL(s4, static_cast<FeatureScalar>(1./7.));
 }
