@@ -199,7 +199,7 @@ namespace pgmlink {
    template <typename OGM_GRAPHICAL_MODEL>
    void OpengmFactor<OGM_FUNCTION>::add_to( OGM_GRAPHICAL_MODEL& m ) const {
    std::vector<size_t> sorted_vi(vi_);
-   std::sort(sorted_vi.begin(), sorted_vi.end());
+   indexsorter::reorder( sorted_vi, order_);
    // opengm expects a monotonic increasing sequence
    if(!(m.isValidIndexSequence(sorted_vi.begin(), sorted_vi.end()))) {
      throw std::runtime_error("OpengmExplicitFactor::add_to(): invalid index sequence");
