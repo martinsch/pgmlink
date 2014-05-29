@@ -365,6 +365,33 @@ class DotProductCalculator : public SubsetFeatureCalculator {
 };
 
 ////
+//// class ChildDeceleration
+////
+class ChildDeceleration : public SubsetFeatureCalculator {
+ public:
+  ChildDeceleration() {};
+  virtual ~ChildDeceleration() {};
+  virtual const std::string& name() const;
+  virtual const FeatureVector& calculate_vector(
+    const FeatureMatrix& feature_matrix
+  );
+  virtual const FeatureVector& calculate_vector(
+    const FeatureMatrix& feature_matrix,
+    size_t depth
+  );
+  virtual FeatureScalar calculate_scalar(
+    const FeatureMatrix& feature_matrix
+  );
+  virtual FeatureScalar calculate_scalar(
+    const FeatureMatrix& feature_matrix,
+    size_t depth
+  );
+ protected:
+  static const std::string name_;
+  FeatureVector ret_vector_;
+};
+
+////
 //// class MVNOutlierCalculator
 ////
 class MVNOutlierCalculator : public SubsetFeatureCalculator {

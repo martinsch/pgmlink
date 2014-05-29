@@ -943,6 +943,80 @@ FeatureScalar DotProductCalculator::calculate_scalar(
 }
 
 ////
+//// class ChildDeceleration
+////
+const std::string ChildDeceleration::name_ = "ChildDeceleration";
+
+const std::string& ChildDeceleration::name() const {
+  return name_;
+}
+
+const FeatureVector& ChildDeceleration::calculate_vector(
+  const FeatureMatrix& feature_matrix
+) {
+  size_t col_count = feature_matrix.shape(0);
+  if(col_count % 3 != 0) {
+    calculate_vector(feature_matrix, 0);
+    return ret_vector_;
+  } else {
+    calculate_vector(feature_matrix, col_count / 3);
+    return ret_vector_;
+  }
+}
+
+const FeatureVector& ChildDeceleration::calculate_vector(
+  const FeatureMatrix& feature_matrix,
+  size_t depth
+) {
+  ret_vector_.reshape(vigra::Shape1(2));
+  ret_vector_.init(0.0);
+  if (depth < 2) {
+    LOG(logDEBUG) << "In ChildDeceleration: not enough depth of data";
+    LOG(logDEBUG) << "Return 0-vector";
+  } else {
+    FeatureVector temp_a1;
+    FeatureVector temp_a2;
+    FeatureVector temp_b1;
+    FeatureVector temp_b2;
+    temp_a1 = vigra::multi_math::operator-(
+      feature_matrix.bind<0>(depth),
+      feature_matrix.bind<0>(0)
+    );
+    temp_a2 = vigra::multi_math::operator-(
+      feature_matrix.bind<0>(2*depth),
+      feature_matrix.bind<0>(0)
+    );
+    temp_b1 = vigra::multi_math::operator-(
+      feature_matrix.bind<0>(depth+1),
+      feature_matrix.bind<0>(depth)
+    );
+    temp_b2 = vigra::multi_math::operator-(
+      feature_matrix.bind<0>(2*depth+1),
+      feature_matrix.bind<0>(2*depth)
+    );
+    using namespace vigra::linalg;
+    ret_vector_(0) = dot(temp_b1, temp_b1) / dot(temp_a1, temp_a1);
+    ret_vector_(1) = dot(temp_b2, temp_b2) / dot(temp_a2, temp_a2);
+  }
+  return ret_vector_;
+}
+
+FeatureScalar ChildDeceleration::calculate_scalar(
+  const FeatureMatrix& feature_matrix
+) {
+  calculate_vector(feature_matrix);
+  return ret_vector_(0) + ret_vector_(1);
+}
+
+FeatureScalar ChildDeceleration::calculate_scalar(
+  const FeatureMatrix& feature_matrix,
+  size_t depth
+) {
+  calculate_vector(feature_matrix, depth);
+  return ret_vector_(0) + ret_vector_(1);
+}
+
+////
 //// class MVNOutlierCalculator
 ////
 const std::string MVNOutlierCalculator::name_ = "MVNOutlierCalculator";
