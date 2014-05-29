@@ -252,6 +252,22 @@ class CurveCalculator : public SubsetFeatureCalculator {
 };
 
 ////
+//// class SquaredNormCalculator
+////
+class SquaredNormCalculator : public SubsetFeatureCalculator {
+ public:
+  SquaredNormCalculator() {};
+  virtual ~SquaredNormCalculator() {};
+  virtual const std::string& name() const;
+  virtual const FeatureVector& calculate_vector(
+    const FeatureMatrix& feature_matrix
+  );
+ protected:
+  static const std::string name_;
+  FeatureVector ret_;
+};
+
+////
 //// class SquaredDiffCalculator
 ////
 class SquaredDiffCalculator : public SubsetFeatureCalculator {
@@ -264,6 +280,7 @@ class SquaredDiffCalculator : public SubsetFeatureCalculator {
   );
  protected:
   DiffCalculator diff_calculator_;
+  SquaredNormCalculator squared_norm_calculator_;
   static const std::string name_;
   FeatureVector ret_;
 };

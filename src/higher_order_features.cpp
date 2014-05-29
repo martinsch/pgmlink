@@ -758,6 +758,26 @@ const FeatureMatrix& CurveCalculator::calculate_matrix(
 }
 
 ////
+//// class SquaredNormCalculator
+////
+const std::string SquaredNormCalculator::name_ = "SquaredNormCalculator";
+
+const std::string& SquaredNormCalculator::name() const {
+  return name_;
+}
+
+const FeatureVector& SquaredNormCalculator::calculate_vector(
+  const FeatureMatrix& feature_matrix
+) {
+  size_t col_count = feature_matrix.shape(0);
+  ret_.reshape(vigra::Shape1(col_count));
+  for (size_t i = 0; i < col_count; i++) {
+    ret_(i) = vigra::squaredNorm(feature_matrix.bind<0>(i));
+  }
+  return ret_;
+}
+
+////
 //// class SquaredDiffCalculator
 ////
 const std::string SquaredDiffCalculator::name_ = "SquaredDiffCalculator";
@@ -778,11 +798,7 @@ const FeatureVector& SquaredDiffCalculator::calculate_vector(
   } else {
     ret_.reshape(vigra::Shape1(col_count-1));
     FeatureMatrixView temp = diff_calculator_.calculate_matrix(feature_matrix);
-    for (size_t col = 0; col < col_count-1; col++) {
-      ret_(col) = vigra::squaredNorm(
-        temp.bind<0>(col)
-      );
-    }
+    ret_ = squared_norm_calculator_.calculate_vector(temp);
   }
   return ret_;
 }
