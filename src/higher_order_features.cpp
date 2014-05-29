@@ -1,5 +1,6 @@
 #include "pgmlink/higher_order_features.h"
 #include <cmath>
+
 #include <vigra/multi_math.hxx> /* for operator+ */
 #include <vigra/matrix.hxx> /* for covariance calculation */
 #include <vigra/linear_algebra.hxx> /* for matrix inverse calculation */
@@ -190,6 +191,29 @@ FeatureScalar SubsetFeatureCalculator::calculate_scalar(
 /*=============================================================================
   specific classes
 =============================================================================*/
+////
+//// class GraphFeatureCalculator
+////
+const FeatureVector& GraphFeatureCalculator::calculate_vector(
+  const HypothesesGraph& graph
+) {
+  const std::vector<ConstTraxelRefVector> trx_vecs = 
+    subsets_extractor_ptr_->operator()(graph);
+
+  size_t subset_count = trx_vecs.size();
+  ret_vector_.reshape(vigra::Shape1(subset_count));
+  ret_vector_.init(0.0);
+  
+  std::vector<ConstTraxelRefVector>::const_iterator trx_it = trx_vecs.begin();
+  size_t current_column = 0;
+  for (; trx_it != trx_vecs.end(); trx_it++, current_column++) {
+    ret_vector_(current_column) = feature_calculator_ptr_->calculate_scalar(
+      feature_extractor_ptr_->extract_matrix(*trx_it)
+    );
+  }
+  return ret_vector_;
+}
+
 ////
 //// class SubsetFeaturesIdentity
 ////

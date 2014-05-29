@@ -19,6 +19,7 @@
 
 // boost
 #include <boost/serialization/serialization.hpp> /* for serialization */
+#include <boost/shared_ptr.hpp> /* for shared_ptr */
 
 // vigra
 #include <vigra/multi_array.hxx> /* for the feature extractors */
@@ -100,6 +101,30 @@ class SubsetFeatureCalculator {
 /*=============================================================================
   specific classes
 =============================================================================*/
+////
+//// class GraphFeatureCalculator
+////
+class GraphFeatureCalculator {
+ public:
+  GraphFeatureCalculator(
+    boost::shared_ptr<SubsetsOfInterest> subsets_extractor_ptr,
+    boost::shared_ptr<SubsetFeatureExtractor> feature_extractor_ptr,
+    boost::shared_ptr<SubsetFeatureCalculator> feature_calculator_ptr
+  ) : 
+    subsets_extractor_ptr_(subsets_extractor_ptr),
+    feature_extractor_ptr_(feature_extractor_ptr),
+    feature_calculator_ptr_(feature_calculator_ptr) {};
+  virtual ~GraphFeatureCalculator() {}
+  virtual const FeatureVector& calculate_vector(
+    const HypothesesGraph& graph
+  );
+ protected:
+  boost::shared_ptr<SubsetsOfInterest> subsets_extractor_ptr_;
+  boost::shared_ptr<SubsetFeatureExtractor> feature_extractor_ptr_;
+  boost::shared_ptr<SubsetFeatureCalculator> feature_calculator_ptr_;
+  FeatureVector ret_vector_;
+};
+
 ////
 //// class SubsetFeaturesIdentity
 ////
