@@ -736,3 +736,35 @@ BOOST_AUTO_TEST_CASE( MVNOutlierCalculator_calculate_scalar ) {
   BOOST_CHECK_EQUAL(s3, static_cast<FeatureScalar>(1./7.));
   BOOST_CHECK_EQUAL(s4, static_cast<FeatureScalar>(1./7.));
 }
+
+BOOST_AUTO_TEST_CASE( GraphFeatureCalculator_calculate_vector ) {
+  LOG(logINFO) << "test case: GraphFeatureCalculator_calculate_vector";
+  
+  // set up the graph and set the solution index
+  HypothesesGraph graph;
+  get_graph(graph);
+  set_solution(graph, 0);
+
+  // set up the calculators
+  boost::shared_ptr<SubsetsOfInterest> track_subsets_extractor_ptr(
+    new TrackSubsets
+  );
+  boost::shared_ptr<SubsetFeaturesIdentity> features_identity_extractor_ptr(
+    new SubsetFeaturesIdentity("id")
+  );
+  boost::shared_ptr<SubsetFeatureCalculator> sum_calculator_ptr(
+    new SumCalculator
+  );
+  GraphFeatureCalculator sum_of_ids_in_track(
+    track_subsets_extractor_ptr,
+    features_identity_extractor_ptr,
+    sum_calculator_ptr
+  );
+
+  // calculate the vector
+  FeatureVector result = sum_of_ids_in_track.calculate_vector(graph);
+  BOOST_CHECK_EQUAL(result.shape(0), 3);
+  BOOST_CHECK_EQUAL(result(0),  4.);
+  BOOST_CHECK_EQUAL(result(1), 12.);
+  BOOST_CHECK_EQUAL(result(2), 14.);
+}
