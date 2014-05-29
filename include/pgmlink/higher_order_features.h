@@ -201,6 +201,34 @@ class DivisionSubsets : public SubsetsOfInterest {
 };
 
 ////
+//// class CompositionCalculator
+////
+class CompositionCalculator : public SubsetFeatureCalculator {
+ public:
+  CompositionCalculator(
+    boost::shared_ptr<SubsetFeatureCalculator> first_calculator_ptr,
+    boost::shared_ptr<SubsetFeatureCalculator> second_calculator_ptr
+  ) :
+    first_calculator_ptr_(first_calculator_ptr),
+    second_calculator_ptr_(second_calculator_ptr) {};
+  virtual ~CompositionCalculator() {};
+  virtual const std::string& name() const;
+  virtual const FeatureMatrix& calculate_matrix(
+    const FeatureMatrix& feature_matrix
+  );
+  virtual const FeatureVector& calculate_vector(
+    const FeatureMatrix& feature_matrix
+  );
+  FeatureScalar calculate_scalar(
+    const FeatureMatrix& feature_matrix
+  );
+ protected:
+  static const std::string name_;
+  boost::shared_ptr<SubsetFeatureCalculator> first_calculator_ptr_;
+  boost::shared_ptr<SubsetFeatureCalculator> second_calculator_ptr_;
+};
+
+////
 //// class SumCalculator
 ////
 class SumCalculator : public SubsetFeatureCalculator {

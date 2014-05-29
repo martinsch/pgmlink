@@ -663,6 +663,39 @@ bool DivisionSubsets::get_parents_to_depth(
 }
 
 ////
+//// class CompositionCalculator
+////
+const std::string CompositionCalculator::name_ = "CompositionCalculator";
+
+const std::string& CompositionCalculator::name() const {
+  return name_;
+}
+
+const FeatureMatrix& CompositionCalculator::calculate_matrix(
+  const FeatureMatrix& feature_matrix
+) {
+  return second_calculator_ptr_->calculate_matrix(
+    first_calculator_ptr_->calculate_matrix(feature_matrix)
+  );
+}
+
+const FeatureVector& CompositionCalculator::calculate_vector(
+  const FeatureMatrix& feature_matrix
+) {
+  return second_calculator_ptr_->calculate_vector(
+    first_calculator_ptr_->calculate_matrix(feature_matrix)
+  );
+}
+
+FeatureScalar CompositionCalculator::calculate_scalar(
+  const FeatureMatrix& feature_matrix
+) {
+  return second_calculator_ptr_->calculate_scalar(
+    first_calculator_ptr_->calculate_matrix(feature_matrix)
+  );
+}
+
+////
 //// class SumCalculator
 ////
 const std::string SumCalculator::name_ = "SumCalculator";
@@ -672,24 +705,24 @@ const std::string& SumCalculator::name() const {
 }
 
 const FeatureVector& SumCalculator::calculate_vector(
-  const FeatureMatrix& features
+  const FeatureMatrix& feature_matrix
 ) {
-  size_t col_count = features.shape(0);
-  size_t row_count = features.shape(1);
+  size_t col_count = feature_matrix.shape(0);
+  size_t row_count = feature_matrix.shape(1);
   ret_.reshape(vigra::Shape1(row_count));
   ret_.init(0);
   for (size_t col = 0; col < col_count; col++) {
-    ret_ += features.bind<0>(col);
+    ret_ += feature_matrix.bind<0>(col);
   }
   return ret_;
 }
 
 FeatureScalar SumCalculator::calculate_scalar(
-  const FeatureMatrix& features
+  const FeatureMatrix& feature_matrix
 ) {
   FeatureScalar ret_ = 0;
-  for (int i = 0; i < features.size(); i++) {
-    ret_ += features[i];
+  for (int i = 0; i < feature_matrix.size(); i++) {
+    ret_ += feature_matrix[i];
   }
   return ret_;
 }
