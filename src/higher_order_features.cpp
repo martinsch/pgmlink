@@ -856,6 +856,13 @@ const std::string& SquaredDiffCalculator::name() const {
   return name_;
 }
 
+const FeatureMatrix& SquaredDiffCalculator::calculate_matrix(
+  const FeatureMatrix& feature_matrix
+) {
+  calculate_vector(feature_matrix);
+  return ret_matrix_;
+}
+
 const FeatureVector& SquaredDiffCalculator::calculate_vector(
   const FeatureMatrix& feature_matrix
 ) {
@@ -863,14 +870,15 @@ const FeatureVector& SquaredDiffCalculator::calculate_vector(
   if (col_count <= 1) {
     LOG(logDEBUG) << "In SquaredDiffCalculator: matrix in argument has less than two columns";
     LOG(logDEBUG) << "Returning a 0-vector";
-    ret_.reshape(vigra::Shape1(1, col_count));
-    ret_.init(0);
+    ret_matrix_.reshape(vigra::Shape2(1, 1));
+    ret_matrix_.init(0);
   } else {
-    ret_.reshape(vigra::Shape1(col_count-1));
+    ret_matrix_.reshape(vigra::Shape2(col_count-1, 1));
     FeatureMatrixView temp = diff_calculator_.calculate_matrix(feature_matrix);
-    ret_ = squared_norm_calculator_.calculate_vector(temp);
+    ret_matrix_.bind<1>(0) = squared_norm_calculator_.calculate_vector(temp);
   }
-  return ret_;
+  ret_vector_ = ret_matrix_.bind<1>(0);
+  return ret_vector_;
 }
 
 ////

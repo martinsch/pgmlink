@@ -322,6 +322,9 @@ class SquaredDiffCalculator : public SubsetFeatureCalculator {
   SquaredDiffCalculator() {};
   virtual ~SquaredDiffCalculator() {};
   virtual const std::string& name() const;
+  virtual const FeatureMatrix& calculate_matrix(
+    const FeatureMatrix& feature_matrix
+  );
   virtual const FeatureVector& calculate_vector(
     const FeatureMatrix& feature_matrix
   );
@@ -329,7 +332,8 @@ class SquaredDiffCalculator : public SubsetFeatureCalculator {
   DiffCalculator diff_calculator_;
   SquaredNormCalculator squared_norm_calculator_;
   static const std::string name_;
-  FeatureVector ret_;
+  FeatureMatrix ret_matrix_;
+  FeatureVector ret_vector_;
 };
 
 ////

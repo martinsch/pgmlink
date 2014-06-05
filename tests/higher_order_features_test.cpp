@@ -675,6 +675,16 @@ BOOST_AUTO_TEST_CASE( SquaredDiffCalculator_calculate_vector ) {
   BOOST_CHECK_EQUAL(sq_diff(3), 1.);
   BOOST_CHECK_EQUAL(sq_diff(4), 1.);
   BOOST_CHECK_EQUAL(sq_diff(5),25.);
+
+  FeatureMatrix sq_diff_mat = squared_diff_calculator.calculate_matrix(x);
+  BOOST_CHECK_EQUAL(sq_diff_mat.shape(0), 6);
+  BOOST_CHECK_EQUAL(sq_diff_mat.shape(1), 1);
+  BOOST_CHECK_EQUAL(sq_diff(0, 0), 1.);
+  BOOST_CHECK_EQUAL(sq_diff(1, 0), 2.);
+  BOOST_CHECK_EQUAL(sq_diff(2, 0), 1.);
+  BOOST_CHECK_EQUAL(sq_diff(3, 0), 1.);
+  BOOST_CHECK_EQUAL(sq_diff(4, 0), 1.);
+  BOOST_CHECK_EQUAL(sq_diff(5, 0),25.);
 }
 
 BOOST_AUTO_TEST_CASE( DiffusionCalculator_calculate_scalar ) {
