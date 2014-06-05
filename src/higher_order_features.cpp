@@ -4,6 +4,7 @@
 #include <vigra/multi_math.hxx> /* for operator+ */
 #include <vigra/matrix.hxx> /* for covariance calculation */
 #include <vigra/linear_algebra.hxx> /* for matrix inverse calculation */
+#include <vigra/tinyvector.hxx> /* for max? */
 
 #include <sstream> /* for printing a matrix on the debug level */
 
@@ -788,6 +789,42 @@ const FeatureMatrix& CurveCalculator::calculate_matrix(
     }
   }
   return ret_;
+}
+
+////
+//// class MaxCalculator
+////
+const std::string MaxCalculator::name_ = "MaxCalculator";
+
+const std::string& MaxCalculator::name() const {
+  return name_;
+}
+
+const FeatureVector& MaxCalculator::calculate_vector(
+  const FeatureMatrix& feature_matrix
+) {
+  size_t col_count = feature_matrix.shape(0);
+  size_t row_count = feature_matrix.shape(1);
+  if ((col_count == 0) or (row_count == 0)) {
+    LOG(logDEBUG) << "In MaxCalculator: empty input matrix";
+    LOG(logDEBUG) << "Returning a 0-vector";
+    ret_.reshape(vigra::Shape1(1));
+    ret_.init(0);
+  } else {
+    ret_.reshape(vigra::Shape1(row_count));
+    ret_.init(0);
+    for (size_t i = 0; i < row_count; i++) {
+      const FeatureVectorView current_row = feature_matrix.bind<1>(i);
+      ret_(i) = *(std::max_element(current_row.begin(), current_row.end()));
+    }
+  }
+  return ret_;
+}
+
+FeatureScalar MaxCalculator::calculate_scalar(
+  const FeatureMatrix& feature_matrix
+) {
+  return *(std::max_element(feature_matrix.begin(), feature_matrix.end()));
 }
 
 ////

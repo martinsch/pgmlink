@@ -603,6 +603,25 @@ BOOST_AUTO_TEST_CASE( CurveCalculator_test ) {
   BOOST_CHECK_EQUAL(matrix.shape(1), 0);
 }
 
+BOOST_AUTO_TEST_CASE( MaxCalculator_test ) {
+  LOG(logINFO) << "test case: MaxCalculator_test";
+
+  // get the test data
+  FeatureMatrix x;
+  get_feature_matrix(x);
+
+  // set up the CurveCalculator and run the calculation
+  MaxCalculator max_calculator;
+  FeatureVector vector = max_calculator.calculate_vector(x);
+
+  BOOST_CHECK_EQUAL(vector.shape(0), 2);
+  BOOST_CHECK_EQUAL(vector(0), 9.);
+  BOOST_CHECK_EQUAL(vector(1), 8.);
+
+  FeatureScalar scalar = max_calculator.calculate_scalar(x);
+  BOOST_CHECK_EQUAL(scalar, 9.);
+}
+
 BOOST_AUTO_TEST_CASE( ChildParentDiffCalculator_test ) {
   LOG(logINFO) << "test case: ChildParentDiffCalculator_test";
   // get the test data

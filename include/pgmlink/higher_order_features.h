@@ -280,6 +280,25 @@ class CurveCalculator : public SubsetFeatureCalculator {
 };
 
 ////
+//// class MaxCalculator
+////
+class MaxCalculator : public SubsetFeatureCalculator {
+ public:
+  MaxCalculator() {};
+  virtual ~MaxCalculator() {};
+  virtual const std::string& name() const;
+  virtual const FeatureVector& calculate_vector(
+    const FeatureMatrix& feature_matrix
+  );
+  FeatureScalar calculate_scalar(
+    const FeatureMatrix& feature_matrix
+  );
+ protected:
+  static const std::string name_;
+  FeatureVector ret_;
+};
+
+////
 //// class SquaredNormCalculator
 ////
 class SquaredNormCalculator : public SubsetFeatureCalculator {
