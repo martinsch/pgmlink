@@ -280,12 +280,50 @@ class CurveCalculator : public SubsetFeatureCalculator {
 };
 
 ////
+//// class MinCalculator
+////
+class MinCalculator : public SubsetFeatureCalculator {
+ public:
+  MinCalculator() {};
+  virtual ~MinCalculator() {};
+  virtual const std::string& name() const;
+  virtual const FeatureVector& calculate_vector(
+    const FeatureMatrix& feature_matrix
+  );
+  FeatureScalar calculate_scalar(
+    const FeatureMatrix& feature_matrix
+  );
+ protected:
+  static const std::string name_;
+  FeatureVector ret_;
+};
+
+////
 //// class MaxCalculator
 ////
 class MaxCalculator : public SubsetFeatureCalculator {
  public:
   MaxCalculator() {};
   virtual ~MaxCalculator() {};
+  virtual const std::string& name() const;
+  virtual const FeatureVector& calculate_vector(
+    const FeatureMatrix& feature_matrix
+  );
+  FeatureScalar calculate_scalar(
+    const FeatureMatrix& feature_matrix
+  );
+ protected:
+  static const std::string name_;
+  FeatureVector ret_;
+};
+
+////
+//// class MeanCalculator
+////
+class MeanCalculator : public SubsetFeatureCalculator {
+ public:
+  MeanCalculator() {};
+  virtual ~MeanCalculator() {};
   virtual const std::string& name() const;
   virtual const FeatureVector& calculate_vector(
     const FeatureMatrix& feature_matrix

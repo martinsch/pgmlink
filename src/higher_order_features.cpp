@@ -792,6 +792,42 @@ const FeatureMatrix& CurveCalculator::calculate_matrix(
 }
 
 ////
+//// class MinCalculator
+////
+const std::string MinCalculator::name_ = "MinCalculator";
+
+const std::string& MinCalculator::name() const {
+  return name_;
+}
+
+const FeatureVector& MinCalculator::calculate_vector(
+  const FeatureMatrix& feature_matrix
+) {
+  size_t col_count = feature_matrix.shape(0);
+  size_t row_count = feature_matrix.shape(1);
+  if ((col_count == 0) or (row_count == 0)) {
+    LOG(logDEBUG) << "In MinCalculator: empty input matrix";
+    LOG(logDEBUG) << "Returning a 0-vector";
+    ret_.reshape(vigra::Shape1(1));
+    ret_.init(0);
+  } else {
+    ret_.reshape(vigra::Shape1(row_count));
+    ret_.init(0);
+    for (size_t i = 0; i < row_count; i++) {
+      const FeatureVectorView current_row = feature_matrix.bind<1>(i);
+      ret_(i) = *(std::min_element(current_row.begin(), current_row.end()));
+    }
+  }
+  return ret_;
+}
+
+FeatureScalar MinCalculator::calculate_scalar(
+  const FeatureMatrix& feature_matrix
+) {
+  return *(std::min_element(feature_matrix.begin(), feature_matrix.end()));
+}
+
+////
 //// class MaxCalculator
 ////
 const std::string MaxCalculator::name_ = "MaxCalculator";
@@ -825,6 +861,50 @@ FeatureScalar MaxCalculator::calculate_scalar(
   const FeatureMatrix& feature_matrix
 ) {
   return *(std::max_element(feature_matrix.begin(), feature_matrix.end()));
+}
+
+////
+//// class MeanCalculator
+////
+const std::string MeanCalculator::name_ = "MeanCalculator";
+
+const std::string& MeanCalculator::name() const {
+  return name_;
+}
+
+const FeatureVector& MeanCalculator::calculate_vector(
+  const FeatureMatrix& feature_matrix
+) {
+  size_t col_count = feature_matrix.shape(0);
+  size_t row_count = feature_matrix.shape(1);
+  if ((col_count == 0) or (row_count == 0)) {
+    LOG(logDEBUG) << "In MeanCalculator: empty input matrix";
+    LOG(logDEBUG) << "Returning a 0-vector";
+    ret_.reshape(vigra::Shape1(1));
+    ret_.init(0);
+  } else {
+    ret_.reshape(vigra::Shape1(row_count));
+    for (size_t i = 0; i < row_count; i++) {
+      ret_(i) = vigra::multi_math::sum<FeatureScalar>(
+        feature_matrix.bind<1>(i)
+      ) / static_cast<FeatureScalar>(col_count);
+    }
+  }
+  return ret_;
+}
+
+FeatureScalar MeanCalculator::calculate_scalar(
+  const FeatureMatrix& feature_matrix
+) {
+  if ( feature_matrix.size() == 0 ) {
+    LOG(logDEBUG) << "In MeanCalculator: empty input matrix";
+    LOG(logDEBUG) << "Reaturing a 0";
+    return 0.0;
+  } else {
+    return vigra::multi_math::sum<FeatureScalar>(
+      feature_matrix
+    ) / static_cast<FeatureScalar>(feature_matrix.size());
+  }
 }
 
 ////
