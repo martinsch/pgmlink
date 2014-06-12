@@ -68,15 +68,10 @@ class SubsetFeatureExtractor {
   SubsetFeatureExtractor() {};
   virtual ~SubsetFeatureExtractor() {};
   virtual const std::string& name() const = 0;
-  virtual const FeatureMatrix& extract_matrix(
-    const ConstTraxelRefVector& traxelrefs
-  );
-  virtual const FeatureVector& extract_vector(
-    const ConstTraxelRefVector& traxelrefs
-  );
-  virtual FeatureScalar extract_scalar(
-    const ConstTraxelRefVector& traxelrefs
-  );
+  virtual void extract(
+    const ConstTraxelRefVector& traxelrefs,
+    FeatureMatrix& feature_matrix
+  ) const = 0;
 };
 
 ////
@@ -87,15 +82,10 @@ class SubsetFeatureCalculator {
   SubsetFeatureCalculator() {};
   virtual ~ SubsetFeatureCalculator() {};
   virtual const std::string& name() const = 0;
-  virtual const FeatureMatrix& calculate_matrix(
-    const FeatureMatrix& feature_matrix
-  );
-  virtual const FeatureVector& calculate_vector(
-    const FeatureMatrix& feature_matrix
-  );
-  virtual FeatureScalar calculate_scalar(
-    const FeatureMatrix& feature_matrix
-  );
+  virtual void calculate(
+    const FeatureMatrix& feature_matrix,
+    FeatureMatrix& return_matrix
+  ) const = 0;
 };
 
 /*=============================================================================
@@ -104,26 +94,26 @@ class SubsetFeatureCalculator {
 ////
 //// class GraphFeatureCalculator
 ////
-class GraphFeatureCalculator {
- public:
-  GraphFeatureCalculator(
-    boost::shared_ptr<SubsetsOfInterest> subsets_extractor_ptr,
-    boost::shared_ptr<SubsetFeatureExtractor> feature_extractor_ptr,
-    boost::shared_ptr<SubsetFeatureCalculator> feature_calculator_ptr
-  ) : 
-    subsets_extractor_ptr_(subsets_extractor_ptr),
-    feature_extractor_ptr_(feature_extractor_ptr),
-    feature_calculator_ptr_(feature_calculator_ptr) {};
-  virtual ~GraphFeatureCalculator() {}
-  virtual const FeatureVector& calculate_vector(
-    const HypothesesGraph& graph
-  );
- protected:
-  boost::shared_ptr<SubsetsOfInterest> subsets_extractor_ptr_;
-  boost::shared_ptr<SubsetFeatureExtractor> feature_extractor_ptr_;
-  boost::shared_ptr<SubsetFeatureCalculator> feature_calculator_ptr_;
-  FeatureVector ret_vector_;
-};
+// class GraphFeatureCalculator {
+//  public:
+//   GraphFeatureCalculator(
+//     boost::shared_ptr<SubsetsOfInterest> subsets_extractor_ptr,
+//     boost::shared_ptr<SubsetFeatureExtractor> feature_extractor_ptr,
+//     boost::shared_ptr<SubsetFeatureCalculator> feature_calculator_ptr
+//   ) : 
+//     subsets_extractor_ptr_(subsets_extractor_ptr),
+//     feature_extractor_ptr_(feature_extractor_ptr),
+//     feature_calculator_ptr_(feature_calculator_ptr) {};
+//   virtual ~GraphFeatureCalculator() {}
+//   virtual const FeatureVector& calculate_vector(
+//     const HypothesesGraph& graph
+//   );
+//  protected:
+//   boost::shared_ptr<SubsetsOfInterest> subsets_extractor_ptr_;
+//   boost::shared_ptr<SubsetFeatureExtractor> feature_extractor_ptr_;
+//   boost::shared_ptr<SubsetFeatureCalculator> feature_calculator_ptr_;
+//   FeatureVector ret_vector_;
+// };
 
 ////
 //// class SubsetFeaturesIdentity
@@ -134,13 +124,13 @@ class SubsetFeaturesIdentity : public SubsetFeatureExtractor {
   SubsetFeaturesIdentity(const std::string& feature_name);
   virtual ~SubsetFeaturesIdentity() {};
   virtual const std::string& name() const;
-  virtual const FeatureMatrix& extract_matrix(
-    const ConstTraxelRefVector& traxelrefs
-  );
+  virtual void extract(
+    const ConstTraxelRefVector& traxelrefs,
+    FeatureMatrix& feature_matrix
+  ) const;
  protected:
   static const std::string name_;
   std::vector<std::string> feature_names_;
-  FeatureMatrix ret_matrix_;
 }; // class SubsetFeaturesIdentity
 
 ////
@@ -213,15 +203,10 @@ class CompositionCalculator : public SubsetFeatureCalculator {
     second_calculator_ptr_(second_calculator_ptr) {};
   virtual ~CompositionCalculator() {};
   virtual const std::string& name() const;
-  virtual const FeatureMatrix& calculate_matrix(
-    const FeatureMatrix& feature_matrix
-  );
-  virtual const FeatureVector& calculate_vector(
-    const FeatureMatrix& feature_matrix
-  );
-  FeatureScalar calculate_scalar(
-    const FeatureMatrix& feature_matrix
-  );
+  virtual void calculate(
+    const FeatureMatrix& feature_matrix,
+    FeatureMatrix& return_matrix
+  ) const;
  protected:
   static const std::string name_;
   boost::shared_ptr<SubsetFeatureCalculator> first_calculator_ptr_;
@@ -236,15 +221,12 @@ class SumCalculator : public SubsetFeatureCalculator {
   SumCalculator() {};
   virtual ~SumCalculator() {};
   virtual const std::string& name() const;
-  virtual const FeatureVector& calculate_vector(
-    const FeatureMatrix& feature_matrix
-  );
-  virtual FeatureScalar calculate_scalar(
-    const FeatureMatrix& feature_matrix
-  );
+  virtual void calculate(
+    const FeatureMatrix& feature_matrix,
+    FeatureMatrix& return_vector
+  ) const;
  protected:
   static const std::string name_;
-  FeatureVector ret_;
 };
 
 ////
@@ -255,12 +237,12 @@ class DiffCalculator : public SubsetFeatureCalculator {
   DiffCalculator() {};
   virtual ~DiffCalculator() {};
   virtual const std::string& name() const;
-  virtual const FeatureMatrix& calculate_matrix(
-    const FeatureMatrix& feature_matrix
-  );
+  virtual void calculate(
+    const FeatureMatrix& feature_matrix,
+    FeatureMatrix& return_matrix
+  ) const;
  protected:
   static const std::string name_;
-  FeatureMatrix ret_;
 };
 
 ////
@@ -271,12 +253,12 @@ class CurveCalculator : public SubsetFeatureCalculator {
   CurveCalculator() {};
   virtual ~CurveCalculator() {};
   virtual const std::string& name() const;
-  virtual const FeatureMatrix& calculate_matrix(
-    const FeatureMatrix& feature_matrix
-  );
+  virtual void calculate(
+    const FeatureMatrix& feature_matrix,
+    FeatureMatrix& return_matrix
+  ) const;
  protected:
   static const std::string name_;
-  FeatureMatrix ret_;
 };
 
 ////
@@ -287,15 +269,12 @@ class MinCalculator : public SubsetFeatureCalculator {
   MinCalculator() {};
   virtual ~MinCalculator() {};
   virtual const std::string& name() const;
-  virtual const FeatureVector& calculate_vector(
-    const FeatureMatrix& feature_matrix
-  );
-  FeatureScalar calculate_scalar(
-    const FeatureMatrix& feature_matrix
-  );
+  virtual void calculate(
+    const FeatureMatrix& feature_matrix,
+    FeatureMatrix& return_matrix
+  ) const;
  protected:
   static const std::string name_;
-  FeatureVector ret_;
 };
 
 ////
@@ -306,15 +285,12 @@ class MaxCalculator : public SubsetFeatureCalculator {
   MaxCalculator() {};
   virtual ~MaxCalculator() {};
   virtual const std::string& name() const;
-  virtual const FeatureVector& calculate_vector(
-    const FeatureMatrix& feature_matrix
-  );
-  FeatureScalar calculate_scalar(
-    const FeatureMatrix& feature_matrix
-  );
+  virtual void calculate(
+    const FeatureMatrix& feature_matrix,
+    FeatureMatrix& return_matrix
+  ) const;
  protected:
   static const std::string name_;
-  FeatureVector ret_;
 };
 
 ////
@@ -325,15 +301,12 @@ class MeanCalculator : public SubsetFeatureCalculator {
   MeanCalculator() {};
   virtual ~MeanCalculator() {};
   virtual const std::string& name() const;
-  virtual const FeatureVector& calculate_vector(
-    const FeatureMatrix& feature_matrix
-  );
-  FeatureScalar calculate_scalar(
-    const FeatureMatrix& feature_matrix
-  );
+  virtual void calculate(
+    const FeatureMatrix& feature_matrix,
+    FeatureMatrix& return_matrix
+  ) const;
  protected:
   static const std::string name_;
-  FeatureVector ret_;
 };
 
 ////
@@ -344,12 +317,12 @@ class SquaredNormCalculator : public SubsetFeatureCalculator {
   SquaredNormCalculator() {};
   virtual ~SquaredNormCalculator() {};
   virtual const std::string& name() const;
-  virtual const FeatureVector& calculate_vector(
-    const FeatureMatrix& feature_matrix
-  );
+  virtual void calculate(
+    const FeatureMatrix& feature_matrix,
+    FeatureMatrix& return_matrix
+  ) const;
  protected:
   static const std::string name_;
-  FeatureVector ret_;
 };
 
 ////
@@ -360,18 +333,14 @@ class SquaredDiffCalculator : public SubsetFeatureCalculator {
   SquaredDiffCalculator() {};
   virtual ~SquaredDiffCalculator() {};
   virtual const std::string& name() const;
-  virtual const FeatureMatrix& calculate_matrix(
-    const FeatureMatrix& feature_matrix
-  );
-  virtual const FeatureVector& calculate_vector(
-    const FeatureMatrix& feature_matrix
-  );
+  virtual void calculate(
+    const FeatureMatrix& feature_matrix,
+    FeatureMatrix& return_matrix
+  ) const;
  protected:
   DiffCalculator diff_calculator_;
   SquaredNormCalculator squared_norm_calculator_;
   static const std::string name_;
-  FeatureMatrix ret_matrix_;
-  FeatureVector ret_vector_;
 };
 
 ////
@@ -382,11 +351,13 @@ class DiffusionCalculator : public SubsetFeatureCalculator {
   DiffusionCalculator() {};
   virtual ~DiffusionCalculator() {};
   virtual const std::string& name() const;
-  virtual FeatureScalar calculate_scalar(
-    const FeatureMatrix& feature_matrix
-  );
+  virtual void calculate(
+    const FeatureMatrix& feature_matrix,
+    FeatureMatrix& return_matrix
+  ) const;
  protected:
   SquaredDiffCalculator squared_diff_calculator_;
+  MeanCalculator mean_calculator_;
   static const std::string name_;
 };
 
@@ -398,16 +369,17 @@ class ChildParentDiffCalculator : public SubsetFeatureCalculator {
   ChildParentDiffCalculator() {};
   virtual ~ChildParentDiffCalculator() {};
   virtual const std::string& name() const;
-  virtual const FeatureMatrix& calculate_matrix(
-    const FeatureMatrix& feature_matrix
-  );
-  virtual const FeatureMatrix& calculate_matrix(
+  virtual void calculate(
     const FeatureMatrix& feature_matrix,
-    size_t division_depth
-  );
+    FeatureMatrix& return_matrix
+  ) const;
+  virtual void calculate(
+    const FeatureMatrix& feature_matrix,
+    FeatureMatrix& return_matrix,
+    size_t depth
+  ) const;
  protected:
   static const std::string name_;
-  FeatureMatrix ret_;
 };
 
 ////
@@ -418,9 +390,10 @@ class DotProductCalculator : public SubsetFeatureCalculator {
   DotProductCalculator() {};
   virtual ~DotProductCalculator() {};
   virtual const std::string& name() const;
-  virtual FeatureScalar calculate_scalar(
-    const FeatureMatrix& feature_matrix
-  );
+  virtual void calculate(
+    const FeatureMatrix& feature_matrix,
+    FeatureMatrix& return_matrix
+  ) const;
  protected:
   static const std::string name_;
 };
@@ -433,23 +406,17 @@ class ChildDeceleration : public SubsetFeatureCalculator {
   ChildDeceleration() {};
   virtual ~ChildDeceleration() {};
   virtual const std::string& name() const;
-  virtual const FeatureVector& calculate_vector(
-    const FeatureMatrix& feature_matrix
-  );
-  virtual const FeatureVector& calculate_vector(
+  virtual void calculate(
     const FeatureMatrix& feature_matrix,
-    size_t depth
-  );
-  virtual FeatureScalar calculate_scalar(
-    const FeatureMatrix& feature_matrix
-  );
-  virtual FeatureScalar calculate_scalar(
+    FeatureMatrix& return_matrix
+  ) const;
+  virtual void calculate(
     const FeatureMatrix& feature_matrix,
+    FeatureMatrix& return_matrix,
     size_t depth
-  );
+  ) const;
  protected:
   static const std::string name_;
-  FeatureVector ret_vector_;
 };
 
 ////
@@ -460,23 +427,26 @@ class MVNOutlierCalculator : public SubsetFeatureCalculator {
   MVNOutlierCalculator() {};
   virtual ~MVNOutlierCalculator() {};
   virtual const std::string& name() const;
-  virtual const FeatureMatrix& calculate_matrix(
-    const FeatureMatrix& feature_matrix
-  );
-  virtual const FeatureVector& calculate_vector(
-    const FeatureMatrix& feature_matrix
-  );
-  virtual FeatureScalar calculate_scalar(
-    const FeatureMatrix& feature_matrix
-  );
-  virtual FeatureScalar calculate_scalar(
+  virtual void calculate(
     const FeatureMatrix& feature_matrix,
-    FeatureScalar sigma_threshold
-  );
+    FeatureMatrix& return_matrix
+  ) const;
+  virtual void calculate(
+    const FeatureMatrix& feature_matrix,
+    FeatureMatrix& return_matrix,
+    const FeatureScalar& sigma_threshold
+  ) const;
+  virtual void calculate_inverse_covariance_matrix(
+    const FeatureMatrix& feature_matrix,
+    FeatureMatrix& return_matrix
+  ) const;
+  virtual void calculate_outlier_badness(
+    const FeatureMatrix& feature_matrix,
+    FeatureMatrix& return_matrix
+  ) const;
  protected:
+  MeanCalculator mean_calculator_;
   static const std::string name_;
-  FeatureMatrix ret_matrix_;
-  FeatureVector ret_vector_;
 };
 
 } // namespace pgmlink

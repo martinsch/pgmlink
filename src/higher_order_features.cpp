@@ -129,91 +129,30 @@ void get_in_nodes(
 }
 
 /*=============================================================================
-  pure virtual classes
-=============================================================================*/
-////
-//// class SubsetFeatureExtractor
-////
-const FeatureMatrix& SubsetFeatureExtractor::extract_matrix(
-  const ConstTraxelRefVector& /*traxelrefs*/
-) {
-  throw std::runtime_error(
-    "Feature extractor " + name() + " doesn't provide a matrix valued result"
-  );
-  return *(new FeatureMatrix);
-}
-const FeatureVector& SubsetFeatureExtractor::extract_vector(
-  const ConstTraxelRefVector& /*traxelrefs*/
-) {
-  throw std::runtime_error(
-    "Feature extractor " + name() + " doesn't provide a vector valued result"
-  );
-  return *(new FeatureVector);
-}
-FeatureScalar SubsetFeatureExtractor::extract_scalar(
-  const ConstTraxelRefVector& /*traxelrefs*/
-) {
-  throw std::runtime_error(
-    "Feature extractor " + name() + " doesn't provide a scalar valued result"
-  );
-  FeatureScalar ret_ = 0.;
-  return ret_;
-}
-
-////
-//// class SubsetFeatureCalculator
-////
-const FeatureMatrix& SubsetFeatureCalculator::calculate_matrix(
-  const FeatureMatrix& /*feature_matrix*/
-) {
-  throw std::runtime_error(
-    "Feature calculator " + name() + " doesn't provide a matrix valued result"
-  );
-  return *(new FeatureMatrix);
-}
-const FeatureVector& SubsetFeatureCalculator::calculate_vector(
-  const FeatureMatrix& /*feature_matrix*/
-) {
-  throw std::runtime_error(
-    "Feature calculator " + name() + " doesn't provide a vector valued result"
-  );
-  return *(new FeatureVector);
-}
-FeatureScalar SubsetFeatureCalculator::calculate_scalar(
-  const FeatureMatrix& /*feature_matrix*/
-) {
-  throw std::runtime_error(
-    "Feature calculator " + name() + " doesn't provide a scalar valued result"
-  );
-  FeatureScalar ret_ = 0.;
-  return ret_;
-}
-
-/*=============================================================================
   specific classes
 =============================================================================*/
 ////
 //// class GraphFeatureCalculator
 ////
-const FeatureVector& GraphFeatureCalculator::calculate_vector(
-  const HypothesesGraph& graph
-) {
-  const std::vector<ConstTraxelRefVector> trx_vecs = 
-    subsets_extractor_ptr_->operator()(graph);
-
-  size_t subset_count = trx_vecs.size();
-  ret_vector_.reshape(vigra::Shape1(subset_count));
-  ret_vector_.init(0.0);
-  
-  std::vector<ConstTraxelRefVector>::const_iterator trx_it = trx_vecs.begin();
-  size_t current_column = 0;
-  for (; trx_it != trx_vecs.end(); trx_it++, current_column++) {
-    ret_vector_(current_column) = feature_calculator_ptr_->calculate_scalar(
-      feature_extractor_ptr_->extract_matrix(*trx_it)
-    );
-  }
-  return ret_vector_;
-}
+// const FeatureVector& GraphFeatureCalculator::calculate_vector(
+//   const HypothesesGraph& graph
+// ) {
+//   const std::vector<ConstTraxelRefVector> trx_vecs = 
+//     subsets_extractor_ptr_->operator()(graph);
+// 
+//   size_t subset_count = trx_vecs.size();
+//   ret_vector_.reshape(vigra::Shape1(subset_count));
+//   ret_vector_.init(0.0);
+//   
+//   std::vector<ConstTraxelRefVector>::const_iterator trx_it = trx_vecs.begin();
+//   size_t current_column = 0;
+//   for (; trx_it != trx_vecs.end(); trx_it++, current_column++) {
+//     ret_vector_(current_column) = feature_calculator_ptr_->calculate_scalar(
+//       feature_extractor_ptr_->extract_matrix(*trx_it)
+//     );
+//   }
+//   return ret_vector_;
+// }
 
 ////
 //// class SubsetFeaturesIdentity
@@ -236,9 +175,10 @@ const std::string& SubsetFeaturesIdentity::name() const {
   return name_;
 }
 
-const FeatureMatrix& SubsetFeaturesIdentity::extract_matrix(
-  const ConstTraxelRefVector& traxelrefs
-) {
+void SubsetFeaturesIdentity::extract(
+  const ConstTraxelRefVector& traxelrefs,
+  FeatureMatrix& feature_matrix
+) const {
   // get the size of the return matrix
   size_t x_size = traxelrefs.size();
 
@@ -261,7 +201,7 @@ const FeatureMatrix& SubsetFeaturesIdentity::extract_matrix(
   }
   
   // initialize the return matrix
-  ret_matrix_.reshape(vigra::Shape2(x_size, y_size));
+  feature_matrix.reshape(vigra::Shape2(x_size, y_size));
 
   // iterate over all traxel
   size_t column_index = 0;
@@ -274,7 +214,7 @@ const FeatureMatrix& SubsetFeaturesIdentity::extract_matrix(
     const FeatureMap feature_map = (*tref_it)->features;
 
     // get the current column as a view
-    FeatureVectorView column = ret_matrix_.bind<0>(column_index);
+    FeatureVectorView column = feature_matrix.bind<0>(column_index);
 
     // reset the row_index
     size_t row_index = 0;
@@ -304,7 +244,6 @@ const FeatureMatrix& SubsetFeaturesIdentity::extract_matrix(
       } // if (fmap_it != feature_map.end())"
     } // for (fname_it = ... )
   } // for(traxels_it = .. )
-  return ret_matrix_;
 }
 
 ////
@@ -672,28 +611,13 @@ const std::string& CompositionCalculator::name() const {
   return name_;
 }
 
-const FeatureMatrix& CompositionCalculator::calculate_matrix(
-  const FeatureMatrix& feature_matrix
-) {
-  return second_calculator_ptr_->calculate_matrix(
-    first_calculator_ptr_->calculate_matrix(feature_matrix)
-  );
-}
-
-const FeatureVector& CompositionCalculator::calculate_vector(
-  const FeatureMatrix& feature_matrix
-) {
-  return second_calculator_ptr_->calculate_vector(
-    first_calculator_ptr_->calculate_matrix(feature_matrix)
-  );
-}
-
-FeatureScalar CompositionCalculator::calculate_scalar(
-  const FeatureMatrix& feature_matrix
-) {
-  return second_calculator_ptr_->calculate_scalar(
-    first_calculator_ptr_->calculate_matrix(feature_matrix)
-  );
+void CompositionCalculator::calculate(
+  const FeatureMatrix& feature_matrix,
+  FeatureMatrix& return_matrix
+) const {
+  FeatureMatrix temp;
+  first_calculator_ptr_->calculate(feature_matrix, temp);
+  second_calculator_ptr_->calculate(temp, return_matrix);
 }
 
 ////
@@ -705,27 +629,17 @@ const std::string& SumCalculator::name() const {
   return name_;
 }
 
-const FeatureVector& SumCalculator::calculate_vector(
-  const FeatureMatrix& feature_matrix
-) {
+void SumCalculator::calculate(
+  const FeatureMatrix& feature_matrix,
+  FeatureMatrix& return_matrix
+) const {
   size_t col_count = feature_matrix.shape(0);
   size_t row_count = feature_matrix.shape(1);
-  ret_.reshape(vigra::Shape1(row_count));
-  ret_.init(0);
+  return_matrix.reshape(vigra::Shape2(1, row_count));
+  return_matrix.init(0);
   for (size_t col = 0; col < col_count; col++) {
-    ret_ += feature_matrix.bind<0>(col);
+    return_matrix.bind<0>(0) += feature_matrix.bind<0>(col);
   }
-  return ret_;
-}
-
-FeatureScalar SumCalculator::calculate_scalar(
-  const FeatureMatrix& feature_matrix
-) {
-  FeatureScalar ret_ = 0;
-  for (int i = 0; i < feature_matrix.size(); i++) {
-    ret_ += feature_matrix[i];
-  }
-  return ret_;
 }
 
 ////
@@ -737,26 +651,26 @@ const std::string& DiffCalculator::name() const {
   return name_;
 }
 
-const FeatureMatrix& DiffCalculator::calculate_matrix(
-  const FeatureMatrix& feature_matrix
-) {
+void DiffCalculator::calculate(
+  const FeatureMatrix& feature_matrix,
+  FeatureMatrix& return_matrix
+) const {
   size_t col_count = feature_matrix.shape(0);
   size_t row_count = feature_matrix.shape(1);
   if (col_count <= 1) {
     LOG(logDEBUG) << "In DiffCalculator: matrix in argument has less than one column";
     LOG(logDEBUG) << "Returning a 0-vector";
-    ret_.reshape(vigra::Shape2(1, row_count));
-    ret_.init(0);
+    return_matrix.reshape(vigra::Shape2(1, row_count));
+    return_matrix.init(0);
   } else {
-    ret_.reshape(vigra::Shape2(col_count-1, row_count));
+    return_matrix.reshape(vigra::Shape2(col_count-1, row_count));
     for (size_t col = 0; col < col_count-1; col++) {
       FeatureVectorView a = feature_matrix.bind<0>(col);
       FeatureVectorView b = feature_matrix.bind<0>(col+1);
       using namespace vigra::multi_math;
-      ret_.bind<0>(col) = b - a;
+      return_matrix.bind<0>(col) = b - a;
     }
   }
-  return ret_;
 }
 
 ////
@@ -768,27 +682,27 @@ const std::string& CurveCalculator::name() const {
   return name_;
 }
 
-const FeatureMatrix& CurveCalculator::calculate_matrix(
-  const FeatureMatrix& feature_matrix
-) {
+void CurveCalculator::calculate(
+  const FeatureMatrix& feature_matrix,
+  FeatureMatrix& return_matrix
+) const {
   size_t col_count = feature_matrix.shape(0);
   size_t row_count = feature_matrix.shape(1);
   if (col_count <= 2) {
     LOG(logDEBUG) << "In CurveCalculator: matrix in argument has less than three columns";
     LOG(logDEBUG) << "Returning a 0-vector";
-    ret_.reshape(vigra::Shape2(1, row_count));
-    ret_.init(0);
+    return_matrix.reshape(vigra::Shape2(1, row_count));
+    return_matrix.init(0);
   } else {
-    ret_.reshape(vigra::Shape2(col_count-2, row_count));
+    return_matrix.reshape(vigra::Shape2(col_count-2, row_count));
     for (size_t col = 0; col < col_count-2; col++) {
       using namespace vigra::multi_math;
       FeatureVectorView a = feature_matrix.bind<0>(col);
       FeatureVectorView b = feature_matrix.bind<0>(col+1);
       FeatureVectorView c = feature_matrix.bind<0>(col+2);
-      ret_.bind<0>(col) = a - 2*b + c;
+      return_matrix.bind<0>(col) = a - 2*b + c;
     }
   }
-  return ret_;
 }
 
 ////
@@ -800,31 +714,25 @@ const std::string& MinCalculator::name() const {
   return name_;
 }
 
-const FeatureVector& MinCalculator::calculate_vector(
-  const FeatureMatrix& feature_matrix
-) {
+void MinCalculator::calculate(
+  const FeatureMatrix& feature_matrix,
+  FeatureMatrix& return_matrix
+) const {
   size_t col_count = feature_matrix.shape(0);
   size_t row_count = feature_matrix.shape(1);
   if ((col_count == 0) or (row_count == 0)) {
     LOG(logDEBUG) << "In MinCalculator: empty input matrix";
     LOG(logDEBUG) << "Returning a 0-vector";
-    ret_.reshape(vigra::Shape1(1));
-    ret_.init(0);
+    return_matrix.reshape(vigra::Shape2(1, 1));
+    return_matrix.init(0);
   } else {
-    ret_.reshape(vigra::Shape1(row_count));
-    ret_.init(0);
+    return_matrix.reshape(vigra::Shape2(1, row_count));
+    return_matrix.init(0);
     for (size_t i = 0; i < row_count; i++) {
       const FeatureVectorView current_row = feature_matrix.bind<1>(i);
-      ret_(i) = *(std::min_element(current_row.begin(), current_row.end()));
+      return_matrix(0, i) = *(std::min_element(current_row.begin(), current_row.end()));
     }
   }
-  return ret_;
-}
-
-FeatureScalar MinCalculator::calculate_scalar(
-  const FeatureMatrix& feature_matrix
-) {
-  return *(std::min_element(feature_matrix.begin(), feature_matrix.end()));
 }
 
 ////
@@ -836,31 +744,25 @@ const std::string& MaxCalculator::name() const {
   return name_;
 }
 
-const FeatureVector& MaxCalculator::calculate_vector(
-  const FeatureMatrix& feature_matrix
-) {
+void MaxCalculator::calculate(
+  const FeatureMatrix& feature_matrix,
+  FeatureMatrix& return_matrix
+) const {
   size_t col_count = feature_matrix.shape(0);
   size_t row_count = feature_matrix.shape(1);
   if ((col_count == 0) or (row_count == 0)) {
     LOG(logDEBUG) << "In MaxCalculator: empty input matrix";
     LOG(logDEBUG) << "Returning a 0-vector";
-    ret_.reshape(vigra::Shape1(1));
-    ret_.init(0);
+    return_matrix.reshape(vigra::Shape2(1, 1));
+    return_matrix.init(0);
   } else {
-    ret_.reshape(vigra::Shape1(row_count));
-    ret_.init(0);
+    return_matrix.reshape(vigra::Shape2(1, row_count));
+    return_matrix.init(0);
     for (size_t i = 0; i < row_count; i++) {
       const FeatureVectorView current_row = feature_matrix.bind<1>(i);
-      ret_(i) = *(std::max_element(current_row.begin(), current_row.end()));
+      return_matrix(0, i) = *(std::max_element(current_row.begin(), current_row.end()));
     }
   }
-  return ret_;
-}
-
-FeatureScalar MaxCalculator::calculate_scalar(
-  const FeatureMatrix& feature_matrix
-) {
-  return *(std::max_element(feature_matrix.begin(), feature_matrix.end()));
 }
 
 ////
@@ -872,38 +774,24 @@ const std::string& MeanCalculator::name() const {
   return name_;
 }
 
-const FeatureVector& MeanCalculator::calculate_vector(
-  const FeatureMatrix& feature_matrix
-) {
+void MeanCalculator::calculate(
+  const FeatureMatrix& feature_matrix,
+  FeatureMatrix& return_matrix
+) const {
   size_t col_count = feature_matrix.shape(0);
   size_t row_count = feature_matrix.shape(1);
   if ((col_count == 0) or (row_count == 0)) {
     LOG(logDEBUG) << "In MeanCalculator: empty input matrix";
     LOG(logDEBUG) << "Returning a 0-vector";
-    ret_.reshape(vigra::Shape1(1));
-    ret_.init(0);
+    return_matrix.reshape(vigra::Shape2(1, 1));
+    return_matrix.init(0);
   } else {
-    ret_.reshape(vigra::Shape1(row_count));
+    return_matrix.reshape(vigra::Shape2(1, row_count));
     for (size_t i = 0; i < row_count; i++) {
-      ret_(i) = vigra::multi_math::sum<FeatureScalar>(
+      return_matrix(0, i) = vigra::multi_math::sum<FeatureScalar>(
         feature_matrix.bind<1>(i)
       ) / static_cast<FeatureScalar>(col_count);
     }
-  }
-  return ret_;
-}
-
-FeatureScalar MeanCalculator::calculate_scalar(
-  const FeatureMatrix& feature_matrix
-) {
-  if ( feature_matrix.size() == 0 ) {
-    LOG(logDEBUG) << "In MeanCalculator: empty input matrix";
-    LOG(logDEBUG) << "Reaturing a 0";
-    return 0.0;
-  } else {
-    return vigra::multi_math::sum<FeatureScalar>(
-      feature_matrix
-    ) / static_cast<FeatureScalar>(feature_matrix.size());
   }
 }
 
@@ -916,15 +804,15 @@ const std::string& SquaredNormCalculator::name() const {
   return name_;
 }
 
-const FeatureVector& SquaredNormCalculator::calculate_vector(
-  const FeatureMatrix& feature_matrix
-) {
+void SquaredNormCalculator::calculate(
+  const FeatureMatrix& feature_matrix,
+  FeatureMatrix& return_matrix
+) const {
   size_t col_count = feature_matrix.shape(0);
-  ret_.reshape(vigra::Shape1(col_count));
+  return_matrix.reshape(vigra::Shape2(col_count, 1));
   for (size_t i = 0; i < col_count; i++) {
-    ret_(i) = vigra::squaredNorm(feature_matrix.bind<0>(i));
+    return_matrix(i, 0) = vigra::squaredNorm(feature_matrix.bind<0>(i));
   }
-  return ret_;
 }
 
 ////
@@ -936,29 +824,21 @@ const std::string& SquaredDiffCalculator::name() const {
   return name_;
 }
 
-const FeatureMatrix& SquaredDiffCalculator::calculate_matrix(
-  const FeatureMatrix& feature_matrix
-) {
-  calculate_vector(feature_matrix);
-  return ret_matrix_;
-}
-
-const FeatureVector& SquaredDiffCalculator::calculate_vector(
-  const FeatureMatrix& feature_matrix
-) {
+void SquaredDiffCalculator::calculate(
+  const FeatureMatrix& feature_matrix,
+  FeatureMatrix& return_matrix
+) const {
   size_t col_count = feature_matrix.shape(0);
   if (col_count <= 1) {
     LOG(logDEBUG) << "In SquaredDiffCalculator: matrix in argument has less than two columns";
     LOG(logDEBUG) << "Returning a 0-vector";
-    ret_matrix_.reshape(vigra::Shape2(1, 1));
-    ret_matrix_.init(0);
+    return_matrix.reshape(vigra::Shape2(1, 1));
+    return_matrix.init(0);
   } else {
-    ret_matrix_.reshape(vigra::Shape2(col_count-1, 1));
-    FeatureMatrixView temp = diff_calculator_.calculate_matrix(feature_matrix);
-    ret_matrix_.bind<1>(0) = squared_norm_calculator_.calculate_vector(temp);
+    FeatureMatrix temp;
+    diff_calculator_.calculate(feature_matrix, temp);
+    squared_norm_calculator_.calculate(temp, return_matrix);
   }
-  ret_vector_ = ret_matrix_.bind<1>(0);
-  return ret_vector_;
 }
 
 ////
@@ -970,14 +850,19 @@ const std::string& DiffusionCalculator::name() const {
   return name_;
 }
 
-FeatureScalar DiffusionCalculator::calculate_scalar(
-  const FeatureMatrix& feature_matrix
-) {
-  FeatureVectorView sq_diff = squared_diff_calculator_.calculate_vector(
-    feature_matrix
+void DiffusionCalculator::calculate(
+  const FeatureMatrix& feature_matrix,
+  FeatureMatrix& return_matrix
+) const {
+  FeatureMatrix sq_diff;
+  squared_diff_calculator_.calculate(
+    feature_matrix,
+    sq_diff
   );
-  FeatureScalar sq_diff_sum = vigra::multi_math::sum<FeatureScalar>(sq_diff);
-  return sq_diff_sum / static_cast<FeatureScalar>(sq_diff.shape(0));
+  mean_calculator_.calculate(
+    sq_diff,
+    return_matrix
+  );
 }
 
 ////
@@ -989,41 +874,40 @@ const std::string& ChildParentDiffCalculator::name() const {
   return name_;
 }
 
-const FeatureMatrix& ChildParentDiffCalculator::calculate_matrix(
-  const FeatureMatrix& feature_matrix
-) {
+void ChildParentDiffCalculator::calculate(
+  const FeatureMatrix& feature_matrix,
+  FeatureMatrix& return_matrix
+) const {
   size_t col_count = feature_matrix.shape(0);
   if(col_count % 3 != 0) {
-    calculate_matrix(feature_matrix, 0);
-    return ret_;
+    calculate(feature_matrix, return_matrix, 0);
   } else {
-    calculate_matrix(feature_matrix, col_count / 3);
-    return ret_;
+    calculate(feature_matrix, return_matrix, col_count / 3);
   }
 }
 
-const FeatureMatrix& ChildParentDiffCalculator::calculate_matrix(
+void ChildParentDiffCalculator::calculate(
   const FeatureMatrix& feature_matrix,
-  size_t division_depth
-) {
+  FeatureMatrix& return_matrix,
+  size_t depth
+) const {
   size_t col_count = feature_matrix.shape(0);
   size_t row_count = feature_matrix.shape(1);
-  ret_.reshape(vigra::Shape2(2, row_count));
-  if ((col_count < division_depth * 3) or (division_depth == 0)) {
+  return_matrix.reshape(vigra::Shape2(2, row_count));
+  if ((col_count < depth * 3) or (depth == 0)) {
     LOG(logDEBUG) << "In ChildParentDiffCalculator: Invalid division depth";
     LOG(logDEBUG) << "Return two 0-vectors";
-    ret_.init(0);
+    return_matrix.init(0);
   } else {
-    ret_.bind<0>(0) = vigra::multi_math::operator-(
-      feature_matrix.bind<0>(division_depth),
+    return_matrix.bind<0>(0) = vigra::multi_math::operator-(
+      feature_matrix.bind<0>(depth),
       feature_matrix.bind<0>(0)
     );
-    ret_.bind<0>(1) = vigra::multi_math::operator-(
-      feature_matrix.bind<0>(2*division_depth),
+    return_matrix.bind<0>(1) = vigra::multi_math::operator-(
+      feature_matrix.bind<0>(2*depth),
       feature_matrix.bind<0>(0)
     );
   }
-  return ret_;
 }
 
 ////
@@ -1035,35 +919,33 @@ const std::string& DotProductCalculator::name() const {
   return name_;
 }
 
-FeatureScalar DotProductCalculator::calculate_scalar(
-  const FeatureMatrix& feature_matrix
-) {
+void DotProductCalculator::calculate(
+  const FeatureMatrix& feature_matrix,
+  FeatureMatrix& return_matrix
+) const {
   size_t col_count = feature_matrix.shape(0);
   // Calculate the dot product depending on the size of the input matrix
   if (col_count == 0) {
     // empty matrix
     LOG(logDEBUG) << "In DotProductCalculator: matrix is empty";
     LOG(logDEBUG) << "Return zero";
-    return 0.0;
+    return_matrix.reshape(vigra::Shape2(1,1));
+    return_matrix(0, 0) = 0.0;
   } else if (col_count == 1) {
     // matrix with one column
     LOG(logDEBUG) << "In DotProductCalculator: matrix has only one column";
     LOG(logDEBUG) << "Calculate the norm of this vector";
-    return vigra::linalg::dot(feature_matrix, feature_matrix);
-  } else if (col_count == 2) {
-    // matrix with two columns
-    return vigra::linalg::dot(
-      feature_matrix.bind<0>(0),
-      feature_matrix.bind<0>(1)
-    );
-  } else {
-    // matrix with more than two columns
-    LOG(logDEBUG) << "In DotProductCalculator: matrix has more than two columns";
-    LOG(logDEBUG) << "Calculate the dot product of the first and second column";
-    return vigra::linalg::dot(
-      feature_matrix.bind<0>(0),
-      feature_matrix.bind<0>(1)
-    );
+    return_matrix.reshape(vigra::Shape2(1,1));
+    return_matrix(0, 0) =  vigra::linalg::dot(feature_matrix, feature_matrix);
+  } else if (col_count >= 2) {
+    // matrix with two or more columns
+    return_matrix.reshape(vigra::Shape2(col_count-1, 1));
+    for (size_t i = 0; i < (col_count-1); i++) {
+      return_matrix(i, 0) = vigra::linalg::dot(
+        feature_matrix.bind<0>(i),
+        feature_matrix.bind<0>(i+1)
+      );
+    }
   }
 }
 
@@ -1076,25 +958,25 @@ const std::string& ChildDeceleration::name() const {
   return name_;
 }
 
-const FeatureVector& ChildDeceleration::calculate_vector(
-  const FeatureMatrix& feature_matrix
-) {
+void ChildDeceleration::calculate(
+  const FeatureMatrix& feature_matrix,
+  FeatureMatrix& return_matrix
+) const {
   size_t col_count = feature_matrix.shape(0);
   if(col_count % 3 != 0) {
-    calculate_vector(feature_matrix, 0);
-    return ret_vector_;
+    calculate(feature_matrix, return_matrix, 0);
   } else {
-    calculate_vector(feature_matrix, col_count / 3);
-    return ret_vector_;
+    calculate(feature_matrix, return_matrix, col_count / 3);
   }
 }
 
-const FeatureVector& ChildDeceleration::calculate_vector(
+void ChildDeceleration::calculate(
   const FeatureMatrix& feature_matrix,
+  FeatureMatrix& return_matrix,
   size_t depth
-) {
-  ret_vector_.reshape(vigra::Shape1(2));
-  ret_vector_.init(0.0);
+) const {
+  return_matrix.reshape(vigra::Shape2(2,1));
+  return_matrix.init(0.0);
   if (depth < 2) {
     LOG(logDEBUG) << "In ChildDeceleration: not enough depth of data";
     LOG(logDEBUG) << "Return 0-vector";
@@ -1120,25 +1002,9 @@ const FeatureVector& ChildDeceleration::calculate_vector(
       feature_matrix.bind<0>(2*depth)
     );
     using namespace vigra::linalg;
-    ret_vector_(0) = dot(temp_b1, temp_b1) / dot(temp_a1, temp_a1);
-    ret_vector_(1) = dot(temp_b2, temp_b2) / dot(temp_a2, temp_a2);
+    return_matrix(0, 0) = dot(temp_b1, temp_b1) / dot(temp_a1, temp_a1);
+    return_matrix(1, 0) = dot(temp_b2, temp_b2) / dot(temp_a2, temp_a2);
   }
-  return ret_vector_;
-}
-
-FeatureScalar ChildDeceleration::calculate_scalar(
-  const FeatureMatrix& feature_matrix
-) {
-  calculate_vector(feature_matrix);
-  return ret_vector_(0) + ret_vector_(1);
-}
-
-FeatureScalar ChildDeceleration::calculate_scalar(
-  const FeatureMatrix& feature_matrix,
-  size_t depth
-) {
-  calculate_vector(feature_matrix, depth);
-  return ret_vector_(0) + ret_vector_(1);
 }
 
 ////
@@ -1150,76 +1016,74 @@ const std::string& MVNOutlierCalculator::name() const {
   return name_;
 }
 
-const FeatureMatrix& MVNOutlierCalculator::calculate_matrix(
-  const FeatureMatrix& feature_matrix
-) {
+void MVNOutlierCalculator::calculate_inverse_covariance_matrix(
+  const FeatureMatrix& feature_matrix,
+  FeatureMatrix& return_matrix
+) const {
   size_t col_count = feature_matrix.shape(0);
   size_t row_count = feature_matrix.shape(1);
-  ret_matrix_.reshape(vigra::Shape2(row_count, row_count));
-  ret_matrix_.init(0.0);
+  return_matrix.reshape(vigra::Shape2(row_count, row_count));
+  return_matrix.init(0.0);
   if (col_count <= row_count) {
     LOG(logDEBUG) << "In MVNOutlierCalculator: too few data to calculate covariance matrix";
     LOG(logDEBUG) << "Returning a Matrix filled with zeros";
   }
   FeatureMatrix covariance_matrix(vigra::Shape2(row_count, row_count), 0.0);
   vigra::linalg::covarianceMatrixOfColumns(feature_matrix, covariance_matrix);
-  bool invertible = vigra::linalg::inverse(covariance_matrix, ret_matrix_);
+  bool invertible = vigra::linalg::inverse(covariance_matrix, return_matrix);
   if (not invertible) {
-    ret_matrix_.init(0.0);
+    return_matrix.init(0.0);
   }
-  return ret_matrix_;
 }
 
-const FeatureVector& MVNOutlierCalculator::calculate_vector(
-  const FeatureMatrix& feature_matrix
-) {
+void MVNOutlierCalculator::calculate_outlier_badness(
+  const FeatureMatrix& feature_matrix,
+  FeatureMatrix& return_matrix
+) const {
   size_t col_count = feature_matrix.shape(0);
   size_t row_count = feature_matrix.shape(1);
-  ret_vector_.reshape(vigra::Shape1(col_count));
-  ret_vector_.init(0.0);
 
-  FeatureMatrix mean(vigra::Shape2(1, row_count));
+  return_matrix.reshape(vigra::Shape2(col_count, 1));
+  FeatureMatrix mean_vector;
   FeatureMatrix temp1(vigra::Shape2(row_count, 1));
   FeatureMatrix temp2(vigra::Shape2(1,1));
-  // TODO calculate_vector fails if the row is of type FeatureMatrixView > Why?
-  FeatureMatrix row;
-  const FeatureMatrix& inv_cov = calculate_matrix(feature_matrix);
-  for (size_t i = 0; i < row_count; i++) {
-    mean(0,i) = vigra::multi_math::sum<FeatureScalar>(
-      feature_matrix.bind<1>(i)
-    ) / static_cast<FeatureScalar>(col_count);
-  }
+  FeatureMatrix row_temp(vigra::Shape2(1, row_count));
+
+  mean_calculator_.calculate(feature_matrix, mean_vector);
+
+  FeatureMatrix inv_cov;
+  calculate_inverse_covariance_matrix(feature_matrix, inv_cov);
   for (size_t col = 0; col < col_count; col++) {
-    row = vigra::linalg::rowVector(feature_matrix, col);
-    row = vigra::multi_math::operator-(row, mean);
-    vigra::linalg::mmul(inv_cov, row.transpose(), temp1);
-    vigra::linalg::mmul(row, temp1, temp2);
-    ret_vector_(col) = temp2(0,0);
+    row_temp = vigra::linalg::rowVector(feature_matrix, col);
+    row_temp = vigra::multi_math::operator-(row_temp, mean_vector);
+    vigra::linalg::mmul(inv_cov, row_temp.transpose(), temp1);
+    vigra::linalg::mmul(row_temp, temp1, temp2);
+    return_matrix(col, 0) = temp2(0,0);
   }
-
-  return ret_vector_;
 }
 
-FeatureScalar MVNOutlierCalculator::calculate_scalar(
-  const FeatureMatrix& feature_matrix
-) {
-  return calculate_scalar(feature_matrix, 3.0);
-}
-
-FeatureScalar MVNOutlierCalculator::calculate_scalar(
+void MVNOutlierCalculator::calculate(
   const FeatureMatrix& feature_matrix,
-  FeatureScalar sigma_threshold
-) {
+  FeatureMatrix& return_matrix,
+  const FeatureScalar& sigma_threshold
+) const {
   size_t col_count = feature_matrix.shape(0);
-  FeatureScalar ret_scalar = 0;
-
-  ret_vector_ = calculate_vector(feature_matrix);
+  FeatureMatrix sigma_matrix;
+  calculate_outlier_badness(feature_matrix, sigma_matrix);
+  return_matrix.reshape(vigra::Shape2(1,1));
+  return_matrix(0, 0) = 0.0;
   for (size_t col = 0; col < col_count; col++) {
-    if(ret_vector_(col) > sigma_threshold) {
-      ret_scalar += 1.0 / static_cast<FeatureScalar>(col_count);
+    if(sigma_matrix(col, 0) > sigma_threshold) {
+      return_matrix(0, 0) += 1.0 / static_cast<FeatureScalar>(col_count);
     }
   }
-  return ret_scalar;
+}
+
+void MVNOutlierCalculator::calculate(
+  const FeatureMatrix& feature_matrix,
+  FeatureMatrix& return_matrix
+) const {
+  calculate(feature_matrix, return_matrix, 3.0);
 }
 
 } // namespace pgmlink
