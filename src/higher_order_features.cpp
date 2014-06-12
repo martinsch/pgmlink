@@ -129,30 +129,52 @@ void get_in_nodes(
 }
 
 /*=============================================================================
+  virtual classes
+=============================================================================*/
+FeatureMatrix SubsetFeatureExtractor::extract(
+  const ConstTraxelRefVector& traxelrefs
+) const {
+  FeatureMatrix ret_;
+  extract(traxelrefs, ret_);
+  return ret_;
+}
+
+FeatureMatrix SubsetFeatureCalculator::calculate(
+  const FeatureMatrix& feature_matrix
+) const {
+  FeatureMatrix ret_;
+  calculate(feature_matrix, ret_);
+  return ret_;
+}
+
+/*=============================================================================
   specific classes
 =============================================================================*/
 ////
 //// class GraphFeatureCalculator
 ////
-// const FeatureVector& GraphFeatureCalculator::calculate_vector(
-//   const HypothesesGraph& graph
-// ) {
-//   const std::vector<ConstTraxelRefVector> trx_vecs = 
-//     subsets_extractor_ptr_->operator()(graph);
-// 
-//   size_t subset_count = trx_vecs.size();
-//   ret_vector_.reshape(vigra::Shape1(subset_count));
-//   ret_vector_.init(0.0);
-//   
-//   std::vector<ConstTraxelRefVector>::const_iterator trx_it = trx_vecs.begin();
-//   size_t current_column = 0;
-//   for (; trx_it != trx_vecs.end(); trx_it++, current_column++) {
-//     ret_vector_(current_column) = feature_calculator_ptr_->calculate_scalar(
-//       feature_extractor_ptr_->extract_matrix(*trx_it)
-//     );
-//   }
-//   return ret_vector_;
-// }
+const FeatureVector& GraphFeatureCalculator::calculate_vector(
+  const HypothesesGraph& graph
+) {
+  const std::vector<ConstTraxelRefVector> trx_vecs = 
+    subsets_extractor_ptr_->operator()(graph);
+
+  size_t subset_count = trx_vecs.size();
+  ret_vector_.reshape(vigra::Shape1(subset_count));
+  ret_vector_.init(0.0);
+  
+  std::vector<ConstTraxelRefVector>::const_iterator trx_it = trx_vecs.begin();
+  size_t current_column = 0;
+  for (; trx_it != trx_vecs.end(); trx_it++, current_column++) {
+    FeatureMatrix feature = feature_calculator_ptr_->calculate(
+      feature_extractor_ptr_->extract(*trx_it)
+    );
+    if ((feature.shape(0) == 1) and (feature.shape(1) == 1)) {
+      ret_vector_(current_column) = feature(0, 0);
+    }
+  }
+  return ret_vector_;
+}
 
 ////
 //// class SubsetFeaturesIdentity
@@ -635,10 +657,17 @@ void SumCalculator::calculate(
 ) const {
   size_t col_count = feature_matrix.shape(0);
   size_t row_count = feature_matrix.shape(1);
-  return_matrix.reshape(vigra::Shape2(1, row_count));
-  return_matrix.init(0);
-  for (size_t col = 0; col < col_count; col++) {
-    return_matrix.bind<0>(0) += feature_matrix.bind<0>(col);
+  if ((col_count == 0) or (row_count == 0)) {
+    LOG(logDEBUG) << "In SumCalculator: empty input matrix";
+    LOG(logDEBUG) << "Returning zero";
+    return_matrix.reshape(vigra::Shape2(1, 1));
+    return_matrix.init(0.0);
+  } else {
+    return_matrix.reshape(vigra::Shape2(1, row_count));
+    return_matrix.init(0.0);
+    for (size_t col = 0; col < col_count; col++) {
+      return_matrix.bind<0>(0) += feature_matrix.bind<0>(col);
+    }
   }
 }
 

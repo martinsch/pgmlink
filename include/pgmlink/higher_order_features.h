@@ -72,6 +72,9 @@ class SubsetFeatureExtractor {
     const ConstTraxelRefVector& traxelrefs,
     FeatureMatrix& feature_matrix
   ) const = 0;
+  virtual FeatureMatrix extract(
+    const ConstTraxelRefVector& traxelrefs
+  ) const;
 };
 
 ////
@@ -86,6 +89,9 @@ class SubsetFeatureCalculator {
     const FeatureMatrix& feature_matrix,
     FeatureMatrix& return_matrix
   ) const = 0;
+  virtual FeatureMatrix calculate(
+    const FeatureMatrix& feature_matrix
+  ) const;
 };
 
 /*=============================================================================
@@ -94,26 +100,26 @@ class SubsetFeatureCalculator {
 ////
 //// class GraphFeatureCalculator
 ////
-// class GraphFeatureCalculator {
-//  public:
-//   GraphFeatureCalculator(
-//     boost::shared_ptr<SubsetsOfInterest> subsets_extractor_ptr,
-//     boost::shared_ptr<SubsetFeatureExtractor> feature_extractor_ptr,
-//     boost::shared_ptr<SubsetFeatureCalculator> feature_calculator_ptr
-//   ) : 
-//     subsets_extractor_ptr_(subsets_extractor_ptr),
-//     feature_extractor_ptr_(feature_extractor_ptr),
-//     feature_calculator_ptr_(feature_calculator_ptr) {};
-//   virtual ~GraphFeatureCalculator() {}
-//   virtual const FeatureVector& calculate_vector(
-//     const HypothesesGraph& graph
-//   );
-//  protected:
-//   boost::shared_ptr<SubsetsOfInterest> subsets_extractor_ptr_;
-//   boost::shared_ptr<SubsetFeatureExtractor> feature_extractor_ptr_;
-//   boost::shared_ptr<SubsetFeatureCalculator> feature_calculator_ptr_;
-//   FeatureVector ret_vector_;
-// };
+class GraphFeatureCalculator {
+ public:
+  GraphFeatureCalculator(
+    boost::shared_ptr<SubsetsOfInterest> subsets_extractor_ptr,
+    boost::shared_ptr<SubsetFeatureExtractor> feature_extractor_ptr,
+    boost::shared_ptr<SubsetFeatureCalculator> feature_calculator_ptr
+  ) : 
+    subsets_extractor_ptr_(subsets_extractor_ptr),
+    feature_extractor_ptr_(feature_extractor_ptr),
+    feature_calculator_ptr_(feature_calculator_ptr) {};
+  virtual ~GraphFeatureCalculator() {}
+  virtual const FeatureVector& calculate_vector(
+    const HypothesesGraph& graph
+  );
+ protected:
+  boost::shared_ptr<SubsetsOfInterest> subsets_extractor_ptr_;
+  boost::shared_ptr<SubsetFeatureExtractor> feature_extractor_ptr_;
+  boost::shared_ptr<SubsetFeatureCalculator> feature_calculator_ptr_;
+  FeatureVector ret_vector_;
+};
 
 ////
 //// class SubsetFeaturesIdentity
