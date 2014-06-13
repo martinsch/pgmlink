@@ -1,10 +1,9 @@
 /**
-* @file
-* @ingroup tracking
-* @brief calculation of higher order features
-*
-* This file provides an interface to calculate higher order features from a
-* tracking.
+\file
+\brief calculation of higher order features
+
+This file provides an interface to calculate higher order features from a
+tracking.
 */
 
 #ifndef PGMLINK_HIGHER_ORDER_FEATURES_H
@@ -42,6 +41,11 @@ typedef vigra::MultiArrayView<2, feature_type> FeatureMatrixView;
 /*=============================================================================
  functions
 =============================================================================*/
+/**
+\brief write the solution stored in the property maps <TT>node_active_count</TT>
+  and <TT>arc_active_count</TT> into the <TT>node_active</TT> and 
+  <TT>arc_active</TT>.
+*/
 void set_solution(HypothesesGraph& graph, const size_t solution_index);
 
 /*=============================================================================
@@ -50,11 +54,30 @@ void set_solution(HypothesesGraph& graph, const size_t solution_index);
 ////
 //// class TraxelsOfInterest
 ////
+/**
+\brief The class <TT>TraxelsOfInterest</TT> extracts subsets of the graph that
+  are of interest, e.g. tracks or division.
+
+The <TT>TraxelsOfInterest</TT> is a pure virtual class. Its ()-operator returns
+a vector of vectors of traxel references. One vector of traxel references
+represents one subset of traxels of the whole graph over which the higher order
+features will be calculated.
+
+Interesting subsets of traxels might be the traxels in one track, or the traxels
+involved in a cell division.
+*/
 class TraxelsOfInterest {
  public:
   TraxelsOfInterest() {};
   virtual ~TraxelsOfInterest() {};
   virtual const std::string& name() const = 0;
+  /**
+  \brief Extract the traxels of interest of the hypotheses graph.
+
+  \param[in] graph Hypotheses graph with its MAP-solution written into the
+    property maps <TT>node_active</TT> and <TT>arc_active</TT>.
+  \return vector of vectors of traxel references. ((t1, t2, t3), (t1, t3), ...)
+  */
   virtual const std::vector<ConstTraxelRefVector>& operator()(
     const HypothesesGraph& graph
   ) = 0;
@@ -63,6 +86,10 @@ class TraxelsOfInterest {
 ////
 //// class TraxelsFeatureExtractor
 ////
+/**
+\brief virtual class for extracting the interesting features of the traxels.
+
+*/
 class TraxelsFeatureExtractor {
  public:
   TraxelsFeatureExtractor() {};
@@ -80,6 +107,12 @@ class TraxelsFeatureExtractor {
 ////
 //// class TraxelsFeatureCalculator
 ////
+/**
+\brief virtual class for the calculation of features of any order.
+
+The calculations of the higher order features are implemented as child classes
+of this virtual class.
+*/
 class TraxelsFeatureCalculator {
  public:
   TraxelsFeatureCalculator() {};
