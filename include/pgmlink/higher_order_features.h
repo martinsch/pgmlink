@@ -353,6 +353,23 @@ class MeanCalculator : public TraxelsFeatureCalculator {
 };
 
 ////
+//// class StdCalculator
+////
+template<int N>
+class StdCalculator : public TraxelsFeatureCalculator {
+ public:
+  StdCalculator() {};
+  virtual ~StdCalculator() {};
+  virtual const std::string& name() const;
+  virtual void calculate(
+    const FeatureMatrix& feature_matrix,
+    FeatureMatrix& return_matrix
+  ) const;
+ protected:
+  static const std::string name_;
+};
+
+////
 //// class SquaredNormCalculator
 ////
 class SquaredNormCalculator : public TraxelsFeatureCalculator {
