@@ -4,7 +4,8 @@
 #include <vigra/multi_math.hxx> /* for operator+ */
 #include <vigra/matrix.hxx> /* for covariance calculation */
 #include <vigra/linear_algebra.hxx> /* for matrix inverse calculation */
-#include <vigra/tinyvector.hxx> /* for max? */
+
+#include <numeric> /* for accumulate */
 
 #include <sstream> /* for printing a matrix on the debug level */
 
@@ -645,13 +646,8 @@ void CompositionCalculator::calculate(
 ////
 //// class SumCalculator
 ////
-const std::string SumCalculator::name_ = "SumCalculator";
-
-const std::string& SumCalculator::name() const {
-  return name_;
-}
-
-void SumCalculator::calculate(
+template<>
+void SumCalculator<0>::calculate(
   const FeatureMatrix& feature_matrix,
   FeatureMatrix& return_matrix
 ) const {
@@ -668,6 +664,48 @@ void SumCalculator::calculate(
     for (size_t col = 0; col < col_count; col++) {
       return_matrix.bind<0>(0) += feature_matrix.bind<0>(col);
     }
+  }
+}
+
+template<>
+void SumCalculator<1>::calculate(
+  const FeatureMatrix& feature_matrix,
+  FeatureMatrix& return_matrix
+) const {
+  size_t col_count = feature_matrix.shape(0);
+  size_t row_count = feature_matrix.shape(1);
+  if ((col_count == 0) or (row_count == 0)) {
+    LOG(logDEBUG) << "In SumCalculator: empty input matrix";
+    LOG(logDEBUG) << "Returning zero";
+    return_matrix.reshape(vigra::Shape2(1, 1));
+    return_matrix.init(0.0);
+  } else {
+    return_matrix.reshape(vigra::Shape2(col_count, 1));
+    return_matrix.init(0.0);
+    for (size_t row = 0; row < row_count; row++) {
+      return_matrix.bind<1>(0) += feature_matrix.bind<1>(row);
+    }
+  }
+}
+
+template<>
+void SumCalculator<-1>::calculate(
+  const FeatureMatrix& feature_matrix,
+  FeatureMatrix& return_matrix
+) const {
+  size_t col_count = feature_matrix.shape(0);
+  size_t row_count = feature_matrix.shape(1);
+  return_matrix.reshape(vigra::Shape2(1, 1));
+  if ((col_count == 0) or (row_count == 0)) {
+    LOG(logDEBUG) << "In SumCalculator: empty input matrix";
+    LOG(logDEBUG) << "Returning zero";
+    return_matrix.init(0.0);
+  } else {
+    return_matrix(0,0) = std::accumulate(
+      feature_matrix.begin(),
+      feature_matrix.end(),
+      0.0
+    );
   }
 }
 
@@ -737,13 +775,8 @@ void CurveCalculator::calculate(
 ////
 //// class MinCalculator
 ////
-const std::string MinCalculator::name_ = "MinCalculator";
-
-const std::string& MinCalculator::name() const {
-  return name_;
-}
-
-void MinCalculator::calculate(
+template<>
+void MinCalculator<0>::calculate(
   const FeatureMatrix& feature_matrix,
   FeatureMatrix& return_matrix
 ) const {
@@ -764,16 +797,54 @@ void MinCalculator::calculate(
   }
 }
 
+template<>
+void MinCalculator<1>::calculate(
+  const FeatureMatrix& feature_matrix,
+  FeatureMatrix& return_matrix
+) const {
+  size_t col_count = feature_matrix.shape(0);
+  size_t row_count = feature_matrix.shape(1);
+  if ((col_count == 0) or (row_count == 0)) {
+    LOG(logDEBUG) << "In MinCalculator: empty input matrix";
+    LOG(logDEBUG) << "Returning a 0-vector";
+    return_matrix.reshape(vigra::Shape2(1, 1));
+    return_matrix.init(0);
+  } else {
+    return_matrix.reshape(vigra::Shape2(col_count, 1));
+    return_matrix.init(0);
+    for (size_t i = 0; i < col_count; i++) {
+      const FeatureVectorView current_col = feature_matrix.bind<0>(i);
+      return_matrix(i, 0) = *(
+        std::min_element(current_col.begin(), current_col.end())
+      );
+    }
+  }
+}
+
+template<>
+void MinCalculator<-1>::calculate(
+  const FeatureMatrix& feature_matrix,
+  FeatureMatrix& return_matrix
+) const {
+  size_t col_count = feature_matrix.shape(0);
+  size_t row_count = feature_matrix.shape(1);
+  return_matrix.reshape(vigra::Shape2(1, 1));
+  return_matrix.init(0);
+  if ((col_count == 0) or (row_count == 0)) {
+    LOG(logDEBUG) << "In MinCalculator: empty input matrix";
+    LOG(logDEBUG) << "Returning a 0-vector";
+  } else {
+    return_matrix(0, 0) = *(
+      std::min_element(feature_matrix.begin(), feature_matrix.end())
+    );
+  }
+}
+
 ////
 //// class MaxCalculator
 ////
-const std::string MaxCalculator::name_ = "MaxCalculator";
-
-const std::string& MaxCalculator::name() const {
-  return name_;
-}
-
-void MaxCalculator::calculate(
+template <>
+void MaxCalculator<0>::calculate(
   const FeatureMatrix& feature_matrix,
   FeatureMatrix& return_matrix
 ) const {
@@ -789,21 +860,60 @@ void MaxCalculator::calculate(
     return_matrix.init(0);
     for (size_t i = 0; i < row_count; i++) {
       const FeatureVectorView current_row = feature_matrix.bind<1>(i);
-      return_matrix(0, i) = *(std::max_element(current_row.begin(), current_row.end()));
+      return_matrix(0, i) = *(
+        std::max_element(current_row.begin(), current_row.end())
+      );
     }
   }
 }
 
+template <>
+void MaxCalculator<1>::calculate(
+  const FeatureMatrix& feature_matrix,
+  FeatureMatrix& return_matrix
+) const {
+  size_t col_count = feature_matrix.shape(0);
+  size_t row_count = feature_matrix.shape(1);
+  if ((col_count == 0) or (row_count == 0)) {
+    LOG(logDEBUG) << "In MaxCalculator: empty input matrix";
+    LOG(logDEBUG) << "Returning a 0-vector";
+    return_matrix.reshape(vigra::Shape2(1, 1));
+    return_matrix.init(0);
+  } else {
+    return_matrix.reshape(vigra::Shape2(col_count, 1));
+    return_matrix.init(0);
+    for (size_t i = 0; i < col_count; i++) {
+      const FeatureVectorView current_col = feature_matrix.bind<0>(i);
+      return_matrix(i, 0) = *(
+        std::max_element(current_col.begin(), current_col.end())
+      );
+    }
+  }
+}
+
+template <>
+void MaxCalculator<-1>::calculate(
+  const FeatureMatrix& feature_matrix,
+  FeatureMatrix& return_matrix
+) const {
+  size_t col_count = feature_matrix.shape(0);
+  size_t row_count = feature_matrix.shape(1);
+  return_matrix.reshape(vigra::Shape2(1,1));
+  return_matrix.init(0.0);
+  if ((col_count == 0) or (row_count == 0)) {
+    LOG(logDEBUG) << "In MaxCalculator: empty input matrix";
+    LOG(logDEBUG) << "Returning a 0-vector";
+  } else {
+    return_matrix(0, 0) = *(
+      std::max_element(feature_matrix.begin(), feature_matrix.end())
+    );
+  }
+}
 ////
 //// class MeanCalculator
 ////
-const std::string MeanCalculator::name_ = "MeanCalculator";
-
-const std::string& MeanCalculator::name() const {
-  return name_;
-}
-
-void MeanCalculator::calculate(
+template<>
+void MeanCalculator<0>::calculate(
   const FeatureMatrix& feature_matrix,
   FeatureMatrix& return_matrix
 ) const {
@@ -821,6 +931,49 @@ void MeanCalculator::calculate(
         feature_matrix.bind<1>(i)
       ) / static_cast<FeatureScalar>(col_count);
     }
+  }
+}
+
+template<>
+void MeanCalculator<1>::calculate(
+  const FeatureMatrix& feature_matrix,
+  FeatureMatrix& return_matrix
+) const {
+  size_t col_count = feature_matrix.shape(0);
+  size_t row_count = feature_matrix.shape(1);
+  if ((col_count == 0) or (row_count == 0)) {
+    LOG(logDEBUG) << "In MeanCalculator: empty input matrix";
+    LOG(logDEBUG) << "Returning a 0-vector";
+    return_matrix.reshape(vigra::Shape2(1, 1));
+    return_matrix.init(0);
+  } else {
+    return_matrix.reshape(vigra::Shape2(col_count, 1));
+    for (size_t i = 0; i < col_count; i++) {
+      return_matrix(i, 0) = vigra::multi_math::sum<FeatureScalar>(
+        feature_matrix.bind<0>(i)
+      ) / static_cast<FeatureScalar>(row_count);
+    }
+  }
+}
+
+template<>
+void MeanCalculator<-1>::calculate(
+  const FeatureMatrix& feature_matrix,
+  FeatureMatrix& return_matrix
+) const {
+  size_t col_count = feature_matrix.shape(0);
+  size_t row_count = feature_matrix.shape(1);
+  return_matrix.reshape(vigra::Shape2(1, 1));
+  return_matrix.init(0);
+  if ((col_count == 0) or (row_count == 0)) {
+    LOG(logDEBUG) << "In MeanCalculator: empty input matrix";
+    LOG(logDEBUG) << "Returning a 0-vector";
+  } else {
+    return_matrix(0, 0) = std::accumulate(
+      feature_matrix.begin(),
+      feature_matrix.end(),
+      0.0
+    ) / static_cast<FeatureScalar>(feature_matrix.size());
   }
 }
 

@@ -222,6 +222,7 @@ class CompositionCalculator : public TraxelsFeatureCalculator {
 ////
 //// class SumCalculator
 ////
+template<int N>
 class SumCalculator : public TraxelsFeatureCalculator {
  public:
   SumCalculator() {};
@@ -234,6 +235,14 @@ class SumCalculator : public TraxelsFeatureCalculator {
  protected:
   static const std::string name_;
 };
+
+template<int N>
+const std::string SumCalculator<N>::name_ = "SumCalculator";
+
+template<int N>
+const std::string& SumCalculator<N>::name() const {
+  return name_;
+}
 
 ////
 //// class DiffCalculator
@@ -270,6 +279,7 @@ class CurveCalculator : public TraxelsFeatureCalculator {
 ////
 //// class MinCalculator
 ////
+template<int N>
 class MinCalculator : public TraxelsFeatureCalculator {
  public:
   MinCalculator() {};
@@ -282,10 +292,18 @@ class MinCalculator : public TraxelsFeatureCalculator {
  protected:
   static const std::string name_;
 };
+template<int N>
+const std::string MinCalculator<N>::name_ = "MinCalculator";
+
+template<int N>
+const std::string& MinCalculator<N>::name() const {
+  return name_;
+}
 
 ////
 //// class MaxCalculator
 ////
+template<int N>
 class MaxCalculator : public TraxelsFeatureCalculator {
  public:
   MaxCalculator() {};
@@ -298,10 +316,18 @@ class MaxCalculator : public TraxelsFeatureCalculator {
  protected:
   static const std::string name_;
 };
+template<int N>
+const std::string MaxCalculator<N>::name_ = "MaxCalculator";
+
+template<int N>
+const std::string& MaxCalculator<N>::name() const {
+  return name_;
+}
 
 ////
 //// class MeanCalculator
 ////
+template<int N>
 class MeanCalculator : public TraxelsFeatureCalculator {
  public:
   MeanCalculator() {};
@@ -314,6 +340,13 @@ class MeanCalculator : public TraxelsFeatureCalculator {
  protected:
   static const std::string name_;
 };
+template<int N>
+const std::string MeanCalculator<N>::name_ = "MeanCalculator";
+
+template<int N>
+const std::string& MeanCalculator<N>::name() const {
+  return name_;
+}
 
 ////
 //// class SquaredNormCalculator
@@ -363,7 +396,7 @@ class DiffusionCalculator : public TraxelsFeatureCalculator {
   ) const;
  protected:
   SquaredDiffCalculator squared_diff_calculator_;
-  MeanCalculator mean_calculator_;
+  MeanCalculator<0> mean_calculator_;
   static const std::string name_;
 };
 
@@ -451,7 +484,7 @@ class MVNOutlierCalculator : public TraxelsFeatureCalculator {
     FeatureMatrix& return_matrix
   ) const;
  protected:
-  MeanCalculator mean_calculator_;
+  MeanCalculator<0> mean_calculator_;
   static const std::string name_;
 };
 

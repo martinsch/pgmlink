@@ -510,25 +510,44 @@ BOOST_AUTO_TEST_CASE( SumCalculator_test ) {
   FeatureMatrix x(vigra::Shape2(0,0));
   get_feature_matrix(x);
 
-  // set up the reference data
-  FeatureVector x_sum_vec_ref(vigra::Shape1(2));
-  x_sum_vec_ref(0) = 33;
-  x_sum_vec_ref(1) = 31;
-
   // set up the SumCalculator
-  SumCalculator sum_calculator;
+  SumCalculator<0> row_sum_calculator;
+  SumCalculator<1> col_sum_calculator;
+  SumCalculator<-1> total_sum_calculator;
 
   FeatureMatrix x_sum_vec;
-  sum_calculator.calculate(x, x_sum_vec);
+  row_sum_calculator.calculate(x, x_sum_vec);
   BOOST_CHECK_EQUAL(x_sum_vec.shape(0), 1);
   BOOST_CHECK_EQUAL(x_sum_vec.shape(1), 2);
-  BOOST_CHECK_EQUAL(x_sum_vec(0, 0), x_sum_vec_ref(0));
-  BOOST_CHECK_EQUAL(x_sum_vec(0, 1), x_sum_vec_ref(1));
+  BOOST_CHECK_EQUAL(x_sum_vec(0, 0), 33.);
+  BOOST_CHECK_EQUAL(x_sum_vec(0, 1), 31.);
+
+  col_sum_calculator.calculate(x, x_sum_vec);
+  BOOST_CHECK_EQUAL(x_sum_vec.shape(0), 7);
+  BOOST_CHECK_EQUAL(x_sum_vec.shape(1), 1);
+  BOOST_CHECK_EQUAL(x_sum_vec(0, 0),  6.);
+  BOOST_CHECK_EQUAL(x_sum_vec(1, 0),  7.);
+  BOOST_CHECK_EQUAL(x_sum_vec(2, 0),  7.);
+  BOOST_CHECK_EQUAL(x_sum_vec(3, 0),  8.);
+  BOOST_CHECK_EQUAL(x_sum_vec(4, 0),  9.);
+  BOOST_CHECK_EQUAL(x_sum_vec(5, 0), 10.);
+  BOOST_CHECK_EQUAL(x_sum_vec(6, 0), 17.);
+
+  total_sum_calculator.calculate(x, x_sum_vec);
+  BOOST_CHECK_EQUAL(x_sum_vec.shape(0), 1);
+  BOOST_CHECK_EQUAL(x_sum_vec.shape(1), 1);
+  BOOST_CHECK_EQUAL(x_sum_vec(0, 0), 64.);
 
   // with an empty feature matrix
   FeatureMatrix y(vigra::Shape2(0,0));
   FeatureMatrix y_sum_vec;
-  sum_calculator.calculate(y, y_sum_vec);
+  row_sum_calculator.calculate(y, y_sum_vec);
+  BOOST_CHECK_EQUAL(y_sum_vec.shape(0), 1);
+  BOOST_CHECK_EQUAL(y_sum_vec.shape(1), 1);
+  col_sum_calculator.calculate(y, y_sum_vec);
+  BOOST_CHECK_EQUAL(y_sum_vec.shape(0), 1);
+  BOOST_CHECK_EQUAL(y_sum_vec.shape(1), 1);
+  col_sum_calculator.calculate(y, y_sum_vec);
   BOOST_CHECK_EQUAL(y_sum_vec.shape(0), 1);
   BOOST_CHECK_EQUAL(y_sum_vec.shape(1), 1);
 }
@@ -604,6 +623,42 @@ BOOST_AUTO_TEST_CASE( CurveCalculator_test ) {
   BOOST_CHECK_EQUAL(matrix.shape(1), 0);
 }
 
+BOOST_AUTO_TEST_CASE( MinCalculator_test ) {
+  LOG(logINFO) << "test case: MinCalculator_test";
+
+  // get the test data
+  FeatureMatrix x;
+  get_feature_matrix(x);
+
+  // set up the CurveCalculator and run the calculation
+  MinCalculator<0> row_min_calculator;
+  MinCalculator<1> col_min_calculator;
+  MinCalculator<-1> total_min_calculator;
+  FeatureMatrix matrix;
+
+  row_min_calculator.calculate(x, matrix);
+  BOOST_CHECK_EQUAL(matrix.shape(0), 1);
+  BOOST_CHECK_EQUAL(matrix.shape(1), 2);
+  BOOST_CHECK_EQUAL(matrix(0, 0), 3.);
+  BOOST_CHECK_EQUAL(matrix(0, 1), 3.);
+
+  col_min_calculator.calculate(x, matrix);
+  BOOST_CHECK_EQUAL(matrix.shape(0), 7);
+  BOOST_CHECK_EQUAL(matrix.shape(1), 1);
+  BOOST_CHECK_EQUAL(matrix(0, 0), 3.);
+  BOOST_CHECK_EQUAL(matrix(1, 0), 3.);
+  BOOST_CHECK_EQUAL(matrix(2, 0), 3.);
+  BOOST_CHECK_EQUAL(matrix(3, 0), 4.);
+  BOOST_CHECK_EQUAL(matrix(4, 0), 4.);
+  BOOST_CHECK_EQUAL(matrix(5, 0), 5.);
+  BOOST_CHECK_EQUAL(matrix(6, 0), 8.);
+
+  total_min_calculator.calculate(x, matrix);
+  BOOST_CHECK_EQUAL(matrix.shape(0), 1);
+  BOOST_CHECK_EQUAL(matrix.shape(1), 1);
+  BOOST_CHECK_EQUAL(matrix(0, 0), 3.);
+}
+
 BOOST_AUTO_TEST_CASE( MaxCalculator_test ) {
   LOG(logINFO) << "test case: MaxCalculator_test";
 
@@ -612,14 +667,68 @@ BOOST_AUTO_TEST_CASE( MaxCalculator_test ) {
   get_feature_matrix(x);
 
   // set up the CurveCalculator and run the calculation
-  MaxCalculator max_calculator;
+  MaxCalculator<0> row_max_calculator;
+  MaxCalculator<1> col_max_calculator;
+  MaxCalculator<-1> total_max_calculator;
   FeatureMatrix matrix;
-  max_calculator.calculate(x, matrix);
 
+  row_max_calculator.calculate(x, matrix);
   BOOST_CHECK_EQUAL(matrix.shape(0), 1);
   BOOST_CHECK_EQUAL(matrix.shape(1), 2);
   BOOST_CHECK_EQUAL(matrix(0, 0), 9.);
   BOOST_CHECK_EQUAL(matrix(0, 1), 8.);
+
+  col_max_calculator.calculate(x, matrix);
+  BOOST_CHECK_EQUAL(matrix.shape(0), 7);
+  BOOST_CHECK_EQUAL(matrix.shape(1), 1);
+  BOOST_CHECK_EQUAL(matrix(0, 0), 3.);
+  BOOST_CHECK_EQUAL(matrix(1, 0), 4.);
+  BOOST_CHECK_EQUAL(matrix(2, 0), 4.);
+  BOOST_CHECK_EQUAL(matrix(3, 0), 4.);
+  BOOST_CHECK_EQUAL(matrix(4, 0), 5.);
+  BOOST_CHECK_EQUAL(matrix(5, 0), 5.);
+  BOOST_CHECK_EQUAL(matrix(6, 0), 9.);
+
+  total_max_calculator.calculate(x, matrix);
+  BOOST_CHECK_EQUAL(matrix.shape(0), 1);
+  BOOST_CHECK_EQUAL(matrix.shape(1), 1);
+  BOOST_CHECK_EQUAL(matrix(0, 0), 9.);
+}
+
+BOOST_AUTO_TEST_CASE( MeanCalculator_test ) {
+  LOG(logINFO) << "test case: MeanCalculator_test";
+
+  // get the test data
+  FeatureMatrix x;
+  get_feature_matrix(x);
+
+  // set up the CurveCalculator and run the calculation
+  MeanCalculator<0> row_mean_calculator;
+  MeanCalculator<1> col_mean_calculator;
+  MeanCalculator<-1> total_mean_calculator;
+  FeatureMatrix matrix;
+
+  row_mean_calculator.calculate(x, matrix);
+  BOOST_CHECK_EQUAL(matrix.shape(0), 1);
+  BOOST_CHECK_EQUAL(matrix.shape(1), 2);
+  BOOST_CHECK_EQUAL(matrix(0, 0), static_cast<FeatureScalar>(33./7.));
+  BOOST_CHECK_EQUAL(matrix(0, 1), static_cast<FeatureScalar>(31./7.));
+
+  col_mean_calculator.calculate(x, matrix);
+  BOOST_CHECK_EQUAL(matrix.shape(0), 7);
+  BOOST_CHECK_EQUAL(matrix.shape(1), 1);
+  BOOST_CHECK_EQUAL(matrix(0, 0), 3.0);
+  BOOST_CHECK_EQUAL(matrix(1, 0), 3.5);
+  BOOST_CHECK_EQUAL(matrix(2, 0), 3.5);
+  BOOST_CHECK_EQUAL(matrix(3, 0), 4.0);
+  BOOST_CHECK_EQUAL(matrix(4, 0), 4.5);
+  BOOST_CHECK_EQUAL(matrix(5, 0), 5.0);
+  BOOST_CHECK_EQUAL(matrix(6, 0), 8.5);
+
+  total_mean_calculator.calculate(x, matrix);
+  BOOST_CHECK_EQUAL(matrix.shape(0), 1);
+  BOOST_CHECK_EQUAL(matrix.shape(1), 1);
+  BOOST_CHECK_EQUAL(matrix(0, 0), static_cast<FeatureScalar>(64./14.));
 }
 
 BOOST_AUTO_TEST_CASE( ChildParentDiffCalculator_test ) {
@@ -789,7 +898,7 @@ BOOST_AUTO_TEST_CASE( GraphFeatureCalculator_calculate_vector ) {
     new TraxelsFeaturesIdentity("id")
   );
   boost::shared_ptr<TraxelsFeatureCalculator> sum_calculator_ptr(
-    new SumCalculator
+    new SumCalculator<0>
   );
   GraphFeatureCalculator sum_of_ids_in_track(
     track_traxels_extractor_ptr,
