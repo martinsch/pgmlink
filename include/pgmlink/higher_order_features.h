@@ -2,8 +2,16 @@
 \file
 \brief calculation of higher order features
 
-This file provides an interface to calculate higher order features from a
-tracking.
+This file provides an interface to calculate higher order features of a
+tracking. Workflow of the calculation of higher order feautres of the MAP
+solution:
+- Use an implementation of <TT>pgmlink::TraxelsOfInterest</TT> to get all
+interesting subsets of traxels, e.g. a track.
+- Use an implementation of the <TT>pgmlink::TraxelsFeatureExtractor</TT> to
+extract features like positions or sizes of the involved traxels.
+- Compose the implementations of <TT>pgmlink::TraxelsFeatureCalculator</TT> to
+calculate any interesting new higher order feature
+
 */
 
 #ifndef PGMLINK_HIGHER_ORDER_FEATURES_H
@@ -76,7 +84,8 @@ class TraxelsOfInterest {
 
   \param[in] graph Hypotheses graph with its MAP-solution written into the
     property maps <TT>node_active</TT> and <TT>arc_active</TT>.
-  \return vector of vectors of traxel references. ((t1, t2, t3), (t1, t3), ...)
+  \return vector of vectors of traxel references: ((t1, t2, t3), (t1, t3), ...).
+    They are stored as std::vector<std::vector<const *pgmlink::Traxel> >
   */
   virtual const std::vector<ConstTraxelRefVector>& operator()(
     const HypothesesGraph& graph
@@ -95,6 +104,14 @@ class TraxelsFeatureExtractor {
   TraxelsFeatureExtractor() {};
   virtual ~TraxelsFeatureExtractor() {};
   virtual const std::string& name() const = 0;
+  /**
+  \brief extracts any features from the traxelvector given as the argument
+  
+  \param[in] traxelrefs Vector of references to traxels of which the features
+    should be extracted.
+  \param[out] feature_matrix two dimensional matrix that contains the extracted
+    features
+  */
   virtual void extract(
     const ConstTraxelRefVector& traxelrefs,
     FeatureMatrix& feature_matrix
@@ -157,10 +174,28 @@ class GraphFeatureCalculator {
 ////
 //// class TraxelsFeaturesIdentity
 ////
+/**
+\brief extract the features of the traxels with the feature names given in the
+  constructor, e.g. "size"
+
+In the traxels there are the property maps stored which map a string to a 
+vector. This class extracts with the extract method the vectors with the feature
+names given in the constructor as a matrix. The columns are the extracted
+feature vectors for the traxels.
+*/
 class TraxelsFeaturesIdentity : public TraxelsFeatureExtractor {
  public:
-  TraxelsFeaturesIdentity(const std::vector<std::string>& feature_names);
+  /**
+  \brief Takes the feature name that should be extracted in the extract method.
+
+  The extract method the extracts this feature vector of the feature map.
+  */
   TraxelsFeaturesIdentity(const std::string& feature_name);
+  /**
+  \brief Takes many feature names that should be extracted in the extract
+    method.
+  */
+  TraxelsFeaturesIdentity(const std::vector<std::string>& feature_names);
   virtual ~TraxelsFeaturesIdentity() {};
   virtual const std::string& name() const;
   virtual void extract(
@@ -175,6 +210,22 @@ class TraxelsFeaturesIdentity : public TraxelsFeatureExtractor {
 ////
 //// class TrackTraxels
 ////
+/**
+\brief gets all tracks in the MAP solution. On element in the return vector
+  is a set of traxels that belong to the same track.
+
+A track is a sequence of one to one connected nodes. A track begins if a node
+has no incoming arc, more than one incoming arcs or a parent with two outgoing
+arcs. A track is terminated if there is no outgoing arc, more than
+one outgoing arc or a child with two incoming arcs.
+The tracks in the following example are:
+(n1, n2), (n3, n4), (n5, n6), (n7, n8)
+\code
+ n1 - n2 - n3 - n4
+         \
+ n5 - n6 - n7 - n8
+\endcode
+*/
 class TrackTraxels : public TraxelsOfInterest {
  public:
   TrackTraxels() {};
@@ -191,6 +242,24 @@ class TrackTraxels : public TraxelsOfInterest {
 ////
 //// class DivisionTraxels
 ////
+/**
+\brief identifies all cell divisions in the tracking an returns the references
+  to the involved traxels.
+
+A cell division is detected if one node has two outgoing arcs. One can specify
+the depth to which the traxels are extracted. That is to say how many parent
+and child nodes are returned.
+Division of depth 2:
+\code
+          n2 - n3
+        /
+n1 - n0
+        \
+          n4 - n5
+\endcode
+The numbers indicate their position in the return vector as well. The dividing
+cell is always in the 0th position.
+*/
 class DivisionTraxels : public TraxelsOfInterest {
  public:
   DivisionTraxels(size_t depth = 1) : depth_(depth) {};
