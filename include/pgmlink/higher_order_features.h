@@ -422,25 +422,9 @@ class MeanCalculator : public TraxelsFeatureCalculator {
 };
 
 ////
-//// class StdCalculator
-////
-template<int N>
-class StdCalculator : public TraxelsFeatureCalculator {
- public:
-  StdCalculator() {};
-  virtual ~StdCalculator() {};
-  virtual const std::string& name() const;
-  virtual void calculate(
-    const FeatureMatrix& feature_matrix,
-    FeatureMatrix& return_matrix
-  ) const;
- protected:
-  static const std::string name_;
-};
-
-////
 //// class SquaredNormCalculator
 ////
+template<int N>
 class SquaredNormCalculator : public TraxelsFeatureCalculator {
  public:
   SquaredNormCalculator() {};
@@ -468,7 +452,7 @@ class SquaredDiffCalculator : public TraxelsFeatureCalculator {
   ) const;
  protected:
   DiffCalculator diff_calculator_;
-  SquaredNormCalculator squared_norm_calculator_;
+  SquaredNormCalculator<0> squared_norm_calculator_;
   static const std::string name_;
 };
 
@@ -487,6 +471,25 @@ class DiffusionCalculator : public TraxelsFeatureCalculator {
  protected:
   SquaredDiffCalculator squared_diff_calculator_;
   MeanCalculator<0> mean_calculator_;
+  static const std::string name_;
+};
+
+////
+//// class VarianceCalculator
+////
+template<int N>
+class VarianceCalculator : public TraxelsFeatureCalculator {
+ public:
+  VarianceCalculator() {};
+  virtual ~VarianceCalculator() {};
+  virtual const std::string& name() const;
+  virtual void calculate(
+    const FeatureMatrix& feature_matrix,
+    FeatureMatrix& return_matrix
+  ) const;
+ protected:
+  MeanCalculator<N> mean_calculator_;
+  SquaredNormCalculator<N> squared_norm_calculator_;
   static const std::string name_;
 };
 

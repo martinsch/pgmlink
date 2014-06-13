@@ -1032,13 +1032,16 @@ template class MeanCalculator<-1>;
 ////
 //// class SquaredNormCalculator
 ////
-const std::string SquaredNormCalculator::name_ = "SquaredNormCalculator";
+template<int N>
+const std::string SquaredNormCalculator<N>::name_ = "SquaredNormCalculator";
 
-const std::string& SquaredNormCalculator::name() const {
+template<int N>
+const std::string& SquaredNormCalculator<N>::name() const {
   return name_;
 }
 
-void SquaredNormCalculator::calculate(
+template<>
+void SquaredNormCalculator<0>::calculate(
   const FeatureMatrix& feature_matrix,
   FeatureMatrix& return_matrix
 ) const {
@@ -1048,6 +1051,22 @@ void SquaredNormCalculator::calculate(
     return_matrix(i, 0) = vigra::squaredNorm(feature_matrix.bind<0>(i));
   }
 }
+
+template<>
+void SquaredNormCalculator<1>::calculate(
+  const FeatureMatrix& feature_matrix,
+  FeatureMatrix& return_matrix
+) const {
+  size_t row_count = feature_matrix.shape(1);
+  return_matrix.reshape(vigra::Shape2(1, row_count));
+  for (size_t i = 0; i < row_count; i++) {
+    return_matrix(0, i) = vigra::squaredNorm(feature_matrix.bind<1>(i));
+  }
+}
+
+// Explicit instantiation
+template class SquaredNormCalculator<0>;
+template class SquaredNormCalculator<1>;
 
 ////
 //// class SquaredDiffCalculator
@@ -1096,6 +1115,37 @@ void DiffusionCalculator::calculate(
   mean_calculator_.calculate(
     sq_diff,
     return_matrix
+  );
+}
+
+////
+//// class VarianceCalculator
+////
+template<int N>
+const std::string VarianceCalculator<N>::name_ = "VarianceCalculator";
+
+template<int N>
+const std::string& VarianceCalculator<N>::name() const {
+  return name_;
+}
+
+template<>
+void VarianceCalculator<0>::calculate(
+  const FeatureMatrix& feature_matrix,
+  FeatureMatrix& return_matrix
+) const {
+  FeatureMatrix squared_matrix;
+  squared_norm_calculator_.calculate(feature_matrix, squared_matrix);
+  FeatureMatrix squared_mean_matrix;
+  mean_calculator_.calculate(squared_matrix, squared_mean_matrix);
+  FeatureMatrix mean_matrix;
+  mean_calculator_.calculate(feature_matrix, mean_matrix);
+  FeatureMatrix mean_squared_matrix;
+  squared_norm_calculator_.calculate(mean_matrix, mean_squared_matrix);
+
+  return_matrix = vigra::multi_math::operator-(
+    squared_mean_matrix,
+    mean_squared_matrix
   );
 }
 
