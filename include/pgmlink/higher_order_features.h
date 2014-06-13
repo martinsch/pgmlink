@@ -48,12 +48,12 @@ void set_solution(HypothesesGraph& graph, const size_t solution_index);
   pure virtual classes
 =============================================================================*/
 ////
-//// class SubsetsOfInterest
+//// class TraxelsOfInterest
 ////
-class SubsetsOfInterest {
+class TraxelsOfInterest {
  public:
-  SubsetsOfInterest() {};
-  virtual ~SubsetsOfInterest() {};
+  TraxelsOfInterest() {};
+  virtual ~TraxelsOfInterest() {};
   virtual const std::string& name() const = 0;
   virtual const std::vector<ConstTraxelRefVector>& operator()(
     const HypothesesGraph& graph
@@ -61,12 +61,12 @@ class SubsetsOfInterest {
 };
 
 ////
-//// class SubsetFeatureExtractor
+//// class TraxelsFeatureExtractor
 ////
-class SubsetFeatureExtractor {
+class TraxelsFeatureExtractor {
  public:
-  SubsetFeatureExtractor() {};
-  virtual ~SubsetFeatureExtractor() {};
+  TraxelsFeatureExtractor() {};
+  virtual ~TraxelsFeatureExtractor() {};
   virtual const std::string& name() const = 0;
   virtual void extract(
     const ConstTraxelRefVector& traxelrefs,
@@ -78,12 +78,12 @@ class SubsetFeatureExtractor {
 };
 
 ////
-//// class SubsetFeatureCalculator
+//// class TraxelsFeatureCalculator
 ////
-class SubsetFeatureCalculator {
+class TraxelsFeatureCalculator {
  public:
-  SubsetFeatureCalculator() {};
-  virtual ~ SubsetFeatureCalculator() {};
+  TraxelsFeatureCalculator() {};
+  virtual ~ TraxelsFeatureCalculator() {};
   virtual const std::string& name() const = 0;
   virtual void calculate(
     const FeatureMatrix& feature_matrix,
@@ -103,9 +103,9 @@ class SubsetFeatureCalculator {
 class GraphFeatureCalculator {
  public:
   GraphFeatureCalculator(
-    boost::shared_ptr<SubsetsOfInterest> subsets_extractor_ptr,
-    boost::shared_ptr<SubsetFeatureExtractor> feature_extractor_ptr,
-    boost::shared_ptr<SubsetFeatureCalculator> feature_calculator_ptr
+    boost::shared_ptr<TraxelsOfInterest> subsets_extractor_ptr,
+    boost::shared_ptr<TraxelsFeatureExtractor> feature_extractor_ptr,
+    boost::shared_ptr<TraxelsFeatureCalculator> feature_calculator_ptr
   ) : 
     subsets_extractor_ptr_(subsets_extractor_ptr),
     feature_extractor_ptr_(feature_extractor_ptr),
@@ -115,20 +115,20 @@ class GraphFeatureCalculator {
     const HypothesesGraph& graph
   );
  protected:
-  boost::shared_ptr<SubsetsOfInterest> subsets_extractor_ptr_;
-  boost::shared_ptr<SubsetFeatureExtractor> feature_extractor_ptr_;
-  boost::shared_ptr<SubsetFeatureCalculator> feature_calculator_ptr_;
+  boost::shared_ptr<TraxelsOfInterest> subsets_extractor_ptr_;
+  boost::shared_ptr<TraxelsFeatureExtractor> feature_extractor_ptr_;
+  boost::shared_ptr<TraxelsFeatureCalculator> feature_calculator_ptr_;
   FeatureVector ret_vector_;
 };
 
 ////
-//// class SubsetFeaturesIdentity
+//// class TraxelsFeaturesIdentity
 ////
-class SubsetFeaturesIdentity : public SubsetFeatureExtractor {
+class TraxelsFeaturesIdentity : public TraxelsFeatureExtractor {
  public:
-  SubsetFeaturesIdentity(const std::vector<std::string>& feature_names);
-  SubsetFeaturesIdentity(const std::string& feature_name);
-  virtual ~SubsetFeaturesIdentity() {};
+  TraxelsFeaturesIdentity(const std::vector<std::string>& feature_names);
+  TraxelsFeaturesIdentity(const std::string& feature_name);
+  virtual ~TraxelsFeaturesIdentity() {};
   virtual const std::string& name() const;
   virtual void extract(
     const ConstTraxelRefVector& traxelrefs,
@@ -137,15 +137,15 @@ class SubsetFeaturesIdentity : public SubsetFeatureExtractor {
  protected:
   static const std::string name_;
   std::vector<std::string> feature_names_;
-}; // class SubsetFeaturesIdentity
+}; // class TraxelsFeaturesIdentity
 
 ////
-//// class TrackSubsets
+//// class TrackTraxels
 ////
-class TrackSubsets : public SubsetsOfInterest {
+class TrackTraxels : public TraxelsOfInterest {
  public:
-  TrackSubsets() {};
-  virtual ~TrackSubsets() {};
+  TrackTraxels() {};
+  virtual ~TrackTraxels() {};
   virtual const std::string& name() const;
   virtual const std::vector<ConstTraxelRefVector>& operator()(
     const HypothesesGraph& graph
@@ -156,12 +156,12 @@ class TrackSubsets : public SubsetsOfInterest {
 };
 
 ////
-//// class DivisionSubsets
+//// class DivisionTraxels
 ////
-class DivisionSubsets : public SubsetsOfInterest {
+class DivisionTraxels : public TraxelsOfInterest {
  public:
-  DivisionSubsets(size_t depth = 1) : depth_(depth) {};
-  virtual ~DivisionSubsets() {};
+  DivisionTraxels(size_t depth = 1) : depth_(depth) {};
+  virtual ~DivisionTraxels() {};
   virtual const std::string& name() const;
   virtual const std::vector<ConstTraxelRefVector>& operator()(
     const HypothesesGraph& graph
@@ -199,11 +199,11 @@ class DivisionSubsets : public SubsetsOfInterest {
 ////
 //// class CompositionCalculator
 ////
-class CompositionCalculator : public SubsetFeatureCalculator {
+class CompositionCalculator : public TraxelsFeatureCalculator {
  public:
   CompositionCalculator(
-    boost::shared_ptr<SubsetFeatureCalculator> first_calculator_ptr,
-    boost::shared_ptr<SubsetFeatureCalculator> second_calculator_ptr
+    boost::shared_ptr<TraxelsFeatureCalculator> first_calculator_ptr,
+    boost::shared_ptr<TraxelsFeatureCalculator> second_calculator_ptr
   ) :
     first_calculator_ptr_(first_calculator_ptr),
     second_calculator_ptr_(second_calculator_ptr) {};
@@ -215,14 +215,14 @@ class CompositionCalculator : public SubsetFeatureCalculator {
   ) const;
  protected:
   static const std::string name_;
-  boost::shared_ptr<SubsetFeatureCalculator> first_calculator_ptr_;
-  boost::shared_ptr<SubsetFeatureCalculator> second_calculator_ptr_;
+  boost::shared_ptr<TraxelsFeatureCalculator> first_calculator_ptr_;
+  boost::shared_ptr<TraxelsFeatureCalculator> second_calculator_ptr_;
 };
 
 ////
 //// class SumCalculator
 ////
-class SumCalculator : public SubsetFeatureCalculator {
+class SumCalculator : public TraxelsFeatureCalculator {
  public:
   SumCalculator() {};
   virtual ~SumCalculator() {};
@@ -238,7 +238,7 @@ class SumCalculator : public SubsetFeatureCalculator {
 ////
 //// class DiffCalculator
 ////
-class DiffCalculator : public SubsetFeatureCalculator {
+class DiffCalculator : public TraxelsFeatureCalculator {
  public:
   DiffCalculator() {};
   virtual ~DiffCalculator() {};
@@ -254,7 +254,7 @@ class DiffCalculator : public SubsetFeatureCalculator {
 ////
 //// class CurveCalculator
 ////
-class CurveCalculator : public SubsetFeatureCalculator {
+class CurveCalculator : public TraxelsFeatureCalculator {
  public:
   CurveCalculator() {};
   virtual ~CurveCalculator() {};
@@ -270,7 +270,7 @@ class CurveCalculator : public SubsetFeatureCalculator {
 ////
 //// class MinCalculator
 ////
-class MinCalculator : public SubsetFeatureCalculator {
+class MinCalculator : public TraxelsFeatureCalculator {
  public:
   MinCalculator() {};
   virtual ~MinCalculator() {};
@@ -286,7 +286,7 @@ class MinCalculator : public SubsetFeatureCalculator {
 ////
 //// class MaxCalculator
 ////
-class MaxCalculator : public SubsetFeatureCalculator {
+class MaxCalculator : public TraxelsFeatureCalculator {
  public:
   MaxCalculator() {};
   virtual ~MaxCalculator() {};
@@ -302,7 +302,7 @@ class MaxCalculator : public SubsetFeatureCalculator {
 ////
 //// class MeanCalculator
 ////
-class MeanCalculator : public SubsetFeatureCalculator {
+class MeanCalculator : public TraxelsFeatureCalculator {
  public:
   MeanCalculator() {};
   virtual ~MeanCalculator() {};
@@ -318,7 +318,7 @@ class MeanCalculator : public SubsetFeatureCalculator {
 ////
 //// class SquaredNormCalculator
 ////
-class SquaredNormCalculator : public SubsetFeatureCalculator {
+class SquaredNormCalculator : public TraxelsFeatureCalculator {
  public:
   SquaredNormCalculator() {};
   virtual ~SquaredNormCalculator() {};
@@ -334,7 +334,7 @@ class SquaredNormCalculator : public SubsetFeatureCalculator {
 ////
 //// class SquaredDiffCalculator
 ////
-class SquaredDiffCalculator : public SubsetFeatureCalculator {
+class SquaredDiffCalculator : public TraxelsFeatureCalculator {
  public:
   SquaredDiffCalculator() {};
   virtual ~SquaredDiffCalculator() {};
@@ -352,7 +352,7 @@ class SquaredDiffCalculator : public SubsetFeatureCalculator {
 ////
 //// class DiffusionCalculator
 ////
-class DiffusionCalculator : public SubsetFeatureCalculator {
+class DiffusionCalculator : public TraxelsFeatureCalculator {
  public:
   DiffusionCalculator() {};
   virtual ~DiffusionCalculator() {};
@@ -370,7 +370,7 @@ class DiffusionCalculator : public SubsetFeatureCalculator {
 ////
 //// class ChildParentDiffCalculator
 ////
-class ChildParentDiffCalculator : public SubsetFeatureCalculator {
+class ChildParentDiffCalculator : public TraxelsFeatureCalculator {
  public:
   ChildParentDiffCalculator() {};
   virtual ~ChildParentDiffCalculator() {};
@@ -391,7 +391,7 @@ class ChildParentDiffCalculator : public SubsetFeatureCalculator {
 ////
 //// class DotProductCalculator
 ////
-class DotProductCalculator : public SubsetFeatureCalculator {
+class DotProductCalculator : public TraxelsFeatureCalculator {
  public:
   DotProductCalculator() {};
   virtual ~DotProductCalculator() {};
@@ -407,7 +407,7 @@ class DotProductCalculator : public SubsetFeatureCalculator {
 ////
 //// class ChildDeceleration
 ////
-class ChildDeceleration : public SubsetFeatureCalculator {
+class ChildDeceleration : public TraxelsFeatureCalculator {
  public:
   ChildDeceleration() {};
   virtual ~ChildDeceleration() {};
@@ -428,7 +428,7 @@ class ChildDeceleration : public SubsetFeatureCalculator {
 ////
 //// class MVNOutlierCalculator
 ////
-class MVNOutlierCalculator : public SubsetFeatureCalculator {
+class MVNOutlierCalculator : public TraxelsFeatureCalculator {
  public:
   MVNOutlierCalculator() {};
   virtual ~MVNOutlierCalculator() {};

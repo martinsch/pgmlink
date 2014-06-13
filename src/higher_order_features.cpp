@@ -131,7 +131,7 @@ void get_in_nodes(
 /*=============================================================================
   virtual classes
 =============================================================================*/
-FeatureMatrix SubsetFeatureExtractor::extract(
+FeatureMatrix TraxelsFeatureExtractor::extract(
   const ConstTraxelRefVector& traxelrefs
 ) const {
   FeatureMatrix ret_;
@@ -139,7 +139,7 @@ FeatureMatrix SubsetFeatureExtractor::extract(
   return ret_;
 }
 
-FeatureMatrix SubsetFeatureCalculator::calculate(
+FeatureMatrix TraxelsFeatureCalculator::calculate(
   const FeatureMatrix& feature_matrix
 ) const {
   FeatureMatrix ret_;
@@ -177,27 +177,27 @@ const FeatureVector& GraphFeatureCalculator::calculate_vector(
 }
 
 ////
-//// class SubsetFeaturesIdentity
+//// class TraxelsFeaturesIdentity
 ////
-const std::string SubsetFeaturesIdentity::name_ = "SubsetFeaturesIdentity";
+const std::string TraxelsFeaturesIdentity::name_ = "TraxelsFeaturesIdentity";
 
-SubsetFeaturesIdentity::SubsetFeaturesIdentity(
+TraxelsFeaturesIdentity::TraxelsFeaturesIdentity(
   const std::vector<std::string>& feature_names
 ) : feature_names_(feature_names) {
 }
 
-SubsetFeaturesIdentity::SubsetFeaturesIdentity(
+TraxelsFeaturesIdentity::TraxelsFeaturesIdentity(
   const std::string& feature_name
 ) {
   feature_names_.resize(1);
   feature_names_[0] = feature_name;
 }
 
-const std::string& SubsetFeaturesIdentity::name() const {
+const std::string& TraxelsFeaturesIdentity::name() const {
   return name_;
 }
 
-void SubsetFeaturesIdentity::extract(
+void TraxelsFeaturesIdentity::extract(
   const ConstTraxelRefVector& traxelrefs,
   FeatureMatrix& feature_matrix
 ) const {
@@ -218,7 +218,7 @@ void SubsetFeaturesIdentity::extract(
     if (feature_map_it != feature_map.end()) {
       y_size += feature_map_it->second.size();
     } else {
-      LOG(logDEBUG) << "In SubsetFeaturesIdentity: Feature \"" << *fname_it << "\" not found";
+      LOG(logDEBUG) << "In TraxelsFeaturesIdentity: Feature \"" << *fname_it << "\" not found";
     }
   }
   
@@ -258,7 +258,7 @@ void SubsetFeaturesIdentity::extract(
         ) {
           if (row_index >= y_size) {
             throw std::runtime_error(
-              "In SubsetFeaturesIdentity: Invalid row index"
+              "In TraxelsFeaturesIdentity: Invalid row index"
             );
           }
           column(row_index) = *f_it;
@@ -269,15 +269,15 @@ void SubsetFeaturesIdentity::extract(
 }
 
 ////
-//// class TrackSubsets
+//// class TrackTraxels
 ////
-const std::string TrackSubsets::name_ = "TrackSubsets";
+const std::string TrackTraxels::name_ = "TrackTraxels";
 
-const std::string& TrackSubsets::name() const {
+const std::string& TrackTraxels::name() const {
   return name_;
 }
 
-const std::vector<ConstTraxelRefVector>& TrackSubsets::operator()(
+const std::vector<ConstTraxelRefVector>& TrackTraxels::operator()(
   const HypothesesGraph& graph
 ) {
   ret_.clear();
@@ -373,20 +373,20 @@ const std::vector<ConstTraxelRefVector>& TrackSubsets::operator()(
 }
 
 ////
-//// class DivisionSubsets
+//// class DivisionTraxels
 ////
-const std::string DivisionSubsets::name_ = "DivisionSubsets";
+const std::string DivisionTraxels::name_ = "DivisionTraxels";
 
-const std::string& DivisionSubsets::name() const {
+const std::string& DivisionTraxels::name() const {
   return name_;
 }
 
-const std::vector<ConstTraxelRefVector>& DivisionSubsets::operator()(
+const std::vector<ConstTraxelRefVector>& DivisionTraxels::operator()(
   const HypothesesGraph& graph
 ) {
   return operator()(graph, depth_);
 }
-const std::vector<ConstTraxelRefVector>& DivisionSubsets::operator()(
+const std::vector<ConstTraxelRefVector>& DivisionTraxels::operator()(
   const HypothesesGraph& graph,
   size_t depth
 ) {
@@ -425,7 +425,7 @@ const std::vector<ConstTraxelRefVector>& DivisionSubsets::operator()(
   }
 }
 
-const std::vector<ConstTraxelRefVector>& DivisionSubsets::from_traxel_graph(
+const std::vector<ConstTraxelRefVector>& DivisionTraxels::from_traxel_graph(
   const HypothesesGraph& graph,
   size_t depth
 ) {
@@ -503,7 +503,7 @@ const std::vector<ConstTraxelRefVector>& DivisionSubsets::from_traxel_graph(
   return ret_;
 }
 
-const std::vector<ConstTraxelRefVector>& DivisionSubsets::from_tracklet_graph(
+const std::vector<ConstTraxelRefVector>& DivisionTraxels::from_tracklet_graph(
   const HypothesesGraph& graph,
   size_t depth
 ) {
@@ -565,7 +565,7 @@ const std::vector<ConstTraxelRefVector>& DivisionSubsets::from_tracklet_graph(
   return ret_;
 }
 
-bool DivisionSubsets::get_children_to_depth(
+bool DivisionTraxels::get_children_to_depth(
   const HypothesesGraph::Node& node,
   const HypothesesGraph& graph,
   size_t depth,
@@ -594,7 +594,7 @@ bool DivisionSubsets::get_children_to_depth(
   return (depth == 0);
 }
 
-bool DivisionSubsets::get_parents_to_depth(
+bool DivisionTraxels::get_parents_to_depth(
   const HypothesesGraph::Node& node,
   const HypothesesGraph& graph,
   size_t depth,

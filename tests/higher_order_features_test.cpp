@@ -235,26 +235,26 @@ void get_feature_matrix(FeatureMatrix& x) {
   }
 }
 
-BOOST_AUTO_TEST_CASE( SubsetFeaturesIdentity_extract ) {
-  LOG(logINFO) << "test case: SubsetFeaturesIdentity_operator";
+BOOST_AUTO_TEST_CASE( TraxelsFeaturesIdentity_extract ) {
+  LOG(logINFO) << "test case: TraxelsFeaturesIdentity_operator";
 
   // set up the graph
   HypothesesGraph graph;
   get_graph(graph);
 
   // get the subset of all traxels in the order of their traxel ids
-  ConstTraxelRefVector subset(8);
+  ConstTraxelRefVector traxels(8);
   for (NodeIt n_it(graph); n_it != lemon::INVALID; ++n_it) {
     const Traxel* tref = &(graph.get(node_traxel())[n_it]);
-    subset[tref->Id-1] = tref;
+    traxels[tref->Id-1] = tref;
   }
 
-  LOG(logINFO) << "  test \"SubsetFeaturesIdentity\" with string as constructor argument";
+  LOG(logINFO) << "  test \"TraxelsFeaturesIdentity\" with string as constructor argument";
   {
-    SubsetFeaturesIdentity identity("com");
+    TraxelsFeaturesIdentity identity("com");
 
     FeatureMatrix com_matrix;
-    identity.extract(subset, com_matrix);
+    identity.extract(traxels, com_matrix);
     
     BOOST_CHECK_EQUAL(com_matrix.shape(0), 8);
     BOOST_CHECK_EQUAL(com_matrix.shape(1), 2);
@@ -267,13 +267,13 @@ BOOST_AUTO_TEST_CASE( SubsetFeaturesIdentity_extract ) {
     }
   }
 
-  LOG(logINFO) << "  test \"SubsetFeaturesIdentity\" with length one vector as constructor argument";
+  LOG(logINFO) << "  test \"TraxelsFeaturesIdentity\" with length one vector as constructor argument";
   {
     std::vector<std::string> feature_names(1, "com");
-    SubsetFeaturesIdentity identity(feature_names);
+    TraxelsFeaturesIdentity identity(feature_names);
 
     FeatureMatrix com_matrix;
-    identity.extract(subset, com_matrix);
+    identity.extract(traxels, com_matrix);
     
     BOOST_CHECK_EQUAL(com_matrix.shape(0), 8);
     BOOST_CHECK_EQUAL(com_matrix.shape(1), 2);
@@ -286,16 +286,16 @@ BOOST_AUTO_TEST_CASE( SubsetFeaturesIdentity_extract ) {
     }
   }
 
-  LOG(logINFO) << "  test \"SubsetFeaturesIdentity\" with length two vector as constructor argument";
+  LOG(logINFO) << "  test \"TraxelsFeaturesIdentity\" with length two vector as constructor argument";
   {
     std::vector<std::string> feature_names;
     feature_names.push_back("com");
     feature_names.push_back("id");
 
-    SubsetFeaturesIdentity identity(feature_names);
+    TraxelsFeaturesIdentity identity(feature_names);
 
     FeatureMatrix com_matrix;
-    identity.extract(subset, com_matrix);
+    identity.extract(traxels, com_matrix);
     
     BOOST_CHECK_EQUAL(com_matrix.shape(0), 8);
     BOOST_CHECK_EQUAL(com_matrix.shape(1), 3);
@@ -311,8 +311,8 @@ BOOST_AUTO_TEST_CASE( SubsetFeaturesIdentity_extract ) {
   }
 }
 
-BOOST_AUTO_TEST_CASE( TrackSubsets_operator_traxelgraph ) {
-  LOG(logINFO) << "test case: TrackSubsets_operator_traxelgraph";
+BOOST_AUTO_TEST_CASE( TrackTraxels_operator_traxelgraph ) {
+  LOG(logINFO) << "test case: TrackTraxels_operator_traxelgraph";
 
   // set up the graph
   HypothesesGraph graph;
@@ -321,14 +321,14 @@ BOOST_AUTO_TEST_CASE( TrackSubsets_operator_traxelgraph ) {
   // set the solution index
   set_solution(graph, 0);
   
-  // get the track subsets
-  TrackSubsets get_track_subsets;
-  std::vector<ConstTraxelRefVector> track_subsets = get_track_subsets(graph);
+  // get the track traxels
+  TrackTraxels get_track_traxels;
+  std::vector<ConstTraxelRefVector> track_traxels = get_track_traxels(graph);
 
-  LOG(logINFO) << "  there are " << track_subsets.size() << " tracks";
+  LOG(logINFO) << "  there are " << track_traxels.size() << " tracks";
   for (
-    std::vector<ConstTraxelRefVector>::iterator tvec_it = track_subsets.begin();
-    tvec_it != track_subsets.end();
+    std::vector<ConstTraxelRefVector>::iterator tvec_it = track_traxels.begin();
+    tvec_it != track_traxels.end();
     tvec_it++
   ) {
     LOG(logINFO) << "    count of nodes in track: " << tvec_it->size();
@@ -344,14 +344,14 @@ BOOST_AUTO_TEST_CASE( TrackSubsets_operator_traxelgraph ) {
     LOG(logINFO) << sstream.str();
   }
   LOG(logINFO) << "  test sizes";
-  BOOST_CHECK_EQUAL(track_subsets.size(), 3);
-  BOOST_CHECK_EQUAL(track_subsets[0].size(), 2);
-  BOOST_CHECK_EQUAL(track_subsets[1].size(), 2);
-  BOOST_CHECK_EQUAL(track_subsets[2].size(), 2);
+  BOOST_CHECK_EQUAL(track_traxels.size(), 3);
+  BOOST_CHECK_EQUAL(track_traxels[0].size(), 2);
+  BOOST_CHECK_EQUAL(track_traxels[1].size(), 2);
+  BOOST_CHECK_EQUAL(track_traxels[2].size(), 2);
 }
 
-BOOST_AUTO_TEST_CASE( TrackSubsets_operator_trackletgraph ) {
-  LOG(logINFO) << "test case: TrackSubsets_operator_trackletgraph";
+BOOST_AUTO_TEST_CASE( TrackTraxels_operator_trackletgraph ) {
+  LOG(logINFO) << "test case: TrackTraxels_operator_trackletgraph";
 
   // set up the graph
   HypothesesGraph graph;
@@ -360,14 +360,14 @@ BOOST_AUTO_TEST_CASE( TrackSubsets_operator_trackletgraph ) {
   // set the solution index
   set_solution(graph, 0);
   
-  // get the track subsets
-  TrackSubsets get_track_subsets;
-  std::vector<ConstTraxelRefVector> track_subsets = get_track_subsets(graph);
+  // get the track traxels
+  TrackTraxels get_track_traxels;
+  std::vector<ConstTraxelRefVector> track_traxels = get_track_traxels(graph);
 
-  LOG(logINFO) << "  there are " << track_subsets.size() << " tracks";
+  LOG(logINFO) << "  there are " << track_traxels.size() << " tracks";
   for (
-    std::vector<ConstTraxelRefVector>::iterator tvec_it = track_subsets.begin();
-    tvec_it != track_subsets.end();
+    std::vector<ConstTraxelRefVector>::iterator tvec_it = track_traxels.begin();
+    tvec_it != track_traxels.end();
     tvec_it++
   ) {
     LOG(logINFO) << "    count of nodes in track: " << tvec_it->size();
@@ -383,14 +383,14 @@ BOOST_AUTO_TEST_CASE( TrackSubsets_operator_trackletgraph ) {
     LOG(logINFO) << sstream.str();
   }
   LOG(logINFO) << "  test sizes";
-  BOOST_CHECK_EQUAL(track_subsets.size(), 3);
-  BOOST_CHECK_EQUAL(track_subsets[0].size(), 2);
-  BOOST_CHECK_EQUAL(track_subsets[1].size(), 2);
-  BOOST_CHECK_EQUAL(track_subsets[2].size(), 2);
+  BOOST_CHECK_EQUAL(track_traxels.size(), 3);
+  BOOST_CHECK_EQUAL(track_traxels[0].size(), 2);
+  BOOST_CHECK_EQUAL(track_traxels[1].size(), 2);
+  BOOST_CHECK_EQUAL(track_traxels[2].size(), 2);
 }
 
-BOOST_AUTO_TEST_CASE( DivisionSubsets_operator_traxelgraph ) {
-  LOG(logINFO) << "test case: DivisionSubsets_operator_traxelgraph";
+BOOST_AUTO_TEST_CASE( DivisionTraxels_operator_traxelgraph ) {
+  LOG(logINFO) << "test case: DivisionTraxels_operator_traxelgraph";
 
   // set up the graph
   HypothesesGraph graph;
@@ -399,33 +399,33 @@ BOOST_AUTO_TEST_CASE( DivisionSubsets_operator_traxelgraph ) {
   // set the solution index
   set_solution(graph, 0);
 
-  // get the division subsets to depth 1
-  LOG(logINFO) << "  get division subsets to depth 1";
+  // get the division traxels to depth 1
+  LOG(logINFO) << "  get division traxels to depth 1";
   {
-    DivisionSubsets get_div_subsets;
-    std::vector<ConstTraxelRefVector> div_subsets = get_div_subsets(graph);
+    DivisionTraxels get_div_traxels;
+    std::vector<ConstTraxelRefVector> div_traxels = get_div_traxels(graph);
 
-    LOG(logINFO) << "  count of division subsets: " << div_subsets.size();
+    LOG(logINFO) << "  count of division traxels: " << div_traxels.size();
     LOG(logINFO) << "  check size and indices";
-    BOOST_CHECK_EQUAL(div_subsets.size(), 1);
-    ConstTraxelRefVector traxelrefs = div_subsets[0];
+    BOOST_CHECK_EQUAL(div_traxels.size(), 1);
+    ConstTraxelRefVector traxelrefs = div_traxels[0];
     BOOST_CHECK_EQUAL(traxelrefs.size(), 3);
     BOOST_CHECK_EQUAL(traxelrefs[0]->Id, 3);
     BOOST_CHECK((traxelrefs[1]->Id == 5) or (traxelrefs[1]->Id == 6));
     BOOST_CHECK((traxelrefs[2]->Id == 5) or (traxelrefs[2]->Id == 6));
   }
 
-  // get the division subsets to depth 2
-  LOG(logINFO) << "  get division subsets to depth 2";
+  // get the division traxels to depth 2
+  LOG(logINFO) << "  get division traxels to depth 2";
   {
-    DivisionSubsets get_div_subsets(2);
-    std::vector<ConstTraxelRefVector> div_subsets = get_div_subsets(graph);
+    DivisionTraxels get_div_traxels(2);
+    std::vector<ConstTraxelRefVector> div_traxels = get_div_traxels(graph);
 
-    LOG(logINFO) << "  count of division subsets: " << div_subsets.size();
+    LOG(logINFO) << "  count of division traxels: " << div_traxels.size();
     LOG(logINFO) << "  check size and indices";
-    BOOST_CHECK_EQUAL(div_subsets.size(), 1);
+    BOOST_CHECK_EQUAL(div_traxels.size(), 1);
 
-    ConstTraxelRefVector traxelrefs = div_subsets[0];
+    ConstTraxelRefVector traxelrefs = div_traxels[0];
     std::stringstream sstream;
     sstream << "    indices in division: ";
     for (
@@ -446,8 +446,8 @@ BOOST_AUTO_TEST_CASE( DivisionSubsets_operator_traxelgraph ) {
   }
 }
 
-BOOST_AUTO_TEST_CASE( DivisionSubsets_operator_trackletgraph ) {
-  LOG(logINFO) << "test case: DivisionSubsets_operator_trackletgraph";
+BOOST_AUTO_TEST_CASE( DivisionTraxels_operator_trackletgraph ) {
+  LOG(logINFO) << "test case: DivisionTraxels_operator_trackletgraph";
 
   // set up the graph
   HypothesesGraph graph;
@@ -456,33 +456,33 @@ BOOST_AUTO_TEST_CASE( DivisionSubsets_operator_trackletgraph ) {
   // set the solution index
   set_solution(graph, 0);
 
-  // get the division subsets to depth 1
-  LOG(logINFO) << "  get division subsets to depth 1";
+  // get the division traxels to depth 1
+  LOG(logINFO) << "  get division traxels to depth 1";
   {
-    DivisionSubsets get_div_subsets;
-    std::vector<ConstTraxelRefVector> div_subsets = get_div_subsets(graph);
+    DivisionTraxels get_div_traxels;
+    std::vector<ConstTraxelRefVector> div_traxels = get_div_traxels(graph);
 
-    LOG(logINFO) << "  count of division subsets: " << div_subsets.size();
+    LOG(logINFO) << "  count of division traxels: " << div_traxels.size();
     LOG(logINFO) << "  check size and indices";
-    BOOST_CHECK_EQUAL(div_subsets.size(), 1);
-    ConstTraxelRefVector traxelrefs = div_subsets[0];
+    BOOST_CHECK_EQUAL(div_traxels.size(), 1);
+    ConstTraxelRefVector traxelrefs = div_traxels[0];
     BOOST_CHECK_EQUAL(traxelrefs.size(), 3);
     BOOST_CHECK_EQUAL(traxelrefs[0]->Id, 3);
     BOOST_CHECK((traxelrefs[1]->Id == 5) or (traxelrefs[1]->Id == 6));
     BOOST_CHECK((traxelrefs[2]->Id == 5) or (traxelrefs[2]->Id == 6));
   }
 
-  // get the division subsets to depth 2
-  LOG(logINFO) << "  get division subsets to depth 2";
+  // get the division traxels to depth 2
+  LOG(logINFO) << "  get division traxels to depth 2";
   {
-    DivisionSubsets get_div_subsets(2);
-    std::vector<ConstTraxelRefVector> div_subsets = get_div_subsets(graph);
+    DivisionTraxels get_div_traxels(2);
+    std::vector<ConstTraxelRefVector> div_traxels = get_div_traxels(graph);
 
-    LOG(logINFO) << "  count of division subsets: " << div_subsets.size();
+    LOG(logINFO) << "  count of division traxels: " << div_traxels.size();
     LOG(logINFO) << "  check size and indices";
-    BOOST_CHECK_EQUAL(div_subsets.size(), 1);
+    BOOST_CHECK_EQUAL(div_traxels.size(), 1);
 
-    ConstTraxelRefVector traxelrefs = div_subsets[0];
+    ConstTraxelRefVector traxelrefs = div_traxels[0];
     std::stringstream sstream;
     sstream << "    indices in division: ";
     for (
@@ -782,17 +782,17 @@ BOOST_AUTO_TEST_CASE( GraphFeatureCalculator_calculate_vector ) {
   set_solution(graph, 0);
 
   // set up the calculators
-  boost::shared_ptr<SubsetsOfInterest> track_subsets_extractor_ptr(
-    new TrackSubsets
+  boost::shared_ptr<TraxelsOfInterest> track_traxels_extractor_ptr(
+    new TrackTraxels
   );
-  boost::shared_ptr<SubsetFeaturesIdentity> features_identity_extractor_ptr(
-    new SubsetFeaturesIdentity("id")
+  boost::shared_ptr<TraxelsFeaturesIdentity> features_identity_extractor_ptr(
+    new TraxelsFeaturesIdentity("id")
   );
-  boost::shared_ptr<SubsetFeatureCalculator> sum_calculator_ptr(
+  boost::shared_ptr<TraxelsFeatureCalculator> sum_calculator_ptr(
     new SumCalculator
   );
   GraphFeatureCalculator sum_of_ids_in_track(
-    track_subsets_extractor_ptr,
+    track_traxels_extractor_ptr,
     features_identity_extractor_ptr,
     sum_calculator_ptr
   );
