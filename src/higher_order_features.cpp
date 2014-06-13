@@ -646,6 +646,14 @@ void CompositionCalculator::calculate(
 ////
 //// class SumCalculator
 ////
+template<int N>
+const std::string SumCalculator<N>::name_ = "SumCalculator";
+
+template<int N>
+const std::string& SumCalculator<N>::name() const {
+  return name_;
+}
+
 template<>
 void SumCalculator<0>::calculate(
   const FeatureMatrix& feature_matrix,
@@ -708,6 +716,11 @@ void SumCalculator<-1>::calculate(
     );
   }
 }
+
+// Explicit instantiation
+template class SumCalculator<0>;
+template class SumCalculator<1>;
+template class SumCalculator<-1>;
 
 ////
 //// class DiffCalculator
@@ -775,6 +788,14 @@ void CurveCalculator::calculate(
 ////
 //// class MinCalculator
 ////
+template<int N>
+const std::string MinCalculator<N>::name_ = "MinCalculator";
+
+template<int N>
+const std::string& MinCalculator<N>::name() const {
+  return name_;
+}
+
 template<>
 void MinCalculator<0>::calculate(
   const FeatureMatrix& feature_matrix,
@@ -840,9 +861,21 @@ void MinCalculator<-1>::calculate(
   }
 }
 
+// Explicit instantiation
+template class MinCalculator<0>;
+template class MinCalculator<1>;
+template class MinCalculator<-1>;
+
 ////
 //// class MaxCalculator
 ////
+template<int N>
+const std::string MaxCalculator<N>::name_ = "MaxCalculator";
+
+template<int N>
+const std::string& MaxCalculator<N>::name() const {
+  return name_;
+}
 template <>
 void MaxCalculator<0>::calculate(
   const FeatureMatrix& feature_matrix,
@@ -909,9 +942,23 @@ void MaxCalculator<-1>::calculate(
     );
   }
 }
+
+// Explicit instantiation
+template class MaxCalculator<0>;
+template class MaxCalculator<1>;
+template class MaxCalculator<-1>;
+
 ////
 //// class MeanCalculator
 ////
+template<int N>
+const std::string MeanCalculator<N>::name_ = "MeanCalculator";
+
+template<int N>
+const std::string& MeanCalculator<N>::name() const {
+  return name_;
+}
+
 template<>
 void MeanCalculator<0>::calculate(
   const FeatureMatrix& feature_matrix,
@@ -976,6 +1023,11 @@ void MeanCalculator<-1>::calculate(
     ) / static_cast<FeatureScalar>(feature_matrix.size());
   }
 }
+
+// Explicit instantiation
+template class MeanCalculator<0>;
+template class MeanCalculator<1>;
+template class MeanCalculator<-1>;
 
 ////
 //// class SquaredNormCalculator

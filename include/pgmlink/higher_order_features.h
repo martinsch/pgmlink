@@ -236,14 +236,6 @@ class SumCalculator : public TraxelsFeatureCalculator {
   static const std::string name_;
 };
 
-template<int N>
-const std::string SumCalculator<N>::name_ = "SumCalculator";
-
-template<int N>
-const std::string& SumCalculator<N>::name() const {
-  return name_;
-}
-
 ////
 //// class DiffCalculator
 ////
@@ -292,13 +284,6 @@ class MinCalculator : public TraxelsFeatureCalculator {
  protected:
   static const std::string name_;
 };
-template<int N>
-const std::string MinCalculator<N>::name_ = "MinCalculator";
-
-template<int N>
-const std::string& MinCalculator<N>::name() const {
-  return name_;
-}
 
 ////
 //// class MaxCalculator
@@ -316,13 +301,6 @@ class MaxCalculator : public TraxelsFeatureCalculator {
  protected:
   static const std::string name_;
 };
-template<int N>
-const std::string MaxCalculator<N>::name_ = "MaxCalculator";
-
-template<int N>
-const std::string& MaxCalculator<N>::name() const {
-  return name_;
-}
 
 ////
 //// class MeanCalculator
@@ -340,13 +318,6 @@ class MeanCalculator : public TraxelsFeatureCalculator {
  protected:
   static const std::string name_;
 };
-template<int N>
-const std::string MeanCalculator<N>::name_ = "MeanCalculator";
-
-template<int N>
-const std::string& MeanCalculator<N>::name() const {
-  return name_;
-}
 
 ////
 //// class SquaredNormCalculator
