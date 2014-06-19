@@ -647,6 +647,20 @@ class DotProductCalculator : public TraxelsFeatureCalculator {
 ////
 //// class ChildDeceleration
 ////
+/**
+\brief calculates the deceleration of the childrens movement in a cell division
+
+Calculates the ratios of the childrens squared move distance between t and t+1
+where t is the time of the cell division. It returns a row vector with two
+values. One for the first child, one for the second child.
+\code
+       t2--t3
+      /
+t1--t0
+      \
+       t4--t5
+\endcode
+*/
 class ChildDeceleration : public TraxelsFeatureCalculator {
  public:
   ChildDeceleration() {};
@@ -668,6 +682,21 @@ class ChildDeceleration : public TraxelsFeatureCalculator {
 ////
 //// class MVNOutlierCalculator
 ////
+/**
+\brief calculates count of outliers normalized to the track length
+
+The outliers are calculated with the multivariant gaussian distribution. The
+covariance matrix \f$\Sigma\f$ and the mean value \f$\vec{\mu}\f$ are calculated
+with the column vectors. An outlier is defined as a column vector that differs
+for more than three sigma from the mean value. This sigma threshold can also be
+varied.
+
+The count of outliers returned by MVNOutlierCalculator::calculate is normalized
+to the count of column vectors in the matrix.
+
+Definition of outlier:
+\f$\sigma < (\vec{x}-\vec{\mu})^T \Sigma^{-1} (\vec{x}-\vec{\mu})\f$
+*/
 class MVNOutlierCalculator : public TraxelsFeatureCalculator {
  public:
   MVNOutlierCalculator() {};
