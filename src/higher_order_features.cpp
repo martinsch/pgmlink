@@ -161,6 +161,7 @@ const FeatureVector& GraphFeatureCalculator::calculate_vector(
     subsets_extractor_ptr_->operator()(graph);
 
   size_t subset_count = trx_vecs.size();
+  // TODO Implement for non scalar features
   ret_vector_.reshape(vigra::Shape1(subset_count));
   ret_vector_.init(0.0);
   

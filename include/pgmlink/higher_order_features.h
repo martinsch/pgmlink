@@ -12,6 +12,35 @@ extract features like positions or sizes of the involved traxels.
 - Compose the implementations of <TT>pgmlink::TraxelsFeatureCalculator</TT> to
 calculate any interesting new higher order feature
 
+Minimal example:
+\code
+#include <pgmlink/higher_order_features.h>
+
+using namespace pgmlink
+
+// Get the hypotheses graph with the MAP solution written into the node_active
+// and arc_active property map
+HypothesesGraph graph;
+...
+
+// Extract all tracks in the tracking
+TrackTraxels track_extractor;
+std::vector<ConstTraxelRefVector> track_traxels = track_extractor(graph);
+
+// Extract the positions of the traxels in the first track
+TraxelsFeaturesIdentity position_extractor("com");
+FeatureMatrix positions;
+position_extractor.extract(track_traxels[0], positions);
+
+// Calculate the diffusion coefficient of those positions
+DiffusionCalculator diffusion_calculator;
+FeatureMatrix return_value;
+diffusion_calculator.calculate(positions, return_value);
+
+// The return_value is now a 1x1 matrix with the diffusion coefficient in the
+// (0,0) position
+\endcode
+
 */
 
 #ifndef PGMLINK_HIGHER_ORDER_FEATURES_H
@@ -150,8 +179,57 @@ class TraxelsFeatureCalculator {
 ////
 //// class GraphFeatureCalculator
 ////
+/**
+\brief simplifies the workflow TraxelsOfInterest -> TraxelsFeatureExtractor ->
+  TraxelsFeatureCalculator
+
+\code
+                          TraxelsOfInterest
+                    Graph ----------------------> Vector of vectors of traxels
+
+                          TraxelsFeatureExtractor
+   i-th vector of Traxels ----------------------> matrix of traxel features
+
+                          TraxelsFeatureCalculator
+matrix of traxel features ----------------------> 1x1 matrix of traxel features
+                                                  (i-th component of return vector)
+\endcode
+The GraphFeatureCalculator uses the TraxelsFeatureExtractor and 
+TraxelsFeatureCalculator given in the constructor to calculate the features 
+for of every subset returned by the TraxelsOfInterest class in the constructor.
+This only works for TraxelsFeatureCalculator that return a 1x1 matrix since the
+results are returned in one vector. Each position in the return vector stands
+for one subset.
+*/
 class GraphFeatureCalculator {
  public:
+  /**
+  \brief takes shared pointers to the TraxelsOfInterest, TraxelsFeatureExtractor
+    and TraxelsFeatureCalculator that should be used in the calculation workflow
+  
+  Example usage:
+  \code
+  boost::shared_ptr<TraxelsOfInterest> track_extractor_ptr(
+    new TrackExtractor
+  );
+  boost::shared_ptr<TraxelsFeatureExtractor> position_identity_ptr(
+    new TraxelsFeaturesIdentity("com")
+  );
+  boost::shared_ptr<TraxelsFeatureCalculator> diffusion_calculator_ptr(
+    new DiffusionCalculator
+  );
+
+  GraphFeatureCalculator diffusion_coefficients(
+    track_extractor_ptr,
+    position_identity_ptr,
+    diffusion_calculator_ptr
+  );
+  
+  return_vector = diffusion_coefficients.calculate_vector(graph);
+  // the return vector now consists of the diffusion coefficients of all tracks
+  // in the hypotheses graph
+  \endcode
+  */
   GraphFeatureCalculator(
     boost::shared_ptr<TraxelsOfInterest> subsets_extractor_ptr,
     boost::shared_ptr<TraxelsFeatureExtractor> feature_extractor_ptr,
@@ -301,6 +379,9 @@ class DivisionTraxels : public TraxelsOfInterest {
 ////
 //// class CompositionCalculator
 ////
+/**
+\brief Composition of two TraxelsFeatureCalculator
+*/
 class CompositionCalculator : public TraxelsFeatureCalculator {
  public:
   CompositionCalculator(
@@ -324,6 +405,16 @@ class CompositionCalculator : public TraxelsFeatureCalculator {
 ////
 //// class SumCalculator
 ////
+/**
+\brief Calculates the sum along the matrix axis specified in the template
+  argument
+
+\tparam N axis along which the sum is taken
+
+- N=0: The sum is taken along the rows, returns a column vector.
+- N=1: The sum is taken along the columns, returns a row vector.
+- N=-1: The sum is taken over all elements of the matrix, returns a 1x1 matrix.
+*/
 template<int N>
 class SumCalculator : public TraxelsFeatureCalculator {
  public:
@@ -424,6 +515,14 @@ class MeanCalculator : public TraxelsFeatureCalculator {
 ////
 //// class SquaredNormCalculator
 ////
+/**
+\brief calculates the squared norm of the row or column vectors
+
+\tparam N axis along which the norm is taken
+
+- N=0 Calculates the squared norm of each column vector
+- N=1 Calculates the squared norm of each row vector
+*/
 template<int N>
 class SquaredNormCalculator : public TraxelsFeatureCalculator {
  public:
@@ -459,6 +558,15 @@ class SquaredDiffCalculator : public TraxelsFeatureCalculator {
 ////
 //// class DiffusionCalculator
 ////
+/**
+\brief calculates the diffusion coefficient of the column vectors of the input
+  matrix.
+
+Returns \f$D = \langle \vec{v}^2 \rangle - {\langle \vec{v} \rangle}^2\f$, where
+\f$\vec{v}\f$ is the difference of two neigbouring column vectors. It is
+therefore variance of the mean move distance if the column vectors are the cell
+positions.
+*/
 class DiffusionCalculator : public TraxelsFeatureCalculator {
  public:
   DiffusionCalculator() {};
@@ -477,6 +585,12 @@ class DiffusionCalculator : public TraxelsFeatureCalculator {
 ////
 //// class VarianceCalculator
 ////
+/**
+\brief calculates the variance along the specified matrix axis
+
+Only implemented for N=0: calculates the variance for each row. Returns a column
+vector.
+*/
 template<int N>
 class VarianceCalculator : public TraxelsFeatureCalculator {
  public:
