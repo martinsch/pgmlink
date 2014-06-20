@@ -52,6 +52,7 @@ diffusion_calculator.calculate(positions, return_value);
 // pgmlink
 #include "pgmlink/traxels.h" /* for traxels */
 #include "pgmlink/hypotheses.h" /* for hypotheses graph */
+#include "pgmlink/classifier_auxiliary.h" /* for class FeatureCalculator */
 
 // boost
 #include <boost/serialization/serialization.hpp> /* for serialization */
@@ -400,6 +401,27 @@ class CompositionCalculator : public TraxelsFeatureCalculator {
   static const std::string name_;
   boost::shared_ptr<TraxelsFeatureCalculator> first_calculator_ptr_;
   boost::shared_ptr<TraxelsFeatureCalculator> second_calculator_ptr_;
+};
+
+////
+//// class TraxelsFCFromFC
+////
+class TraxelsFCFromFC : public TraxelsFeatureCalculator {
+ public:
+  TraxelsFCFromFC(
+    boost::shared_ptr<FeatureCalculator> feature_calculator_ptr,
+    size_t order
+  ) : feature_calculator_ptr_(feature_calculator_ptr), order_(order) {};
+  virtual ~TraxelsFCFromFC() {};
+  virtual const std::string& name() const;
+  virtual void calculate(
+    const FeatureMatrix& feature_matrix,
+    FeatureMatrix& return_vector
+  ) const;
+ protected:
+  boost::shared_ptr<FeatureCalculator> feature_calculator_ptr_;
+  size_t order_;
+  static const std::string name_;
 };
 
 ////

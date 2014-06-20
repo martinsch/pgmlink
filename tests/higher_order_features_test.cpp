@@ -7,6 +7,7 @@
 
 #include "pgmlink/log.h"
 #include "pgmlink/higher_order_features.h"
+#include "pgmlink/classifier_auxiliary.h"
 
 using namespace pgmlink;
 // using namespace boost;
@@ -501,6 +502,53 @@ BOOST_AUTO_TEST_CASE( DivisionTraxels_operator_trackletgraph ) {
     BOOST_CHECK((traxelrefs[4]->Id == 5) or (traxelrefs[4]->Id == 6));
     BOOST_CHECK_EQUAL(traxelrefs[5]->Id - traxelrefs[4]->Id, 2);
   }
+}
+
+BOOST_AUTO_TEST_CASE( TraxelsFCFromFC_test) {
+  LOG(logINFO) << "test case: TraxelsFCFromFC_test";
+  
+  // get the test data
+  FeatureMatrix x(vigra::Shape2(0,0));
+  get_feature_matrix(x);
+
+  boost::shared_ptr<FeatureCalculator> identity_ptr(new IdentityCalculator);
+  boost::shared_ptr<FeatureCalculator> difference_ptr( 
+    new VectorDifferenceCalculator
+  );
+  boost::shared_ptr<FeatureCalculator> curvature_ptr( 
+    new CurvatureCalculator
+  );
+  TraxelsFCFromFC identity_calc(identity_ptr, 1);
+  TraxelsFCFromFC difference_calc(difference_ptr, 2);
+  TraxelsFCFromFC curvature_calc(curvature_ptr, 3);
+
+  FeatureMatrix identity;
+  FeatureMatrix difference;
+  FeatureMatrix curvature;
+  identity_calc.calculate(x, identity);
+  difference_calc.calculate(x, difference);
+  curvature_calc.calculate(x, curvature);
+
+  BOOST_CHECK_EQUAL(identity.shape(0), 7);
+  BOOST_CHECK_EQUAL(identity.shape(1), 2);
+  BOOST_CHECK_EQUAL(identity(0,0), 3.);
+  BOOST_CHECK_EQUAL(identity(0,1), 3.);
+  BOOST_CHECK_EQUAL(identity(6,0), 9.);
+  BOOST_CHECK_EQUAL(identity(6,1), 8.);
+
+  BOOST_CHECK_EQUAL(difference.shape(0), 6);
+  BOOST_CHECK_EQUAL(difference.shape(1), 2);
+  BOOST_CHECK_EQUAL(difference(0,0), 1.);
+  BOOST_CHECK_EQUAL(difference(0,1), 0.);
+  BOOST_CHECK_EQUAL(difference(5,0), 4.);
+  BOOST_CHECK_EQUAL(difference(5,1), 3.);
+
+  BOOST_CHECK_EQUAL(curvature.shape(0), 5);
+  BOOST_CHECK_EQUAL(curvature.shape(1), 2);
+  BOOST_CHECK_EQUAL(curvature(0,0),-2.);
+  BOOST_CHECK_EQUAL(curvature(0,1), 1.);
+  BOOST_CHECK_EQUAL(curvature(4,0), 4.);
+  BOOST_CHECK_EQUAL(curvature(4,1), 2.);
 }
 
 BOOST_AUTO_TEST_CASE( SumCalculator_test ) {

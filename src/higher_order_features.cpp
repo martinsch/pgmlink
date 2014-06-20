@@ -645,6 +645,96 @@ void CompositionCalculator::calculate(
 }
 
 ////
+//// class TraxelsFCFromFC
+////
+const std::string TraxelsFCFromFC::name_ = "TraxelsFCFromFC";
+
+const std::string& TraxelsFCFromFC::name() const {
+  return name_;
+}
+
+void TraxelsFCFromFC::calculate(
+  const FeatureMatrix& feature_matrix,
+  FeatureMatrix& return_matrix
+) const {
+  size_t col_count = feature_matrix.shape(0);
+  size_t row_count = feature_matrix.shape(1);
+  if (col_count < order_) {
+    LOG(logDEBUG) << "In TraxelsFCFromFC: not enough data to calculate feature";
+    LOG(logDEBUG) << "Returning zero";
+    return_matrix.reshape(vigra::Shape2(1,1));
+    return_matrix.init(0.0);
+  } else {
+    // convert feature_matrix to vec<vec<FeatureScalar> >
+    std::vector<std::vector<FeatureScalar> > feature_vectors;
+    for (size_t i=0; i < col_count; i++) {
+      feature_vectors.push_back(std::vector<FeatureScalar>());
+      feature_vectors.back().insert(
+        feature_vectors.back().end(),
+        feature_matrix.bind<0>(i).begin(),
+        feature_matrix.bind<0>(i).end()
+      );
+    }
+    if (order_ == 1) {
+      std::vector<FeatureScalar> ret_ = feature_calculator_ptr_->calculate(
+        feature_vectors[0]
+      );
+      size_t ret_row_count = ret_.size();
+      return_matrix.reshape(vigra::Shape2(col_count, ret_row_count));
+      for (size_t j=0; j<ret_row_count; j++) {
+        return_matrix(0, j) = ret_[j];
+      }
+      for (size_t i=1; i<col_count; i++) {
+        ret_ = feature_calculator_ptr_->calculate(feature_vectors[i]);
+        for (size_t j=0; j<ret_row_count; j++) {
+          return_matrix(i, j) = ret_[j];
+        }
+      }
+    } else if (order_ == 2) {
+      std::vector<FeatureScalar> ret_ = feature_calculator_ptr_->calculate(
+        feature_vectors[0],
+        feature_vectors[1]
+      );
+      size_t ret_row_count = ret_.size();
+      return_matrix.reshape(vigra::Shape2(col_count-1, ret_row_count));
+      for (size_t j=0; j<ret_row_count; j++) {
+        return_matrix(0, j) = ret_[j];
+      }
+      for (size_t i=1; i+1<col_count; i++) {
+        ret_ = feature_calculator_ptr_->calculate(
+          feature_vectors[i],
+          feature_vectors[i+1]
+        );
+        for (size_t j=0; j<ret_row_count; j++) {
+          return_matrix(i, j) = ret_[j];
+        }
+      }
+    } else if (order_ == 3) {
+      std::vector<FeatureScalar> ret_ = feature_calculator_ptr_->calculate(
+        feature_vectors[0],
+        feature_vectors[1],
+        feature_vectors[2]
+      );
+      size_t ret_row_count = ret_.size();
+      return_matrix.reshape(vigra::Shape2(col_count-2, ret_row_count));
+      for (size_t j=0; j<ret_row_count; j++) {
+        return_matrix(0, j) = ret_[j];
+      }
+      for (size_t i=1; i+2<col_count; i++) {
+        ret_ = feature_calculator_ptr_->calculate(
+          feature_vectors[i],
+          feature_vectors[i+1],
+          feature_vectors[i+2]
+        );
+        for (size_t j=0; j<ret_row_count; j++) {
+          return_matrix(i, j) = ret_[j];
+        }
+      }
+    }
+  }
+}
+
+////
 //// class SumCalculator
 ////
 template<int N>
