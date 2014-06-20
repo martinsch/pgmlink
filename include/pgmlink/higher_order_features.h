@@ -406,6 +406,31 @@ class CompositionCalculator : public TraxelsFeatureCalculator {
 ////
 //// class TraxelsFCFromFC
 ////
+/**
+\brief helper class to use the feature calculators from the classifier auxiliary
+  with the higher order features interface.
+
+The pgmlink::TraxelsFCFromFC is constructed with a pgmlink::FeatureCalculator.
+The calculate method then calcultes the result matrix with this feature
+calculator. The order parameter given in the constructor determines how many
+neighbouring columns are use to calculate one column in the return matrix.
+
+Let \f$f(\vec{x_1}, \vec{x_2}, \vec{x_3})\f$ be a feature calculator of order 3.
+Then TraxelsFCFromFC::calculate method does the following:
+
+\f$
+  (\vec{x_1}, \vec{x_2}, \dots, \vec{x_n})
+  \mapsto
+  (f(\vec{x_1}, \vec{x_2}, \vec{x_3}),
+  f(\vec{x_2}, \vec{x_3}, \vec{x_4}),
+  \dots,
+  f(\vec{x_{n-2}}, \vec{x_{n-1}}, \vec{x_n}))
+\f$
+
+If there are fewer column vectors in the input matrix than the order of the
+feature calculator, this calculator returns a 1x1 matrix with a 0 in the (0,0)
+position.
+*/
 class TraxelsFCFromFC : public TraxelsFeatureCalculator {
  public:
   TraxelsFCFromFC(
