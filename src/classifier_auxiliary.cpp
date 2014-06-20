@@ -237,7 +237,7 @@ feature_array CurvatureCalculator::calculate(
   feature_array::iterator ret_it = ret.begin();
 
   for (; f1_it != f1.end(); f1_it++, f2_it++, f3_it++, ret_it++) {
-    (*ret_it) = (*f2_it) + (*f3_it) - 2*(*f1_it);
+    (*ret_it) = (*f1_it) + (*f3_it) - 2*(*f2_it);
   }
 
   return ret;
