@@ -854,19 +854,18 @@ BOOST_AUTO_TEST_CASE( DiffusionCalculator_test ) {
   BOOST_CHECK_EQUAL(diffusion(0, 0), static_cast<FeatureScalar>(31./6.));
 }
 
-BOOST_AUTO_TEST_CASE( MVNOutlierCalculator_calculate_inverse_covariance_matrix ) {
-  LOG(logINFO) << "test case: MVNOutlierCalculator_calculate_inverse_covariance_matrix";
+BOOST_AUTO_TEST_CASE( CovarianceCalculator_test ) {
+  LOG(logINFO) << "test case: CovarianceCalculator_test";
 
   // get the test data with outlier in x6
   FeatureMatrix x;
   get_feature_matrix(x);
 
-  // Create outlier detection
-  LOG(logINFO) << "  set up the outlier calculator";
-  MVNOutlierCalculator mvnoutlier;
+  LOG(logINFO) << "  set up the covariance calculator";
+  CovarianceCalculator<true> inv_covariance_calc;
   LOG(logINFO) << "  calculate inverse covariance matrix:";
   FeatureMatrix inv_cov;
-  mvnoutlier.calculate_inverse_covariance_matrix(x, inv_cov);
+  inv_covariance_calc.calculate(x, inv_cov);
   
   LOG(logINFO) << "  " << inv_cov(0, 0) << "\t" << inv_cov(1, 0);
   LOG(logINFO) << "  " << inv_cov(0, 1) << "\t" << inv_cov(1, 1);

@@ -727,6 +727,30 @@ class ChildDeceleration : public TraxelsFeatureCalculator {
 };
 
 ////
+//// class CovarianceCalculator
+////
+/**
+\brief calculates the covariance or inverse covariance matrix for the column
+  vectors of the feature matrix
+
+\tparam INV determines wheter the covariance matrix or the inverse covariance
+  matrix is returned
+*/
+template<bool INV>
+class CovarianceCalculator : public TraxelsFeatureCalculator {
+ public:
+  CovarianceCalculator() {};
+  virtual ~CovarianceCalculator() {};
+  virtual const std::string& name() const;
+  virtual void calculate(
+    const FeatureMatrix& feature_matrix,
+    FeatureMatrix& return_matrix
+  ) const;
+ protected:
+  static const std::string name_;
+};
+
+////
 //// class MVNOutlierCalculator
 ////
 /**
@@ -758,15 +782,12 @@ class MVNOutlierCalculator : public TraxelsFeatureCalculator {
     FeatureMatrix& return_matrix,
     const FeatureScalar& sigma_threshold
   ) const;
-  virtual void calculate_inverse_covariance_matrix(
-    const FeatureMatrix& feature_matrix,
-    FeatureMatrix& return_matrix
-  ) const;
   virtual void calculate_outlier_badness(
     const FeatureMatrix& feature_matrix,
     FeatureMatrix& return_matrix
   ) const;
  protected:
+  CovarianceCalculator<true> inv_covariance_calculator_;
   MeanCalculator<0> mean_calculator_;
   static const std::string name_;
 };

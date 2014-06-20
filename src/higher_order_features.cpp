@@ -658,7 +658,6 @@ void TraxelsFCFromFC::calculate(
   FeatureMatrix& return_matrix
 ) const {
   size_t col_count = feature_matrix.shape(0);
-  size_t row_count = feature_matrix.shape(1);
   if (col_count < order_) {
     LOG(logDEBUG) << "In TraxelsFCFromFC: not enough data to calculate feature";
     LOG(logDEBUG) << "Returning zero";
@@ -1383,15 +1382,18 @@ void ChildDeceleration::calculate(
 }
 
 ////
-//// class MVNOutlierCalculator
+//// class CovarianceCalculator
 ////
-const std::string MVNOutlierCalculator::name_ = "MVNOutlierCalculator";
+template<bool INV>
+const std::string CovarianceCalculator<INV>::name_ = "CovarianceCalculator";
 
-const std::string& MVNOutlierCalculator::name() const {
+template<bool INV>
+const std::string& CovarianceCalculator<INV>::name() const {
   return name_;
 }
 
-void MVNOutlierCalculator::calculate_inverse_covariance_matrix(
+template<>
+void CovarianceCalculator<true>::calculate(
   const FeatureMatrix& feature_matrix,
   FeatureMatrix& return_matrix
 ) const {
@@ -1400,7 +1402,7 @@ void MVNOutlierCalculator::calculate_inverse_covariance_matrix(
   return_matrix.reshape(vigra::Shape2(row_count, row_count));
   return_matrix.init(0.0);
   if (col_count <= row_count) {
-    LOG(logDEBUG) << "In MVNOutlierCalculator: too few data to calculate covariance matrix";
+    LOG(logDEBUG) << "In CovarianceCalculator: too few data to calculate covariance matrix";
     LOG(logDEBUG) << "Returning a Matrix filled with zeros";
   }
   FeatureMatrix covariance_matrix(vigra::Shape2(row_count, row_count), 0.0);
@@ -1409,6 +1411,34 @@ void MVNOutlierCalculator::calculate_inverse_covariance_matrix(
   if (not invertible) {
     return_matrix.init(0.0);
   }
+}
+
+template<>
+void CovarianceCalculator<false>::calculate(
+  const FeatureMatrix& feature_matrix,
+  FeatureMatrix& return_matrix
+) const {
+  size_t col_count = feature_matrix.shape(0);
+  size_t row_count = feature_matrix.shape(1);
+  return_matrix.reshape(vigra::Shape2(row_count, row_count));
+  return_matrix.init(0.0);
+  if (col_count <= row_count) {
+    LOG(logDEBUG) << "In CovarianceCalculator: too few data to calculate covariance matrix";
+    LOG(logDEBUG) << "Returning a Matrix filled with zeros";
+  }
+  vigra::linalg::covarianceMatrixOfColumns(feature_matrix, return_matrix);
+}
+
+template class CovarianceCalculator<true>;
+template class CovarianceCalculator<false>;
+
+////
+//// class MVNOutlierCalculator
+////
+const std::string MVNOutlierCalculator::name_ = "MVNOutlierCalculator";
+
+const std::string& MVNOutlierCalculator::name() const {
+  return name_;
 }
 
 void MVNOutlierCalculator::calculate_outlier_badness(
@@ -1427,7 +1457,7 @@ void MVNOutlierCalculator::calculate_outlier_badness(
   mean_calculator_.calculate(feature_matrix, mean_vector);
 
   FeatureMatrix inv_cov;
-  calculate_inverse_covariance_matrix(feature_matrix, inv_cov);
+  inv_covariance_calculator_.calculate(feature_matrix, inv_cov);
   for (size_t col = 0; col < col_count; col++) {
     row_temp = vigra::linalg::rowVector(feature_matrix, col);
     row_temp = vigra::multi_math::operator-(row_temp, mean_vector);
