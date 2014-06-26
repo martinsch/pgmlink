@@ -790,6 +790,34 @@ class CovarianceCalculator : public TraxelsFeatureCalculator {
 ////
 //// class SquaredMahalanobisCalculator
 ////
+/**
+\brief calculates the mahalanobis distance between each column vector and either
+  the 0-vector or the mean vector (see description).
+
+The distance matrix can be set in the calculation method. If it is given the
+distance between the 0-vector and the column vectors is calcualted. If no
+distance matrix is given the inverse covariance matrix of the column vectors is
+taken. In this case the mahalanobis distance to the mean vector is calculated.
+
+With a specified distance matrix \f$A\f$:
+
+\f$
+  (\vec{x_1}, \dots, \vec{x_n})
+  \mapsto
+  (\vec{x_1}^T A \vec{x_1}, \dots, \vec{x_n}^T A \vec{x_n})
+\f$
+
+With no distance matrix given:
+
+\f$
+  (\vec{x_1}, \dots, \vec{x_n})
+  \mapsto
+  ((\vec{x_1}-\vec{\mu})^T \Sigma^{-1} (\vec{x_1}-\vec{\mu}), \dots, (\vec{x_n}-\vec{\mu})^T \Sigma^{-1} (\vec{x_n}-\vec{\mu}))
+\f$
+
+Where \f$\vec{\mu}\f$ denotes the mean vector of all column vectors.
+\f$\Sigma^{-1}\f$ is the inverse of the covariance matrix of the row vectors.
+*/
 class SquaredMahalanobisCalculator : public TraxelsFeatureCalculator {
  public:
   SquaredMahalanobisCalculator() {};
