@@ -1159,56 +1159,6 @@ template class SquaredNormCalculator<0>;
 template class SquaredNormCalculator<1>;
 
 ////
-//// class SquaredDiffCalculator
-////
-const std::string SquaredDiffCalculator::name_ = "SquaredDiffCalculator";
-
-const std::string& SquaredDiffCalculator::name() const {
-  return name_;
-}
-
-void SquaredDiffCalculator::calculate(
-  const FeatureMatrix& feature_matrix,
-  FeatureMatrix& return_matrix
-) const {
-  size_t col_count = feature_matrix.shape(0);
-  if (col_count <= 1) {
-    LOG(logDEBUG) << "In SquaredDiffCalculator: matrix in argument has less than two columns";
-    LOG(logDEBUG) << "Returning a 0-vector";
-    return_matrix.reshape(vigra::Shape2(1, 1));
-    return_matrix.init(0);
-  } else {
-    FeatureMatrix temp;
-    diff_calculator_.calculate(feature_matrix, temp);
-    squared_norm_calculator_.calculate(temp, return_matrix);
-  }
-}
-
-////
-//// class DiffusionCalculator
-////
-const std::string DiffusionCalculator::name_ = "DiffusionCalculator";
-
-const std::string& DiffusionCalculator::name() const {
-  return name_;
-}
-
-void DiffusionCalculator::calculate(
-  const FeatureMatrix& feature_matrix,
-  FeatureMatrix& return_matrix
-) const {
-  FeatureMatrix sq_diff;
-  squared_diff_calculator_.calculate(
-    feature_matrix,
-    sq_diff
-  );
-  mean_calculator_.calculate(
-    sq_diff,
-    return_matrix
-  );
-}
-
-////
 //// class VarianceCalculator
 ////
 template<int N>

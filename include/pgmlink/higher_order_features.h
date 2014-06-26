@@ -624,23 +624,10 @@ class SquaredNormCalculator : public TraxelsFeatureCalculator {
   static const std::string name_;
 };
 
-////
-//// class SquaredDiffCalculator
-////
-class SquaredDiffCalculator : public TraxelsFeatureCalculator {
- public:
-  SquaredDiffCalculator() {};
-  virtual ~SquaredDiffCalculator() {};
-  virtual const std::string& name() const;
-  virtual void calculate(
-    const FeatureMatrix& feature_matrix,
-    FeatureMatrix& return_matrix
-  ) const;
- protected:
-  DiffCalculator diff_calculator_;
-  SquaredNormCalculator<0> squared_norm_calculator_;
-  static const std::string name_;
-};
+typedef TCompositionCalculator<
+  DiffCalculator,
+  SquaredNormCalculator<0>
+> SquaredDiffCalculator;
 
 ////
 //// class DiffusionCalculator
@@ -654,20 +641,10 @@ Returns \f$D = \langle \vec{v}^2 \rangle - {\langle \vec{v} \rangle}^2\f$, where
 therefore variance of the mean move distance if the column vectors are the cell
 positions.
 */
-class DiffusionCalculator : public TraxelsFeatureCalculator {
- public:
-  DiffusionCalculator() {};
-  virtual ~DiffusionCalculator() {};
-  virtual const std::string& name() const;
-  virtual void calculate(
-    const FeatureMatrix& feature_matrix,
-    FeatureMatrix& return_matrix
-  ) const;
- protected:
-  SquaredDiffCalculator squared_diff_calculator_;
-  MeanCalculator<0> mean_calculator_;
-  static const std::string name_;
-};
+typedef TCompositionCalculator<
+  SquaredDiffCalculator,
+  MeanCalculator<0>
+> DiffusionCalculator;
 
 ////
 //// class VarianceCalculator
