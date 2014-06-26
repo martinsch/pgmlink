@@ -1473,32 +1473,6 @@ const std::string& MVNOutlierCalculator::name() const {
   return name_;
 }
 
-void MVNOutlierCalculator::calculate_outlier_badness(
-  const FeatureMatrix& feature_matrix,
-  FeatureMatrix& return_matrix
-) const {
-  size_t col_count = feature_matrix.shape(0);
-  size_t row_count = feature_matrix.shape(1);
-
-  return_matrix.reshape(vigra::Shape2(col_count, 1));
-  FeatureMatrix mean_vector;
-  FeatureMatrix temp1(vigra::Shape2(row_count, 1));
-  FeatureMatrix temp2(vigra::Shape2(1,1));
-  FeatureMatrix row_temp(vigra::Shape2(1, row_count));
-
-  mean_calculator_.calculate(feature_matrix, mean_vector);
-
-  FeatureMatrix inv_cov;
-  inv_covariance_calculator_.calculate(feature_matrix, inv_cov);
-  for (size_t col = 0; col < col_count; col++) {
-    row_temp = vigra::linalg::rowVector(feature_matrix, col);
-    row_temp = vigra::multi_math::operator-(row_temp, mean_vector);
-    vigra::linalg::mmul(inv_cov, row_temp.transpose(), temp1);
-    vigra::linalg::mmul(row_temp, temp1, temp2);
-    return_matrix(col, 0) = temp2(0,0);
-  }
-}
-
 void MVNOutlierCalculator::calculate(
   const FeatureMatrix& feature_matrix,
   FeatureMatrix& return_matrix,
@@ -1506,7 +1480,7 @@ void MVNOutlierCalculator::calculate(
 ) const {
   size_t col_count = feature_matrix.shape(0);
   FeatureMatrix sigma_matrix;
-  calculate_outlier_badness(feature_matrix, sigma_matrix);
+  mahalanobis_calculator_.calculate(feature_matrix, sigma_matrix);
   return_matrix.reshape(vigra::Shape2(1,1));
   return_matrix(0, 0) = 0.0;
   for (size_t col = 0; col < col_count; col++) {

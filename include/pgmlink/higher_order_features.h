@@ -870,13 +870,8 @@ class MVNOutlierCalculator : public TraxelsFeatureCalculator {
     FeatureMatrix& return_matrix,
     const FeatureScalar& sigma_threshold
   ) const;
-  virtual void calculate_outlier_badness(
-    const FeatureMatrix& feature_matrix,
-    FeatureMatrix& return_matrix
-  ) const;
  protected:
-  CovarianceCalculator<true> inv_covariance_calculator_;
-  MeanCalculator<0> mean_calculator_;
+  SquaredMahalanobisCalculator mahalanobis_calculator_;
   static const std::string name_;
 };
 
