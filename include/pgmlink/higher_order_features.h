@@ -744,6 +744,26 @@ class ChildDeceleration : public TraxelsFeatureCalculator {
 };
 
 ////
+//// class DeviationCalculator
+////
+/**
+\brief calculates the deviation of the column vectors to the mean column vector
+*/
+class DeviationCalculator : public TraxelsFeatureCalculator {
+ public:
+  DeviationCalculator() {};
+  virtual ~DeviationCalculator() {};
+  virtual const std::string& name() const;
+  virtual void calculate(
+    const FeatureMatrix& feature_matrix,
+    FeatureMatrix& return_matrix
+  ) const;
+ protected:
+  MeanCalculator<0> mean_calculator_;
+  static const std::string name_;
+};
+
+////
 //// class CovarianceCalculator
 ////
 /**

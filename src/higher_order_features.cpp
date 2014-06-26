@@ -1332,6 +1332,39 @@ void ChildDeceleration::calculate(
 }
 
 ////
+//// class DeviationCalculator
+////
+const std::string DeviationCalculator::name_ = "DeviationCalculator";
+
+const std::string& DeviationCalculator::name() const {
+  return name_;
+}
+
+void DeviationCalculator::calculate(
+  const FeatureMatrix& feature_matrix,
+  FeatureMatrix& return_matrix
+) const {
+  size_t col_count = feature_matrix.shape(0);
+  size_t row_count = feature_matrix.shape(1);
+  if ((col_count == 0) or (row_count == 0)) {
+    LOG(logDEBUG) << "In DeviationCalculator: empty input matrix";
+    LOG(logDEBUG) << "Returning a 1x1 matrix filled with zeros";
+    return_matrix.reshape(vigra::Shape2(0,0));
+    return_matrix.init(0.0);
+  } else {
+    FeatureMatrix mean_vector;
+    mean_calculator_.calculate(feature_matrix, mean_vector);
+    return_matrix.reshape(vigra::Shape2(col_count, row_count));
+    for (size_t i = 0; i < col_count; i++) {
+      return_matrix.bind<0>(i) = vigra::multi_math::operator-(
+        feature_matrix.bind<0>(i),
+        mean_vector.bind<0>(0)
+      );
+    }
+  }
+}
+
+////
 //// class CovarianceCalculator
 ////
 template<bool INV>
