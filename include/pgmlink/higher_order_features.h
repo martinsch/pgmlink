@@ -788,12 +788,12 @@ class CovarianceCalculator : public TraxelsFeatureCalculator {
 };
 
 ////
-//// class MahalanobisDistanceCalculator
+//// class SquaredMahalanobisCalculator
 ////
-class MahalanobisDistanceCalculator : public TraxelsFeatureCalculator {
+class SquaredMahalanobisCalculator : public TraxelsFeatureCalculator {
  public:
-  MahalanobisDistanceCalculator() {};
-  virtual ~MahalanobisDistanceCalculator() {};
+  SquaredMahalanobisCalculator() {};
+  virtual ~SquaredMahalanobisCalculator() {};
   virtual const std::string& name() const;
   virtual void calculate(
     const FeatureMatrix& feature_matrix,
@@ -805,6 +805,7 @@ class MahalanobisDistanceCalculator : public TraxelsFeatureCalculator {
     const FeatureMatrix& inv_covariance_matrix
   ) const;
  protected:
+  DeviationCalculator deviation_calculator_;
   CovarianceCalculator<true> inv_covariance_calculator_;
   static const std::string name_;
 };

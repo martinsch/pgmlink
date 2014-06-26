@@ -1416,6 +1416,55 @@ template class CovarianceCalculator<true>;
 template class CovarianceCalculator<false>;
 
 ////
+//// class SquaredMahalanobisCalculator
+////
+const std::string SquaredMahalanobisCalculator::name_ = "SquaredMahalanobisCalculator";
+
+const std::string& SquaredMahalanobisCalculator::name() const {
+  return name_;
+}
+
+void SquaredMahalanobisCalculator::calculate(
+  const FeatureMatrix& feature_matrix,
+  FeatureMatrix& return_matrix
+) const {
+  FeatureMatrix deviation_matrix;
+  deviation_calculator_.calculate(feature_matrix, deviation_matrix);
+  FeatureMatrix inv_cov_matrix;
+  inv_covariance_calculator_.calculate(feature_matrix, inv_cov_matrix);
+  calculate(deviation_matrix, return_matrix, inv_cov_matrix);
+}
+
+void SquaredMahalanobisCalculator::calculate(
+  const FeatureMatrix& feature_matrix,
+  FeatureMatrix& return_matrix,
+  const FeatureMatrix& inv_covariance_matrix
+) const {
+  size_t col_count = feature_matrix.shape(0);
+  size_t row_count = feature_matrix.shape(1);
+  if ((row_count == 0) or (row_count == 0)) {
+    LOG(logDEBUG) << "In SquaredMahalanobisCalculator: empty input matrix";
+    LOG(logDEBUG) << "Returning a 1x1 matrix filled with zeros";
+    return_matrix.reshape(vigra::Shape2(1,1));
+    return_matrix.init(0.0);
+  } else {
+    return_matrix.reshape(vigra::Shape2(col_count, 1));
+    FeatureMatrixView temp1;
+    FeatureMatrix temp2(vigra::Shape2(row_count, 1));
+    FeatureMatrix temp3(vigra::Shape2(1,1));
+    for (size_t i = 0; i < col_count; i++) {
+      temp1 = feature_matrix.subarray(
+        vigra::Shape2(i, 0),
+        vigra::Shape2(i+1, row_count)
+      );
+      vigra::linalg::mmul(inv_covariance_matrix, temp1.transpose(), temp2);
+      vigra::linalg::mmul(temp1, temp2, temp3);
+      return_matrix(i, 0) = temp3(0,0);
+    }
+  }
+}
+
+////
 //// class MVNOutlierCalculator
 ////
 const std::string MVNOutlierCalculator::name_ = "MVNOutlierCalculator";
