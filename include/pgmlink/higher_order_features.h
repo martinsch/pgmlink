@@ -599,6 +599,38 @@ class MeanCalculator : public TraxelsFeatureCalculator {
   static const std::string name_;
 };
 
+/**
+\brief the square of each element
+*/
+class SquareCalculator : public TraxelsFeatureCalculator {
+ public:
+  SquareCalculator() {};
+  virtual ~SquareCalculator() {};
+  virtual const std::string& name() const;
+  virtual void calculate(
+    const FeatureMatrix& feature_matrix,
+    FeatureMatrix& return_matrix
+  ) const;
+ protected:
+  static const std::string name_;
+};
+
+/**
+\brief the square root of each element
+*/
+class SquareRootCalculator : public TraxelsFeatureCalculator {
+ public:
+  SquareRootCalculator() {};
+  virtual ~SquareRootCalculator() {};
+  virtual const std::string& name() const;
+  virtual void calculate(
+    const FeatureMatrix& feature_matrix,
+    FeatureMatrix& return_matrix
+  ) const;
+ protected:
+  static const std::string name_;
+};
+
 ////
 //// class SquaredNormCalculator
 ////
@@ -624,6 +656,10 @@ class SquaredNormCalculator : public TraxelsFeatureCalculator {
   static const std::string name_;
 };
 
+/**
+\brief calculates the squared norm of the difference of neighbouring column
+  vectors of the
+*/
 typedef TCompositionCalculator<
   DiffCalculator,
   SquaredNormCalculator<0>

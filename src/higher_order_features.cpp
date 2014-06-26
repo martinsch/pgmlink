@@ -1120,6 +1120,48 @@ template class MeanCalculator<1>;
 template class MeanCalculator<-1>;
 
 ////
+//// class SquareCalculator
+////
+const std::string SquareCalculator::name_ = "SquareCalculator";
+
+const std::string& SquareCalculator::name() const {
+  return name_;
+}
+
+void SquareCalculator::calculate(
+  const FeatureMatrix& feature_matrix,
+  FeatureMatrix& return_matrix
+) const {
+  return_matrix.reshape(feature_matrix.shape());
+  FeatureMatrix::const_iterator f_it = feature_matrix.begin();
+  FeatureMatrix::iterator r_it = return_matrix.begin();
+  for (; f_it != feature_matrix.end(); f_it++, r_it++ ) {
+    *r_it = *f_it * *f_it;
+  }
+}
+
+////
+//// class SquareRootCalculator
+////
+const std::string SquareRootCalculator::name_ = "SquareRootCalculator";
+
+const std::string& SquareRootCalculator::name() const {
+  return name_;
+}
+
+void SquareRootCalculator::calculate(
+  const FeatureMatrix& feature_matrix,
+  FeatureMatrix& return_matrix
+) const {
+  return_matrix.reshape(feature_matrix.shape());
+  FeatureMatrix::const_iterator f_it = feature_matrix.begin();
+  FeatureMatrix::iterator r_it = return_matrix.begin();
+  for (; f_it != feature_matrix.end(); f_it++, r_it++ ) {
+    *r_it = sqrt(*f_it);
+  }
+}
+
+////
 //// class SquaredNormCalculator
 ////
 template<int N>
