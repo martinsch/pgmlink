@@ -1201,37 +1201,6 @@ template class SquaredNormCalculator<0>;
 template class SquaredNormCalculator<1>;
 
 ////
-//// class VarianceCalculator
-////
-template<int N>
-const std::string VarianceCalculator<N>::name_ = "VarianceCalculator";
-
-template<int N>
-const std::string& VarianceCalculator<N>::name() const {
-  return name_;
-}
-
-template<>
-void VarianceCalculator<0>::calculate(
-  const FeatureMatrix& feature_matrix,
-  FeatureMatrix& return_matrix
-) const {
-  FeatureMatrix squared_matrix;
-  squared_norm_calculator_.calculate(feature_matrix, squared_matrix);
-  FeatureMatrix squared_mean_matrix;
-  mean_calculator_.calculate(squared_matrix, squared_mean_matrix);
-  FeatureMatrix mean_matrix;
-  mean_calculator_.calculate(feature_matrix, mean_matrix);
-  FeatureMatrix mean_squared_matrix;
-  squared_norm_calculator_.calculate(mean_matrix, mean_squared_matrix);
-
-  return_matrix = vigra::multi_math::operator-(
-    squared_mean_matrix,
-    mean_squared_matrix
-  );
-}
-
-////
 //// class ChildParentDiffCalculator
 ////
 const std::string ChildParentDiffCalculator::name_ = "ChildParentDiffCalculator";

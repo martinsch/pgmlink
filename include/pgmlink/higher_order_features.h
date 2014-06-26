@@ -599,6 +599,26 @@ class MeanCalculator : public TraxelsFeatureCalculator {
   static const std::string name_;
 };
 
+////
+//// class DeviationCalculator
+////
+/**
+\brief calculates the deviation of the column vectors to the mean column vector
+*/
+class DeviationCalculator : public TraxelsFeatureCalculator {
+ public:
+  DeviationCalculator() {};
+  virtual ~DeviationCalculator() {};
+  virtual const std::string& name() const;
+  virtual void calculate(
+    const FeatureMatrix& feature_matrix,
+    FeatureMatrix& return_matrix
+  ) const;
+ protected:
+  MeanCalculator<0> mean_calculator_;
+  static const std::string name_;
+};
+
 /**
 \brief the square of each element
 */
@@ -657,6 +677,26 @@ class SquaredNormCalculator : public TraxelsFeatureCalculator {
 };
 
 /**
+\brief calculates the euclidean norm for each column vector
+*/
+typedef TCompositionCalculator<
+  SquaredNormCalculator<0>,
+  SquareRootCalculator
+> EuclideanNormCalculator;
+
+
+/**
+\brief calculates the variance for each row.
+*/
+typedef TCompositionCalculator<
+  TCompositionCalculator<
+    DeviationCalculator,
+    SquareCalculator
+  >,
+  MeanCalculator<0>
+> VarianceCalculator;
+
+/**
 \brief calculates the squared norm of the difference of neighbouring column
   vectors of the
 */
@@ -681,31 +721,6 @@ typedef TCompositionCalculator<
   SquaredDiffCalculator,
   MeanCalculator<0>
 > DiffusionCalculator;
-
-////
-//// class VarianceCalculator
-////
-/**
-\brief calculates the variance along the specified matrix axis
-
-Only implemented for N=0: calculates the variance for each row. Returns a column
-vector.
-*/
-template<int N>
-class VarianceCalculator : public TraxelsFeatureCalculator {
- public:
-  VarianceCalculator() {};
-  virtual ~VarianceCalculator() {};
-  virtual const std::string& name() const;
-  virtual void calculate(
-    const FeatureMatrix& feature_matrix,
-    FeatureMatrix& return_matrix
-  ) const;
- protected:
-  MeanCalculator<N> mean_calculator_;
-  SquaredNormCalculator<N> squared_norm_calculator_;
-  static const std::string name_;
-};
 
 ////
 //// class ChildParentDiffCalculator
@@ -776,26 +791,6 @@ class ChildDeceleration : public TraxelsFeatureCalculator {
     size_t depth
   ) const;
  protected:
-  static const std::string name_;
-};
-
-////
-//// class DeviationCalculator
-////
-/**
-\brief calculates the deviation of the column vectors to the mean column vector
-*/
-class DeviationCalculator : public TraxelsFeatureCalculator {
- public:
-  DeviationCalculator() {};
-  virtual ~DeviationCalculator() {};
-  virtual const std::string& name() const;
-  virtual void calculate(
-    const FeatureMatrix& feature_matrix,
-    FeatureMatrix& return_matrix
-  ) const;
- protected:
-  MeanCalculator<0> mean_calculator_;
   static const std::string name_;
 };
 
