@@ -404,6 +404,46 @@ class CompositionCalculator : public TraxelsFeatureCalculator {
 };
 
 ////
+//// class TCompositionCalculator
+//// template version
+/**
+\brief templated version of the CompositionCalculator
+*/
+template<typename FC1, typename FC2>
+class TCompositionCalculator : public TraxelsFeatureCalculator {
+ public:
+  TCompositionCalculator() {};
+  virtual ~TCompositionCalculator() {};
+  virtual const std::string& name() const;
+  virtual void calculate(
+    const FeatureMatrix& feature_matrix,
+    FeatureMatrix& return_matrix
+  ) const;
+ protected:
+  static const std::string name_;
+  FC1 first_calculator_;
+  FC2 second_calculator_;
+};
+
+template<typename FC1, typename FC2>
+const std::string TCompositionCalculator<FC1, FC2>::name_ = "CompositionCalculator";
+
+template<typename FC1, typename FC2>
+const std::string& TCompositionCalculator<FC1, FC2>::name() const {
+  return name_;
+}
+
+template<typename FC1, typename FC2>
+void TCompositionCalculator<FC1, FC2>::calculate(
+  const FeatureMatrix& feature_matrix,
+  FeatureMatrix& return_matrix
+) const {
+  FeatureMatrix temp;
+  first_calculator_.calculate(feature_matrix, temp);
+  second_calculator_.calculate(temp, return_matrix);
+}
+
+////
 //// class TraxelsFCFromFC
 ////
 /**
@@ -413,7 +453,7 @@ class CompositionCalculator : public TraxelsFeatureCalculator {
 The pgmlink::TraxelsFCFromFC is constructed with a pgmlink::FeatureCalculator.
 The calculate method then calcultes the result matrix with this feature
 calculator. The order parameter given in the constructor determines how many
-neighbouring columns are use to calculate one column in the return matrix.
+neighbouring columns are used to calculate one column in the return matrix.
 
 Let \f$f(\vec{x_1}, \vec{x_2}, \vec{x_3})\f$ be a feature calculator of order 3.
 Then TraxelsFCFromFC::calculate method does the following:
@@ -747,6 +787,28 @@ class CovarianceCalculator : public TraxelsFeatureCalculator {
     FeatureMatrix& return_matrix
   ) const;
  protected:
+  static const std::string name_;
+};
+
+////
+//// class MahalanobisDistanceCalculator
+////
+class MahalanobisDistanceCalculator : public TraxelsFeatureCalculator {
+ public:
+  MahalanobisDistanceCalculator() {};
+  virtual ~MahalanobisDistanceCalculator() {};
+  virtual const std::string& name() const;
+  virtual void calculate(
+    const FeatureMatrix& feature_matrix,
+    FeatureMatrix& return_matrix
+  ) const;
+  virtual void calculate(
+    const FeatureMatrix& feature_matrix,
+    FeatureMatrix& return_matrix,
+    const FeatureMatrix& inv_covariance_matrix
+  ) const;
+ protected:
+  CovarianceCalculator<true> inv_covariance_calculator_;
   static const std::string name_;
 };
 
