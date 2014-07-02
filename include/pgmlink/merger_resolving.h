@@ -182,11 +182,11 @@ template <typename T, typename U>
  * @param [in,out] out arma::Mat<U> that holds the converted data. For the use in
  * KMeans specify U=double
  */
-void feature_array_to_arma_mat(const std::vector<T>& in, arma::Mat<U>& out);
+PGMLINK_EXPORT void feature_array_to_arma_mat(const std::vector<T>& in, arma::Mat<U>& out);
 
 
 template <typename T, typename U>
-void feature_array_to_arma_mat_skip_last_dimension(const std::vector<T>& in, arma::Mat<U>& out, unsigned int last_dimension);
+PGMLINK_EXPORT void feature_array_to_arma_mat_skip_last_dimension(const std::vector<T>& in, arma::Mat<U>& out, unsigned int last_dimension);
 
   
 template <typename T>
@@ -201,7 +201,7 @@ template <typename T>
  * The mlpack kMeans implementation does not return the coordinates of the cluster centers.
  * The centers can be computed using the original data and the assignments.
  */
-void get_centers(const arma::Mat<T>& data, const arma::Col<size_t> labels, arma::Mat<T>& centers, int k);
+PGMLINK_EXPORT void get_centers(const arma::Mat<T>& data, const arma::Col<size_t> labels, arma::Mat<T>& centers, int k);
 
 
 ////
@@ -223,7 +223,7 @@ class FeatureExtractorBase {
 ////
 //// FeatureExtractorMCOMsFromPCOMs
 ////
-class FeatureExtractorMCOMsFromPCOMs : public FeatureExtractorBase {
+class PGMLINK_EXPORT FeatureExtractorMCOMsFromPCOMs : public FeatureExtractorBase {
  public:
   virtual std::vector<Traxel> operator()(Traxel& trax, size_t nMergers, unsigned int max_id);
 };
@@ -232,7 +232,7 @@ class FeatureExtractorMCOMsFromPCOMs : public FeatureExtractorBase {
 ////
 //// FeatureExtractorMCOMsFromMCOMs
 ////
-class FeatureExtractorMCOMsFromMCOMs : public FeatureExtractorBase {
+class PGMLINK_EXPORT FeatureExtractorMCOMsFromMCOMs : public FeatureExtractorBase {
  public:
   virtual std::vector<Traxel> operator()(Traxel& trax, size_t nMergers, unsigned int max_id);
 };
@@ -241,7 +241,7 @@ class FeatureExtractorMCOMsFromMCOMs : public FeatureExtractorBase {
 ////
 //// FeatureExtractorMCOMsFromKMeans
 ////
-class FeatureExtractorMCOMsFromKMeans : public FeatureExtractorBase {
+class PGMLINK_EXPORT FeatureExtractorMCOMsFromKMeans : public FeatureExtractorBase {
  public:
   virtual std::vector<Traxel> operator()(Traxel& trax, size_t nMergers, unsigned int max_id);
 };
@@ -250,7 +250,7 @@ class FeatureExtractorMCOMsFromKMeans : public FeatureExtractorBase {
 ////
 //// FeatureExtractorMCOMsFromGMM
 ////
-class FeatureExtractorMCOMsFromGMM : public FeatureExtractorBase {
+class PGMLINK_EXPORT FeatureExtractorMCOMsFromGMM : public FeatureExtractorBase {
  private:
   int n_dim_;
  public:
@@ -261,7 +261,7 @@ class FeatureExtractorMCOMsFromGMM : public FeatureExtractorBase {
 ////
 //// FeatureExtractorArmadillo
 ////
-class FeatureExtractorArmadillo : public FeatureExtractorBase {
+class PGMLINK_EXPORT FeatureExtractorArmadillo : public FeatureExtractorBase {
  public:
   FeatureExtractorArmadillo(TimestepIdCoordinateMapPtr coordinates);
   virtual std::vector<Traxel> operator()(Traxel& trax, size_t nMergers, unsigned int max_id);
@@ -285,7 +285,7 @@ class DistanceBase {
 ////
 //// DistanceFromCOMs
 ////
-class DistanceFromCOMs : public DistanceBase {
+class PGMLINK_EXPORT DistanceFromCOMs : public DistanceBase {
  public:
   virtual double operator()(const HypothesesGraph& g, HypothesesGraph::Node from, HypothesesGraph::Node to);
   virtual double operator()(Traxel from,  Traxel to);
@@ -318,7 +318,7 @@ class FeatureHandlerBase {
 ////
 //// FeatureHandlerFromTraxels
 ////
-class FeatureHandlerFromTraxels : public FeatureHandlerBase {
+class PGMLINK_EXPORT FeatureHandlerFromTraxels : public FeatureHandlerBase {
  private:
   FeatureExtractorBase& extractor_;
   DistanceBase& base_;
@@ -352,7 +352,7 @@ class ResolveAmbiguousArcsBase {
 ////
 //// ResolveAmbiguousArcsGreedy
 ////
-class ResolveAmbiguousArcsGreedy : public ResolveAmbiguousArcsBase {
+class PGMLINK_EXPORT ResolveAmbiguousArcsGreedy : public ResolveAmbiguousArcsBase {
  public:
   virtual HypothesesGraph& operator()(HypothesesGraph* g);
 };
@@ -361,7 +361,7 @@ class ResolveAmbiguousArcsGreedy : public ResolveAmbiguousArcsBase {
 ////
 //// ReasonerMaxOneArc
 ////
-class ReasonerMaxOneArc : public Reasoner {
+class PGMLINK_EXPORT ReasonerMaxOneArc : public Reasoner {
  private:
  public:
   ReasonerMaxOneArc();
@@ -374,7 +374,7 @@ class ReasonerMaxOneArc : public Reasoner {
 ////
 //// ResolveAmbiguousArcsPgm
 ////
-class ResolveAmbiguousArcsPgm : public ReasonerMaxOneArc, private ResolveAmbiguousArcsBase {
+class PGMLINK_EXPORT ResolveAmbiguousArcsPgm : public ReasonerMaxOneArc, private ResolveAmbiguousArcsBase {
   virtual HypothesesGraph& operator()(HypothesesGraph* g);
 };
 
@@ -394,7 +394,7 @@ class ResolveAmbiguousArcsPgm : public ReasonerMaxOneArc, private ResolveAmbiguo
  * the appropriate classes have to be specified accordingly.
  */
    
-class MergerResolver {
+class PGMLINK_EXPORT MergerResolver {
  private:
   HypothesesGraph* g_;
     
@@ -460,7 +460,7 @@ class MergerResolver {
 ////
 //// given a graph, do retracking
 ////
-void resolve_graph(HypothesesGraph& src, HypothesesGraph& dest, boost::function<double(const double)> transition, double ep_gap, bool with_tracklets,
+PGMLINK_EXPORT void resolve_graph(HypothesesGraph& src, HypothesesGraph& dest, boost::function<double(const double)> transition, double ep_gap, bool with_tracklets,
                    const double transition_parameter=5, const bool with_constraints=true);
 // void resolve_graph(HypothesesGraph& src, HypothesesGraph& dest);
 
@@ -469,7 +469,7 @@ void resolve_graph(HypothesesGraph& src, HypothesesGraph& dest, boost::function<
 //// transfer graph to graph containing only subset of nodes based on tags
 ////
 template <typename NodePropertyTag, typename ArcPropertyTag>
-void copy_hypotheses_graph_subset(const HypothesesGraph& src,
+PGMLINK_EXPORT void copy_hypotheses_graph_subset(const HypothesesGraph& src,
                                   HypothesesGraph& dest,
                                   std::map<HypothesesGraph::Node, HypothesesGraph::Node>& nr,
                                   std::map<HypothesesGraph::Arc, HypothesesGraph::Arc>& ar,
@@ -479,21 +479,21 @@ void copy_hypotheses_graph_subset(const HypothesesGraph& src,
 
 
 template <typename PropertyTag, typename KeyType>
-void translate_property_value_map(const HypothesesGraph& src,
+PGMLINK_EXPORT void translate_property_value_map(const HypothesesGraph& src,
                                   const HypothesesGraph& dest,
                                   std::map<KeyType, KeyType> dict
                                   );
 
 
 template <typename PropertyTag, typename KeyType>
-void translate_property_bool_map(const HypothesesGraph& src,
+PGMLINK_EXPORT void translate_property_bool_map(const HypothesesGraph& src,
                                  const HypothesesGraph& dest,
                                  std::map<KeyType,KeyType> dict
                                  );
 
 
 template <typename NodePropertyTag, typename ArcPropertyTag>
-void get_subset(const HypothesesGraph& src,
+PGMLINK_EXPORT void get_subset(const HypothesesGraph& src,
                 HypothesesGraph& dest,
                 HypothesesGraph::NodeMap<HypothesesGraph::Node>& nr,
                 HypothesesGraph::ArcMap<HypothesesGraph::Arc>& ar,
@@ -502,18 +502,18 @@ void get_subset(const HypothesesGraph& src,
                 );
 
   
-double calculate_BIC(int k, int n, double weight);
+PGMLINK_EXPORT double calculate_BIC(int k, int n, double weight);
 
 
-void gmm_priors_and_centers(const feature_array& data, feature_array& priors, feature_array& centers, int k_max, int n, double weight);
+PGMLINK_EXPORT void gmm_priors_and_centers(const feature_array& data, feature_array& priors, feature_array& centers, int k_max, int n, double weight);
 
-void gmm_priors_and_centers_arma(const arma::mat& data, feature_array& priors, feature_array& centers, int k_max, int ndim, double regularization_weight);
+PGMLINK_EXPORT void gmm_priors_and_centers_arma(const arma::mat& data, feature_array& priors, feature_array& centers, int k_max, int ndim, double regularization_weight);
 
 
 ////
 //// duplicate division nodes in subset graph
 ////
-void duplicate_division_nodes(HypothesesGraph& graph,
+PGMLINK_EXPORT void duplicate_division_nodes(HypothesesGraph& graph,
                               std::map<HypothesesGraph::Node, HypothesesGraph::Node>& division_splits,
                               std::map<HypothesesGraph::Arc, HypothesesGraph::Arc>& arc_cross_reference);
 
@@ -521,17 +521,17 @@ void duplicate_division_nodes(HypothesesGraph& graph,
 ////
 //// merge previously split divisions after inference
 ////
-void merge_split_divisions(const HypothesesGraph& graph,
+PGMLINK_EXPORT void merge_split_divisions(const HypothesesGraph& graph,
                            std::map<HypothesesGraph::Node, HypothesesGraph::Node>& division_splits,
                            std::map<HypothesesGraph::Arc, HypothesesGraph::Arc>& arc_cross_reference);
 
 
-void calculate_gmm_beforehand(HypothesesGraph& g, int n_trials, int n_dimensions);
+PGMLINK_EXPORT void calculate_gmm_beforehand(HypothesesGraph& g, int n_trials, int n_dimensions);
 
 
 // extract coordinates in arma::mat
 template<int N, typename T>
-void extract_coordinates(TimestepIdCoordinateMapPtr coordinates,
+PGMLINK_EXPORT void extract_coordinates(TimestepIdCoordinateMapPtr coordinates,
                          const vigra::MultiArrayView<N, T>& image,
                          const vigra::TinyVector<long int, N>& offsets,
                          const Traxel& trax);
