@@ -292,8 +292,8 @@ Value& IterableEditableValueMap<Graph, Key, Value>::get_value(const Key& key) {
     std::set<node_timestep_map::Value> timesteps_;      
   };
 
-  void generateTrackletGraph(const HypothesesGraph& traxel_graph, HypothesesGraph& tracklet_graph);
-  std::map<HypothesesGraph::Node, std::vector<HypothesesGraph::Node> > generateTrackletGraph2(
+  PGMLINK_EXPORT void generateTrackletGraph(const HypothesesGraph& traxel_graph, HypothesesGraph& tracklet_graph);
+  PGMLINK_EXPORT std::map<HypothesesGraph::Node, std::vector<HypothesesGraph::Node> > generateTrackletGraph2(
 		  const HypothesesGraph& traxel_graph, HypothesesGraph& tracklet_graph);
   PGMLINK_EXPORT HypothesesGraph& prune_inactive(HypothesesGraph&);
   PGMLINK_EXPORT boost::shared_ptr<std::vector< std::vector<Event> > > events(const HypothesesGraph&);

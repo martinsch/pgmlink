@@ -75,7 +75,7 @@ namespace pgmlink {
     shared_ptr<std::vector< std::map<unsigned int, bool> > > last_detections_;
   };
 
-  class NNTracking {
+  class PGMLINK_EXPORT NNTracking {
     public:
       NNTracking(double divDist = 30,
     		  double movDist = 10,
@@ -104,7 +104,7 @@ namespace pgmlink {
     };
 
 
-  class NNTrackletsTracking {
+  class PGMLINK_EXPORT NNTrackletsTracking {
       public:
 	  NNTrackletsTracking(double maxDist = 30,
                               std::vector<std::string> features = std::vector<std::string>(0),
@@ -131,7 +131,7 @@ namespace pgmlink {
         std::vector<int> maxTraxelIdAt_;
   };
 
-  class ConsTracking {
+  class PGMLINK_EXPORT ConsTracking {
     public:
 	  ConsTracking(
 		  int max_number_objects=3,

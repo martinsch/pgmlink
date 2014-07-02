@@ -79,7 +79,7 @@ private:
 	double w_;
 };
 
-class NegLnConstant {
+class PGMLINK_EXPORT NegLnConstant {
 public:
 	NegLnConstant(double weight, std::vector<double> prob_vector): w_(weight), prob_vector_(prob_vector) {}
 	double operator()(const size_t state ) const;
@@ -88,7 +88,7 @@ private:
 	std::vector<double> prob_vector_;
 };
 
-class NegLnDivision {
+class PGMLINK_EXPORT NegLnDivision {
 public:
 	NegLnDivision(double weight) : w_(weight) {}
 	double operator()( const Traxel&, const size_t state ) const;
@@ -96,7 +96,7 @@ private:
 	double w_;
 };
 
-class NegLnTransition {
+class PGMLINK_EXPORT NegLnTransition {
 public:
 	NegLnTransition(double weight) : w_(weight) {}
 	double operator()( const double ) const;

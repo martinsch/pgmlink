@@ -11,18 +11,19 @@
 
 // pgmlink
 #include "feature.h"
+#include "pgmlink/pgmlink_export.h"
 
 namespace pgmlink {
 
 namespace feature_extraction {
 
 // forward declaration of FeatureCalculator
-class FeatureCalculator;
+class PGMLINK_EXPORT FeatureCalculator;
 
 ////
 //// class FeatureExtractor
 ////
-class FeatureExtractor {
+class PGMLINK_EXPORT FeatureExtractor {
  public:
   FeatureExtractor(boost::shared_ptr<FeatureCalculator> calculator, const std::string& feature_name);
   virtual ~FeatureExtractor();
@@ -41,7 +42,7 @@ class FeatureExtractor {
 ////
 //// class MultipleFeaturesExtraction
 ////
-class MultipleFeatureExtraction {
+class PGMLINK_EXPORT MultipleFeatureExtraction {
  public:
   typedef std::pair<std::string, std::string> CombinedFeatureName;
   typedef std::map<CombinedFeatureName, feature_array> CombinedFeatureMap;

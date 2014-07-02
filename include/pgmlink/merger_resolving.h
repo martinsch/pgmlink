@@ -27,6 +27,7 @@
 #include "pgmlink/merger_resolving_grammar.h"
 #include "pgmlink/reasoner_constracking.h"
 #include "pgmlink/feature.h"
+#include "pgmlink/pgmlink_export.h"
 
 /**
  * @brief Implementation of ideas for merger resolution in the HypothesesGraph environment.
@@ -74,7 +75,7 @@ class ClusteringMlpackBase {
  * the data given in the form of a feature_array into an appropriate armadillo matrix (arma::mat), that can be used by
  * mlpack
  */
-class KMeans : public ClusteringMlpackBase {
+class PGMLINK_EXPORT KMeans : public ClusteringMlpackBase {
  private:
   KMeans();
   int k_;
@@ -99,7 +100,7 @@ class KMeans : public ClusteringMlpackBase {
 };
 
 
-class GMM : public ClusteringMlpackBase {
+class PGMLINK_EXPORT GMM : public ClusteringMlpackBase {
  private:
   GMM();
   int k_;
@@ -121,7 +122,7 @@ class GMM : public ClusteringMlpackBase {
 };
 
 
-class GMMWithInitialized : public ClusteringMlpackBase {
+class PGMLINK_EXPORT GMMWithInitialized : public ClusteringMlpackBase {
  private:
   GMMWithInitialized();
   int k_;
@@ -147,7 +148,7 @@ class GMMWithInitialized : public ClusteringMlpackBase {
 };
 
 
-class GMMInitializeArma : public ClusteringMlpackBase {
+class PGMLINK_EXPORT GMMInitializeArma : public ClusteringMlpackBase {
 
  public:
   
