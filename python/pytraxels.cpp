@@ -103,7 +103,7 @@ namespace pgmlink {
 void export_traxels() {
     class_< feature_array >("feature_array")
       .def(vector_indexing_suite< feature_array >() )
-      .def("push_back", &feature_array::push_back)
+      .def("push_back", (void (feature_array::*)(feature_array::const_reference))&feature_array::push_back)
       .def("size", &feature_array::size)
       ;
 

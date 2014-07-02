@@ -306,7 +306,7 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts, TimestepIdCoord
 		}
 		prob_vector.insert(prob_vector.begin(), 1-sum);
 
-		detection = bind<double>(NegLnConstant(detection_weight,prob_vector), _2);
+		detection = boost::bind<double>(NegLnConstant(detection_weight,prob_vector), _2);
 	}
 
 	LOG(logDEBUG1) << "division_weight_ = " << division_weight_;

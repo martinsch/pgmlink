@@ -370,7 +370,7 @@ namespace pgmlink {
 
 
   boost::shared_ptr<std::vector< std::vector<Event> > > multi_frame_move_events(const HypothesesGraph& g) {
-    shared_ptr<std::vector< std::vector<Event> > > ret(new vector< vector<Event> >);
+    boost::shared_ptr<std::vector< std::vector<Event> > > ret(new vector< vector<Event> >);
     typedef property_map<node_timestep, HypothesesGraph::base_graph>::type node_timestep_map_t;
     node_timestep_map_t& node_timestep_map = g.get(node_timestep());
     typedef property_map<node_traxel, HypothesesGraph::base_graph>::type node_traxel_map_t;
@@ -436,7 +436,7 @@ namespace pgmlink {
 
   boost::shared_ptr<std::vector< std::vector<Event> > > merge_event_vectors(const std::vector<std::vector<Event> >& ev1, const std::vector<std::vector<Event> >& ev2) {
     assert(ev1.size() == ev2.size());
-    shared_ptr<std::vector< std::vector<Event> > > ret(new vector< vector<Event> >);
+    boost::shared_ptr<std::vector< std::vector<Event> > > ret(new vector< vector<Event> >);
     std::vector<std::vector<Event> >::const_iterator it1 = ev1.begin();
     std::vector<std::vector<Event> >::const_iterator it2 = ev2.begin();
     for (; it1 != ev1.end(); ++it1, ++it2) {
