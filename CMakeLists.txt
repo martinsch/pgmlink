@@ -152,7 +152,9 @@ if(WIN32)
 endif()
 
 file(GLOB LIB_SOURCES src/*.cpp src/feature_calculator/*.cpp)
-add_library(pgmlink SHARED ${LIB_SOURCES})
+file(GLOB_RECURSE HEADERS include/*.h*)
+
+add_library(pgmlink SHARED ${LIB_SOURCES} ${HEADERS})
 
 
 
