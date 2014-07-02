@@ -424,7 +424,7 @@ inline std::string nowTime()
     // format time according to our format: "hh:mm:ss.ms"
     static DWORD first = GetTickCount();
     char result[100] = {0};
-    std::sprintf(result, "%s.%03ld", buffer, (long)(GetTickCount() - first) % 1000);
+    std::snprintf(result, sizeof(result), "%s.%03ld", buffer, (long)(GetTickCount() - first) % 1000);
 
     return result;
 }
