@@ -17,7 +17,8 @@ namespace pgmlink {
   typedef std::vector<std::string> feature_list;
 
   template <typename NodeFilter, typename ArcFilter>
-  struct PGMLINK_EXPORT SubHypothesesGraph {
+  struct SubHypothesesGraph
+  {
     typedef typename lemon::SubDigraph<HypothesesGraph::base_graph,
                                        typename property_map<NodeFilter, HypothesesGraph::base_graph>::type,
                                        typename property_map<ArcFilter, HypothesesGraph::base_graph>::type > type;
@@ -28,21 +29,21 @@ namespace pgmlink {
 
   typedef SubHypothesesGraph<node_resolution_candidate, arc_resolution_candidate>::type SubResolver;
 
-  class PGMLINK_EXPORT KMeans;
+  class KMeans;
 
-  class PGMLINK_EXPORT GMM;
+  class GMM;
   
-  class PGMLINK_EXPORT GMMInitalizeArma;
+  class GMMInitalizeArma;
 
   template <typename T, typename U>
-  PGMLINK_EXPORT void feature_array_to_arma_mat(const std::vector<T>& in,
-				 arma::Mat<U>& out);
+  void feature_array_to_arma_mat(const std::vector<T>& in,
+				                 arma::Mat<U>& out);
 
   template <typename T>
-  PGMLINK_EXPORT void get_centers(const arma::Mat<T>& data,
-		   const arma::Col<size_t> labels,
-		   arma::Mat<T>& centers,
-		   int k);
+  void get_centers(const arma::Mat<T>& data,
+		           const arma::Col<size_t> labels,
+		           arma::Mat<T>& centers,
+		           int k);
 
   class FeatureExtractorBase;
 

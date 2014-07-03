@@ -51,13 +51,14 @@ typedef boost::shared_ptr<TimestepIdCoordinateMap > TimestepIdCoordinateMapPtr;
 //// ClusteringMlpackBase
 ////
 
-class ClusteringMlpackBase {
+class ClusteringMlpackBase 
+{
  protected:
-  void copy_centers_to_feature_array(const arma::mat& centers, feature_array& c);
+  PGMLINK_EXPORT void copy_centers_to_feature_array(const arma::mat& centers, feature_array& c);
  public:
-  virtual ~ClusteringMlpackBase() {}
-  virtual feature_array operator()() = 0;
-  virtual double score() const {return 0.0;}
+  PGMLINK_EXPORT virtual ~ClusteringMlpackBase() {}
+  PGMLINK_EXPORT virtual feature_array operator()() = 0;
+  PGMLINK_EXPORT virtual double score() const {return 0.0;}
 };
 
 
@@ -75,7 +76,9 @@ class ClusteringMlpackBase {
  * the data given in the form of a feature_array into an appropriate armadillo matrix (arma::mat), that can be used by
  * mlpack
  */
-class PGMLINK_EXPORT KMeans : public ClusteringMlpackBase {
+class KMeans 
+: public ClusteringMlpackBase 
+{
  private:
   KMeans();
   int k_;
@@ -88,19 +91,22 @@ class PGMLINK_EXPORT KMeans : public ClusteringMlpackBase {
    * @param [in] k number of clusters
    * @param [in] data feature_array storing data
    */
-  KMeans(int k, const feature_array& data) :
-      k_(k), data_(data) {}
+  PGMLINK_EXPORT KMeans(int k, const feature_array& data) 
+  : k_(k), data_(data)
+  {}
 
   // tested
   /**
    * @brief compute cluster centers and labels for datapoints
    * @returns feature_array that contains the coordinates of k clusters
    */
-  virtual feature_array operator()();
+  PGMLINK_EXPORT virtual feature_array operator()();
 };
 
 
-class PGMLINK_EXPORT GMM : public ClusteringMlpackBase {
+class GMM 
+: public ClusteringMlpackBase 
+{
  private:
   GMM();
   int k_;
@@ -113,16 +119,19 @@ class PGMLINK_EXPORT GMM : public ClusteringMlpackBase {
   // for 2D data, ilastik provides coordinates with 3rd dimension 0
   // which will cause singular covariance matrix
   // therefore add option for dimensionality
-  GMM(int k, int n, const feature_array& data, int n_trials=1) :
-      k_(k), n_(n), data_(data), score_(0.0), n_trials_(n_trials) {}
+  PGMLINK_EXPORT GMM(int k, int n, const feature_array& data, int n_trials=1) 
+  : k_(k), n_(n), data_(data), score_(0.0), n_trials_(n_trials)
+  {}
 
-  virtual feature_array operator()();
-  double score() const;
+  PGMLINK_EXPORT virtual feature_array operator()();
+  PGMLINK_EXPORT double score() const;
     
 };
 
 
-class PGMLINK_EXPORT GMMWithInitialized : public ClusteringMlpackBase {
+class GMMWithInitialized 
+: public ClusteringMlpackBase 
+{
  private:
   GMMWithInitialized();
   int k_;
@@ -138,25 +147,29 @@ class PGMLINK_EXPORT GMMWithInitialized : public ClusteringMlpackBase {
   // for 2D data, ilastik provides coordinates with 3rd dimension 0
   // which will cause singular covariance matrix
   // therefore add option for dimensionality
-  GMMWithInitialized(int k, int n, const feature_array& data, int n_trials,
-                     const std::vector<arma::vec>& means, const std::vector<arma::mat>& covs, const arma::vec& weights) :
-      k_(k), n_(n), data_(data), score_(0.0), n_trials_(n_trials), means_(means), covs_(covs), weights_(weights) {}
+  PGMLINK_EXPORT GMMWithInitialized(int k, int n, const feature_array& data, int n_trials,
+                                    const std::vector<arma::vec>& means, 
+                                    const std::vector<arma::mat>& covs, const arma::vec& weights)
+  : k_(k), n_(n), data_(data), score_(0.0), n_trials_(n_trials), means_(means), covs_(covs), weights_(weights) 
+  {}
 
-  virtual feature_array operator()();
-  double score() const;
+  PGMLINK_EXPORT virtual feature_array operator()();
+  PGMLINK_EXPORT double score() const;
     
 };
 
 
-class PGMLINK_EXPORT GMMInitializeArma : public ClusteringMlpackBase {
+class GMMInitializeArma 
+: public ClusteringMlpackBase 
+{
 
  public:
   
-  GMMInitializeArma(int k, const arma::mat& data, int n_trials=1, int n_iterations=30, double threshold=0.000001);
-  ~GMMInitializeArma();
+  PGMLINK_EXPORT GMMInitializeArma(int k, const arma::mat& data, int n_trials=1, int n_iterations=30, double threshold=0.000001);
+  PGMLINK_EXPORT ~GMMInitializeArma();
 
-  virtual feature_array operator()();
-  double score() const;
+  PGMLINK_EXPORT virtual feature_array operator()();
+  PGMLINK_EXPORT double score() const;
 
  private:
   GMMInitializeArma();
@@ -182,11 +195,11 @@ template <typename T, typename U>
  * @param [in,out] out arma::Mat<U> that holds the converted data. For the use in
  * KMeans specify U=double
  */
-PGMLINK_EXPORT void feature_array_to_arma_mat(const std::vector<T>& in, arma::Mat<U>& out);
+void feature_array_to_arma_mat(const std::vector<T>& in, arma::Mat<U>& out);
 
 
 template <typename T, typename U>
-PGMLINK_EXPORT void feature_array_to_arma_mat_skip_last_dimension(const std::vector<T>& in, arma::Mat<U>& out, unsigned int last_dimension);
+void feature_array_to_arma_mat_skip_last_dimension(const std::vector<T>& in, arma::Mat<U>& out, unsigned int last_dimension);
 
   
 template <typename T>
@@ -201,7 +214,7 @@ template <typename T>
  * The mlpack kMeans implementation does not return the coordinates of the cluster centers.
  * The centers can be computed using the original data and the assignments.
  */
-PGMLINK_EXPORT void get_centers(const arma::Mat<T>& data, const arma::Col<size_t> labels, arma::Mat<T>& centers, int k);
+void get_centers(const arma::Mat<T>& data, const arma::Col<size_t> labels, arma::Mat<T>& centers, int k);
 
 
 ////
@@ -223,48 +236,61 @@ class FeatureExtractorBase {
 ////
 //// FeatureExtractorMCOMsFromPCOMs
 ////
-class PGMLINK_EXPORT FeatureExtractorMCOMsFromPCOMs : public FeatureExtractorBase {
+class FeatureExtractorMCOMsFromPCOMs 
+: public FeatureExtractorBase 
+{
  public:
-  virtual std::vector<Traxel> operator()(Traxel& trax, size_t nMergers, unsigned int max_id);
+  PGMLINK_EXPORT virtual std::vector<Traxel> operator()(Traxel& trax, size_t nMergers, unsigned int max_id);
 };
 
   
 ////
 //// FeatureExtractorMCOMsFromMCOMs
 ////
-class PGMLINK_EXPORT FeatureExtractorMCOMsFromMCOMs : public FeatureExtractorBase {
+class FeatureExtractorMCOMsFromMCOMs 
+: public FeatureExtractorBase
+{
  public:
-  virtual std::vector<Traxel> operator()(Traxel& trax, size_t nMergers, unsigned int max_id);
+  PGMLINK_EXPORT virtual std::vector<Traxel> operator()(Traxel& trax, size_t nMergers, unsigned int max_id);
 };
     
 
 ////
 //// FeatureExtractorMCOMsFromKMeans
 ////
-class PGMLINK_EXPORT FeatureExtractorMCOMsFromKMeans : public FeatureExtractorBase {
+class FeatureExtractorMCOMsFromKMeans 
+: public FeatureExtractorBase 
+{
  public:
-  virtual std::vector<Traxel> operator()(Traxel& trax, size_t nMergers, unsigned int max_id);
+  PGMLINK_EXPORT virtual std::vector<Traxel> operator()(Traxel& trax, size_t nMergers, unsigned int max_id);
 };
 
 
 ////
 //// FeatureExtractorMCOMsFromGMM
 ////
-class PGMLINK_EXPORT FeatureExtractorMCOMsFromGMM : public FeatureExtractorBase {
+class FeatureExtractorMCOMsFromGMM 
+: public FeatureExtractorBase
+{
  private:
   int n_dim_;
  public:
-  FeatureExtractorMCOMsFromGMM(int n_dim) : n_dim_(n_dim) {}
-  virtual std::vector<Traxel> operator()(Traxel& trax, size_t nMergers, unsigned int max_id);
+  PGMLINK_EXPORT FeatureExtractorMCOMsFromGMM(int n_dim) 
+  : n_dim_(n_dim) 
+  {}
+  
+  PGMLINK_EXPORT virtual std::vector<Traxel> operator()(Traxel& trax, size_t nMergers, unsigned int max_id);
 };
 
 ////
 //// FeatureExtractorArmadillo
 ////
-class PGMLINK_EXPORT FeatureExtractorArmadillo : public FeatureExtractorBase {
+class FeatureExtractorArmadillo 
+: public FeatureExtractorBase 
+{
  public:
-  FeatureExtractorArmadillo(TimestepIdCoordinateMapPtr coordinates);
-  virtual std::vector<Traxel> operator()(Traxel& trax, size_t nMergers, unsigned int max_id);
+  PGMLINK_EXPORT FeatureExtractorArmadillo(TimestepIdCoordinateMapPtr coordinates);
+  PGMLINK_EXPORT virtual std::vector<Traxel> operator()(Traxel& trax, size_t nMergers, unsigned int max_id);
  private:
   FeatureExtractorArmadillo();
   TimestepIdCoordinateMapPtr coordinates_;
@@ -285,24 +311,29 @@ class DistanceBase {
 ////
 //// DistanceFromCOMs
 ////
-class PGMLINK_EXPORT DistanceFromCOMs : public DistanceBase {
+class DistanceFromCOMs 
+: public DistanceBase 
+{
  public:
-  virtual double operator()(const HypothesesGraph& g, HypothesesGraph::Node from, HypothesesGraph::Node to);
-  virtual double operator()(Traxel from,  Traxel to);
+  PGMLINK_EXPORT virtual double operator()(const HypothesesGraph& g, HypothesesGraph::Node from, HypothesesGraph::Node to);
+  PGMLINK_EXPORT virtual double operator()(Traxel from,  Traxel to);
 };
 
   
 ////
 //// FeatureHandlerBase
 ////
-class FeatureHandlerBase {
+class FeatureHandlerBase 
+{
  public:
+  PGMLINK_EXPORT 
   void add_arcs_for_replacement_node(HypothesesGraph& g,
                                      HypothesesGraph::Node n,
                                      const std::vector<HypothesesGraph::base_graph::Arc>& sources,
                                      const std::vector<HypothesesGraph::base_graph::Arc>& targets,
                                      DistanceBase& distance);
  public:
+  PGMLINK_EXPORT 
   virtual void operator()(HypothesesGraph& g,
                           HypothesesGraph::Node n,
                           std::size_t n_merger,
@@ -318,16 +349,21 @@ class FeatureHandlerBase {
 ////
 //// FeatureHandlerFromTraxels
 ////
-class PGMLINK_EXPORT FeatureHandlerFromTraxels : public FeatureHandlerBase {
+class FeatureHandlerFromTraxels 
+: public FeatureHandlerBase 
+{
  private:
   FeatureExtractorBase& extractor_;
   DistanceBase& base_;
   // FeatureHandlerFromTraxelsMCOMsFromPCOMs() {};
  public:
+  PGMLINK_EXPORT 
   FeatureHandlerFromTraxels(FeatureExtractorBase& extractor,
-                            DistanceBase& base) :
-      extractor_(extractor), base_(base) {}
+                            DistanceBase& base)
+  : extractor_(extractor), base_(base)
+  {}
 
+  PGMLINK_EXPORT 
   virtual void operator()(HypothesesGraph& g,
                           HypothesesGraph::Node n,
                           std::size_t n_merger,
@@ -352,23 +388,25 @@ class ResolveAmbiguousArcsBase {
 ////
 //// ResolveAmbiguousArcsGreedy
 ////
-class PGMLINK_EXPORT ResolveAmbiguousArcsGreedy : public ResolveAmbiguousArcsBase {
+class ResolveAmbiguousArcsGreedy 
+: public ResolveAmbiguousArcsBase 
+{
  public:
-  virtual HypothesesGraph& operator()(HypothesesGraph* g);
+  PGMLINK_EXPORT virtual HypothesesGraph& operator()(HypothesesGraph* g);
 };
 
 
 ////
 //// ReasonerMaxOneArc
 ////
-class PGMLINK_EXPORT ReasonerMaxOneArc : public Reasoner {
+class ReasonerMaxOneArc : public Reasoner {
 };
   
 
 ////
 //// ResolveAmbiguousArcsPgm
 ////
-class PGMLINK_EXPORT ResolveAmbiguousArcsPgm : public ReasonerMaxOneArc, private ResolveAmbiguousArcsBase {
+class ResolveAmbiguousArcsPgm : public ReasonerMaxOneArc, private ResolveAmbiguousArcsBase {
 };
 
 
@@ -387,7 +425,8 @@ class PGMLINK_EXPORT ResolveAmbiguousArcsPgm : public ReasonerMaxOneArc, private
  * the appropriate classes have to be specified accordingly.
  */
    
-class PGMLINK_EXPORT MergerResolver {
+class MergerResolver 
+{
  private:
   HypothesesGraph* g_;
     
@@ -427,7 +466,8 @@ class PGMLINK_EXPORT MergerResolver {
                    FeatureHandlerBase& handler);
 
  public:
-  MergerResolver(HypothesesGraph* g) : g_(g)
+  PGMLINK_EXPORT MergerResolver(HypothesesGraph* g) 
+  : g_(g)
   {
     if (!g_)
       throw std::runtime_error("HypotesesGraph* g_ is a null pointer!");
@@ -446,7 +486,8 @@ class PGMLINK_EXPORT MergerResolver {
     if (!g_->has_property(arc_resolution_candidate()))
       g_->add(arc_resolution_candidate());
   }
-  HypothesesGraph* resolve_mergers(FeatureHandlerBase& handler);
+
+  PGMLINK_EXPORT HypothesesGraph* resolve_mergers(FeatureHandlerBase& handler);
 };
 
 
@@ -462,7 +503,7 @@ PGMLINK_EXPORT void resolve_graph(HypothesesGraph& src, HypothesesGraph& dest, b
 //// transfer graph to graph containing only subset of nodes based on tags
 ////
 template <typename NodePropertyTag, typename ArcPropertyTag>
-PGMLINK_EXPORT void copy_hypotheses_graph_subset(const HypothesesGraph& src,
+void copy_hypotheses_graph_subset(const HypothesesGraph& src,
                                   HypothesesGraph& dest,
                                   std::map<HypothesesGraph::Node, HypothesesGraph::Node>& nr,
                                   std::map<HypothesesGraph::Arc, HypothesesGraph::Arc>& ar,
@@ -472,21 +513,21 @@ PGMLINK_EXPORT void copy_hypotheses_graph_subset(const HypothesesGraph& src,
 
 
 template <typename PropertyTag, typename KeyType>
-PGMLINK_EXPORT void translate_property_value_map(const HypothesesGraph& src,
+void translate_property_value_map(const HypothesesGraph& src,
                                   const HypothesesGraph& dest,
                                   std::map<KeyType, KeyType> dict
                                   );
 
 
 template <typename PropertyTag, typename KeyType>
-PGMLINK_EXPORT void translate_property_bool_map(const HypothesesGraph& src,
+void translate_property_bool_map(const HypothesesGraph& src,
                                  const HypothesesGraph& dest,
                                  std::map<KeyType,KeyType> dict
                                  );
 
 
 template <typename NodePropertyTag, typename ArcPropertyTag>
-PGMLINK_EXPORT void get_subset(const HypothesesGraph& src,
+void get_subset(const HypothesesGraph& src,
                 HypothesesGraph& dest,
                 HypothesesGraph::NodeMap<HypothesesGraph::Node>& nr,
                 HypothesesGraph::ArcMap<HypothesesGraph::Arc>& ar,
@@ -524,7 +565,7 @@ PGMLINK_EXPORT void calculate_gmm_beforehand(HypothesesGraph& g, int n_trials, i
 
 // extract coordinates in arma::mat
 template<int N, typename T>
-PGMLINK_EXPORT void extract_coordinates(TimestepIdCoordinateMapPtr coordinates,
+void extract_coordinates(TimestepIdCoordinateMapPtr coordinates,
                          const vigra::MultiArrayView<N, T>& image,
                          const vigra::TinyVector<long int, N>& offsets,
                          const Traxel& trax);

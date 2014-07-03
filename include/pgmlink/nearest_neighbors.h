@@ -16,8 +16,9 @@
 namespace pgmlink {
     class Traxel;
 
-    class PGMLINK_EXPORT NearestNeighborSearch {
-	public:
+    class NearestNeighborSearch
+    {
+	  public:
 	    template <typename InputIt>
 	    NearestNeighborSearch( InputIt traxel_begin,
 				   InputIt traxel_end,
@@ -27,8 +28,8 @@ namespace pgmlink {
 	     /**
 	      * Returns (traxel id, distance*distance) map.
 	      */
-	    std::map<unsigned int, double> knn_in_range( const Traxel& query, double radius, unsigned int knn, const bool reverse = false );
-	    unsigned int count_in_range( const Traxel& query, double radius, const bool reverse = false );
+	    PGMLINK_EXPORT std::map<unsigned int, double> knn_in_range( const Traxel& query, double radius, unsigned int knn, const bool reverse = false );
+	    PGMLINK_EXPORT unsigned int count_in_range( const Traxel& query, double radius, const bool reverse = false );
 
 	private:
 	    /**
