@@ -362,12 +362,6 @@ class PGMLINK_EXPORT ResolveAmbiguousArcsGreedy : public ResolveAmbiguousArcsBas
 //// ReasonerMaxOneArc
 ////
 class PGMLINK_EXPORT ReasonerMaxOneArc : public Reasoner {
- private:
- public:
-  ReasonerMaxOneArc();
-  virtual void formulate(const HypothesesGraph& g);
-  virtual void infer();
-  virtual void conclude(HypothesesGraph& g);
 };
   
 
@@ -375,7 +369,6 @@ class PGMLINK_EXPORT ReasonerMaxOneArc : public Reasoner {
 //// ResolveAmbiguousArcsPgm
 ////
 class PGMLINK_EXPORT ResolveAmbiguousArcsPgm : public ReasonerMaxOneArc, private ResolveAmbiguousArcsBase {
-  virtual HypothesesGraph& operator()(HypothesesGraph* g);
 };
 
 
