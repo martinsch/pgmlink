@@ -64,6 +64,7 @@ void ConservationTracking::formulate(const HypothesesGraph& hypotheses) {
     param.verbose_ = true;
     param.integerConstraint_ = true;
     param.epGap_ = ep_gap_;
+    param.timeLimit_ = cplex_timeout_;
     LOG(logDEBUG) << "ConservationTracking::formulate ep_gap = " << param.epGap_;
 
     optimizer_ = new cplex_optimizer(*model, param);

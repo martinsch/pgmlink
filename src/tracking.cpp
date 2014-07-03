@@ -377,7 +377,8 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts, TimestepIdCoord
 			true, // with_appearance
 			true, // with_disappearance
 			transition_parameter_,
-			with_constraints_
+            with_constraints_,
+            cplex_timeout_
 			);
 
 	cout << "-> formulate ConservationTracking model" << endl;

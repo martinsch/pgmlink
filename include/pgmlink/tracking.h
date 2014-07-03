@@ -154,6 +154,7 @@ namespace pgmlink {
 		  double border_width = 0,
 		  FieldOfView fov = FieldOfView(),
           bool with_constraints = true,
+          double cplex_timeout = 1e+75,
           const std::string& event_vector_dump_filename = "none"
   	      )
         : max_number_objects_(max_number_objects),
@@ -175,6 +176,7 @@ namespace pgmlink {
 		border_width_(border_width),
 		fov_(fov),
         with_constraints_(with_constraints),
+        cplex_timeout_(cplex_timeout),
         event_vector_dump_filename_(event_vector_dump_filename){}
     std::vector< std::vector<Event> > operator()(TraxelStore& ts,
                                                  TimestepIdCoordinateMapPtr coordinates = TimestepIdCoordinateMapPtr());
@@ -206,6 +208,7 @@ namespace pgmlink {
       double border_width_;
       FieldOfView fov_;
       bool with_constraints_;
+      double cplex_timeout_;
       std::string event_vector_dump_filename_;
     };
 }
