@@ -779,6 +779,78 @@ BOOST_AUTO_TEST_CASE( MeanCalculator_test ) {
   BOOST_CHECK_EQUAL(matrix(0, 0), static_cast<FeatureScalar>(64./14.));
 }
 
+BOOST_AUTO_TEST_CASE( DeviationCalculator_test ) {
+  LOG(logINFO) << "test case: DeviationCalculator_test";
+
+  // get the test data
+  FeatureMatrix x;
+  get_feature_matrix(x);
+
+  // set up the DeviationCalculator and run the calculation
+  DeviationCalculator deviation_calculator;
+  FeatureMatrix matrix;
+
+  deviation_calculator.calculate(x, matrix);
+  BOOST_CHECK_EQUAL(matrix.shape(0), 7);
+  BOOST_CHECK_EQUAL(matrix.shape(1), 2);
+  BOOST_CHECK_EQUAL(matrix(0, 0), 3.-static_cast<FeatureScalar>(33./7.));
+  BOOST_CHECK_EQUAL(matrix(0, 1), 3.-static_cast<FeatureScalar>(31./7.));
+  BOOST_CHECK_EQUAL(matrix(1, 0), 4.-static_cast<FeatureScalar>(33./7.));
+  BOOST_CHECK_EQUAL(matrix(1, 1), 3.-static_cast<FeatureScalar>(31./7.));
+  BOOST_CHECK_EQUAL(matrix(2, 0), 3.-static_cast<FeatureScalar>(33./7.));
+  BOOST_CHECK_EQUAL(matrix(2, 1), 4.-static_cast<FeatureScalar>(31./7.));
+  BOOST_CHECK_EQUAL(matrix(3, 0), 4.-static_cast<FeatureScalar>(33./7.));
+  BOOST_CHECK_EQUAL(matrix(3, 1), 4.-static_cast<FeatureScalar>(31./7.));
+  BOOST_CHECK_EQUAL(matrix(4, 0), 5.-static_cast<FeatureScalar>(33./7.));
+  BOOST_CHECK_EQUAL(matrix(4, 1), 4.-static_cast<FeatureScalar>(31./7.));
+  BOOST_CHECK_EQUAL(matrix(5, 0), 5.-static_cast<FeatureScalar>(33./7.));
+  BOOST_CHECK_EQUAL(matrix(5, 1), 5.-static_cast<FeatureScalar>(31./7.));
+  BOOST_CHECK_EQUAL(matrix(6, 0), 9.-static_cast<FeatureScalar>(33./7.));
+  BOOST_CHECK_EQUAL(matrix(6, 1), 8.-static_cast<FeatureScalar>(31./7.));
+}
+
+BOOST_AUTO_TEST_CASE( VarianceCalculator_test ){
+  LOG(logINFO) << "test case: VarianceCalculator_test";
+
+  // get the test data
+  FeatureMatrix x;
+  get_feature_matrix(x);
+
+  // set up the VarianceCalculator and run the calculation
+  VarianceCalculator variance_calculator;
+  FeatureMatrix matrix;
+
+  variance_calculator.calculate(x, matrix);
+  BOOST_CHECK_EQUAL(matrix.shape(0), 1);
+  BOOST_CHECK_EQUAL(matrix.shape(1), 2);
+  BOOST_CHECK(3.63265 < matrix(0, 0) && matrix(0, 0) < 3.63266);
+  BOOST_CHECK(2.53061 < matrix(0, 1) && matrix(0, 1) < 2.53062);
+}
+
+BOOST_AUTO_TEST_CASE( EuclideanNormCalculator_test){
+  LOG(logINFO) << "test case: EuclideanNormCalculator_test";
+
+  // get the test data
+  FeatureMatrix x;
+  get_feature_matrix(x);
+
+  // set up the EuclideanNormCalculator and run the calculation
+  EuclideanNormCalculator euclidean_norm;
+  FeatureMatrix matrix;
+
+  euclidean_norm.calculate(x, matrix);
+  BOOST_CHECK_EQUAL(matrix.shape(0), 7);
+  BOOST_CHECK_EQUAL(matrix.shape(1), 1);
+  LOG(logINFO) << matrix(0, 0);
+  BOOST_CHECK(4.24264 < matrix(0, 0) && matrix(0, 0) < 4.24265);
+  BOOST_CHECK(4.99999 < matrix(1, 0) && matrix(0, 0) < 5.00001);
+  BOOST_CHECK(4.99999 < matrix(2, 0) && matrix(0, 1) < 5.00001);
+  BOOST_CHECK(5.65685 < matrix(3, 0) && matrix(0, 0) < 5.65686);
+  BOOST_CHECK(6.40312 < matrix(4, 0) && matrix(0, 0) < 6.40313);
+  BOOST_CHECK(7.07106 < matrix(5, 0) && matrix(0, 0) < 7.07107);
+  BOOST_CHECK(12.0415 < matrix(6, 0) && matrix(0, 0) < 12.0416);
+}
+
 BOOST_AUTO_TEST_CASE( ChildParentDiffCalculator_test ) {
   LOG(logINFO) << "test case: ChildParentDiffCalculator_test";
   // get the test data
@@ -813,6 +885,25 @@ BOOST_AUTO_TEST_CASE( ChildParentDiffCalculator_test ) {
   BOOST_CHECK_EQUAL(matrix(0,1), 0.);
   BOOST_CHECK_EQUAL(matrix(1,0), 0.);
   BOOST_CHECK_EQUAL(matrix(1,1), 0.);
+}
+
+BOOST_AUTO_TEST_CASE( ChildDeceleration_test ) {
+  LOG(logINFO) << "test case: ChildDeceleration_test";
+  // get the test data
+  FeatureMatrix x;
+  get_feature_matrix(x);
+  
+  // reshape
+  FeatureMatrixView y = x.subarray(vigra::Shape2(1,0), vigra::Shape2(7,2));
+
+  // set up ChildParentDiffCalculator and calculate the result
+  ChildDeceleration child_deceleration;
+  FeatureMatrix matrix;
+  child_deceleration.calculate(y, matrix);
+  BOOST_CHECK_EQUAL(matrix.shape(0), 2);
+  BOOST_CHECK_EQUAL(matrix.shape(1), 1);
+  BOOST_CHECK_EQUAL(matrix(0,0), static_cast<FeatureScalar>(1.));
+  BOOST_CHECK_EQUAL(matrix(1,0), static_cast<FeatureScalar>(5.));
 }
 
 BOOST_AUTO_TEST_CASE( SquaredDiffCalculator_test) {

@@ -93,8 +93,8 @@ void set_solution(HypothesesGraph& graph, const size_t solution_index);
 //// class TraxelsOfInterest
 ////
 /**
-\brief The class <TT>TraxelsOfInterest</TT> extracts subsets of the graph that
-  are of interest, e.g. tracks or division.
+\brief virtual class to extract subsets of the graph that are of interest, e.g.
+  tracks or division.
 
 The <TT>TraxelsOfInterest</TT> is a pure virtual class. Its ()-operator returns
 a vector of vectors of traxel references. One vector of traxel references
