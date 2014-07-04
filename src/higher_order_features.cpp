@@ -1201,6 +1201,84 @@ template class SquaredNormCalculator<0>;
 template class SquaredNormCalculator<1>;
 
 ////
+//// class DotProductCalculator
+////
+const std::string DotProductCalculator::name_ = "DotProductCalculator";
+
+const std::string& DotProductCalculator::name() const {
+  return name_;
+}
+
+void DotProductCalculator::calculate(
+  const FeatureMatrix& feature_matrix,
+  FeatureMatrix& return_matrix
+) const {
+  size_t col_count = feature_matrix.shape(0);
+  // Calculate the dot product depending on the size of the input matrix
+  if (col_count == 0) {
+    // empty matrix
+    LOG(logDEBUG) << "In DotProductCalculator: matrix is empty";
+    LOG(logDEBUG) << "Return zero";
+    return_matrix.reshape(vigra::Shape2(1,1));
+    return_matrix(0, 0) = 0.0;
+  } else if (col_count == 1) {
+    // matrix with one column
+    LOG(logDEBUG) << "In DotProductCalculator: matrix has only one column";
+    LOG(logDEBUG) << "Calculate the norm of this vector";
+    return_matrix.reshape(vigra::Shape2(1,1));
+    return_matrix(0, 0) =  vigra::linalg::dot(feature_matrix, feature_matrix);
+  } else if (col_count >= 2) {
+    // matrix with two or more columns
+    return_matrix.reshape(vigra::Shape2(col_count-1, 1));
+    for (size_t i = 0; i < (col_count-1); i++) {
+      return_matrix(i, 0) = vigra::linalg::dot(
+        feature_matrix.bind<0>(i),
+        feature_matrix.bind<0>(i+1)
+      );
+    }
+  }
+}
+
+////
+//// class AngleCosineCalculator
+////
+const std::string AngleCosineCalculator::name_ = "AngleCosineCalculator";
+
+const std::string& AngleCosineCalculator::name() const {
+  return name_;
+}
+
+void AngleCosineCalculator::calculate(
+  const FeatureMatrix& feature_matrix,
+  FeatureMatrix& return_matrix
+) const {
+  size_t col_count = feature_matrix.shape(0);
+  size_t row_count = feature_matrix.shape(1);
+  if (col_count <= 2 or row_count == 0) {
+    LOG(logDEBUG) << "In ChildParentDiffCalculator: Invalid division depth";
+    LOG(logDEBUG) << "Returning zero";
+    return_matrix.reshape(vigra::Shape2(1,1));
+    return_matrix.init(0);
+  } else {
+    return_matrix.reshape(vigra::Shape2(col_count-2,1));
+    FeatureMatrix diff_matrix;
+    FeatureMatrix dot_matrix;
+    FeatureMatrix norm_matrix;
+    diff_calculator_.calculate(feature_matrix, diff_matrix);
+    dot_product_calculator_.calculate(diff_matrix, dot_matrix);
+    norm_calculator_.calculate(diff_matrix, norm_matrix);
+    for (size_t i = 0; i < col_count - 2; i++) {
+      if (norm_matrix(i, 0) != 0 and norm_matrix(i+1, 0) != 0) {
+        return_matrix(i, 0) = dot_matrix(i, 0);
+        return_matrix(i, 0) /= (norm_matrix(i, 0) * norm_matrix(i+1, 0));
+      } else {
+        return_matrix(i, 0) = 0;
+      }
+    }
+  }
+}
+
+////
 //// class ChildParentDiffCalculator
 ////
 const std::string ChildParentDiffCalculator::name_ = "ChildParentDiffCalculator";
@@ -1242,45 +1320,6 @@ void ChildParentDiffCalculator::calculate(
       feature_matrix.bind<0>(2*depth),
       feature_matrix.bind<0>(0)
     );
-  }
-}
-
-////
-//// class DotProductCalculator
-////
-const std::string DotProductCalculator::name_ = "DotProductCalculator";
-
-const std::string& DotProductCalculator::name() const {
-  return name_;
-}
-
-void DotProductCalculator::calculate(
-  const FeatureMatrix& feature_matrix,
-  FeatureMatrix& return_matrix
-) const {
-  size_t col_count = feature_matrix.shape(0);
-  // Calculate the dot product depending on the size of the input matrix
-  if (col_count == 0) {
-    // empty matrix
-    LOG(logDEBUG) << "In DotProductCalculator: matrix is empty";
-    LOG(logDEBUG) << "Return zero";
-    return_matrix.reshape(vigra::Shape2(1,1));
-    return_matrix(0, 0) = 0.0;
-  } else if (col_count == 1) {
-    // matrix with one column
-    LOG(logDEBUG) << "In DotProductCalculator: matrix has only one column";
-    LOG(logDEBUG) << "Calculate the norm of this vector";
-    return_matrix.reshape(vigra::Shape2(1,1));
-    return_matrix(0, 0) =  vigra::linalg::dot(feature_matrix, feature_matrix);
-  } else if (col_count >= 2) {
-    // matrix with two or more columns
-    return_matrix.reshape(vigra::Shape2(col_count-1, 1));
-    for (size_t i = 0; i < (col_count-1); i++) {
-      return_matrix(i, 0) = vigra::linalg::dot(
-        feature_matrix.bind<0>(i),
-        feature_matrix.bind<0>(i+1)
-      );
-    }
   }
 }
 

@@ -458,14 +458,14 @@ neighbouring columns are used to calculate one column in the return matrix.
 Let \f$f(\vec{x_1}, \vec{x_2}, \vec{x_3})\f$ be a feature calculator of order 3.
 Then TraxelsFCFromFC::calculate method does the following:
 
-\f$
+\f[
   (\vec{x_1}, \vec{x_2}, \dots, \vec{x_n})
   \mapsto
   (f(\vec{x_1}, \vec{x_2}, \vec{x_3}),
   f(\vec{x_2}, \vec{x_3}, \vec{x_4}),
   \dots,
   f(\vec{x_{n-2}}, \vec{x_{n-1}}, \vec{x_n}))
-\f$
+\f]
 
 If there are fewer column vectors in the input matrix than the order of the
 feature calculator, this calculator returns a 1x1 matrix with a 0 in the (0,0)
@@ -723,6 +723,62 @@ typedef TCompositionCalculator<
 > DiffusionCalculator;
 
 ////
+//// class DotProductCalculator
+////
+class DotProductCalculator : public TraxelsFeatureCalculator {
+ public:
+  DotProductCalculator() {};
+  virtual ~DotProductCalculator() {};
+  virtual const std::string& name() const;
+  virtual void calculate(
+    const FeatureMatrix& feature_matrix,
+    FeatureMatrix& return_matrix
+  ) const;
+ protected:
+  static const std::string name_;
+};
+
+////
+//// class AngleCosineCalculator
+////
+/**
+\brief calculates the cosine of the angle of three neighbouring column vectors
+
+AngleCosineCalculator returns the cosine of an angle. This angle is the change
+of direction of three neighbouring column vectors. \f$ \vec{x_1}, \vec{x_2},
+\vec{x_3} \f$. The cosine of alpha is calculated with:
+\f[
+  \cos(\alpha) =
+  \frac{(\vec{x_2} - \vec{x_1}) \cdot (\vec{x_3} - \vec{x_2})}
+       {\Vert\vec{x_2} - \vec{x_1}\Vert \cdot \Vert\vec{x_3} - \vec{x_2}\Vert}
+\f]
+The 2-norm is taken as the norm.
+\code
+ x_1
+   \
+    \
+     x_2 ----- x_3
+      \  )
+       \
+\endcode
+*/
+class AngleCosineCalculator : public TraxelsFeatureCalculator {
+ public:
+  AngleCosineCalculator() {};
+  virtual ~AngleCosineCalculator() {};
+  virtual const std::string& name() const;
+  virtual void calculate(
+    const FeatureMatrix& feature_matrix,
+    FeatureMatrix& return_matrix
+  ) const;
+ protected:
+  DiffCalculator diff_calculator_;
+  EuclideanNormCalculator norm_calculator_;
+  DotProductCalculator dot_product_calculator_;
+  static const std::string name_;
+};
+
+////
 //// class ChildParentDiffCalculator
 ////
 class ChildParentDiffCalculator : public TraxelsFeatureCalculator {
@@ -738,22 +794,6 @@ class ChildParentDiffCalculator : public TraxelsFeatureCalculator {
     const FeatureMatrix& feature_matrix,
     FeatureMatrix& return_matrix,
     size_t depth
-  ) const;
- protected:
-  static const std::string name_;
-};
-
-////
-//// class DotProductCalculator
-////
-class DotProductCalculator : public TraxelsFeatureCalculator {
- public:
-  DotProductCalculator() {};
-  virtual ~DotProductCalculator() {};
-  virtual const std::string& name() const;
-  virtual void calculate(
-    const FeatureMatrix& feature_matrix,
-    FeatureMatrix& return_matrix
   ) const;
  protected:
   static const std::string name_;
@@ -831,20 +871,17 @@ distance matrix is given the inverse covariance matrix of the column vectors is
 taken. In this case the mahalanobis distance to the mean vector is calculated.
 
 With a specified distance matrix \f$A\f$:
-
-\f$
+\f[
   (\vec{x_1}, \dots, \vec{x_n})
   \mapsto
   (\vec{x_1}^T A \vec{x_1}, \dots, \vec{x_n}^T A \vec{x_n})
-\f$
-
+\f]
 With no distance matrix given:
-
-\f$
+\f[
   (\vec{x_1}, \dots, \vec{x_n})
   \mapsto
   ((\vec{x_1}-\vec{\mu})^T \Sigma^{-1} (\vec{x_1}-\vec{\mu}), \dots, (\vec{x_n}-\vec{\mu})^T \Sigma^{-1} (\vec{x_n}-\vec{\mu}))
-\f$
+\f]
 
 Where \f$\vec{\mu}\f$ denotes the mean vector of all column vectors.
 \f$\Sigma^{-1}\f$ is the inverse of the covariance matrix of the row vectors.
@@ -885,7 +922,7 @@ The count of outliers returned by MVNOutlierCalculator::calculate is normalized
 to the count of column vectors in the matrix.
 
 Definition of outlier:
-\f$\sigma < (\vec{x}-\vec{\mu})^T \Sigma^{-1} (\vec{x}-\vec{\mu})\f$
+\f[\sigma < (\vec{x}-\vec{\mu})^T \Sigma^{-1} (\vec{x}-\vec{\mu})\f]
 */
 class MVNOutlierCalculator : public TraxelsFeatureCalculator {
  public:
