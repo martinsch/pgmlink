@@ -1065,9 +1065,11 @@ BOOST_AUTO_TEST_CASE( GraphFeatureCalculator_calculate_vector ) {
   );
 
   // calculate the vector
-  FeatureVector result = sum_of_ids_in_track.calculate_vector(graph);
+  FeatureMatrix result;
+  sum_of_ids_in_track.calculate(graph, result);
   BOOST_CHECK_EQUAL(result.shape(0), 3);
-  BOOST_CHECK_EQUAL(result(0),  4.);
-  BOOST_CHECK_EQUAL(result(1), 12.);
-  BOOST_CHECK_EQUAL(result(2), 14.);
+  BOOST_CHECK_EQUAL(result.shape(1), 1);
+  BOOST_CHECK_EQUAL(result(0, 0),  4.);
+  BOOST_CHECK_EQUAL(result(1, 0), 12.);
+  BOOST_CHECK_EQUAL(result(2, 0), 14.);
 }

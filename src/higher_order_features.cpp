@@ -9,6 +9,8 @@
 
 #include <sstream> /* for printing a matrix on the debug level */
 
+#include <algorithm> /* for std::copy */
+
 namespace pgmlink {
 
 ////
@@ -154,28 +156,37 @@ FeatureMatrix TraxelsFeatureCalculator::calculate(
 ////
 //// class GraphFeatureCalculator
 ////
-const FeatureVector& GraphFeatureCalculator::calculate_vector(
-  const HypothesesGraph& graph
-) {
+void GraphFeatureCalculator::calculate(
+  const HypothesesGraph& graph,
+  FeatureMatrix& return_matrix
+) const {
+  // Get all interesing subsets into the vector trx_vecs
   const std::vector<ConstTraxelRefVector> trx_vecs = 
     subsets_extractor_ptr_->operator()(graph);
 
+  return_matrix.reshape(vigra::Shape2(0,0));
   size_t subset_count = trx_vecs.size();
-  // TODO Implement for non scalar features
-  ret_vector_.reshape(vigra::Shape1(subset_count));
-  ret_vector_.init(0.0);
-  
-  std::vector<ConstTraxelRefVector>::const_iterator trx_it = trx_vecs.begin();
-  size_t current_column = 0;
-  for (; trx_it != trx_vecs.end(); trx_it++, current_column++) {
-    FeatureMatrix feature = feature_calculator_ptr_->calculate(
-      feature_extractor_ptr_->extract(*trx_it)
-    );
-    if ((feature.shape(0) == 1) and (feature.shape(1) == 1)) {
-      ret_vector_(current_column) = feature(0, 0);
+  if (subset_count >=1 ) {
+    std::vector<ConstTraxelRefVector>::const_iterator trx_it = trx_vecs.begin();
+    std::vector<FeatureScalar> return_vector;
+    for (; trx_it != trx_vecs.end(); trx_it++) {
+      // Calculate the features for this subset and store it in the variable
+      // feature_matrix
+      FeatureMatrix feature_matrix;
+      feature_calculator_ptr_->calculate(
+        feature_extractor_ptr_->extract(*trx_it),
+        feature_matrix
+      );
+      // Write the feature_matrix into an vector
+      return_vector.insert(
+        return_vector.end(),
+        feature_matrix.begin(),
+        feature_matrix.end()
+      );
     }
+    return_matrix.reshape(vigra::Shape2(return_vector.size(), 1));
+    std::copy(return_vector.begin(), return_vector.end(), return_matrix.begin());
   }
-  return ret_vector_;
 }
 
 ////

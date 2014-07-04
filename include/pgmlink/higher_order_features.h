@@ -192,15 +192,12 @@ class TraxelsFeatureCalculator {
    i-th vector of Traxels ----------------------> matrix of traxel features
 
                           TraxelsFeatureCalculator
-matrix of traxel features ----------------------> 1x1 matrix of traxel features
-                                                  (i-th component of return vector)
+matrix of traxel features ----------------------> nxm matrix of traxel features
 \endcode
 The GraphFeatureCalculator uses the TraxelsFeatureExtractor and 
 TraxelsFeatureCalculator given in the constructor to calculate the features 
 for of every subset returned by the TraxelsOfInterest class in the constructor.
-This only works for TraxelsFeatureCalculator that return a 1x1 matrix since the
-results are returned in one vector. Each position in the return vector stands
-for one subset.
+The return_matrix is a row vector of all calculated feature matrix entries.
 */
 class GraphFeatureCalculator {
  public:
@@ -226,9 +223,10 @@ class GraphFeatureCalculator {
     diffusion_calculator_ptr
   );
   
-  return_vector = diffusion_coefficients.calculate_vector(graph);
-  // the return vector now consists of the diffusion coefficients of all tracks
-  // in the hypotheses graph
+  FeatureMatrix return_matrix;
+  diffusion_coefficients.calculate(graph, return_matrix);
+  // the return matrix is now a row vector of all diffusion coefficients of all
+  // tracks in the hypotheses graph.
   \endcode
   */
   GraphFeatureCalculator(
@@ -240,14 +238,14 @@ class GraphFeatureCalculator {
     feature_extractor_ptr_(feature_extractor_ptr),
     feature_calculator_ptr_(feature_calculator_ptr) {};
   virtual ~GraphFeatureCalculator() {}
-  virtual const FeatureVector& calculate_vector(
-    const HypothesesGraph& graph
-  );
+  virtual void calculate(
+    const HypothesesGraph& graph,
+    FeatureMatrix& return_matrix
+  ) const;
  protected:
   boost::shared_ptr<TraxelsOfInterest> subsets_extractor_ptr_;
   boost::shared_ptr<TraxelsFeatureExtractor> feature_extractor_ptr_;
   boost::shared_ptr<TraxelsFeatureCalculator> feature_calculator_ptr_;
-  FeatureVector ret_vector_;
 };
 
 ////
