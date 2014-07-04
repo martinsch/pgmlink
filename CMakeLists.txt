@@ -49,12 +49,26 @@ find_package( Cplex REQUIRED )
 find_package( VIGRA REQUIRED )
 find_package( Lemon REQUIRED )
 find_package( Boost REQUIRED COMPONENTS serialization program_options )
-find_package( Armadillo REQUIRED )
+message(STATUS "  found: ${Boost_LIBRARIES}")
+
+# first try to find ArmadilloConfig.cmake to get correct transitive 
+# dependencies (e.g. libopenblas)
+find_package( Armadillo CONFIG )
+if(Armadillo_FOUND)
+    get_target_property(Armadillo_LIBRARY armadillo IMPORTED_IMPLIB_RELEASE)
+    get_target_property(Armadillo_LIBRARIES armadillo IMPORTED_LINK_INTERFACE_LIBRARIES_RELEASE)
+    set(Armadillo_LIBRARIES ${Armadillo_LIBRARY} ${Armadillo_LIBRARIES})
+    set(Armadillo_INCLUDE_DIR ${ARMADILLO_INCLUDE_DIRS})
+else()
+    # if this fails, try search heuristics
+    find_package( Armadillo REQUIRED )
+endif()
+message(STATUS "Armadillo: ${Armadillo_LIBRARIES}")
+
 find_package( Mlpack REQUIRED )
 find_package( Opengm REQUIRED )
 find_package( Xml2 REQUIRED )
 
-message(STATUS "  found: ${Boost_LIBRARIES}")
 
 if(WIN32)
   # FindHDF5 is broken on Windows
