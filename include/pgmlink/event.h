@@ -39,7 +39,7 @@ class Event
        daughterId2). A Void is just an empty vector. ResolvedTo contains the
        id of the merger node followed by pairs of <new id, respective COM>.
     */
-    std::vector<unsigned int> traxel_ids;
+    std::vector<std::size_t> traxel_ids;
     
     /**
        \brief The energy assigned to this Event happening.
