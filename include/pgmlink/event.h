@@ -15,7 +15,7 @@
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 
-template class PGMLINK_EXPORT std::vector<unsigned int>;
+// template class PGMLINK_EXPORT std::vector<unsigned int>;
 
 namespace pgmlink {
 
