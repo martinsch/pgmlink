@@ -280,39 +280,39 @@ boost::shared_ptr<std::vector< std::vector<Event> > > events(const HypothesesGra
                     break;
                 }
             }
-        }
-        if (t >= g.earliest_timestep()) {
-            for (map<unsigned int, vector<unsigned int> >::iterator map_it = resolver_map.begin(); map_it != resolver_map.end(); ++map_it) {
-                Event e;
-                e.type = Event::ResolvedTo;
-                e.traxel_ids.push_back(map_it->first);
-                for (std::vector<unsigned int>::iterator it = map_it->second.begin(); it != map_it->second.end(); ++it) {
-                    e.traxel_ids.push_back(*it);
-                }
-                (*ret)[t-g.earliest_timestep()+1].push_back(e);
-                LOG(logDEBUG1) << e;
+        }        
+        for (map<unsigned int, vector<unsigned int> >::iterator map_it = resolver_map.begin(); map_it != resolver_map.end(); ++map_it) {
+            Event e;
+            e.type = Event::ResolvedTo;
+            e.traxel_ids.push_back(map_it->first);
+            for (std::vector<unsigned int>::iterator it = map_it->second.begin(); it != map_it->second.end(); ++it) {
+                e.traxel_ids.push_back(*it);
             }
+            (*ret)[t-g.earliest_timestep()+1].push_back(e);
+            LOG(logDEBUG1) << e;
         }
 
-        
 
         // appearances and mergers in next timestep
-        LOG(logDEBUG2) << "events(): appearances in next timestep";        
-        for(node_timestep_map_t::ItemIt node_at(node_timestep_map, t); node_at!=lemon::INVALID; ++node_at) {
-            // count incoming arcs
-            int count = 0;
-            for(HypothesesGraph::base_graph::InArcIt a(g, node_at); a!=lemon::INVALID; ++a) ++count;
-            LOG(logDEBUG3) << "events(): counted incoming arcs in next timestep: " << count;
+        LOG(logDEBUG2) << "events(): appearances in next timestep";
+        if (t+1 <= g.latest_timestep()) {
+            for(node_timestep_map_t::ItemIt node_at(node_timestep_map, t+1); node_at!=lemon::INVALID; ++node_at) {
+                // count incoming arcs
+                int count = 0;
+                for(HypothesesGraph::base_graph::InArcIt a(g, node_at); a!=lemon::INVALID; ++a) ++count;
+                LOG(logDEBUG3) << "events(): counted incoming arcs in next timestep: " << count;
 
-            // no incoming arcs => appearance
-            if(count == 0 && t > g.earliest_timestep()) {
-                Event e;
-                e.type = Event::Appearance;
-                e.traxel_ids.push_back(node_traxel_map[node_at].Id);
-                (*ret)[t-g.earliest_timestep()].push_back(e);
-                LOG(logDEBUG3) << e;
+                // no incoming arcs => appearance
+                if(count == 0 && t + 1 > g.earliest_timestep()) {
+                    Event e;
+                    e.type = Event::Appearance;
+                    e.traxel_ids.push_back(node_traxel_map[node_at].Id);
+                    (*ret)[t-g.earliest_timestep()+1].push_back(e);
+                    LOG(logDEBUG3) << e;
+                }
             }
-
+        }
+        for(node_timestep_map_t::ItemIt node_at(node_timestep_map, t); node_at!=lemon::INVALID; ++node_at) {
             if(with_mergers && (*node_number_of_objects)[node_at] > 1) {
                 Event e;
                 e.type = Event::Merger;
@@ -322,33 +322,21 @@ boost::shared_ptr<std::vector< std::vector<Event> > > events(const HypothesesGra
                 LOG(logDEBUG3) << e;
             }
         }
+
     }
 
-    LOG(logDEBUG2) << "events(): last timestep";
+    LOG(logDEBUG2) << "events(): last timestep: " << g.latest_timestep();
     for(node_timestep_map_t::ItemIt node_at(node_timestep_map, g.latest_timestep()); node_at!=lemon::INVALID; ++node_at) {
-        // count incoming arcs
-        int count = 0;
-        for(HypothesesGraph::base_graph::InArcIt a(g, node_at); a!=lemon::INVALID; ++a) ++count;
-        LOG(logDEBUG3) << "events(): counted incoming arcs in next timestep: " << count;
-
-        // no incoming arcs => appearance
-        if(count == 0) {
-            Event e;
-            e.type = Event::Appearance;
-            e.traxel_ids.push_back(node_traxel_map[node_at].Id);
-            (*ret)[g.latest_timestep()-1].push_back(e);
-            LOG(logDEBUG3) << e;
-        }
-
         if(with_mergers && (*node_number_of_objects)[node_at] > 1) {
             Event e;
             e.type = Event::Merger;
             e.traxel_ids.push_back(node_traxel_map[node_at].Id);
             e.traxel_ids.push_back((*node_number_of_objects)[node_at]);
-            (*ret)[g.latest_timestep()-1].push_back(e);
+            (*ret)[g.latest_timestep()-g.earliest_timestep()].push_back(e);
             LOG(logDEBUG3) << e;
         }
     }
+    LOG(logDEBUG2) << "events(): done.";
     return ret;
 }
 
