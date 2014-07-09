@@ -302,9 +302,6 @@ BOOST_AUTO_TEST_CASE( MergerResolver_resolve_mergers_3 ) {
 
 BOOST_AUTO_TEST_CASE( MergerResolver_resolve_mergers_2 ) {
   LOG(logINFO) << "Starting test MergerResolver_resolve_mergers_2";
-  //
-  // IMPORTANT: IMPLEMENT BOOST_CHECKS FOR THIS TEST!!!
-  //
   
   //  t=1      2      3
   //    o ----    ----o

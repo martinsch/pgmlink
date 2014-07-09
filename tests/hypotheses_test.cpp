@@ -415,18 +415,6 @@ BOOST_AUTO_TEST_CASE( SingleTimestepTraxel_HypothesesGraph_generateTraxelGraph )
 	traxel_graph.addArc(n32,n43);
 	traxel_graph.addArc(n33,n43);
 
-//	Arc a1_11 = traxel_graph.addArc(n11,n21);
-//	Arc a1_21 = traxel_graph.addArc(n12,n21);
-//	Arc a1_22 = traxel_graph.addArc(n12,n22);
-//	Arc a1_33 = traxel_graph.addArc(n13,n23);
-//	Arc a2_11 = traxel_graph.addArc(n21,n31);
-//	Arc a2_22 = traxel_graph.addArc(n22,n32);
-//	Arc a2_33 = traxel_graph.addArc(n23,n33);
-//	Arc a3_11 = traxel_graph.addArc(n31,n41);
-//	Arc a3_22 = traxel_graph.addArc(n32,n42);
-//	Arc a3_23 = traxel_graph.addArc(n32,n43);
-//	Arc a3_33 = traxel_graph.addArc(n33,n43);
-
 	std::cout << "Setting some arcs of traxel graph active" << std::endl;
 	// set some arcs active
 	traxel_graph.add(arc_active());
@@ -501,5 +489,296 @@ BOOST_AUTO_TEST_CASE( SingleTimestepTraxel_HypothesesGraph_generateTraxelGraph )
 	BOOST_CHECK_EQUAL(num_of_arcs,7);
 }
 
+
+BOOST_AUTO_TEST_CASE( SingleTimestepTraxel_HypothesesGraph_eventVector ) {
+    HypothesesGraph traxel_graph;
+
+    typedef HypothesesGraph::Node Node;
+    typedef HypothesesGraph::Arc Arc;
+
+
+    // 11:2 - 21:2 - 31:2
+    //        22:3 - 32:3 - 41:3
+    //
+    //        23:1
+    // 12:1D<
+    //        24:1
+    //                      42:4
+    //
+    //                      43:1
+    //               33:2M<
+    //                      44:1
+
+    std::cout << "Adding nodes and arcs to traxel graph" << std::endl;
+    Node n11 = traxel_graph.add_node(1);
+    Node n12 = traxel_graph.add_node(1);    
+    Node n21 = traxel_graph.add_node(2);
+    Node n22 = traxel_graph.add_node(2);
+    Node n23 = traxel_graph.add_node(2);
+    Node n24 = traxel_graph.add_node(2);
+    Node n31 = traxel_graph.add_node(3);
+    Node n32 = traxel_graph.add_node(3);
+    Node n33 = traxel_graph.add_node(3);
+    Node n41 = traxel_graph.add_node(4);
+    Node n42 = traxel_graph.add_node(4);
+    Node n43 = traxel_graph.add_node(4);
+    Node n44 = traxel_graph.add_node(4);
+
+    traxel_graph.addArc(n11,n21);
+    traxel_graph.addArc(n21,n31);
+    traxel_graph.addArc(n22,n32);
+    traxel_graph.addArc(n32,n41);
+    traxel_graph.addArc(n12,n23);
+    traxel_graph.addArc(n12,n24);
+    traxel_graph.addArc(n33,n43);
+    traxel_graph.addArc(n33,n44);
+
+    Traxel t11(11,1);
+    Traxel t12(12,1);
+    Traxel t21(21,2);
+    Traxel t22(22,2);
+    Traxel t23(23,2);
+    Traxel t24(24,2);
+    Traxel t31(31,3);
+    Traxel t32(32,3);
+    Traxel t33(33,3);
+    Traxel t41(41,4);
+    Traxel t42(42,4);
+    Traxel t43(43,4);
+    Traxel t44(44,4);
+
+    traxel_graph.add(node_traxel());
+    property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = traxel_graph.get(node_traxel());
+    traxel_map.set(n11, t11);
+    traxel_map.set(n12, t12);
+    traxel_map.set(n21, t21);
+    traxel_map.set(n22, t22);
+    traxel_map.set(n23, t23);
+    traxel_map.set(n24, t24);
+    traxel_map.set(n31, t31);
+    traxel_map.set(n32, t32);
+    traxel_map.set(n33, t33);
+    traxel_map.set(n41, t41);
+    traxel_map.set(n42, t42);
+    traxel_map.set(n43, t43);
+    traxel_map.set(n44, t44);
+
+    std::cout << "Setting all arcs of traxel graph active" << std::endl;
+    // set some arcs active
+    traxel_graph.add(arc_active());
+    property_map<arc_active, HypothesesGraph::base_graph > ::type& active_arcs = traxel_graph.get(arc_active());
+    for(HypothesesGraph::ArcIt a(traxel_graph); a != lemon::INVALID; ++a) {
+        active_arcs.set(a, true);
+    }
+
+    std::cout << "Setting all nodes to their merger values" << std::endl;
+    traxel_graph.add(node_active2());
+    property_map<node_active2, HypothesesGraph::base_graph>::type& active_nodes = traxel_graph.get(node_active2());
+    active_nodes.set(n11, 2);
+    active_nodes.set(n21, 2);
+    active_nodes.set(n31, 2);
+    active_nodes.set(n22, 3);
+    active_nodes.set(n32, 3);
+    active_nodes.set(n41, 3);
+    active_nodes.set(n12, 1);
+    active_nodes.set(n23, 1);
+    active_nodes.set(n42, 4);
+    active_nodes.set(n33, 2);
+    active_nodes.set(n43, 1);
+    active_nodes.set(n44, 1);
+
+
+    std::cout << "Adding traxels to the nodes of the traxel graph" << std::endl;
+    // add traxels to the graph nodes
+
+//    traxel_graph.add(node_timestep());
+//    property_map<node_timestep, HypothesesGraph::base_graph>::type& node_timestep_map = traxel_graph.get(node_timestep());
+//    for(HypothesesGraph::NodeIt n(traxel_graph); n != lemon::INVALID; ++n) {
+//        Traxel traxel;
+//        traxel.Id = ++id;
+//        traxel.Timestep = node_timestep_map[n];
+//        traxel_map.set(n, traxel);
+//    }
+
+    traxel_graph.add(division_active());
+    property_map<division_active, HypothesesGraph::base_graph>::type& division_node_map = traxel_graph.get(division_active());
+    division_node_map.set(n12, true);
+
+    std::set<Event> trueEvents1;
+    Event e;
+    e.type = Event::Merger;
+    e.traxel_ids.push_back(11);
+    e.traxel_ids.push_back(2);
+    trueEvents1.insert(e);
+
+    std::set<Event> trueEvents2;
+    e.type = Event::Merger;
+    e.traxel_ids.clear();
+    e.traxel_ids.push_back(21);
+    e.traxel_ids.push_back(2);
+    trueEvents2.insert(e);
+
+    e.type = Event::Move;
+    e.traxel_ids.clear();
+    e.traxel_ids.push_back(11);
+    e.traxel_ids.push_back(21);
+    trueEvents2.insert(e);
+
+    e.type = Event::Appearance;
+    e.traxel_ids.clear();
+    e.traxel_ids.push_back(22);
+    trueEvents2.insert(e);
+
+    e.type = Event::Merger;
+    e.traxel_ids.clear();
+    e.traxel_ids.push_back(22);
+    e.traxel_ids.push_back(3);
+    trueEvents2.insert(e);
+
+    e.type = Event::Division;
+    e.traxel_ids.clear();
+    e.traxel_ids.push_back(12);
+    e.traxel_ids.push_back(24);
+    e.traxel_ids.push_back(23);
+    trueEvents2.insert(e);
+
+    std::set<Event> trueEvents3;
+    e.type = Event::Disappearance;
+    e.traxel_ids.clear();
+    e.traxel_ids.push_back(23);
+    trueEvents3.insert(e);
+
+    e.type = Event::Disappearance;
+    e.traxel_ids.clear();
+    e.traxel_ids.push_back(24);
+    trueEvents3.insert(e);
+
+    e.type = Event::Merger;
+    e.traxel_ids.clear();
+    e.traxel_ids.push_back(31);
+    e.traxel_ids.push_back(2);
+    trueEvents3.insert(e);
+
+    e.type = Event::Move;
+    e.traxel_ids.clear();
+    e.traxel_ids.push_back(21);
+    e.traxel_ids.push_back(31);
+    trueEvents3.insert(e);
+
+    e.type = Event::Merger;
+    e.traxel_ids.clear();
+    e.traxel_ids.push_back(32);
+    e.traxel_ids.push_back(3);
+    trueEvents3.insert(e);
+
+    e.type = Event::Move;
+    e.traxel_ids.clear();
+    e.traxel_ids.push_back(22);
+    e.traxel_ids.push_back(32);
+    trueEvents3.insert(e);
+
+    e.type = Event::Appearance;
+    e.traxel_ids.clear();
+    e.traxel_ids.push_back(33);
+    trueEvents3.insert(e);
+
+    e.type = Event::Merger;
+    e.traxel_ids.clear();
+    e.traxel_ids.push_back(33);
+    e.traxel_ids.push_back(2);
+    trueEvents3.insert(e);
+
+    std::set<Event> trueEvents4;
+    e.type = Event::Disappearance;
+    e.traxel_ids.clear();
+    e.traxel_ids.push_back(31);
+    trueEvents4.insert(e);
+
+    e.type = Event::Merger;
+    e.traxel_ids.clear();
+    e.traxel_ids.push_back(41);
+    e.traxel_ids.push_back(3);
+    trueEvents4.insert(e);
+
+    e.type = Event::Move;
+    e.traxel_ids.clear();
+    e.traxel_ids.push_back(32);
+    e.traxel_ids.push_back(41);
+    trueEvents4.insert(e);
+
+    e.type = Event::Merger;
+    e.traxel_ids.clear();
+    e.traxel_ids.push_back(42);
+    e.traxel_ids.push_back(4);
+    trueEvents4.insert(e);
+
+    e.type = Event::Appearance;
+    e.traxel_ids.clear();
+    e.traxel_ids.push_back(42);
+    trueEvents4.insert(e);
+
+    e.type = Event::Move;
+    e.traxel_ids.clear();
+    e.traxel_ids.push_back(33);
+    e.traxel_ids.push_back(43);
+    trueEvents4.insert(e);
+
+    e.type = Event::Move;
+    e.traxel_ids.clear();
+    e.traxel_ids.push_back(33);
+    e.traxel_ids.push_back(44);
+    trueEvents4.insert(e);
+
+
+    std::cout << "Computing event vector" << std::endl;
+    std::vector< std::vector<Event> > eventVector = *events(traxel_graph);
+
+    std::cout << "Event vector:" << std::endl;
+    for (size_t t = 0; t < eventVector.size(); ++t) {
+        for (std::vector<Event>::const_iterator it = eventVector[t].begin(); it != eventVector[t].end(); ++it) {
+            std::cout << "t=" << t << ": " << *it << std::endl;
+        }
+    }
+    std::cout << "Checking result" << std::endl;
+    BOOST_CHECK_EQUAL(eventVector.size(), 4);
+
+    std::set<Event> eventSet1(eventVector[0].begin(), eventVector[0].end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(eventSet1.begin(), eventSet1.end(),
+            trueEvents1.begin(), trueEvents1.end());
+    std::set<Event> eventSet2(eventVector[1].begin(), eventVector[1].end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(eventSet2.begin(), eventSet2.end(),
+            trueEvents2.begin(), trueEvents2.end());
+    std::set<Event> eventSet3(eventVector[2].begin(), eventVector[2].end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(eventSet3.begin(), eventSet3.end(),
+            trueEvents3.begin(), trueEvents3.end());
+    std::set<Event> eventSet4(eventVector[3].begin(), eventVector[3].end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(eventSet4.begin(), eventSet4.end(),
+            trueEvents4.begin(), trueEvents4.end());
+
+    traxel_graph.add(node_originated_from());
+    std::vector< std::vector<Event> > mfmEvents = *multi_frame_move_events(traxel_graph);
+
+    std::vector< std::vector<Event> > mergedEvents = *merge_event_vectors(eventVector, mfmEvents);
+
+    std::cout << "Checking result after merging" << std::endl;
+    BOOST_CHECK_EQUAL(mergedEvents.size(), 4);
+
+    eventSet1.clear();
+    eventSet1.insert(mergedEvents[0].begin(), mergedEvents[0].end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(eventSet1.begin(), eventSet1.end(),
+            trueEvents1.begin(), trueEvents1.end());
+    eventSet2.clear();
+    eventSet2.insert(mergedEvents[1].begin(), mergedEvents[1].end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(eventSet2.begin(), eventSet2.end(),
+            trueEvents2.begin(), trueEvents2.end());
+    eventSet3.clear();
+    eventSet3.insert(mergedEvents[2].begin(), mergedEvents[2].end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(eventSet3.begin(), eventSet3.end(),
+            trueEvents3.begin(), trueEvents3.end());
+    eventSet4.clear();
+    eventSet4.insert(mergedEvents[3].begin(), mergedEvents[3].end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(eventSet4.begin(), eventSet4.end(),
+            trueEvents4.begin(), trueEvents4.end());
+}
 
 // EOF

@@ -61,6 +61,8 @@ class Event
     // Beware: doesn't compare by energy!
     PGMLINK_EXPORT bool operator==(const Event& other) const;
     PGMLINK_EXPORT bool operator!=(const Event& other) const;
+    PGMLINK_EXPORT bool operator<(const Event& other) const;
+    PGMLINK_EXPORT bool operator>(const Event& other) const;
     friend std::ostream& operator<< (std::ostream &out, const Event &e);
     
   private:
