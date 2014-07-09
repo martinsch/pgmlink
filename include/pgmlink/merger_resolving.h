@@ -792,7 +792,7 @@ void extract_coordinates(TimestepIdCoordinateMapPtr coordinates,
                  << coord.n_cols << " cols. The traxel size is "
                  << trax.features.find("count")->second[0] << ".";
   {
-    int index = 0;
+    size_t index = 0;
     for (; start != end; ++start) {
       if (start.template get<1>() == trax.Id) {
         const vigra::TinyVector<long int, N>& position = start.template get<0>();
