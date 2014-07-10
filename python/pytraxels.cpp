@@ -152,10 +152,6 @@ void export_traxels() {
       .def(vector_indexing_suite< std::vector<int> >() )
     ;
 
-    class_< std::vector<string> >("VectorOfString")
-      .def(vector_indexing_suite< std::vector<string> >() )
-    ;
-
     TraxelStoreByTimeid& (TraxelStore::*get_by_timeid)() = &TraxelStore::get<by_timeid>; 
     class_<TraxelStore>("TraxelStore")
       .def("add", &add_traxel_to_traxelstore)
