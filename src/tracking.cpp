@@ -400,7 +400,7 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts, TimestepIdCoord
     boost::shared_ptr<std::vector< std::vector<Event> > > ev = events(*graph);
 
 
-    if (max_number_objects_ > 1 && with_merger_resolution_ && all_true(ev->begin(), ev->end(), has_data<Event>)) {
+    if (max_number_objects_ > 1 && with_merger_resolution_ && all_true(ev->begin()+1, ev->end(), has_data<Event>)) {
       cout << "-> resolving mergers" << endl;
       MergerResolver m(graph);
       FeatureExtractorBase* extractor;
