@@ -103,8 +103,8 @@ void export_track() {
 	.value("Void", Event::Void)
     ;
 
-    class_<vector<unsigned int> >("IdVector")
-	.def(vector_indexing_suite<vector<unsigned int> >())
+    class_<vector<vigra::UInt64> >("IdVector")
+    .def(vector_indexing_suite<vector<vigra::UInt64> >())
     ;
     class_<Event>("Event")
 	.def_readonly("type", &Event::type)
