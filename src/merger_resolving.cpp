@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <iterator>
 
+// undef IN/OUT for windows, otherwise mlpack and lemon collide
+#include "pgmlink/windows.h"
 
 // external headers
 #include <lemon/maps.h>

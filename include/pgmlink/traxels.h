@@ -35,26 +35,28 @@ typedef std::map<std::string,feature_array> FeatureMap;
 //
 // retrieve spatial coordinates from features
 //
-class PGMLINK_EXPORT Locator {
+class Locator {
  public:
- Locator( std::string fn,
-	  double x_scale = 1.0,
-	  double y_scale = 1.0,
-	  double z_scale = 1.0 ) 
-   : x_scale(x_scale), y_scale(y_scale), z_scale(z_scale), feature_name_(fn) {};
-  virtual Locator* clone() = 0;
-  virtual ~Locator() {};
+  PGMLINK_EXPORT Locator( std::string fn,
+	                      double x_scale = 1.0,
+	                      double y_scale = 1.0,
+	                      double z_scale = 1.0 ) 
+  : x_scale(x_scale), y_scale(y_scale), z_scale(z_scale), feature_name_(fn) 
+  {}
+ 
+  PGMLINK_EXPORT virtual Locator* clone() = 0;
+  PGMLINK_EXPORT virtual ~Locator() {};
 
-  virtual bool is_applicable(const FeatureMap& m) const { return m.count(feature_name_)==1; };
-  virtual double X(const FeatureMap&) const = 0;
-  virtual double Y(const FeatureMap&) const = 0;
-  virtual double Z(const FeatureMap&) const = 0;
+  PGMLINK_EXPORT virtual bool is_applicable(const FeatureMap& m) const { return m.count(feature_name_)==1; };
+  PGMLINK_EXPORT virtual double X(const FeatureMap&) const = 0;
+  PGMLINK_EXPORT virtual double Y(const FeatureMap&) const = 0;
+  PGMLINK_EXPORT virtual double Z(const FeatureMap&) const = 0;
 
   double x_scale, y_scale, z_scale;
 
  protected:
   std::string feature_name_;
-  double coordinate_from(const FeatureMap&, size_t idx) const;
+  PGMLINK_EXPORT double coordinate_from(const FeatureMap&, size_t idx) const;
 
  private:
   // boost serialize
@@ -63,13 +65,18 @@ class PGMLINK_EXPORT Locator {
     void serialize( Archive&, const unsigned int /*version*/ );
 };
 
-class PGMLINK_EXPORT ComLocator : public Locator {
+class ComLocator 
+: public Locator 
+{
  public:
- ComLocator() : Locator("com") {};
-  virtual ComLocator* clone() { return new ComLocator(*this); };
-  double X(const FeatureMap& m) const { return x_scale * coordinate_from(m, 0); };
-  double Y(const FeatureMap& m) const { return y_scale * coordinate_from(m, 1); };
-  double Z(const FeatureMap& m) const { return z_scale * coordinate_from(m, 2); };
+  PGMLINK_EXPORT ComLocator() 
+  : Locator("com")
+  {}
+  
+  PGMLINK_EXPORT virtual ComLocator* clone() { return new ComLocator(*this); }
+  PGMLINK_EXPORT double X(const FeatureMap& m) const { return x_scale * coordinate_from(m, 0); }
+  PGMLINK_EXPORT double Y(const FeatureMap& m) const { return y_scale * coordinate_from(m, 1); }
+  PGMLINK_EXPORT double Z(const FeatureMap& m) const { return z_scale * coordinate_from(m, 2); }
 
  private:
   // boost serialize
@@ -78,13 +85,18 @@ class PGMLINK_EXPORT ComLocator : public Locator {
     void serialize( Archive&, const unsigned int /*version*/ );
 };
 
-class PGMLINK_EXPORT ComCorrLocator : public Locator {
+class ComCorrLocator 
+: public Locator 
+{
  public:
- ComCorrLocator() : Locator("com_corrected") {};
-  virtual ComCorrLocator* clone() { return new ComCorrLocator(*this); };
-  double X(const FeatureMap& m) const { return x_scale * coordinate_from(m, 0); };
-  double Y(const FeatureMap& m) const { return y_scale * coordinate_from(m, 1); };
-  double Z(const FeatureMap& m) const { return z_scale * coordinate_from(m, 2); };
+  PGMLINK_EXPORT ComCorrLocator() 
+  : Locator("com_corrected") 
+  {}
+
+  PGMLINK_EXPORT virtual ComCorrLocator* clone() { return new ComCorrLocator(*this); }
+  PGMLINK_EXPORT double X(const FeatureMap& m) const { return x_scale * coordinate_from(m, 0); }
+  PGMLINK_EXPORT double Y(const FeatureMap& m) const { return y_scale * coordinate_from(m, 1); }
+  PGMLINK_EXPORT double Z(const FeatureMap& m) const { return z_scale * coordinate_from(m, 2); }
 
  private:
   // boost serialize
@@ -93,13 +105,18 @@ class PGMLINK_EXPORT ComCorrLocator : public Locator {
     void serialize( Archive&, const unsigned int /*version*/ );
 };
 
-class PGMLINK_EXPORT IntmaxposLocator : public Locator {
+class IntmaxposLocator 
+: public Locator 
+{
  public:
- IntmaxposLocator() : Locator("intmaxpos") {};
-  virtual IntmaxposLocator* clone() { return new IntmaxposLocator(*this); };
-  double X(const FeatureMap& m) const { return x_scale * coordinate_from(m, 1); };
-  double Y(const FeatureMap& m) const { return y_scale * coordinate_from(m, 2); };
-  double Z(const FeatureMap& m) const { return z_scale * coordinate_from(m, 3); };
+  PGMLINK_EXPORT IntmaxposLocator() 
+  : Locator("intmaxpos") 
+  {}
+
+  PGMLINK_EXPORT virtual IntmaxposLocator* clone() { return new IntmaxposLocator(*this); }
+  PGMLINK_EXPORT double X(const FeatureMap& m) const { return x_scale * coordinate_from(m, 1); }
+  PGMLINK_EXPORT double Y(const FeatureMap& m) const { return y_scale * coordinate_from(m, 2); }
+  PGMLINK_EXPORT double Z(const FeatureMap& m) const { return z_scale * coordinate_from(m, 3); }
 
  private:
   // boost serialize
@@ -113,18 +130,21 @@ class PGMLINK_EXPORT IntmaxposLocator : public Locator {
 //
 // Traxel datatype
 //
- class PGMLINK_EXPORT Traxel {
+class Traxel 
+{
  public:
    // construction / assignment
    //takes ownership of locator pointer
-   Traxel(unsigned int id = 0, int timestep = 0, FeatureMap fmap = FeatureMap(), Locator* l = new ComLocator(),
-		   ComCorrLocator* lc = new ComCorrLocator()) :
-	   Id(id), Timestep(timestep), features(fmap), locator_(l), corr_locator_(lc) {};
-   Traxel(const Traxel& other);
-   Traxel& operator=(const Traxel& other);
-   ~Traxel() { delete locator_; };
-   Traxel& set_locator(Locator*);
-   Locator* locator() {return locator_;}
+  PGMLINK_EXPORT Traxel(unsigned int id = 0, int timestep = 0, FeatureMap fmap = FeatureMap(), Locator* l = new ComLocator(),
+		                ComCorrLocator* lc = new ComCorrLocator()) 
+  : Id(id), Timestep(timestep), features(fmap), locator_(l), corr_locator_(lc) 
+  {}
+
+  PGMLINK_EXPORT Traxel(const Traxel& other);
+  PGMLINK_EXPORT Traxel& operator=(const Traxel& other);
+  PGMLINK_EXPORT ~Traxel() { delete locator_; }
+  PGMLINK_EXPORT Traxel& set_locator(Locator*);
+  PGMLINK_EXPORT Locator* locator() {return locator_;}
    
    // fields
    unsigned int Id; // id of connected component (aka "label")
@@ -132,18 +152,18 @@ class PGMLINK_EXPORT IntmaxposLocator : public Locator {
    FeatureMap features;
    
    // position according to locator
-   double X() const;
-   double Y() const;
-   double Z() const;
-
-   double X_corr() const;
-   double Y_corr() const;
-   double Z_corr() const;
+   PGMLINK_EXPORT double X() const;
+   PGMLINK_EXPORT double Y() const;
+   PGMLINK_EXPORT double Z() const;
+    
+   PGMLINK_EXPORT double X_corr() const;
+   PGMLINK_EXPORT double Y_corr() const;
+   PGMLINK_EXPORT double Z_corr() const;
 
    // relation to other traxels
-   double distance_to(const Traxel& other) const;
-   double distance_to_corr(const Traxel& other) const;
-   double angle(const Traxel& leg1, const Traxel& leg2) const;
+   PGMLINK_EXPORT double distance_to(const Traxel& other) const;
+   PGMLINK_EXPORT double distance_to_corr(const Traxel& other) const;
+   PGMLINK_EXPORT double angle(const Traxel& leg1, const Traxel& leg2) const;
    friend std::ostream& operator<< (std::ostream &out, const Traxel &t);
 
  private:

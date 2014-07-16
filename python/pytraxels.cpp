@@ -103,7 +103,7 @@ namespace pgmlink {
 void export_traxels() {
     class_< feature_array >("feature_array")
       .def(vector_indexing_suite< feature_array >() )
-      .def("push_back", &feature_array::push_back)
+      .def("push_back", (void (feature_array::*)(feature_array::const_reference))&feature_array::push_back)
       .def("size", &feature_array::size)
       ;
 
@@ -150,10 +150,6 @@ void export_traxels() {
 
     class_< std::vector<int> >("VectorOfInt")
       .def(vector_indexing_suite< std::vector<int> >() )
-    ;
-
-    class_< std::vector<string> >("VectorOfString")
-      .def(vector_indexing_suite< std::vector<string> >() )
     ;
 
     TraxelStoreByTimeid& (TraxelStore::*get_by_timeid)() = &TraxelStore::get<by_timeid>; 

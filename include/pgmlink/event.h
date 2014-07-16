@@ -15,12 +15,18 @@
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 
-template class PGMLINK_EXPORT std::vector<unsigned int>;
+// template class PGMLINK_EXPORT std::vector<unsigned int>;
 
 namespace pgmlink {
-  class PGMLINK_EXPORT Event {
-  public:
-  Event() : n_features_(0) { type = Void; };
+
+class Event 
+{
+ public:
+    PGMLINK_EXPORT Event() 
+    : n_features_(0) 
+    { 
+      type = Void;
+    }
     
     enum EventType {Move, Division, Appearance, Disappearance, Merger, ResolvedTo, MultiFrameMove, Void};
     EventType type;
@@ -33,7 +39,7 @@ namespace pgmlink {
        daughterId2). A Void is just an empty vector. ResolvedTo contains the
        id of the merger node followed by pairs of <new id, respective COM>.
     */
-    std::vector<unsigned int> traxel_ids;
+    std::vector<std::size_t> traxel_ids;
     
     /**
        \brief The energy assigned to this Event happening.
@@ -41,20 +47,22 @@ namespace pgmlink {
        It's calculated as the scalar product of weights and features.
        If there are no features the energy will be 0 by definition.
     */
-    double energy() const;
+    PGMLINK_EXPORT double energy() const;
     
-    unsigned int number_of_features() const { return n_features_; }
-    Event& number_of_features( unsigned int );
+    PGMLINK_EXPORT unsigned int number_of_features() const { return n_features_; }
+    PGMLINK_EXPORT Event& number_of_features( unsigned int );
 
-    const std::vector<double>& features() const { return features_; }
-    Event& features( const std::vector<double>& );
+    PGMLINK_EXPORT const std::vector<double>& features() const { return features_; }
+    PGMLINK_EXPORT Event& features( const std::vector<double>& );
     
-    const std::vector<double>& weights() const { return weights_; }
-    Event& weights( const std::vector<double>& );
+    PGMLINK_EXPORT const std::vector<double>& weights() const { return weights_; }
+    PGMLINK_EXPORT Event& weights( const std::vector<double>& );
     
     // Beware: doesn't compare by energy!
-    bool operator==(const Event& other) const;
-    bool operator!=(const Event& other) const;
+    PGMLINK_EXPORT bool operator==(const Event& other) const;
+    PGMLINK_EXPORT bool operator!=(const Event& other) const;
+    PGMLINK_EXPORT bool operator<(const Event& other) const;
+    PGMLINK_EXPORT bool operator>(const Event& other) const;
     friend std::ostream& operator<< (std::ostream &out, const Event &e);
     
   private:
@@ -80,9 +88,14 @@ namespace pgmlink {
     }
   };
 
-  struct PGMLINK_EXPORT EventsStatistics {
-  EventsStatistics() : n_total(0), n_mov(0), n_div(0), n_app(0), n_dis(0) {}
-    EventsStatistics& operator+=( const EventsStatistics& rhs ) {
+struct EventsStatistics 
+{
+    PGMLINK_EXPORT EventsStatistics() 
+    : n_total(0), n_mov(0), n_div(0), n_app(0), n_dis(0) 
+    {}
+
+    PGMLINK_EXPORT EventsStatistics& operator+=( const EventsStatistics& rhs ) 
+    {
       n_total += rhs.n_total;
       n_mov += rhs.n_mov;
       n_div += rhs.n_div;
@@ -91,50 +104,51 @@ namespace pgmlink {
       return *this;
     }
     size_t n_total, n_mov, n_div, n_app, n_dis;
-  };
-  inline EventsStatistics operator+( EventsStatistics lhs, const EventsStatistics& rhs ) {
-    lhs += rhs;
-    return lhs;
-  }
-  inline std::ostream& operator<<(std::ostream& os, const EventsStatistics& obj) { 
-    os << "#total: " << obj.n_total
-       << ", #move: " << obj.n_mov
-       << ", #division: " << obj.n_div
-       << ", #app.: " << obj.n_app
-       << ", #disapp.: " << obj.n_dis;
-    return os;
-  } 
+};
 
-  template<class event_it>
-    EventsStatistics collect_events_statistics(event_it begin, event_it end, bool ignore_unknown_events=false) {
-    EventsStatistics stats;
-    for(event_it event=begin; event!=end; ++event) {
-      switch(event->type) {
-      case Event::Move:
-	stats.n_mov += 1;
-	stats.n_total += 1;
-	break;
-      case Event::Division:
-	stats.n_div += 1;
-	stats.n_total += 1;
-	break;
-      case Event::Appearance:
-	stats.n_app += 1;
-	stats.n_total += 1;
-	break;
-      case Event::Disappearance:
-	stats.n_dis += 1;
-	stats.n_total += 1;
-	break;
-      default:
-	if(!ignore_unknown_events) {
-	  throw std::runtime_error("collect_events_statistics(): unknown event type encountered");
-	}
-	break;
-      }
-    }
-    return stats;
+inline EventsStatistics operator+( EventsStatistics lhs, const EventsStatistics& rhs ) {
+  lhs += rhs;
+  return lhs;
+}
+inline std::ostream& operator<<(std::ostream& os, const EventsStatistics& obj) { 
+  os << "#total: " << obj.n_total
+     << ", #move: " << obj.n_mov
+     << ", #division: " << obj.n_div
+     << ", #app.: " << obj.n_app
+     << ", #disapp.: " << obj.n_dis;
+  return os;
+} 
+
+template<class event_it>
+  EventsStatistics collect_events_statistics(event_it begin, event_it end, bool ignore_unknown_events=false) {
+  EventsStatistics stats;
+  for(event_it event=begin; event!=end; ++event) {
+    switch(event->type) {
+    case Event::Move:
+  stats.n_mov += 1;
+  stats.n_total += 1;
+  break;
+    case Event::Division:
+  stats.n_div += 1;
+  stats.n_total += 1;
+  break;
+    case Event::Appearance:
+  stats.n_app += 1;
+  stats.n_total += 1;
+  break;
+    case Event::Disappearance:
+  stats.n_dis += 1;
+  stats.n_total += 1;
+  break;
+    default:
+  if(!ignore_unknown_events) {
+    throw std::runtime_error("collect_events_statistics(): unknown event type encountered");
   }
+  break;
+    }
+  }
+  return stats;
+}
 
 } /* namespace pgmlink */
 

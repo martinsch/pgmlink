@@ -44,7 +44,7 @@ class PyTimestepIdCoordinateMap
 template <int N, typename T>
 void py_extract_coordinates(PyTimestepIdCoordinateMap coordinates,
                             const vigra::NumpyArray<N, T>& image,
-                            const vigra::NumpyArray<1, long int>& offsets,
+                            const vigra::NumpyArray<1, vigra::Int64>& offsets,
                             const Traxel& trax) {
   if (offsets.shape()[0] != N) {
     throw std::runtime_error("py_extract_coordinates() -- Number of offsets and image dimensions disagree!");
@@ -72,6 +72,12 @@ void export_gmm() {
 
   class_<TimestepIdCoordinateMapPtr>("TimestepIdCoordinateMapPtr");
 
-  def("extract_coordinates", vigra::registerConverters(&py_extract_coordinates<2, unsigned>));
-  def("extract_coordinates", vigra::registerConverters(&py_extract_coordinates<3, unsigned>));
+  def("extract_coordinates", vigra::registerConverters(&py_extract_coordinates<2, vigra::UInt8>));
+  def("extract_coordinates", vigra::registerConverters(&py_extract_coordinates<3, vigra::UInt8>));
+
+  def("extract_coordinates", vigra::registerConverters(&py_extract_coordinates<2, vigra::UInt16>));
+  def("extract_coordinates", vigra::registerConverters(&py_extract_coordinates<3, vigra::UInt16>));
+
+  def("extract_coordinates", vigra::registerConverters(&py_extract_coordinates<2, vigra::UInt32>));
+  def("extract_coordinates", vigra::registerConverters(&py_extract_coordinates<3, vigra::UInt32>));
 }
