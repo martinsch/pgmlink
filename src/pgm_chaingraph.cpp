@@ -7,6 +7,8 @@
 #include <stdexcept>
 #include <utility>
 #include <boost/scoped_ptr.hpp>
+#include <string.h>
+#include <memory.h>
 #include <opengm/inference/lpcplex.hxx>
 #include <opengm/datastructures/marray/marray.hxx>
 

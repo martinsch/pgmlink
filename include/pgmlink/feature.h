@@ -16,7 +16,8 @@
 
 namespace pgmlink {
 
-  class PGMLINK_EXPORT GeometryDivision2 {
+class GeometryDivision2 
+{
     /**
      * Division feature based on geometric properties of a ancestor-child-child configuration.
      *
@@ -32,219 +33,273 @@ namespace pgmlink {
      * @param distance_dependence if turned off, feature will not depend on distance between ancestor and children
      * @param angle_constraint if turned on, a minimal division angle is demanded
      */
-  GeometryDivision2(double mean_div_dist, double min_angle, bool distance_dependence=true, bool angle_constraint=true) 
+    PGMLINK_EXPORT
+    GeometryDivision2(double mean_div_dist, double min_angle, bool distance_dependence=true, bool angle_constraint=true) 
     : mean_div_dist_(mean_div_dist), min_angle_(min_angle), 
-      distance_dependence_(distance_dependence), angle_constraint_(angle_constraint) {};
-    double operator()(const Traxel& ancestor,
-		      const Traxel& child1,
-		      const Traxel& child2) const;
+      distance_dependence_(distance_dependence), angle_constraint_(angle_constraint)
+    {}
+
+    PGMLINK_EXPORT double operator()(const Traxel& ancestor,
+                                     const Traxel& child1,
+                                     const Traxel& child2) const;
   private:
     double mean_div_dist_, min_angle_;
     bool distance_dependence_, angle_constraint_; 
-  };
+};
 
-  class PGMLINK_EXPORT KasterDivision2 {
+class KasterDivision2
+{
   public:
-  KasterDivision2(double weight, double div_cost) : w_(weight), div_cost_(div_cost) {};
-    double operator()(const Traxel& ancestor,
-		      const Traxel& child1,
-		      const Traxel& child2) const;
+    PGMLINK_EXPORT KasterDivision2(double weight, double div_cost)
+    : w_(weight), div_cost_(div_cost)
+    {}
+    
+    PGMLINK_EXPORT double operator()(const Traxel& ancestor,
+                                     const Traxel& child1,
+                                     const Traxel& child2) const;
   private:
     double w_;
     double div_cost_;
-  };
+};
 
-  class PGMLINK_EXPORT NegLnCellness {
+class NegLnCellness 
+{
   public:
-  NegLnCellness(double weight) : w_(weight) {}
-    double operator()( const Traxel& ) const;
+    PGMLINK_EXPORT NegLnCellness(double weight) 
+    : w_(weight)
+    {}
+    
+    PGMLINK_EXPORT double operator()( const Traxel& ) const;
   private:
     double w_;
-  };
+};
 
-  class PGMLINK_EXPORT NegLnOneMinusCellness {
+class NegLnOneMinusCellness
+{
   public:
-  NegLnOneMinusCellness(double weight) : w_(weight) {}
-    double operator()( const Traxel& ) const;
+    PGMLINK_EXPORT NegLnOneMinusCellness(double weight) : w_(weight) {}
+    PGMLINK_EXPORT double operator()( const Traxel& ) const;
   private:
     double w_;
-  };
+};
  
-class PGMLINK_EXPORT NegLnDetection {
+class NegLnDetection 
+{
 public:
-	NegLnDetection(double weight) :
-		w_(weight) {}
-	double operator()( const Traxel&, const size_t state ) const;
+    PGMLINK_EXPORT NegLnDetection(double weight)
+    : w_(weight)
+    {}
+    
+    PGMLINK_EXPORT double operator()( const Traxel&, const size_t state ) const;
 private:
-	double w_;
+    double w_;
 };
 
-class NegLnConstant {
-public:
-	NegLnConstant(double weight, std::vector<double> prob_vector): w_(weight), prob_vector_(prob_vector) {}
-	double operator()(const size_t state ) const;
+class NegLnConstant 
+{
+ public:
+    PGMLINK_EXPORT NegLnConstant(double weight, std::vector<double> prob_vector)
+    : w_(weight), prob_vector_(prob_vector)
+    {}
+
+    PGMLINK_EXPORT double operator()(const size_t state ) const;
 private:
-	double w_;
-	std::vector<double> prob_vector_;
+    double w_;
+    std::vector<double> prob_vector_;
 };
 
-class NegLnDivision {
-public:
-	NegLnDivision(double weight) : w_(weight) {}
-	double operator()( const Traxel&, const size_t state ) const;
+class NegLnDivision 
+{
+ public:
+    PGMLINK_EXPORT NegLnDivision(double weight) 
+    : w_(weight) 
+    {}
+    
+    PGMLINK_EXPORT double operator()( const Traxel&, const size_t state ) const;
 private:
-	double w_;
+    double w_;
 };
 
-class NegLnTransition {
-public:
-	NegLnTransition(double weight) : w_(weight) {}
-	double operator()( const double ) const;
+class NegLnTransition 
+{
+ public:
+    PGMLINK_EXPORT NegLnTransition(double weight)
+    : w_(weight)
+    {}
+
+    PGMLINK_EXPORT double operator()( const double ) const;
 private:
-	double w_;
+    double w_;
 };
 
-  /**
-     @brief Zero near temporal border, else 1.
-  */
-  class PGMLINK_EXPORT BorderAwareConstant {
+/**
+   @brief Zero near temporal border, else 1.
+*/
+class BorderAwareConstant 
+{
+ public:
+  PGMLINK_EXPORT BorderAwareConstant( double weight,
+                                      int at,
+                                      bool early,
+                                      int margin_t=1) 
+  : w_(weight), at_(at), early_(early), margin_t_(margin_t)
+  {}
+ 
+  PGMLINK_EXPORT double operator()( const Traxel& tr ) const 
+  {
+    int t = tr.Timestep;
+    if(early_) 
+    {
+      if( at_ <= t && t < at_ + margin_t_) 
+      { 
+        return 0;
+      } 
+      else 
+        return w_;
+    } else {
+      if (at_ - margin_t_ < t && t <= at_) 
+      {
+        return 0.;
+      } 
+      else 
+        return w_;
+    }
+  }
+
+private:
+  double w_;
+  int at_;
+  bool early_;
+  int margin_t_;
+};
+
+class SpatialBorderAwareWeight
+{
   public:
-  BorderAwareConstant( double weight,
-		       int at,
-		       bool early,
-		       int margin_t=1) 
-    : w_(weight), at_(at), early_(early), margin_t_(margin_t) {}
-   
-    double operator()( const Traxel& tr ) const {
-      int t = tr.Timestep;
-      if(early_) {
-	if( at_ <= t && t < at_ + margin_t_) { 
-	  return 0;
-	} else return w_;
-      } else {
-	if (at_ - margin_t_ < t && t <= at_) {
-	  return 0.;
-	} else return w_;
-      }
+    PGMLINK_EXPORT SpatialBorderAwareWeight( double cost, double margin, bool relative, FieldOfView& fov) 
+    : cost_(cost), margin_(margin), relative_(relative), fov_(fov)
+    {
+        if (relative && margin > 0.5) {
+            throw std::runtime_error("The relative margin may not exceed 0.5.");
+        }
     }
 
+    PGMLINK_EXPORT double operator()( const Traxel& tr ) const;
+
   private:
-    double w_;
-    int at_;
-    bool early_;
-    int margin_t_;
+    double cost_;
+    double margin_;
+    bool relative_;
+    FieldOfView fov_;
   };
 
-  class PGMLINK_EXPORT SpatialBorderAwareWeight {
-    public:
-	  SpatialBorderAwareWeight( double cost, double margin, bool relative, FieldOfView& fov) :
-		  cost_(cost), margin_(margin), relative_(relative), fov_(fov) {
-		  if (relative && margin > 0.5) {
-			  throw std::runtime_error("The relative margin may not exceed 0.5.");
-		  }
-	  }
 
-      double operator()( const Traxel& tr ) const;
+/**
+   @brief Primitive fixed value feature.
+*/
+class ConstantFeature 
+{
+ public:
+  PGMLINK_EXPORT ConstantFeature( double value = 0. ) 
+  : value(value) 
+  {}
+ 
+  PGMLINK_EXPORT double operator()( const Traxel&,
+                                    const Traxel&,
+                                    const Traxel& ) const { return value; }
 
-    private:
-      double cost_;
-      double margin_;
-      bool relative_;
-      FieldOfView fov_;
-    };
+  PGMLINK_EXPORT double operator()( const Traxel&,
+                                    const Traxel&) const { return value; }
 
+  PGMLINK_EXPORT double operator()( const Traxel& ) const { return value; }
 
-  /**
-     @brief Primitive fixed value feature.
-  */
-  class PGMLINK_EXPORT ConstantFeature {
-  public:
-  ConstantFeature( double value = 0. ) : value(value) {}
-   
-    double operator()( const Traxel&,
-		       const Traxel&,
-		       const Traxel& ) const { return value; }
-    double operator()( const Traxel&,
-		       const Traxel&) const { return value; }
-    double operator()( const Traxel& ) const { return value; }
-    double operator()() const { return value; };
-   
-    double value;
-  };
-    
-  class PGMLINK_EXPORT SquaredDistance {
-  public:
-    double operator()(const Traxel& from, const Traxel& to) const;
-  };
-
-  class PGMLINK_EXPORT KasterDivision {
-  public:
-  KasterDivision(double division_cost) : div_cost_(division_cost) {};
-
-    double operator()(const Traxel& ancestor,
-		      const Traxel& child1,
-		      const Traxel& child2) const;
-  private:
-    double div_cost_;
-  };
-
-  class PGMLINK_EXPORT GeometryDivision {
-  public:
-    double operator()(const Traxel& ancestor,
-		      const Traxel& child1,
-		      const Traxel& child2) const;
-  };
-
-  ////
-  //// Cellness based mlinder-type energies
-  ////
-  class PGMLINK_EXPORT CellnessDivision {
-  public:
-    CellnessDivision( double diffCellness = 1461, double absCellness = 190 );
-    
-    double operator()(const Traxel& ancestor,
-		      const Traxel& child1,
-		      const Traxel& child2) const;
-  private:
-    // weight for the difference of daughter cells' cellness
-    double param_diff_c;
-    // weight for the absolute cellness of the parent cell
-    double param_abs_c;
-  };
+  PGMLINK_EXPORT double operator()() const { return value; };
+ 
+  double value;
+};
   
-  class PGMLINK_EXPORT CellnessMove {
-  public:
-    CellnessMove( double diffCellness = 1140 );
-    
-    double operator()(const Traxel& from,
-		      const Traxel& to) const;
+class SquaredDistance 
+{
+public:
+  PGMLINK_EXPORT double operator()(const Traxel& from, const Traxel& to) const;
+};
 
-  private:
-    // weight for the difference of the cells' cellness
-    double param_diff_c;
-  };
+class KasterDivision 
+{
+ public:
+  PGMLINK_EXPORT KasterDivision(double division_cost)
+  : div_cost_(division_cost)
+  {}
 
-  class PGMLINK_EXPORT CellnessDisappearance {
-  public:
-    CellnessDisappearance( double disappWeight = 1000 );
-    
-    double operator()(const Traxel& from) const;
+  PGMLINK_EXPORT double operator()(const Traxel& ancestor,
+                                   const Traxel& child1,
+                                   const Traxel& child2) const;
+private:
+  double div_cost_;
+};
 
-  private:
-    // weight for the absolute cellness
-    double param_abs_c;
-  };
+class GeometryDivision 
+{
+ public:
+  PGMLINK_EXPORT double operator()(const Traxel& ancestor,
+                                   const Traxel& child1,
+                                   const Traxel& child2) const;
+};
 
-  class PGMLINK_EXPORT CellnessAppearance {
-  public:
-    CellnessAppearance( double appWeight = 1000 );
+////
+//// Cellness based mlinder-type energies
+////
+class CellnessDivision 
+{
+public:
+  PGMLINK_EXPORT CellnessDivision( double diffCellness = 1461, double absCellness = 190 );
+  
+  PGMLINK_EXPORT double operator()(const Traxel& ancestor,
+                                   const Traxel& child1,
+                                   const Traxel& child2) const;
+private:
+  // weight for the difference of daughter cells' cellness
+  double param_diff_c;
+  // weight for the absolute cellness of the parent cell
+  double param_abs_c;
+};
 
-    double operator()(const Traxel& to) const;
+class CellnessMove 
+{
+ public:
+  PGMLINK_EXPORT CellnessMove( double diffCellness = 1140 );
+  
+  PGMLINK_EXPORT double operator()(const Traxel& from,
+                                   const Traxel& to) const;
 
-  private:
-    // weight for the absolute cellness
-    double param_abs_c;
-  };
+private:
+  // weight for the difference of the cells' cellness
+  double param_diff_c;
+};
+
+class CellnessDisappearance 
+{
+ public:
+  PGMLINK_EXPORT CellnessDisappearance( double disappWeight = 1000 );
+  
+  PGMLINK_EXPORT double operator()(const Traxel& from) const;
+
+private:
+  // weight for the absolute cellness
+  double param_abs_c;
+};
+
+class CellnessAppearance 
+{
+ public:
+  PGMLINK_EXPORT CellnessAppearance( double appWeight = 1000 );
+
+  PGMLINK_EXPORT double operator()(const Traxel& to) const;
+
+private:
+  // weight for the absolute cellness
+  double param_abs_c;
+};
   
 } /* Namespace pgmlink */
 

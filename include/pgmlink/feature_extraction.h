@@ -11,6 +11,7 @@
 
 // pgmlink
 #include "feature.h"
+#include "pgmlink/pgmlink_export.h"
 
 namespace pgmlink {
 
@@ -22,15 +23,16 @@ class FeatureCalculator;
 ////
 //// class FeatureExtractor
 ////
-class FeatureExtractor {
+class FeatureExtractor 
+{
  public:
-  FeatureExtractor(boost::shared_ptr<FeatureCalculator> calculator, const std::string& feature_name);
-  virtual ~FeatureExtractor();
-  virtual feature_array extract(const Traxel& t1) const;
-  virtual feature_array extract(const Traxel& t1, const Traxel& t2) const;
-  virtual feature_array extract(const Traxel& t1, const Traxel& t2, const Traxel& t3) const;
-  boost::shared_ptr<FeatureCalculator> calculator() const;
-  virtual std::string name() const;
+  PGMLINK_EXPORT FeatureExtractor(boost::shared_ptr<FeatureCalculator> calculator, const std::string& feature_name);
+  PGMLINK_EXPORT virtual ~FeatureExtractor();
+  PGMLINK_EXPORT virtual feature_array extract(const Traxel& t1) const;
+  PGMLINK_EXPORT virtual feature_array extract(const Traxel& t1, const Traxel& t2) const;
+  PGMLINK_EXPORT virtual feature_array extract(const Traxel& t1, const Traxel& t2, const Traxel& t3) const;
+  PGMLINK_EXPORT boost::shared_ptr<FeatureCalculator> calculator() const;
+  PGMLINK_EXPORT virtual std::string name() const;
 
  protected:
   boost::shared_ptr<FeatureCalculator> calculator_;
@@ -41,15 +43,16 @@ class FeatureExtractor {
 ////
 //// class MultipleFeaturesExtraction
 ////
-class MultipleFeatureExtraction {
+class MultipleFeatureExtraction 
+{
  public:
   typedef std::pair<std::string, std::string> CombinedFeatureName;
   typedef std::map<CombinedFeatureName, feature_array> CombinedFeatureMap;
   typedef std::map< std::string, std::vector< std::string > > FeatureList;
 
-  CombinedFeatureMap operator() ( const FeatureList& features, const Traxel& trax ) const;
-  CombinedFeatureMap operator() ( const FeatureList& features, const Traxel& trax1, const Traxel& trax2 ) const;
-  CombinedFeatureMap operator() ( const FeatureList& features, const Traxel& trax1, const Traxel& trax2, const Traxel& trax3 ) const;
+  PGMLINK_EXPORT CombinedFeatureMap operator() ( const FeatureList& features, const Traxel& trax ) const;
+  PGMLINK_EXPORT CombinedFeatureMap operator() ( const FeatureList& features, const Traxel& trax1, const Traxel& trax2 ) const;
+  PGMLINK_EXPORT CombinedFeatureMap operator() ( const FeatureList& features, const Traxel& trax1, const Traxel& trax2, const Traxel& trax3 ) const;
 };
 
 

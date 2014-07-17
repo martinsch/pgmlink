@@ -22,6 +22,7 @@
 #include <string>
 #include <sstream>
 #include <iostream>
+#include <iomanip>
 
 
 
@@ -423,10 +424,10 @@ inline std::string nowTime()
 
     // format time according to our format: "hh:mm:ss.ms"
     static DWORD first = GetTickCount();
-    char result[100] = {0};
-    std::sprintf(result, "%s.%03ld", buffer, (long)(GetTickCount() - first) % 1000);
 
-    return result;
+    std::stringstream result;
+    result << buffer << "." << std::setfill('0') << std::setw(3) << ((long)(GetTickCount() - first) % 1000);
+    return result.str();
 }
 
 #else

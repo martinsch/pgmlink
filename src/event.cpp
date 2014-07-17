@@ -46,6 +46,28 @@ namespace pgmlink {
     return *this;
   }
 
+bool Event::operator<(const Event& other) const {
+    if(type < other.type) {
+        return true;
+    } else if (type == other.type) {
+        if (traxel_ids[0] < other.traxel_ids[0]) {
+            return true;
+        } else if (traxel_ids[0] == other.traxel_ids[0] &&
+                   traxel_ids.size() > 1 && other.traxel_ids.size() > 1) {
+            if (traxel_ids[1] < other.traxel_ids[1]) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+    return false;
+}
+
+bool Event::operator>(const Event& other) const {
+    return other < *this;
+}
+
 bool Event::operator==(const Event& other) const {
     bool same = false;
     if(

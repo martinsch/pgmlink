@@ -48,21 +48,21 @@ find_package( ANN REQUIRED )
 find_package( Cplex REQUIRED )
 find_package( VIGRA REQUIRED )
 find_package( Lemon REQUIRED )
-find_package( Boost REQUIRED COMPONENTS serialization )
+find_package( Boost REQUIRED COMPONENTS serialization program_options )
+message(STATUS "  found: ${Boost_LIBRARIES}")
 find_package( Armadillo REQUIRED )
 find_package( Mlpack REQUIRED )
 find_package( Opengm REQUIRED )
 find_package( Xml2 REQUIRED )
 
-message(STATUS "  found: ${Boost_LIBRARIES}")
 
 if(WIN32)
   # FindHDF5 is broken on Windows
   # it wrongly discovers the dlls instead of the lib files
   # see: www.cmake.org/Bug/bug_relationship_graph.php?bug_id=14111
   # therefore we set the variable manually
-  find_library( HDF5_IMPORT_LIB hdf5dll )
-  find_library( HDF5_HL_IMPORT_LIB hdf5_hldll )
+  find_library( HDF5_IMPORT_LIB NAMES hdf5 hdf5dll )
+  find_library( HDF5_HL_IMPORT_LIB NAMES hdf5_hl hdf5_hldll )
   set( HDF5_LIBRARIES ${HDF5_IMPORT_LIB} ${HDF5_HL_IMPORT_LIB} )
   message(STATUS "HDF5: autodiscovery is broken on WIN32; using global search paths")
   message(STATUS "HDF5: found ${HDF5_LIBRARIES}")
@@ -117,9 +117,9 @@ if(NOT CMAKE_BUILD_TYPE)
 endif(NOT CMAKE_BUILD_TYPE)
 
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-  set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wfatal-errors -std=c++98 -pedantic -pthread -fopenmp ${CMAKE_CXX_FLAGS}")
+  set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++98 -pedantic -pthread -fopenmp ${CMAKE_CXX_FLAGS}")
   set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 ${CMAKE_CXX_FLAGS_DEBUG}")
-  set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Werror ${CMAKE_CXX_FLAGS_RELEASE}")
+  set(CMAKE_CXX_FLAGS_RELEASE "-O3 ${CMAKE_CXX_FLAGS_RELEASE}")
 endif()
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
@@ -152,7 +152,9 @@ if(WIN32)
 endif()
 
 file(GLOB LIB_SOURCES src/*.cpp src/feature_calculator/*.cpp)
-add_library(pgmlink SHARED ${LIB_SOURCES})
+file(GLOB_RECURSE HEADERS include/*.h*)
+
+add_library(pgmlink SHARED ${LIB_SOURCES} ${HEADERS})
 
 
 

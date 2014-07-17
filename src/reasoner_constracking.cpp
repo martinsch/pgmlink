@@ -1,6 +1,8 @@
 #include <algorithm>
 #include <cassert>
 #include <stdexcept>
+#include <string.h>
+#include <memory.h>
 #include <opengm/inference/lpcplex.hxx>
 #include <opengm/datastructures/marray/marray.hxx>
 #include <opengm/graphicalmodel/graphicalmodel_hdf5.hxx>
@@ -64,6 +66,7 @@ void ConservationTracking::formulate(const HypothesesGraph& hypotheses) {
     param.verbose_ = true;
     param.integerConstraint_ = true;
     param.epGap_ = ep_gap_;
+    param.timeLimit_ = cplex_timeout_;
     LOG(logDEBUG) << "ConservationTracking::formulate ep_gap = " << param.epGap_;
 
     optimizer_ = new cplex_optimizer(*model, param);

@@ -260,25 +260,28 @@ Value& IterableEditableValueMap<Graph, Key, Value>::get_value(const Key& key) {
 
 
 
-  class PGMLINK_EXPORT HypothesesGraph : public PropertyGraph<lemon::ListDigraph> {
-  public:
+  class HypothesesGraph 
+  : public PropertyGraph<lemon::ListDigraph> 
+  {
+    public:
     typedef property_map<node_timestep, HypothesesGraph::base_graph>::type node_timestep_map;
 
-    HypothesesGraph() {
+    PGMLINK_EXPORT HypothesesGraph() 
+    {
       // Properties attached to every HypothesesGraph
       add(node_timestep());
       add(arc_from_timestep());
       add(arc_to_timestep());
-    };
+    }
 
     // use this instead of calling the parent graph directly
-    HypothesesGraph::Node add_node(node_timestep_map::Value timestep);
+    PGMLINK_EXPORT HypothesesGraph::Node add_node(node_timestep_map::Value timestep);
     // call this function to add a multi-temporal node (e.g. for tracklets)
-    HypothesesGraph::Node add_node(std::vector<node_timestep_map::Value> timesteps);
+    PGMLINK_EXPORT HypothesesGraph::Node add_node(std::vector<node_timestep_map::Value> timesteps);
 
-    const std::set<HypothesesGraph::node_timestep_map::Value>& timesteps() const;
-    node_timestep_map::Value earliest_timestep() const;
-    node_timestep_map::Value latest_timestep() const;
+    PGMLINK_EXPORT const std::set<HypothesesGraph::node_timestep_map::Value>& timesteps() const;
+    PGMLINK_EXPORT node_timestep_map::Value earliest_timestep() const;
+    PGMLINK_EXPORT node_timestep_map::Value latest_timestep() const;
     
   private:
     // boost serialize
@@ -292,8 +295,8 @@ Value& IterableEditableValueMap<Graph, Key, Value>::get_value(const Key& key) {
     std::set<node_timestep_map::Value> timesteps_;      
   };
 
-  void generateTrackletGraph(const HypothesesGraph& traxel_graph, HypothesesGraph& tracklet_graph);
-  std::map<HypothesesGraph::Node, std::vector<HypothesesGraph::Node> > generateTrackletGraph2(
+  PGMLINK_EXPORT void generateTrackletGraph(const HypothesesGraph& traxel_graph, HypothesesGraph& tracklet_graph);
+  PGMLINK_EXPORT std::map<HypothesesGraph::Node, std::vector<HypothesesGraph::Node> > generateTrackletGraph2(
 		  const HypothesesGraph& traxel_graph, HypothesesGraph& tracklet_graph);
   PGMLINK_EXPORT HypothesesGraph& prune_inactive(HypothesesGraph&);
   PGMLINK_EXPORT boost::shared_ptr<std::vector< std::vector<Event> > > events(const HypothesesGraph&);
@@ -312,15 +315,16 @@ Value& IterableEditableValueMap<Graph, Key, Value>::get_value(const Key& key) {
   ////
   //// HypothesesBuilder
   ////
-  class PGMLINK_EXPORT HypothesesBuilder {
-  public:
-    virtual HypothesesGraph* build() const;
+  class HypothesesBuilder 
+  {
+   public:
+    PGMLINK_EXPORT virtual HypothesesGraph* build() const;
 
   protected:
     // template methods
-    virtual HypothesesGraph* construct() const = 0;
-    virtual HypothesesGraph* add_nodes(HypothesesGraph*) const = 0;
-    virtual HypothesesGraph* add_edges(HypothesesGraph*) const = 0;
+    PGMLINK_EXPORT virtual HypothesesGraph* construct() const = 0;
+    PGMLINK_EXPORT virtual HypothesesGraph* add_nodes(HypothesesGraph*) const = 0;
+    PGMLINK_EXPORT virtual HypothesesGraph* add_edges(HypothesesGraph*) const = 0;
   };
 
 
@@ -328,28 +332,35 @@ Value& IterableEditableValueMap<Graph, Key, Value>::get_value(const Key& key) {
   ////
   //// SingleTimestepTraxel_HypothesesBuilder
   ////
-  class PGMLINK_EXPORT SingleTimestepTraxel_HypothesesBuilder : public HypothesesBuilder {
-  public:
-    struct Options {
-	Options(unsigned int mnn = 6, double dt = 50,
-			bool forward_backward=false, bool consider_divisions=false,
-			double division_threshold = 0.5) :
-  		max_nearest_neighbors(mnn), distance_threshold(dt), forward_backward(forward_backward),
-  		consider_divisions(consider_divisions),
-  		division_threshold(division_threshold){};
-  	unsigned int max_nearest_neighbors;
-  	double distance_threshold;
-  	bool forward_backward, consider_divisions;
-  	double division_threshold;
+  class SingleTimestepTraxel_HypothesesBuilder 
+  : public HypothesesBuilder 
+  {
+   public:
+    struct Options 
+    {
+	    PGMLINK_EXPORT Options(unsigned int mnn = 6, double dt = 50,
+			                  bool forward_backward=false, bool consider_divisions=false,
+			                  double division_threshold = 0.5)
+        : max_nearest_neighbors(mnn), distance_threshold(dt), forward_backward(forward_backward),
+  		  consider_divisions(consider_divisions),
+  		  division_threshold(division_threshold)
+        {}
+
+  	    unsigned int max_nearest_neighbors;
+  	    double distance_threshold;
+  	    bool forward_backward, consider_divisions;
+  	    double division_threshold;
     };
 
-  SingleTimestepTraxel_HypothesesBuilder(const TraxelStore* ts, const Options& o = Options()) : ts_(ts), options_(o) {};
+    PGMLINK_EXPORT SingleTimestepTraxel_HypothesesBuilder(const TraxelStore* ts, const Options& o = Options()) 
+    : ts_(ts), options_(o) 
+    {}
 
-  protected:
+   protected:
     // builder method implementations
-    virtual HypothesesGraph* construct() const;
-    virtual HypothesesGraph* add_nodes(HypothesesGraph*) const;
-    virtual HypothesesGraph* add_edges(HypothesesGraph*) const;
+    PGMLINK_EXPORT virtual HypothesesGraph* construct() const;
+    PGMLINK_EXPORT virtual HypothesesGraph* add_nodes(HypothesesGraph*) const;
+    PGMLINK_EXPORT virtual HypothesesGraph* add_edges(HypothesesGraph*) const;
 
     const TraxelStore* ts_;
     Options options_;

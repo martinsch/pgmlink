@@ -23,7 +23,7 @@ class ConservationTracking : public Reasoner {
                              boost::function<double (const Traxel&, const size_t)> division,
                              boost::function<double (const double)> transition,
                              double forbidden_cost = 0,
-                             double ep_gap = 0.01,
+                             double ep_gap = 0.01,                             
                              bool with_tracklets = false,
                              bool with_divisions = true,
                              boost::function<double (const Traxel&)> disappearance_cost_fn = ConstantFeature(500.0),
@@ -32,7 +32,8 @@ class ConservationTracking : public Reasoner {
                              bool with_appearance = true,
                              bool with_disappearance = true,
                              double transition_parameter = 5,
-                             bool with_constraints = true
+                             bool with_constraints = true,
+                             double cplex_timeout = 1e75
                              )
         : max_number_objects_(max_number_objects),
           detection_(detection),
@@ -53,7 +54,8 @@ class ConservationTracking : public Reasoner {
           with_appearance_(with_appearance),
           with_disappearance_(with_disappearance),
           transition_parameter_(transition_parameter),
-          with_constraints_(with_constraints)
+          with_constraints_(with_constraints),
+          cplex_timeout_(cplex_timeout)
     { };
     ~ConservationTracking();
 
@@ -119,7 +121,7 @@ class ConservationTracking : public Reasoner {
     std::map<HypothesesGraph::Node, size_t> dis_node_map_;
     std::map<HypothesesGraph::Arc, size_t> arc_map_;
 
-    double ep_gap_;
+    double ep_gap_;    
 
     bool with_tracklets_, with_divisions_;
 
@@ -136,6 +138,8 @@ class ConservationTracking : public Reasoner {
     double transition_parameter_;
 
     bool with_constraints_;
+
+    double cplex_timeout_;
 
     HypothesesGraph tracklet_graph_;
     std::map<HypothesesGraph::Node, std::vector<HypothesesGraph::Node> > tracklet2traxel_node_map_;

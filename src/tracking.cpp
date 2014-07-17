@@ -306,7 +306,7 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts, TimestepIdCoord
 		}
 		prob_vector.insert(prob_vector.begin(), 1-sum);
 
-		detection = bind<double>(NegLnConstant(detection_weight,prob_vector), _2);
+		detection = boost::bind<double>(NegLnConstant(detection_weight,prob_vector), _2);
 	}
 
 	LOG(logDEBUG1) << "division_weight_ = " << division_weight_;
@@ -377,7 +377,8 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts, TimestepIdCoord
 			true, // with_appearance
 			true, // with_disappearance
 			transition_parameter_,
-			with_constraints_
+            with_constraints_,
+            cplex_timeout_
 			);
 
 	cout << "-> formulate ConservationTracking model" << endl;
@@ -399,7 +400,7 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts, TimestepIdCoord
     boost::shared_ptr<std::vector< std::vector<Event> > > ev = events(*graph);
 
 
-    if (max_number_objects_ > 1 && with_merger_resolution_ && all_true(ev->begin(), ev->end(), has_data<Event>)) {
+    if (max_number_objects_ > 1 && with_merger_resolution_ && all_true(ev->begin()+1, ev->end(), has_data<Event>)) {
       cout << "-> resolving mergers" << endl;
       MergerResolver m(graph);
       FeatureExtractorBase* extractor;

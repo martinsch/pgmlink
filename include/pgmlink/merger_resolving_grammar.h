@@ -10,13 +10,15 @@
 
 
 // pgmlink headers
+#include "pgmlink/pgmlink_export.h"
 
 namespace pgmlink {
 
   typedef std::vector<std::string> feature_list;
 
   template <typename NodeFilter, typename ArcFilter>
-  struct SubHypothesesGraph {
+  struct SubHypothesesGraph
+  {
     typedef typename lemon::SubDigraph<HypothesesGraph::base_graph,
                                        typename property_map<NodeFilter, HypothesesGraph::base_graph>::type,
                                        typename property_map<ArcFilter, HypothesesGraph::base_graph>::type > type;
@@ -35,13 +37,13 @@ namespace pgmlink {
 
   template <typename T, typename U>
   void feature_array_to_arma_mat(const std::vector<T>& in,
-				 arma::Mat<U>& out);
+				                 arma::Mat<U>& out);
 
   template <typename T>
   void get_centers(const arma::Mat<T>& data,
-		   const arma::Col<size_t> labels,
-		   arma::Mat<T>& centers,
-		   int k);
+		           const arma::Col<size_t> labels,
+		           arma::Mat<T>& centers,
+		           int k);
 
   class FeatureExtractorBase;
 
