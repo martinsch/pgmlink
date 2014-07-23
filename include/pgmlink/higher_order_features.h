@@ -863,8 +863,8 @@ class CovarianceCalculator : public TraxelsFeatureCalculator {
 \brief calculates the mahalanobis distance between each column vector and either
   the 0-vector or the mean vector (see description).
 
-The distance matrix can be set in the calculation method. If it is given the
-distance between the 0-vector and the column vectors is calcualted. If no
+The distance matrix can be set in the calculate() method. If it is given, the
+distance between the 0-vector and the column vectors is calculated. If no
 distance matrix is given the inverse covariance matrix of the column vectors is
 taken. In this case the mahalanobis distance to the mean vector is calculated.
 
