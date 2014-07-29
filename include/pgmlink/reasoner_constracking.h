@@ -4,6 +4,8 @@
 #include <map>
 #include <boost/function.hpp>
 #include <opengm/inference/inference.hxx>
+#include <memory.h>
+#include <string.h>
 #include <opengm/inference/lpcplex.hxx>
 
 #include "pgmlink/pgm.h"

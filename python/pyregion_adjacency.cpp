@@ -4,6 +4,7 @@
 #include <string>
 #include <sstream>
 
+#undef tolower
 #include <boost/python.hpp>
 #include <boost/python/iterator.hpp>
 #include <boost/python/return_internal_reference.hpp>
@@ -14,6 +15,7 @@
 
 #include <lemon/core.h>
 
+#undef tolower
 #include <vigra/numpy_array.hxx>
 #include <vigra/numpy_array_converters.hxx>
 

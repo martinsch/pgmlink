@@ -1,6 +1,8 @@
 #include <algorithm>
 #include <cassert>
 #include <stdexcept>
+#include <memory.h>
+#include <string.h>
 #include <opengm/inference/lpcplex.hxx>
 #include <opengm/datastructures/marray/marray.hxx>
 #include <opengm/graphicalmodel/graphicalmodel_hdf5.hxx>

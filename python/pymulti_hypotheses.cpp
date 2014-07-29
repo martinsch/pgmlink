@@ -8,6 +8,7 @@
 #include <sstream>
 
 // boost
+#undef tolower
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/python.hpp>
@@ -16,6 +17,7 @@
 #include <boost/archive/text_iarchive.hpp>
 
 // vigra
+#undef tolower
 #include <vigra/numpy_array.hxx>
 #include <vigra/numpy_array_converters.hxx>
 

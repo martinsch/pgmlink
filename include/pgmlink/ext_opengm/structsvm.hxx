@@ -13,7 +13,9 @@
 #include "opengm/opengm.hxx"
 #include "pgmlink/ext_opengm/loss_hamming.hxx"
 #include "pgmlink/ext_opengm/loglinearmodel.hxx"
-#include "opengm/inference/lpcplex.hxx"
+#include <memory.h>
+#include <string.h>
+#include <opengm/inference/lpcplex.hxx>
 #include "opengm/operations/minimizer.hxx"
 
 

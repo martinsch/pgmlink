@@ -14,7 +14,7 @@
 
 
 
-template class PGMLINK_EXPORT std::vector<unsigned int>;
+//template class PGMLINK_EXPORT std::vector<unsigned int>;
 
 namespace pgmlink {
   class PGMLINK_EXPORT Event {

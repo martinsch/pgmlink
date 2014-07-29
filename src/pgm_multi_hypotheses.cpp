@@ -13,6 +13,8 @@
 #include <boost/shared_ptr.hpp>
 
 // opengm
+#include <memory.h>
+#include <string.h>
 #include <opengm/inference/lpcplex.hxx>
 #include <opengm/datastructures/marray/marray.hxx>
 

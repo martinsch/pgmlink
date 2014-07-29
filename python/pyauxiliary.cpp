@@ -11,6 +11,7 @@
 #include <boost/python/return_internal_reference.hpp>
 
 // vigra
+#undef tolower
 #include <vigra/multi_array.hxx>
 #include <vigra/numpy_array.hxx>
 #include <vigra/numpy_array_converters.hxx>

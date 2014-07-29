@@ -16,6 +16,8 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/bimap.hpp>
 #include <opengm/inference/inference.hxx>
+#include <memory.h>
+#include <string.h>
 #include <opengm/inference/lpcplex.hxx>
 
 #include "pgmlink/pgm.h"
