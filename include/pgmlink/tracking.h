@@ -147,7 +147,7 @@ namespace pgmlink {
   {
     public:
       PGMLINK_EXPORT 
-      ConsTracking( int max_number_objects=3,
+	ConsTracking( int max_number_objects=3,
                     double max_neighbor_distance = 20,
                     double division_threshold = 0.3,
                     const std::string& random_forest_filename = "none",
@@ -193,8 +193,18 @@ namespace pgmlink {
         event_vector_dump_filename_(event_vector_dump_filename)
       {}
 
+
       PGMLINK_EXPORT std::vector< std::vector<Event> > operator()(TraxelStore& ts,
                                                  TimestepIdCoordinateMapPtr coordinates = TimestepIdCoordinateMapPtr());
+      
+      /**
+       * refactoring of operator().
+       */
+
+      PGMLINK_EXPORT boost::shared_ptr<HypothesesGraph> build_hypo_graph(TraxelStore& ts);
+
+      PGMLINK_EXPORT std::vector<std::vector<Event> > track(TimestepIdCoordinateMapPtr coordinates);
+
 
       /**
        * Get state of detection variables after call to operator().
@@ -225,6 +235,13 @@ namespace pgmlink {
       bool with_constraints_;
       double cplex_timeout_;
       std::string event_vector_dump_filename_;
+
+      boost::shared_ptr<HypothesesGraph>  hypotheses_graph_;
+      boost::shared_ptr<ConservationTracking> pgm_;
+
+      boost::function<double(const Traxel&, const size_t)> detection_, division_;
+      boost::function<double(const double)> transition_;
+
     };
 }
 
