@@ -90,9 +90,8 @@ void export_track() {
                              "event_vector_dump_filename"
                              )))
       .def("__call__", &pythonConsTracking)
-      .def("buildGraph", &ConsTracking::build_hypo_graph)
-      .def("track", &ConsTracking::track)
-
+          .def("buildGraph", &ConsTracking::build_hypo_graph)
+          .def("track", &ConsTracking::track)
 	  .def("detections", &ConsTracking::detections)
 	;
 
