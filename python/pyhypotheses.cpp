@@ -120,7 +120,7 @@ void export_hypotheses() {
   HypothesesGraph::Node (HypothesesGraph::*runningNode2)(const HypothesesGraph::OutArcIt&) const =
     &HypothesesGraph::runningNode;
 
-  class_<HypothesesGraph, boost::noncopyable>("HypothesesGraph")
+  class_<HypothesesGraph,shared_ptr<HypothesesGraph>, boost::noncopyable>("HypothesesGraph")
     .def("addNode", addnode1)
     .def("addNode", addnode2)
     //.def("timesteps", &HypothesesGraph::timesteps, 
