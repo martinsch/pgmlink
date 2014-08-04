@@ -222,30 +222,26 @@ bool all_true (InputIterator first, InputIterator last, UnaryPredicate pred) {
 //// class ConsTracking
 ////
 vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts, TimestepIdCoordinateMapPtr coordinates) {
-  cout << "-> building hypotheses" << endl;
-  build_hypo_graph(ts);  
+  build_hypo_graph(ts);
   return track(coordinates);
-
 }
 
-  boost::shared_ptr<HypothesesGraph> ConsTracking::build_hypo_graph(TraxelStore& ts) {
-    	cout << "-> building energy functions " << endl;
+shared_ptr<HypothesesGraph> ConsTracking::build_hypo_graph(TraxelStore& ts) {
 
-	double detection_weight = 10;
-	Traxels empty;
-
-	bool use_classifier_prior = false;
+  
+  LOG(logDEBUG3) << "enering build_hypo_graph"<< endl;;
+  
+	use_classifier_prior_ = false;
 	Traxel trax = *(ts.begin());
 	FeatureMap::const_iterator it = trax.features.find("detProb");
 	if(it != trax.features.end()) {
-		use_classifier_prior = true;
+		use_classifier_prior_ = true;
 	}
-	if (use_classifier_prior) {
-		LOG(logINFO) << "Using classifier prior";
-		detection_ = NegLnDetection(detection_weight);
-	} else if (use_size_dependent_detection_) {
-		LOG(logINFO) << "Using size dependent prior";
-		vector<double> means;
+
+
+    	if (not use_classifier_prior_ and use_size_dependent_detection_) {
+	  LOG(logDEBUG1) << "preparing for  size dependent prior";
+    		vector<double> means;
 		if (means_.size() == 0 ) {
 			for(int i = 0; i<max_number_objects_+1; ++i) {
 				means.push_back(i*avg_obj_size_);
@@ -299,7 +295,69 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts, TimestepIdCoord
 			trax.features["detProb"] = detProbFeat;
 			ts.replace(tr, trax);
 		}
-		detection_ = NegLnDetection(detection_weight); // weight 1
+	}
+	
+	LOG(logDEBUG1) << "-> building hypotheses" << endl;
+	SingleTimestepTraxel_HypothesesBuilder::Options builder_opts(1, // max_nearest_neighbors
+				max_dist_,
+				true, // forward_backward
+				with_divisions_, // consider_divisions
+				division_threshold_
+				);
+	SingleTimestepTraxel_HypothesesBuilder hyp_builder(&ts, builder_opts);
+	hypotheses_graph_ = boost::shared_ptr<HypothesesGraph>(hyp_builder.build());
+
+
+	LOG(logDEBUG1) << "ConsTracking(): adding distance property to edges";
+	(hypotheses_graph_)->add(arc_distance()).add(tracklet_intern_dist()).add(node_tracklet()).add(tracklet_intern_arc_ids()).add(traxel_arc_id());
+	property_map<arc_distance, HypothesesGraph::base_graph>::type& arc_distances = (hypotheses_graph_)->get(arc_distance());
+	property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = (hypotheses_graph_)->get(node_traxel());
+	bool with_optical_correction = false;
+	Traxel some_traxel = (*traxel_map.beginValue());
+	if (some_traxel.features.find("com_corrected") != some_traxel.features.end()) {
+		LOG(logINFO) << "optical correction enabled";
+		with_optical_correction = true;
+	}
+
+	for(HypothesesGraph::ArcIt a(*hypotheses_graph_); a!=lemon::INVALID; ++a) {
+		HypothesesGraph::Node from = (hypotheses_graph_)->source(a);
+		HypothesesGraph::Node to = (hypotheses_graph_)->target(a);
+		Traxel from_tr = traxel_map[from];
+		Traxel to_tr = traxel_map[to];
+
+		if (with_optical_correction) {
+			arc_distances.set(a, from_tr.distance_to_corr(to_tr));
+		} else {
+			arc_distances.set(a, from_tr.distance_to(to_tr));
+		}
+	}
+
+        if(event_vector_dump_filename_ != "none")
+	  {
+	    // store the traxel store and the resulting event vector
+	    std::ofstream ofs(event_vector_dump_filename_.c_str());
+	    boost::archive::text_oarchive out_archive(ofs);
+	    out_archive << ts;
+	  }
+	return hypotheses_graph_;
+    
+  }
+
+  std::vector<std::vector<Event> >ConsTracking::track(TimestepIdCoordinateMapPtr coordinates){
+
+    cout << "-> building energy functions " << endl;
+
+	double detection_weight = 10;
+	Traxels empty;
+	boost::function<double(const Traxel&, const size_t)> detection, division;
+	boost::function<double(const double)> transition;
+
+	if (use_classifier_prior_) {
+		LOG(logINFO) << "Using classifier prior";
+		detection = NegLnDetection(detection_weight);
+	} else if (use_size_dependent_detection_) {
+		LOG(logINFO) << "Using size dependent prior";
+		detection = NegLnDetection(detection_weight); // weight 1
 	} else {
 		LOG(logINFO) << "Using hard prior";
 		// assume a quasi geometric distribution
@@ -313,50 +371,14 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts, TimestepIdCoord
 		}
 		prob_vector.insert(prob_vector.begin(), 1-sum);
 
-		detection_ = boost::bind<double>(NegLnConstant(detection_weight,prob_vector), _2);
+		detection = boost::bind<double>(NegLnConstant(detection_weight,prob_vector), _2);
 	}
 
 	LOG(logDEBUG1) << "division_weight_ = " << division_weight_;
 	LOG(logDEBUG1) << "transition_weight_ = " << transition_weight_;
-	division_ = NegLnDivision(division_weight_);
-	transition_ = NegLnTransition(transition_weight_);
+	division = NegLnDivision(division_weight_);
+	transition = NegLnTransition(transition_weight_);
 
-	cout << "-> building hypotheses" << endl;
-	SingleTimestepTraxel_HypothesesBuilder::Options builder_opts(1, // max_nearest_neighbors
-				max_dist_,
-				true, // forward_backward
-				with_divisions_, // consider_divisions
-				division_threshold_
-				);
-	SingleTimestepTraxel_HypothesesBuilder hyp_builder(&ts, builder_opts);
-
-	hypotheses_graph_ = boost::shared_ptr<HypothesesGraph>(hyp_builder.build());
-	
-
-	LOG(logDEBUG1) << "ConsTracking(): adding distance property to edges";
-	HypothesesGraph& g = *hypotheses_graph_;
-	g.add(arc_distance()).add(tracklet_intern_dist()).add(node_tracklet()).add(tracklet_intern_arc_ids()).add(traxel_arc_id());
-	property_map<arc_distance, HypothesesGraph::base_graph>::type& arc_distances = g.get(arc_distance());
-	property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = g.get(node_traxel());
-	bool with_optical_correction = false;
-	Traxel some_traxel = (*traxel_map.beginValue());
-	if (some_traxel.features.find("com_corrected") != some_traxel.features.end()) {
-		LOG(logINFO) << "optical correction enabled";
-		with_optical_correction = true;
-	}
-
-	for(HypothesesGraph::ArcIt a(g); a!=lemon::INVALID; ++a) {
-		HypothesesGraph::Node from = g.source(a);
-		HypothesesGraph::Node to = g.target(a);
-		Traxel from_tr = traxel_map[from];
-		Traxel to_tr = traxel_map[to];
-
-		if (with_optical_correction) {
-			arc_distances.set(a, from_tr.distance_to_corr(to_tr));
-		} else {
-			arc_distances.set(a, from_tr.distance_to(to_tr));
-		}
-	}
 	//border_width_ is given in normalized scale, 1 corresponds to a maximal distance of dim_range/2
 	boost::function<double(const Traxel&)> appearance_cost_fn, disappearance_cost_fn;
 	LOG(logINFO) << "using border-aware appearance and disappearance costs, with absolute margin: " << border_width_;
@@ -370,12 +392,15 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts, TimestepIdCoord
 												fov_);
 
 	cout << "-> init ConservationTracking reasoner" << endl;
-	pgm_ = boost::shared_ptr<ConservationTracking>(
-		    new ConservationTracking(
+	
+	cout << "HHHHHHHHHHHHHHHH   " << with_tracklets_ << endl;
+	cout << "HHHHHHHHHHHHHHHH   " << with_divisions_ << endl;
+	
+	ConservationTracking pgm(
 			max_number_objects_,
-			detection_,
-			division_,
-			transition_,
+			detection,
+			division,
+			transition,
 			forbidden_cost_,
 			ep_gap_,
 			with_tracklets_,
@@ -386,29 +411,18 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts, TimestepIdCoord
 			true, // with_appearance
 			true, // with_disappearance
 			transition_parameter_,
-			with_constraints_,
-			cplex_timeout_)
-						       );
-
-
-        std::ofstream ofs(event_vector_dump_filename_.c_str());
-        boost::archive::text_oarchive out_archive(ofs);
-        out_archive << ts;
-
-	return hypotheses_graph_;
-    
-  }
-
-  std::vector<std::vector<Event> >ConsTracking::track(TimestepIdCoordinateMapPtr coordinates){
+            with_constraints_,
+            cplex_timeout_
+			);
 
 	cout << "-> formulate ConservationTracking model" << endl;
-	pgm_->formulate(*hypotheses_graph_);
+	pgm.formulate(*hypotheses_graph_);
 
 	cout << "-> infer" << endl;
-	pgm_->infer();
+	pgm.infer();
 
 	cout << "-> conclude" << endl;
-	pgm_->conclude(*hypotheses_graph_);
+	pgm.conclude(*hypotheses_graph_);
 
 	cout << "-> storing state of detection vars" << endl;
 	last_detections_ = state_of_nodes(*hypotheses_graph_);
@@ -436,7 +450,7 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts, TimestepIdCoord
       m.resolve_mergers(handler);
 
       HypothesesGraph g_res;
-      resolve_graph(*hypotheses_graph_, g_res, transition_, ep_gap_, with_tracklets_, transition_parameter_, with_constraints_);
+      resolve_graph(*hypotheses_graph_, g_res, transition, ep_gap_, with_tracklets_, transition_parameter_, with_constraints_);
       prune_inactive(*hypotheses_graph_);
 
       cout << "-> constructing resolved events" << endl;
@@ -453,7 +467,7 @@ vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts, TimestepIdCoord
         std::ofstream ofs(event_vector_dump_filename_.c_str());
         boost::archive::text_oarchive out_archive(ofs);
         out_archive << *ev;
-    }
+	}
 
     return *ev;
 

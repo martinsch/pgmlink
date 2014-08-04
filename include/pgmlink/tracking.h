@@ -201,7 +201,7 @@ namespace pgmlink {
        * refactoring of operator().
        */
 
-      PGMLINK_EXPORT boost::shared_ptr<HypothesesGraph> build_hypo_graph(TraxelStore& ts);
+      PGMLINK_EXPORT shared_ptr<HypothesesGraph> build_hypo_graph(TraxelStore& ts);
 
       PGMLINK_EXPORT std::vector<std::vector<Event> > track(TimestepIdCoordinateMapPtr coordinates);
 
@@ -217,6 +217,7 @@ namespace pgmlink {
       double division_threshold_;
       const std::string detection_rf_fn_;
       bool use_size_dependent_detection_;
+      bool use_classifier_prior_;
       double forbidden_cost_;
       double ep_gap_;
       double avg_obj_size_;
@@ -236,11 +237,11 @@ namespace pgmlink {
       double cplex_timeout_;
       std::string event_vector_dump_filename_;
 
-      boost::shared_ptr<HypothesesGraph>  hypotheses_graph_;
+      shared_ptr<HypothesesGraph> hypotheses_graph_;
       boost::shared_ptr<ConservationTracking> pgm_;
 
-      boost::function<double(const Traxel&, const size_t)> detection_, division_;
-      boost::function<double(const double)> transition_;
+      //boost::function<double(const Traxel&, const size_t)> detection_, division_;
+      //boost::function<double(const double)> transition_;
 
     };
 }
