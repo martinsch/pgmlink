@@ -393,9 +393,6 @@ shared_ptr<HypothesesGraph> ConsTracking::build_hypo_graph(TraxelStore& ts) {
 
 	cout << "-> init ConservationTracking reasoner" << endl;
 	
-	cout << "HHHHHHHHHHHHHHHH   " << with_tracklets_ << endl;
-	cout << "HHHHHHHHHHHHHHHH   " << with_divisions_ << endl;
-	
 	ConservationTracking pgm(
 			max_number_objects_,
 			detection,
