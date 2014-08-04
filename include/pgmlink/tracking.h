@@ -240,9 +240,6 @@ namespace pgmlink {
       shared_ptr<HypothesesGraph> hypotheses_graph_;
       boost::shared_ptr<ConservationTracking> pgm_;
 
-      //boost::function<double(const Traxel&, const size_t)> detection_, division_;
-      //boost::function<double(const double)> transition_;
-
     };
 }
 

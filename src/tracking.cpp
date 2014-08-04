@@ -240,7 +240,7 @@ shared_ptr<HypothesesGraph> ConsTracking::build_hypo_graph(TraxelStore& ts) {
 
 
     	if (not use_classifier_prior_ and use_size_dependent_detection_) {
-	  LOG(logDEBUG1) << "preparing for  size dependent prior";
+	        LOG(logDEBUG1) << "preparing for  size dependent prior";
     		vector<double> means;
 		if (means_.size() == 0 ) {
 			for(int i = 0; i<max_number_objects_+1; ++i) {
@@ -427,50 +427,48 @@ shared_ptr<HypothesesGraph> ConsTracking::build_hypo_graph(TraxelStore& ts) {
 	cout << "-> pruning inactive hypotheses" << endl;
 	prune_inactive(*hypotheses_graph_);
 
-    cout << "-> constructing unresolved events" << endl;
-    boost::shared_ptr<std::vector< std::vector<Event> > > ev = events(*hypotheses_graph_);
+	cout << "-> constructing unresolved events" << endl;
+	boost::shared_ptr<std::vector< std::vector<Event> > > ev = events(*hypotheses_graph_);
 
 
-    if (max_number_objects_ > 1 && with_merger_resolution_ && all_true(ev->begin()+1, ev->end(), has_data<Event>)) {
-      cout << "-> resolving mergers" << endl;
-      MergerResolver m(hypotheses_graph_.get());
-      FeatureExtractorBase* extractor;
-      DistanceFromCOMs distance;
-      if (coordinates) {
-        extractor = new FeatureExtractorArmadillo(coordinates);
-      } else {
-        calculate_gmm_beforehand(*hypotheses_graph_, 1, number_of_dimensions_);
-        extractor = new FeatureExtractorMCOMsFromMCOMs;
-      }
-      FeatureHandlerFromTraxels handler(*extractor, distance);
+	if (max_number_objects_ > 1 && with_merger_resolution_ && all_true(ev->begin()+1, ev->end(), has_data<Event>)) {
+	  cout << "-> resolving mergers" << endl;
+	  MergerResolver m(hypotheses_graph_.get());
+	  FeatureExtractorBase* extractor;
+	  DistanceFromCOMs distance;
+	  if (coordinates) {
+	    extractor = new FeatureExtractorArmadillo(coordinates);
+	  } else {
+	    calculate_gmm_beforehand(*hypotheses_graph_, 1, number_of_dimensions_);
+	    extractor = new FeatureExtractorMCOMsFromMCOMs;
+	  }
+	  FeatureHandlerFromTraxels handler(*extractor, distance);
       
-      m.resolve_mergers(handler);
+	  m.resolve_mergers(handler);
+	  
+	  HypothesesGraph g_res;
+	  resolve_graph(*hypotheses_graph_, g_res, transition, ep_gap_, with_tracklets_, transition_parameter_, with_constraints_);
+	  prune_inactive(*hypotheses_graph_);
 
-      HypothesesGraph g_res;
-      resolve_graph(*hypotheses_graph_, g_res, transition, ep_gap_, with_tracklets_, transition_parameter_, with_constraints_);
-      prune_inactive(*hypotheses_graph_);
+	  cout << "-> constructing resolved events" << endl;
+	  boost::shared_ptr<std::vector< std::vector<Event> > > multi_frame_moves = multi_frame_move_events(*hypotheses_graph_);
 
-      cout << "-> constructing resolved events" << endl;
-      boost::shared_ptr<std::vector< std::vector<Event> > > multi_frame_moves = multi_frame_move_events(*hypotheses_graph_);
-
-      cout << "-> merging unresolved and resolved events" << endl;
-      // delete extractor; // TO DELETE FIRST CREATE VIRTUAL DTORS
-      ev = merge_event_vectors(*ev, *multi_frame_moves);
-    }
-
-    if(event_vector_dump_filename_ != "none")
-    {
-        // store the traxel store and the resulting event vector
-        std::ofstream ofs(event_vector_dump_filename_.c_str());
-        boost::archive::text_oarchive out_archive(ofs);
-        out_archive << *ev;
+	  cout << "-> merging unresolved and resolved events" << endl;
+	  // delete extractor; // TO DELETE FIRST CREATE VIRTUAL DTORS
+	  ev = merge_event_vectors(*ev, *multi_frame_moves);
 	}
 
-    return *ev;
+	if(event_vector_dump_filename_ != "none")
+	  {
+	    // store the traxel store and the resulting event vector
+	    std::ofstream ofs(event_vector_dump_filename_.c_str());
+	    boost::archive::text_oarchive out_archive(ofs);
+	    out_archive << *ev;
+	  }
+
+	return *ev;
 
   }
-
-
 
 
 
