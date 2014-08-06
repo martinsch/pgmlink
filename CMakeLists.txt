@@ -91,6 +91,7 @@ message(STATUS "  Boost: ${Boost_INCLUDE_DIRS}")
 message(STATUS "  HDF5:  ${HDF5_INCLUDE_DIRS}")
 
 # hide these variables to have a cleaner interface
+link_directories(${FFTW3_LIBRARY_DIR})
 mark_as_advanced( Boost_DIR )
 link_directories(${FFTW3_LIBRARY_DIR})
 # build options
