@@ -48,12 +48,13 @@ find_package( ANN REQUIRED )
 find_package( Cplex REQUIRED )
 find_package( VIGRA REQUIRED )
 find_package( Lemon REQUIRED )
-find_package( Boost REQUIRED COMPONENTS serialization filesystem system)
-message(STATUS "  found: ${Boost_LIBRARIES}")
-
 find_package( Armadillo REQUIRED )
 find_package( Mlpack REQUIRED )
 find_package( Opengm REQUIRED )
+find_package( Xml2 REQUIRED )
+find_package( Boost REQUIRED COMPONENTS serialization filesystem system)
+message(STATUS "  found: ${Boost_LIBRARIES}")
+
 find_package( Vigranumpy REQUIRED PATHS ${Vigranumpy_DIR} )
 SET( Vigranumpy_DIR ${Vigranumpy_DIR}
   CACHE PATH "Directory containing VigranumpyConfig.cmake"
@@ -146,7 +147,8 @@ if(WIN32)
 endif()
 
 file(GLOB LIB_SOURCES src/*.cpp)
-add_library(pgmlink SHARED ${LIB_SOURCES})
+file(GLOB_RECURSE HEADERS include/*.h*)
+add_library(pgmlink SHARED ${LIB_SOURCES} ${HEADERS})
 
 file( MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/pgmlink )
 if(WIN32)
