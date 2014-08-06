@@ -48,7 +48,7 @@ find_package( ANN REQUIRED )
 find_package( Cplex REQUIRED )
 find_package( VIGRA REQUIRED )
 find_package( Lemon REQUIRED )
-find_package( Boost REQUIRED COMPONENTS serialization filesystem)
+find_package( Boost REQUIRED COMPONENTS serialization filesystem system)
 message(STATUS "  found: ${Boost_LIBRARIES}")
 
 if(WIN32)
@@ -91,6 +91,7 @@ message(STATUS "  Boost: ${Boost_INCLUDE_DIRS}")
 message(STATUS "  HDF5:  ${HDF5_INCLUDE_DIRS}")
 
 # hide these variables to have a cleaner interface
+link_directories(${FFTW3_LIBRARY_DIR})
 mark_as_advanced( Boost_DIR )
 
 # build options
@@ -107,7 +108,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif(NOT CMAKE_BUILD_TYPE)
 
 if(NOT MSVC)
-  set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wfatal-errors -std=c++98 -pedantic -pthread -fopenmp")
+  set(CMAKE_CXX_FLAGS "-Wall -std=c++98 -pthread -fopenmp")
   set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
   set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 endif()
@@ -148,7 +149,7 @@ endif(WIN32)
 
 include_directories( ${CMAKE_CURRENT_BINARY_DIR}/include )
 
-target_link_libraries(pgmlink ${ANN_LIBRARIES} ${Boost_LIBRARIES}  ${CPLEX_LIBRARIES} ${VIGRA_IMPEX_LIBRARY} ${LEMON_LIBRARIES} ${HDF5_LIBRARIES} mlpack fftw3 fftw3f)
+target_link_libraries(pgmlink ${ANN_LIBRARIES} ${Boost_LIBRARIES}  ${CPLEX_LIBRARIES} ${VIGRA_IMPEX_LIBRARY} ${LEMON_LIBRARIES} ${HDF5_LIBRARIES} ${Mlpack_LIBRARIES} ${Armadillo_LIBRARIES} fftw3 fftw3f)
 
 # Install target pgmlink
 install(TARGETS pgmlink
