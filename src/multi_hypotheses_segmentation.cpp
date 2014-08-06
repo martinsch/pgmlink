@@ -342,28 +342,6 @@ namespace pgmlink {
       } while(true);
     }
   }
-
-
-  ////
-  //// RegionMergingGraphFactory
-  ////
-  /* RegionMergingGraphFactory::RegionMergingGraphFactory(unsigned maximum_merges_per_connected_component,
-                                                       unsigned maximum_merges_per_patch,
-                                                       label_type starting_label) :
-    maximum_merges_per_connected_component_(maximum_merges_per_connected_component),
-    maximum_merges_per_patch_(maximum_merges_per_patch),
-    starting_label_(starting_label) {
-    // nothing to be done here
-  }
-
-  RegionMergingPolicyPtr RegionMergingGraphFactory::build(AdjacencyGraphPtr graph) {
-    ReigonMergingPolicyPtr policy = new RegionMergingPolicyGraph(graph,
-                                                                 maximum_merges_per_connected_component_,
-                                                                 maximum_merges_per_patch_,
-                                                                 starting_label_
-                                                                 );
-    return policy;
-    } */
   
 }
 

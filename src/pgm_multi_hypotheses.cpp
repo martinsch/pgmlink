@@ -421,10 +421,6 @@ void ModelBuilder::couple_outgoing( const std::vector<size_t>& cplex_idxs, Openg
   LOG(logDEBUG1) << "MultiHypotheses::couple_outgoing()";
   MAX_OUTGOING_ARCS max_outgoing_arcs = DIVISION;
   
-  // maximum division level constraint by soft constraint from feature?
-  // if (s->Level > max_division_level_) {
-  //   max_outgoing_arcs = TRANSITION;
-  // }
   if (cplex_idxs.size() > 0) {
     std::vector<int> coeffs(cplex_idxs.size(), 1);
     const size_t max_on = has_divisions() ? max_outgoing_arcs : TRANSITION;
@@ -831,9 +827,7 @@ void CVPR2014ModelBuilder::fill_probabilities(feature_array& probabilities, size
   // renormalize
   feature_type sum = std::accumulate(probabilities.begin(), probabilities.end(), 0.);
   if (sum > 0) {
-    /*for(feature_array::iterator p = probabilities.begin(); p != probabilities.end(); ++p) {
-      *p /= sum;
-    }*/
+
   } else {
     feature_type constant = 1/probabilities.size();
     std::fill(probabilities.begin(), probabilities.end(), constant);

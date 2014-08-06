@@ -410,35 +410,6 @@ namespace pgmlink {
     virtual void merge();
   };
 
-
-  ////
-  //// RegionMergingPolicyFactoryBase
-  ////
-  /* class RegionMergingPolicyFactoryBase {
-  public:
-    virtual ~RegionMergingPolicyFactoryBase() {}
-    virtual RegionMergingPolicyPtr build(AdjacencyGraphPtr graph) = 0;
-    }; */
-
-
-  ////
-  ////RegionMergingGraphFactory
-  ////
-  /* class RegionMergingGraphFactory : public RegionMergingPolicyFactoryBase {
-  public:
-    RegionMergingGraphFactory(unsigned maximum_merges_per_connected_component,
-                              unsigned maximum_merges_per_patch,
-                              label_type starting_label);
-    virtual ~RegionMergingGraphFactory() {}
-    virtual RegionMergingPolicyPtr build(AdjacencyGraphPtr graph);
-  private:
-    RegionMergingGraphFactory();
-    unsigned maximum_merges_per_connected_component_;
-    unsigned maximum_merges_per_patch_;
-    label_type starting_label_;
-    }; */
-  
-
   /* IMPLEMENTATIONS */
 
 
@@ -645,38 +616,18 @@ namespace pgmlink {
                                             const U& value) {
     
     AdjacencyGraph::LabelMap& label_map = adjacency_graph_->get(node_label());
-    /*AdjacencyGraph::LabelMap::ValueIt value_it = label_map.beginValue();
-    for (; value_it != label_map.endValue(); ++value_it) {
-      if (*value_it == key) {
-        break;
-      }
-    }*/
+
     AdjacencyGraph::Region region = label_map(key);
     if (region == lemon::INVALID) {
       region = adjacency_graph_->add_region(key);
     }
-    /*if (value_it == label_map.endValue()) {
-      region = adjacency_graph_->add_region(key);
-    } else {
-      region = AdjacencyGraph::LabelMap::ItemIt(label_map, key);
-    }
-    for (value_it = label_map.beginValue();
-         value_it != label_map.endValue(); ++value_it) {
-      if (*value_it == value) {
-        break;
-      }
-    } */
+
     AdjacencyGraph::Region neighbor = label_map(value);
     if (neighbor == lemon::INVALID) {
       neighbor = adjacency_graph_->add_region(value);
     }
-    /*if (value_it == label_map.endValue()) {
-      neighbor = adjacency_graph_->add_region(value);
-    } else {
-      neighbor = AdjacencyGraph::LabelMap::ItemIt(label_map, value);
-    } */
+
     adjacency_graph_->get(node_neighbors()).get_value(region).insert(neighbor);
-    // also add dissimilarity to arcs?
   }
 
 

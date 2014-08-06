@@ -201,15 +201,6 @@ void read_lgf( MultiHypothesesGraph& g, std::istream& is, bool /*with_n_traxel*/
   reader.run();
 }
 
-// namespace {
-// void clear_file(const std::string& filename) {
-//   std::ofstream file;
-//   file.open(filename.c_str(), std::ios::trunc);
-//   file.close();
-// }
-
-// }
-
 void MultiHypothesesGraph::add_classifier_features(ClassifierStrategy* move,
                                                    ClassifierStrategy* division,
                                                    ClassifierStrategy* /*count*/,
@@ -219,10 +210,7 @@ void MultiHypothesesGraph::add_classifier_features(ClassifierStrategy* move,
   add(node_division_features());
   add(node_count_features());
 
-  // // clear_file("classifier_move.log");
-  // // clear_file("classifier_division.log");
-  // // clear_file("classifier_detection.log");
-  
+
   DivisionFeatureMap& division_map = get(node_division_features());
   MoveFeatureMap& move_map = get(node_move_features());
   TraxelMap& traxel_map = get(node_traxel());
@@ -263,7 +251,6 @@ void MultiHypothesesGraph::add_classifier_features(ClassifierStrategy* move,
   for (size_t i = 0; i < nodes.size(); ++i) { // need this for omp
     Node n = this->nodeFromId(i);
     assert(this->valid(n));
-    //  for (NodeIt n(*this); n != lemon::INVALID; ++n) {
     Traxel& trax = traxel_map.get_value(n);
     LOG(logDEBUG1) << "MultiHypothesesGraph::add_classifier_features: classifying region "
                    << trax.Id << " at timestep "
@@ -283,8 +270,6 @@ void MultiHypothesesGraph::add_classifier_features(ClassifierStrategy* move,
     LOG(logDEBUG3) << "MultiHypothesesGraph::add_classifier_features: classifying detections";
     detection->classify(trax, true); // with_predict = true
     assert(trax.features.count("detProb") > 0 && "detProb must be present after classification");
-    // LOG(logDEBUG3) << "MultiHypothesesGraph::add_classifier_features: classifying count";
-    // count->classify(sources);
   }
   classifier_added_ = true;
 }

@@ -146,11 +146,7 @@ namespace pgmlink {
         for (typename std::vector<CoordType >::const_iterator v_it = coordinates.begin();
              v_it != coordinates.end();
              ++v_it) {
-          // for (typename CoordType::const_iterator c_it = coordinates.begin();
-          // c_it != coordinates.end();
-          // ++c_it) {
-          // curr.push_back(*c_it);
-          // }
+
           std::copy(v_it->begin(),
                     v_it->end(),
                     std::back_inserter(curr));
@@ -255,14 +251,10 @@ namespace pgmlink {
       CoupledIterator start = vigra::createCoupledIterator(label_image, label_image);
       CoupledIterator end = start.getEndIterator();
       accumulator_connected_components.ignoreLabel(0);
-      // va::activate<va::Coord<va::Mean> >(accumulator_connected_components);
-      // va::activate<va::Count>(accumulator_connected_components);
       va::extractFeatures(start, end, accumulator_connected_components);
       start = vigra::createCoupledIterator(input_image, input_image);
       end = start.getEndIterator();
       accumulator_split_regions.ignoreLabel(0);
-      // va::activate<va::Coord<va::Mean> >(accumulator_split_regions);
-      // va::activate<va::Count>(accumulator_split_regions);
       va::extractFeatures(start, end, accumulator_split_regions);
 
       LOG(logDEBUG3) << "MultiHypothesesGraphVectorBuilder<T, " << N << ">::build()"
@@ -281,9 +273,6 @@ namespace pgmlink {
       RegionGraph::LevelMap& level_map = graph->get(node_level());
       RegionGraph::ContainingMap& containing_map = graph->get(node_contains());
       for (int i = 1; i <= accumulator.maxRegionLabel(); ++i) {
-        /* std::cout << i << " -- " << va::get<va::Count>(accumulator, i) << " - "
-                  << va::get<va::Coord<va::Mean> >(accumulator, i)[0] << ','
-                  << va::get<va::Coord<va::Mean> >(accumulator, i)[1] << '\n'; */
         Traxel trax(i, timestep);
         trax.features["com"] =
           feature_array(va::get<va::Coord<va::Mean> >(accumulator, i).begin(),
@@ -301,12 +290,6 @@ namespace pgmlink {
                        << "," << trax.features["com"][2] << "; " << trax.features["size"][0];
       }
       
-      // RegionMergingGraph merging_policy(graph,
-      //                                   maximum_merges_per_connected_component_,
-      //                                   maximum_merges_per_patch_,
-      //                                   *vigra::argMax(label_image.begin(), label_image.end())
-      //                                   );
-      // merging_policy.merge();
       RegionGraph::LabelMap::ValueIt value_iterator = label_map.beginValue();
       for (; value_iterator != label_map.endValue(); ++value_iterator) {
         if (*value_iterator <= accumulator.maxRegionLabel()) {

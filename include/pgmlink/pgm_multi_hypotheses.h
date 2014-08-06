@@ -34,8 +34,7 @@
 namespace pgmlink {
 namespace pgm {
 namespace multihypotheses {
-// bool operator==(const std::pair<Traxel, feature_type>& p, const Traxel& t);
-// bool operator==(const Traxel& t, const std::pair<Traxel, feature_type>& p);
+
 typedef opengm::LPCplex<OpengmModel, opengm::Minimizer> OpengmLPCplex;
 using boost::function;
 using std::map;
@@ -308,28 +307,12 @@ class CVPR2014ModelBuilder : public ModelBuilder {
 
   void add_outgoing_factor( const MultiHypothesesGraph&, Model&, const MultiHypothesesGraph::Node& ) const;
   void add_count_factors( const MultiHypothesesGraph&, Model&);
-  // void add_count_factors( const MultiHypothesesGraph& hypotheses, Model& m, OpengmLPCplex& cplex ) const;
   void add_conflict_factors( const MultiHypothesesGraph& hypotheses, Model& m ) const;
 
  private:
   void add_incoming_factor( const MultiHypothesesGraph&, Model&, const MultiHypothesesGraph::Node& ) const;
   void add_detection_factor( const MultiHypothesesGraph&, Model&, const MultiHypothesesGraph::Node& ) const;
-  // void add_outgoing_factor( const MultiHypothesesGraph&,
-  //                           Model&,
-  //                           const MultiHypothesesGraph::Node&,
-  //                           const Traxel&,
-  //                           const std::vector<Traxel>&,
-  //                           feature_type ) const;
-  // void add_incoming_factor( const MultiHypothesesGraph&,
-  //                           Model&,
-  //                           const MultiHypothesesGraph::Node&,
-  //                           const Traxel&,
-  //                           const std::vector<Traxel>&,
-  //                           feature_type );
   void fill_probabilities(feature_array& probabilities, size_t maximum_active_regions ) const;
-  // void add_count_factor( Model& m,
-  // const std::vector<Traxel>& traxels,
-  // size_t maximum_active_regions );
   void add_explicit_count_factor( Model&,
                                   const std::vector<size_t>&,
                                   const Traxel& component_traxel ) const;

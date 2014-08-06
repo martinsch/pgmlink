@@ -32,12 +32,6 @@ MultiHypotheses::~MultiHypotheses() {
   reset();
 }
 
-
-// double MultiHypotheses::forbidden() const {
-//   return builder_->forbidden_cost();
-// }
-
-
 bool MultiHypotheses::with_constraints() const {
   return with_constraints_;
 }
@@ -108,70 +102,6 @@ void MultiHypotheses::conclude( MultiHypothesesGraph& g ) {
     if(solution[it->second] == 1) state = true;
     active_arcs.set(it->first, state);
   }
-
-
-  // MultiHypothesesGraph::node_timestep_map& timesteps = g.get(node_timestep());
-  // for (MultiHypothesesGraph::NodeIt n(g); n != lemon::INVALID; ++n) {
-  //   std::vector<Traxel>& traxels = regions.get_value(n);
-  //   if (builder_->timestep_range_specified() &&
-  //       (timesteps[n] < builder_->first_timestep() || timesteps[n] > builder_->last_timestep())) {
-  //     continue;
-  //   }
-  //   for (std::vector<Traxel>::iterator t = traxels.begin(); t != traxels.end(); ++t) {
-
-  //     // set traxels active
-  //     if (builder_->has_detection_vars()) {
-  //       float state = 0.;
-  //       node_var_map::const_iterator it = linking_model_->var_of_trax().find(*t);
-  //       assert(it != linking_model_->var_of_trax().end());
-  //       if (solution[it->second] == 1) {
-  //         state = 1.;
-  //       }
-  //       t->features["active"] = feature_array(1, state);
-  //       LOG(logDEBUG4) << "conclude: " << *t << ": state = " << state;
-  //     } else {
-  //       t->features["active"] = feature_array(1, 1.);
-  //     }
-
-  //     // add edges lists
-  //     for (MultiHypothesesGraph::OutArcIt a(g, n); a != lemon::INVALID; ++a) {
-  //       if (builder_->timestep_range_specified() &&
-  //           (timesteps[g.target(a)] > builder_->last_timestep())) {
-  //         continue;
-  //       }
-  //       const std::vector<Traxel>& neighbors = regions[g.target(a)];
-  //       for (std::vector<Traxel>::const_iterator neighbor = neighbors.begin();
-  //            neighbor != neighbors.end();
-  //            ++neighbor) {
-  //         arc_var_map::const_iterator it = linking_model_->var_of_arc().find(pgm::multihypotheses::Model::TraxelArc(*t, *neighbor));
-  //         // assert(it != linking_model_->var_of_arc().end());
-  //         if (it != linking_model_->var_of_arc().end() && solution[it->second] == 1) {
-  //           t->features["outgoing"].push_back(neighbor->Id);
-  //         }
-  //       }
-  //     }
-  //     assert(t->features["outgoing"].size() <= 2);
-
-  //     // add parent if any
-  //     for (MultiHypothesesGraph::InArcIt a(g, n); a != lemon::INVALID; ++a) {
-  //       if (builder_->timestep_range_specified() &&
-  //           (timesteps[g.source(a)] < builder_->first_timestep())) {
-  //         continue;
-  //       }
-  //       const std::vector<Traxel>& neighbors = regions[g.source(a)];
-  //       for (std::vector<Traxel>::const_iterator neighbor = neighbors.begin();
-  //            neighbor != neighbors.end();
-  //            ++neighbor) {
-  //         arc_var_map::const_iterator it = linking_model_->var_of_arc().find(pgm::multihypotheses::Model::TraxelArc(*neighbor, *t));
-  //         // assert(it != linking_model_->var_of_arc().end());
-  //         if (it != linking_model_->var_of_arc().end() && solution[it->second] == 1) {
-  //           t->features["parent"].push_back(neighbor->Id);
-  //         }
-  //       }
-  //     }
-  //     assert(t->features["parent"].size() <= 1);
-  //   }
-  // }
 }
 
 
