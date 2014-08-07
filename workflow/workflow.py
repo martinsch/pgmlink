@@ -29,7 +29,7 @@ def readHdf5dataset(fn, internal_path, t, ch, t_axis, ch_axis):
 
 if __name__ == "__main__":
    parser = optparse.OptionParser(usage="%prog [options] [predictionMap.h5]")  
-   parser.add_option('--output', '-o', dest='out', default='./merged_oversegmentation.h5', type=str, help='output file (hdf5) [default=%default]')
+   parser.add_option('--output', '-o', dest='out', default='./result.h5', type=str, help='output file (hdf5) [default=%default]')
    parser.add_option('--internalOut', dest='out_internal', default='exported_data', type=str, help='internal hdf5 path to output dataset [default=%default]')
 
    parser.add_option('--oversegmentationOnly', dest='seg_only', action="store_true", default=False, help='exit workflow after oversegmentation [default=%default]')
@@ -257,7 +257,6 @@ if __name__ == "__main__":
       print
       print 'generate traxelstore'
       print '===================='
-      open('count_classifier.log', 'w').close()
       ts = pgmlink.MultiHypothesesTraxelStore()
       rf_detection = vigra.learning.RandomForest(options.det_fn, options.det_internal)
       with h5py.File(options.det_fn, 'r') as detection_file:
@@ -278,7 +277,10 @@ if __name__ == "__main__":
                       feature_names.add(fff)
           if 'None' in feature_names:
                feature_names.remove('None')
-          margin = tuple(f['margin'].value)
+          try:
+              margin = tuple(f['margin'].value)
+          except:
+              margin = 0
       
       for t in range(t_min, t_max):
          print
