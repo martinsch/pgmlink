@@ -252,12 +252,6 @@ def generateTraxelStore_at(ts, timestep, conflictsMap, regionToConnectedCompMap,
              features = np.append(features, feats_at[feature_name][region_id])
          probs = getDetProbs(rf_det, features[np.newaxis,...], region_id, conflictsMap)
          trax.add_feature_array("count_prediction", len(probs))
-         with open('count_classifier.log', 'a') as log_file:
-             log_file.write('Traxel(%d, %d) ' % (trax.Id, trax.Timestep))
-             for i in range(len(probs)):
-                 trax.set_feature_value("count_prediction", i, float(probs[i]))
-                 log_file.write('%f,' % float(probs[i]))
-             log_file.write('\n')
 
       ts.add(trax, regionToConnectedCompMap[region_id])
 
