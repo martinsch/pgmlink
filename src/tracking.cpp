@@ -221,9 +221,27 @@ bool all_true (InputIterator first, InputIterator last, UnaryPredicate pred) {
 ////
 //// class ConsTracking
 ////
-vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts, TimestepIdCoordinateMapPtr coordinates) {
-  build_hypo_graph(ts);
-  return track(coordinates);
+  vector<vector<Event> > ConsTracking::operator()(TraxelStore& ts, 
+						  TimestepIdCoordinateMapPtr coordinates,
+						  int max_number_objects=3,
+						  bool size_dependent_detection_prob = false,
+						  double forbidden_cost = 0,
+						  double ep_gap=0.01,
+						  double avg_obj_size=30.0,
+						  bool with_tracklets=true,
+						  double division_weight=10.0,
+						  double transition_weight=10.0,
+						  bool with_divisions=true,
+						  double disappearance_cost = 0,
+						  double appearance_cost = 0,
+						  bool with_merger_resolution = true,
+						  int n_dim = 3,
+						  double transition_parameter = 5.,
+						  double border_width = 0,
+						  bool with_constraints = true,
+						  double cplex_timeout = 1e+75) {
+    build_hypo_graph(ts);
+    return track(coordinates, max_number_objects, size_dependent_detection_prob,forbidden_cost,ep_gap,avg_obj_size,with_tracklets,division_weight,transition_weight,with_divisions,disappearance_cost,appearance_cost,with_merger_resolution,n_dim,transition_parameter,border_width,with_constraints,cplex_timeout);
 }
 
 shared_ptr<HypothesesGraph> ConsTracking::build_hypo_graph(TraxelStore& ts) {
@@ -238,64 +256,7 @@ shared_ptr<HypothesesGraph> ConsTracking::build_hypo_graph(TraxelStore& ts) {
 		use_classifier_prior_ = true;
 	}
 
-
-    	if (not use_classifier_prior_ and use_size_dependent_detection_) {
-	        LOG(logDEBUG1) << "preparing for  size dependent prior";
-    		vector<double> means;
-		if (means_.size() == 0 ) {
-			for(int i = 0; i<max_number_objects_+1; ++i) {
-				means.push_back(i*avg_obj_size_);
-				LOG(logINFO) << "mean[" << i << "] = " << means[i];
-			}
-		} else {
-			assert(sigmas_.size() != 0);
-			for(int i = 0; i<max_number_objects_+1; ++i) {
-				means.push_back(means_[i]);
-				LOG(logINFO) << "mean[" << i << "] = " << means[i];
-			}
-		}
-
-		vector<double> sigma2;
-		if (sigmas_.size() == 0) {
-			double s2 = (avg_obj_size_*avg_obj_size_)/4.0;
-			if (s2 < 0.0001) {
-				s2 = 0.0001;
-			}
-			for(int i = 0; i<max_number_objects_+1; ++i) {
-				sigma2.push_back(s2);
-				LOG(logINFO) << "sigma2[" << i << "] = "  << sigma2[i];
-			}
-		} else {
-			for (int i = 0; i<max_number_objects_+1; ++i) {
-				sigma2.push_back(sigmas_[i]);
-				LOG(logINFO) << "sigma2[" << i << "] = "  << sigma2[i];
-			}
-		}
-
-		for(TraxelStore::iterator tr = ts.begin(); tr != ts.end(); ++tr) {
-			Traxel trax = *tr;
-			FeatureMap::const_iterator it = trax.features.find("count");
-			if(it == trax.features.end()) {
-				throw runtime_error("get_detection_prob(): cellness feature not in traxel");
-			}
-			double vol = it->second[0];
-			vector<double> detProb;
-			detProb = computeDetProb(vol,means,sigma2);
-			feature_array detProbFeat(feature_array::difference_type(max_number_objects_+1));
-			for(int i = 0; i<=max_number_objects_; ++i) {
-				double d = detProb[i];
-				if (d < 0.01) {
-					d = 0.01;
-				} else if (d > 0.99) {
-					d = 0.99;
-				}
-				LOG(logDEBUG2) << "detection probability for " << trax.Id << "[" << i << "] = " << d;
-				detProbFeat[i] = d;
-			}
-			trax.features["detProb"] = detProbFeat;
-			ts.replace(tr, trax);
-		}
-	}
+	traxel_store_ = &ts;
 	
 	LOG(logDEBUG1) << "-> building hypotheses" << endl;
 	SingleTimestepTraxel_HypothesesBuilder::Options builder_opts(1, // max_nearest_neighbors
@@ -343,28 +304,106 @@ shared_ptr<HypothesesGraph> ConsTracking::build_hypo_graph(TraxelStore& ts) {
     
   }
 
-  std::vector<std::vector<Event> >ConsTracking::track(TimestepIdCoordinateMapPtr coordinates){
-
+  std::vector<std::vector<Event> >ConsTracking::track(TimestepIdCoordinateMapPtr coordinates,
+						      int max_number_objects=3,
+						      bool size_dependent_detection_prob = false,
+						      double forbidden_cost = 0,
+						      double ep_gap=0.01,
+						      double avg_obj_size=30.0,
+						      bool with_tracklets=true,
+						      double division_weight=10.0,
+						      double transition_weight=10.0,
+						      bool with_divisions=true,
+						      double disappearance_cost = 0,
+						      double appearance_cost = 0,
+						      bool with_merger_resolution = true,
+						      int n_dim = 3,
+						      double transition_parameter = 5.,
+						      double border_width = 0,
+						      bool with_constraints = true,
+						      double cplex_timeout = 1e+75){
+    
     cout << "-> building energy functions " << endl;
+
+
 
 	double detection_weight = 10;
 	Traxels empty;
 	boost::function<double(const Traxel&, const size_t)> detection, division;
 	boost::function<double(const double)> transition;
 
+
 	if (use_classifier_prior_) {
 		LOG(logINFO) << "Using classifier prior";
 		detection = NegLnDetection(detection_weight);
-	} else if (use_size_dependent_detection_) {
+	} else if (size_dependent_detection_prob) {
 		LOG(logINFO) << "Using size dependent prior";
+
+	        LOG(logDEBUG1) << "preparing for  size dependent prior";
+    		vector<double> means;
+		if (means_.size() == 0 ) {
+			for(int i = 0; i<max_number_objects+1; ++i) {
+				means.push_back(i*avg_obj_size);
+				LOG(logINFO) << "mean[" << i << "] = " << means[i];
+			}
+		} else {
+			assert(sigmas_.size() != 0);
+			for(int i = 0; i<max_number_objects+1; ++i) {
+				means.push_back(means_[i]);
+				LOG(logINFO) << "mean[" << i << "] = " << means[i];
+			}
+		}
+
+		vector<double> sigma2;
+		if (sigmas_.size() == 0) {
+			double s2 = (avg_obj_size*avg_obj_size)/4.0;
+			if (s2 < 0.0001) {
+				s2 = 0.0001;
+			}
+			for(int i = 0; i<max_number_objects+1; ++i) {
+				sigma2.push_back(s2);
+				LOG(logINFO) << "sigma2[" << i << "] = "  << sigma2[i];
+			}
+		} else {
+			for (int i = 0; i<max_number_objects+1; ++i) {
+				sigma2.push_back(sigmas_[i]);
+				LOG(logINFO) << "sigma2[" << i << "] = "  << sigma2[i];
+			}
+		}
+
+		for(TraxelStore::iterator tr = traxel_store_->begin(); tr != traxel_store_->end(); ++tr) {
+			Traxel trax = *tr;
+			FeatureMap::const_iterator it = trax.features.find("count");
+			if(it == trax.features.end()) {
+				throw runtime_error("get_detection_prob(): cellness feature not in traxel");
+			}
+			double vol = it->second[0];
+			vector<double> detProb;
+			detProb = computeDetProb(vol,means,sigma2);
+			feature_array detProbFeat(feature_array::difference_type(max_number_objects+1));
+			for(int i = 0; i<=max_number_objects; ++i) {
+				double d = detProb[i];
+				if (d < 0.01) {
+					d = 0.01;
+				} else if (d > 0.99) {
+					d = 0.99;
+				}
+				LOG(logDEBUG2) << "detection probability for " << trax.Id << "[" << i << "] = " << d;
+				detProbFeat[i] = d;
+			}
+			trax.features["detProb"] = detProbFeat;
+			traxel_store_->replace(tr, trax);
+		}
+
+
 		detection = NegLnDetection(detection_weight); // weight 1
 	} else {
 		LOG(logINFO) << "Using hard prior";
 		// assume a quasi geometric distribution
 		vector<double> prob_vector;
-		double p = 0.7; // e.g. for max_number_objects_=3, p=0.7: P(X=(0,1,2,3)) = (0.027, 0.7, 0.21, 0.063)
+		double p = 0.7; // e.g. for max_number_objects=3, p=0.7: P(X=(0,1,2,3)) = (0.027, 0.7, 0.21, 0.063)
 		double sum = 0;
-		for(double state = 0; state < max_number_objects_; ++state) {
+		for(double state = 0; state < max_number_objects; ++state) {
 			double prob = p*pow(1-p,state);
 			prob_vector.push_back(prob);
 			sum += prob;
@@ -374,42 +413,42 @@ shared_ptr<HypothesesGraph> ConsTracking::build_hypo_graph(TraxelStore& ts) {
 		detection = boost::bind<double>(NegLnConstant(detection_weight,prob_vector), _2);
 	}
 
-	LOG(logDEBUG1) << "division_weight_ = " << division_weight_;
-	LOG(logDEBUG1) << "transition_weight_ = " << transition_weight_;
-	division = NegLnDivision(division_weight_);
-	transition = NegLnTransition(transition_weight_);
+	LOG(logDEBUG1) << "division_weight = " << division_weight;
+	LOG(logDEBUG1) << "transition_weight = " << transition_weight;
+	division = NegLnDivision(division_weight);
+	transition = NegLnTransition(transition_weight);
 
 	//border_width_ is given in normalized scale, 1 corresponds to a maximal distance of dim_range/2
 	boost::function<double(const Traxel&)> appearance_cost_fn, disappearance_cost_fn;
-	LOG(logINFO) << "using border-aware appearance and disappearance costs, with absolute margin: " << border_width_;
-	appearance_cost_fn = SpatialBorderAwareWeight(appearance_cost_,
-												border_width_,
+	LOG(logINFO) << "using border-aware appearance and disappearance costs, with absolute margin: " << border_width;
+	appearance_cost_fn = SpatialBorderAwareWeight(appearance_cost,
+												border_width,
 												false, // true if relative margin to border
 												fov_);
-	disappearance_cost_fn = SpatialBorderAwareWeight(disappearance_cost_,
-												border_width_,
+	disappearance_cost_fn = SpatialBorderAwareWeight(disappearance_cost,
+												border_width,
 												false, // true if relative margin to border
 												fov_);
 
 	cout << "-> init ConservationTracking reasoner" << endl;
 	
 	ConservationTracking pgm(
-			max_number_objects_,
+			max_number_objects,
 			detection,
 			division,
 			transition,
-			forbidden_cost_,
-			ep_gap_,
-			with_tracklets_,
-			with_divisions_,
+			forbidden_cost,
+			ep_gap,
+			with_tracklets,
+			with_divisions,
 			disappearance_cost_fn,
 			appearance_cost_fn,
 			true, // with_misdetections_allowed
 			true, // with_appearance
 			true, // with_disappearance
-			transition_parameter_,
-            with_constraints_,
-            cplex_timeout_
+			transition_parameter,
+            with_constraints,
+            cplex_timeout
 			);
 
 	cout << "-> formulate ConservationTracking model" << endl;
@@ -431,7 +470,7 @@ shared_ptr<HypothesesGraph> ConsTracking::build_hypo_graph(TraxelStore& ts) {
 	boost::shared_ptr<std::vector< std::vector<Event> > > ev = events(*hypotheses_graph_);
 
 
-	if (max_number_objects_ > 1 && with_merger_resolution_ && all_true(ev->begin()+1, ev->end(), has_data<Event>)) {
+	if (max_number_objects > 1 && with_merger_resolution && all_true(ev->begin()+1, ev->end(), has_data<Event>)) {
 	  cout << "-> resolving mergers" << endl;
 	  MergerResolver m(hypotheses_graph_.get());
 	  FeatureExtractorBase* extractor;
@@ -439,7 +478,7 @@ shared_ptr<HypothesesGraph> ConsTracking::build_hypo_graph(TraxelStore& ts) {
 	  if (coordinates) {
 	    extractor = new FeatureExtractorArmadillo(coordinates);
 	  } else {
-	    calculate_gmm_beforehand(*hypotheses_graph_, 1, number_of_dimensions_);
+	    calculate_gmm_beforehand(*hypotheses_graph_, 1, n_dim);
 	    extractor = new FeatureExtractorMCOMsFromMCOMs;
 	  }
 	  FeatureHandlerFromTraxels handler(*extractor, distance);
@@ -447,7 +486,7 @@ shared_ptr<HypothesesGraph> ConsTracking::build_hypo_graph(TraxelStore& ts) {
 	  m.resolve_mergers(handler);
 	  
 	  HypothesesGraph g_res;
-	  resolve_graph(*hypotheses_graph_, g_res, transition, ep_gap_, with_tracklets_, transition_parameter_, with_constraints_);
+	  resolve_graph(*hypotheses_graph_, g_res, transition, ep_gap, with_tracklets, transition_parameter, with_constraints);
 	  prune_inactive(*hypotheses_graph_);
 
 	  cout << "-> constructing resolved events" << endl;
