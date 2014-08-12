@@ -162,25 +162,27 @@ namespace pgmlink {
       {}
 
 
-      PGMLINK_EXPORT std::vector< std::vector<Event> > operator()(TraxelStore& ts,
-								  TimestepIdCoordinateMapPtr coordinates,// = TimestepIdCoordinateMapPtr()
-								  int max_number_objects,
-								  bool size_dependent_detection_prob,
-								  double forbidden_cost,
-								  double ep_gap,
-								  double avg_obj_size,
-								  bool with_tracklets,
-								  double division_weight,
-								  double transition_weight,
-								  bool with_divisions,
-								  double disappearance_cost,
-								  double appearance_cost,
-								  bool with_merger_resolution,
-								  int n_dim,
-								  double transition_parameter,
-								  double border_width,
-								  bool with_constraints,
-								  double cplex_timeout);
+    PGMLINK_EXPORT std::vector< std::vector<Event> > operator()(TraxelStore& ts, 
+								int max_number_objects=3,
+								bool size_dependent_detection_prob = false,
+								double forbidden_cost = 0,
+								double ep_gap=0.01,
+								double avg_obj_size=30.0,
+								bool with_tracklets=true,
+								double division_weight=10.0,
+								double transition_weight=10.0,
+								bool with_divisions=true,
+								double disappearance_cost = 0,
+								double appearance_cost = 0,
+								bool with_merger_resolution = true,
+								int n_dim = 3,
+								double transition_parameter = 5.,
+								double border_width = 0,
+								bool with_constraints = true,
+								double cplex_timeout = 1e+75,
+								TimestepIdCoordinateMapPtr coordinates = TimestepIdCoordinateMapPtr());
+
+
       
       /**
        * refactoring of operator().
@@ -188,25 +190,24 @@ namespace pgmlink {
 
       PGMLINK_EXPORT shared_ptr<HypothesesGraph> build_hypo_graph(TraxelStore& ts);
 
-      PGMLINK_EXPORT std::vector<std::vector<Event> > track(TimestepIdCoordinateMapPtr coordinates,
-							    int max_number_objects,
-							    bool size_dependent_detection_prob,
-							    double forbidden_cost,
-							    double ep_gap,
-							    double avg_obj_size,
-							    bool with_tracklets,
-							    double division_weight,
-							    double transition_weight,
-							    bool with_divisions,
-							    double disappearance_cost,
-							    double appearance_cost,
-							    bool with_merger_resolution,
-							    int n_dim,
-							    double transition_parameter,
-							    double border_width,
-							    bool with_constraints,
-							    double cplex_timeout
-							    );
+      PGMLINK_EXPORT std::vector<std::vector<Event> > track(int max_number_objects=3,
+								bool size_dependent_detection_prob = false,
+								double forbidden_cost = 0,
+								double ep_gap=0.01,
+								double avg_obj_size=30.0,
+								bool with_tracklets=true,
+								double division_weight=10.0,
+								double transition_weight=10.0,
+								bool with_divisions=true,
+								double disappearance_cost = 0,
+								double appearance_cost = 0,
+								bool with_merger_resolution = true,
+								int n_dim = 3,
+								double transition_parameter = 5.,
+								double border_width = 0,
+								bool with_constraints = true,
+								double cplex_timeout = 1e+75,
+								TimestepIdCoordinateMapPtr coordinates = TimestepIdCoordinateMapPtr());
 
 
 
