@@ -249,13 +249,6 @@ shared_ptr<HypothesesGraph> ConsTracking::build_hypo_graph(TraxelStore& ts) {
   
   LOG(logDEBUG3) << "enering build_hypo_graph"<< endl;;
   
-	use_classifier_prior_ = false;
-	Traxel trax = *(ts.begin());
-	FeatureMap::const_iterator it = trax.features.find("detProb");
-	if(it != trax.features.end()) {
-		use_classifier_prior_ = true;
-	}
-
 	traxel_store_ = &ts;
 	
 	LOG(logDEBUG1) << "-> building hypotheses" << endl;
@@ -332,8 +325,15 @@ shared_ptr<HypothesesGraph> ConsTracking::build_hypo_graph(TraxelStore& ts) {
 	boost::function<double(const Traxel&, const size_t)> detection, division;
 	boost::function<double(const double)> transition;
 
+	bool use_classifier_prior = false;
+	Traxel trax = *(traxel_store_->begin());
+	FeatureMap::const_iterator it = trax.features.find("detProb");
+	if(it != trax.features.end()) {
+		use_classifier_prior = true;
+	}
 
-	if (use_classifier_prior_) {
+
+	if (use_classifier_prior) {
 		LOG(logINFO) << "Using classifier prior";
 		detection = NegLnDetection(detection_weight);
 	} else if (size_dependent_detection_prob) {

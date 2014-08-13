@@ -22,7 +22,7 @@ vector<vector<Event> > pythonChaingraphTracking(ChaingraphTracking& tr, TraxelSt
 	// release the GIL
 	Py_BEGIN_ALLOW_THREADS
 	try {
-		result = tr(ts);
+	  result = tr(ts);
 	} catch (std::exception& e) {
 		Py_BLOCK_THREADS
 		throw;
@@ -31,19 +31,54 @@ vector<vector<Event> > pythonChaingraphTracking(ChaingraphTracking& tr, TraxelSt
 	return result;
 }
 
-vector<vector<Event> > pythonConsTracking(ConsTracking& tr, TraxelStore& ts, TimestepIdCoordinateMapPtr& coordinates) {
+vector<vector<Event> > pythonConsTracking(ConsTracking& tr, TraxelStore& ts, TimestepIdCoordinateMapPtr& coordinates,
+					  int    max_number_objects,
+					  bool   size_dependent_detection_prob,
+					  double forbidden_cost,
+					  double ep_gap,
+					  double avg_obj_size,
+					  bool   with_tracklets,
+					  double division_weight,
+					  double transition_weight,
+					  bool   with_divisions,
+					  double disappearance_cost,
+					  double appearance_cost,
+					  bool   with_merger_resolution,
+					  int    n_dim,
+					  double transition_parameter,
+					  double border_width,
+					  bool   with_constraints,
+					  double cplex_timeout) {
 	vector<vector<Event> > result = std::vector<std::vector<Event> >(0);
 	// release the GIL
 	Py_BEGIN_ALLOW_THREADS
 	try {
-		result = tr(ts, coordinates);
+		result = tr(ts,
+			    max_number_objects,
+			    size_dependent_detection_prob,
+			    forbidden_cost,
+			    ep_gap,
+			    avg_obj_size,
+			    with_tracklets,
+			    division_weight,
+			    transition_weight,
+			    with_divisions,
+			    disappearance_cost,
+			    appearance_cost,
+			    with_merger_resolution,
+			    n_dim,
+			    transition_parameter,
+			    border_width,
+			    with_constraints,
+			    cplex_timeout,
+			    coordinates);
 	} catch (std::exception& e) {
 		Py_BLOCK_THREADS
 		throw;
 	}
 	Py_END_ALLOW_THREADS
 	return result;
-}
+	}
 
 void export_track() {
     class_<vector<Event> >("EventVector")
@@ -77,17 +112,9 @@ void export_track() {
     ;
 
     class_<ConsTracking>("ConsTracking",
-                         init<int,double,double,string,bool,double,double,double,bool,double,double,bool,
-                         double,double, bool, int, double, double, FieldOfView, bool, double, string>(
-						args("max_number_objects", "max_neighbor_distance", "division_threshold",
-							"detection_rf_filename", "size_dependent_detection_prob", "forbidden_cost",
-							"ep_gap", "avg_obj_size",
-							"with_tracklets",
-							"division_weight", "transition_weight",
-							"with_divisions",
-							 "disappearance_cost", "appearance_cost", "with_merger_resolution", "number_of_dimensions",
-                             "transition_parameter", "border_width", "fov", "with_constraints", "cplex_timeout",
-                             "event_vector_dump_filename"
+                         init<double,double,string,FieldOfView, string>(
+						args("max_neighbor_distance", "division_threshold",
+						     "detection_rf_filename", "fov", "event_vector_dump_filename"
                              )))
       .def("__call__", &pythonConsTracking)
           .def("buildGraph", &ConsTracking::build_hypo_graph)

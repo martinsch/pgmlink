@@ -222,7 +222,7 @@ namespace pgmlink {
       double division_threshold_;
       const std::string detection_rf_fn_;
       //bool use_size_dependent_detection_;
-      bool use_classifier_prior_;
+      //bool use_classifier_prior_;
       /*double forbidden_cost_;
       double ep_gap_;
       double avg_obj_size_;
