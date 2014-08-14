@@ -381,7 +381,7 @@ shared_ptr<HypothesesGraph> ConsTracking::build_hypo_graph(TraxelStore& ts) {
 						      double cplex_timeout,
 						      TimestepIdCoordinateMapPtr coordinates){
     
-    LOG(logDEBUG1) << "\033[1;31m"  <<"max_number_objects  \t"<< max_number_objects_  ; 
+    LOG(logDEBUG1) <<"max_number_objects  \t"<< max_number_objects_  ; 
     LOG(logDEBUG1) <<"size_dependent_detection_prob\t"<<  use_size_dependent_detection_ ; 
     LOG(logDEBUG1) <<"forbidden_cost\t"<<      forbidden_cost; 
     LOG(logDEBUG1) <<"ep_gap\t"<<      ep_gap; 
@@ -397,13 +397,9 @@ shared_ptr<HypothesesGraph> ConsTracking::build_hypo_graph(TraxelStore& ts) {
     LOG(logDEBUG1) <<"transition_parameter\t"<<      transition_parameter; 
     LOG(logDEBUG1) <<"border_width\t"<<      border_width; 
     LOG(logDEBUG1) <<"with_constraints\t"<<      with_constraints; 
-    LOG(logDEBUG1) <<"cplex_timeout\t"<<      cplex_timeout<< "\033[0m";
+    LOG(logDEBUG1) <<"cplex_timeout\t"<<      cplex_timeout;
     
     
-    
-    LOG(logINFO)     << "-> building energy functions "  <<endl;
-
-
 
 	double detection_weight = 10;
 	Traxels empty;
