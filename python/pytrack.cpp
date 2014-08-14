@@ -32,11 +32,8 @@ vector<vector<Event> > pythonChaingraphTracking(ChaingraphTracking& tr, TraxelSt
 }
 
 vector<vector<Event> > pythonConsTracking(ConsTracking& tr, TraxelStore& ts, TimestepIdCoordinateMapPtr& coordinates,
-					  int    max_number_objects,
-					  bool   size_dependent_detection_prob,
 					  double forbidden_cost,
 					  double ep_gap,
-					  double avg_obj_size,
 					  bool   with_tracklets,
 					  double division_weight,
 					  double transition_weight,
@@ -54,11 +51,8 @@ vector<vector<Event> > pythonConsTracking(ConsTracking& tr, TraxelStore& ts, Tim
 	Py_BEGIN_ALLOW_THREADS
 	try {
 		result = tr(ts,
-			    max_number_objects,
-			    size_dependent_detection_prob,
 			    forbidden_cost,
 			    ep_gap,
-			    avg_obj_size,
 			    with_tracklets,
 			    division_weight,
 			    transition_weight,
@@ -112,10 +106,8 @@ void export_track() {
     ;
 
     class_<ConsTracking>("ConsTracking",
-                         init<double,double,string,FieldOfView, string>(
-						args("max_neighbor_distance", "division_threshold",
-						     "detection_rf_filename", "fov", "event_vector_dump_filename"
-                             )))
+                         init<int,bool,double,double,double,string,FieldOfView, string>(
+						args("max_number_objects","size_dependent_detection_prob","avg_obj_size","max_neighbor_distance", "division_threshold","detection_rf_filename", "fov", "event_vector_dump_filename")))
       .def("__call__", &pythonConsTracking)
           .def("buildGraph", &ConsTracking::build_hypo_graph)
           .def("track", &ConsTracking::track)

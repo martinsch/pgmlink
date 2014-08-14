@@ -60,14 +60,15 @@ BOOST_AUTO_TEST_CASE( Event_Serialization )
 
     FieldOfView fov(0, 0, 0, 0, 4, 5, 5, 5); // tlow, xlow, ylow, zlow, tup, xup, yup, zup
     ConsTracking tracking = ConsTracking(
-		  //2, // max_number_objects
+		  2, // max_number_objects
+		  false, // detection_by_volume
+		  double(1.1), // avg_obj_size
                   20, // max_neighbor_distance
                   0.3, // division_threshold
                   "none", // random_forest_filename
 		  /*false, // detection_by_volume
                   0, // forbidden_cost
                   0.0, // ep_gap
-                  double(1.1), // avg_obj_size
                   false, // with_tracklets
                   10.0, //division_weight
                   10.0, //transition_weight
@@ -83,11 +84,8 @@ BOOST_AUTO_TEST_CASE( Event_Serialization )
 
 
     std::vector< std::vector<Event> > events = tracking(ts, 
-							2, // max_number_objects
-							false, // detection_by_volume
 							0, // forbidden_cost
 							0.0, // ep_gap
-							double(1.1), // avg_obj_size
 							false, // with_tracklets
 							10.0, //division_weight
 							10.0, //transition_weight

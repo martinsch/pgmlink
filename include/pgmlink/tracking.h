@@ -147,27 +147,31 @@ namespace pgmlink {
   {
     public:
       PGMLINK_EXPORT 
-	ConsTracking(double max_neighbor_distance = 20,
-                    double division_threshold = 0.3,
-                    const std::string& random_forest_filename = "none",
-                    FieldOfView fov = FieldOfView(),
-                    const std::string& event_vector_dump_filename = "none"
-                   )
-        :max_dist_(max_neighbor_distance), division_threshold_(division_threshold),
-        detection_rf_fn_(random_forest_filename),
-        means_(std::vector<double>()),
-        sigmas_(std::vector<double>()),
-        fov_(fov),
-        event_vector_dump_filename_(event_vector_dump_filename)
+	ConsTracking(int max_number_objects=3,
+		     bool size_dependent_detection_prob = false,
+		     double avg_obj_size=30.0,
+		     double max_neighbor_distance = 20,
+		     double division_threshold = 0.3,
+		     const std::string& random_forest_filename = "none",
+		     FieldOfView fov = FieldOfView(),
+		     const std::string& event_vector_dump_filename = "none"
+		     )
+        :max_number_objects_(max_number_objects),
+      max_dist_(max_neighbor_distance),
+      division_threshold_(division_threshold),
+      detection_rf_fn_(random_forest_filename),
+      use_size_dependent_detection_(size_dependent_detection_prob),
+      avg_obj_size_(avg_obj_size),
+      means_(std::vector<double>()),
+      sigmas_(std::vector<double>()),
+      fov_(fov),
+      event_vector_dump_filename_(event_vector_dump_filename)
       {}
 
 
     PGMLINK_EXPORT std::vector< std::vector<Event> > operator()(TraxelStore& ts, 
-								int max_number_objects=3,
-								bool size_dependent_detection_prob = false,
 								double forbidden_cost = 0,
 								double ep_gap=0.01,
-								double avg_obj_size=30.0,
 								bool with_tracklets=true,
 								double division_weight=10.0,
 								double transition_weight=10.0,
@@ -190,24 +194,21 @@ namespace pgmlink {
 
       PGMLINK_EXPORT shared_ptr<HypothesesGraph> build_hypo_graph(TraxelStore& ts);
 
-      PGMLINK_EXPORT std::vector<std::vector<Event> > track(int max_number_objects=3,
-								bool size_dependent_detection_prob = false,
-								double forbidden_cost = 0,
-								double ep_gap=0.01,
-								double avg_obj_size=30.0,
-								bool with_tracklets=true,
-								double division_weight=10.0,
-								double transition_weight=10.0,
-								bool with_divisions=true,
-								double disappearance_cost = 0,
-								double appearance_cost = 0,
-								bool with_merger_resolution = true,
-								int n_dim = 3,
-								double transition_parameter = 5.,
-								double border_width = 0,
-								bool with_constraints = true,
-								double cplex_timeout = 1e+75,
-								TimestepIdCoordinateMapPtr coordinates = TimestepIdCoordinateMapPtr());
+      PGMLINK_EXPORT std::vector<std::vector<Event> > track(double forbidden_cost = 0,
+							    double ep_gap=0.01,
+							    bool with_tracklets=true,
+							    double division_weight=10.0,
+							    double transition_weight=10.0,
+							    bool with_divisions=true,
+							    double disappearance_cost = 0,
+							    double appearance_cost = 0,
+							    bool with_merger_resolution = true,
+							    int n_dim = 3,
+							    double transition_parameter = 5.,
+							    double border_width = 0,
+							    bool with_constraints = true,
+							    double cplex_timeout = 1e+75,
+							    TimestepIdCoordinateMapPtr coordinates = TimestepIdCoordinateMapPtr());
 
 
 
@@ -217,16 +218,16 @@ namespace pgmlink {
       PGMLINK_EXPORT std::vector< std::map<unsigned int, bool> > detections();
 
     private:
-      //int max_number_objects_;
+      int max_number_objects_;
       double max_dist_;
       double division_threshold_;
       const std::string detection_rf_fn_;
-      //bool use_size_dependent_detection_;
-      //bool use_classifier_prior_;
+      bool use_size_dependent_detection_;
+      bool use_classifier_prior_;
       /*double forbidden_cost_;
-      double ep_gap_;
+	double ep_gap_;*/
       double avg_obj_size_;
-      bool with_tracklets_;
+      /*bool with_tracklets_;
       double division_weight_;
       double transition_weight_;*/
       bool with_divisions_;
