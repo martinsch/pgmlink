@@ -1030,7 +1030,6 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Merger3 ) {
 					 99999, // max_neighbor_distance
 					 0.1, // division_threshold
 					 "none", // random_forest_filename
-					 /**/
 					 fov
 					 );
 
@@ -1354,7 +1353,6 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_TranslationVector_Tracklets 
 					 301, // max_neighbor_distance
 					 0.5, // division_threshold
 					 "none", // random_forest_filename
-					 /**/
 					 fov
 					 );
 
@@ -1757,7 +1755,6 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_TranslationVector2 ) {
 					 301, // max_neighbor_distance
 					 0.5, // division_threshold
 					 "none", // random_forest_filename
-					 /**/
 					 fov
 					 );
 
