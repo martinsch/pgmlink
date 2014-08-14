@@ -224,23 +224,11 @@ namespace pgmlink {
       const std::string detection_rf_fn_;
       bool use_size_dependent_detection_;
       bool use_classifier_prior_;
-      /*double forbidden_cost_;
-	double ep_gap_;*/
       double avg_obj_size_;
-      /*bool with_tracklets_;
-      double division_weight_;
-      double transition_weight_;*/
       bool with_divisions_;
-      //double disappearance_cost_, appearance_cost_;
       std::vector<double> means_, sigmas_;
-      //bool with_merger_resolution_;
       shared_ptr<std::vector< std::map<unsigned int, bool> > > last_detections_;
-      //int number_of_dimensions_;
-      //double transition_parameter_;
-      //double border_width_;
       FieldOfView fov_;
-      //bool with_constraints_;
-      //double cplex_timeout_;
       std::string event_vector_dump_filename_;
 
       TraxelStore* traxel_store_;
