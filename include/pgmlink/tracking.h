@@ -151,6 +151,7 @@ namespace pgmlink {
 		     bool size_dependent_detection_prob = false,
 		     double avg_obj_size=30.0,
 		     double max_neighbor_distance = 20,
+		     bool with_divisions=true,
 		     double division_threshold = 0.3,
 		     const std::string& random_forest_filename = "none",
 		     FieldOfView fov = FieldOfView(),
@@ -158,6 +159,7 @@ namespace pgmlink {
 		     )
         :max_number_objects_(max_number_objects),
       max_dist_(max_neighbor_distance),
+      with_divisions_(with_divisions),
       division_threshold_(division_threshold),
       detection_rf_fn_(random_forest_filename),
       use_size_dependent_detection_(size_dependent_detection_prob),
@@ -175,7 +177,6 @@ namespace pgmlink {
 								bool with_tracklets=true,
 								double division_weight=10.0,
 								double transition_weight=10.0,
-								bool with_divisions=true,
 								double disappearance_cost = 0,
 								double appearance_cost = 0,
 								bool with_merger_resolution = true,
@@ -199,7 +200,6 @@ namespace pgmlink {
 							    bool with_tracklets=true,
 							    double division_weight=10.0,
 							    double transition_weight=10.0,
-							    bool with_divisions=true,
 							    double disappearance_cost = 0,
 							    double appearance_cost = 0,
 							    bool with_merger_resolution = true,
@@ -220,12 +220,12 @@ namespace pgmlink {
     private:
       int max_number_objects_;
       double max_dist_;
+      bool with_divisions_;
       double division_threshold_;
       const std::string detection_rf_fn_;
       bool use_size_dependent_detection_;
       bool use_classifier_prior_;
       double avg_obj_size_;
-      bool with_divisions_;
       std::vector<double> means_, sigmas_;
       shared_ptr<std::vector< std::map<unsigned int, bool> > > last_detections_;
       FieldOfView fov_;

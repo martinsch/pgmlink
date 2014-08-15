@@ -64,6 +64,7 @@ BOOST_AUTO_TEST_CASE( Event_Serialization )
 		  false, // detection_by_volume
 		  double(1.1), // avg_obj_size
                   20, // max_neighbor_distance
+                  true, //with_divisions
                   0.3, // division_threshold
                   "none", // random_forest_filename
 		  /*false, // detection_by_volume
@@ -72,7 +73,6 @@ BOOST_AUTO_TEST_CASE( Event_Serialization )
                   false, // with_tracklets
                   10.0, //division_weight
                   10.0, //transition_weight
-                  true, //with_divisions
                   1500., // disappearance_cost,
                   1500., // appearance_cost
                   false, //with_merger_resolution
@@ -89,7 +89,6 @@ BOOST_AUTO_TEST_CASE( Event_Serialization )
 							false, // with_tracklets
 							10.0, //division_weight
 							10.0, //transition_weight
-							true, //with_divisions
 							1500., // disappearance_cost,
 							1500., // appearance_cost
 							false, //with_merger_resolution

@@ -227,7 +227,6 @@ bool all_true (InputIterator first, InputIterator last, UnaryPredicate pred) {
 						  bool with_tracklets,
 						  double division_weight,
 						  double transition_weight,
-						  bool with_divisions,
 						  double disappearance_cost,
 						  double appearance_cost,
 						  bool with_merger_resolution,
@@ -238,7 +237,7 @@ bool all_true (InputIterator first, InputIterator last, UnaryPredicate pred) {
 						  double cplex_timeout,
 						  TimestepIdCoordinateMapPtr coordinates) {
     build_hypo_graph(ts);
-    return track(forbidden_cost,ep_gap,with_tracklets,division_weight,transition_weight,with_divisions,disappearance_cost,appearance_cost,with_merger_resolution,n_dim,transition_parameter,border_width,with_constraints,cplex_timeout,coordinates);
+    return track(forbidden_cost,ep_gap,with_tracklets,division_weight,transition_weight,disappearance_cost,appearance_cost,with_merger_resolution,n_dim,transition_parameter,border_width,with_constraints,cplex_timeout,coordinates);
 }
 
 shared_ptr<HypothesesGraph> ConsTracking::build_hypo_graph(TraxelStore& ts) {
@@ -257,10 +256,6 @@ shared_ptr<HypothesesGraph> ConsTracking::build_hypo_graph(TraxelStore& ts) {
 	} else {
 	        LOG(logDEBUG3) << "COULD find detProb!!";
 	}
-
-	//int max_number_objects_ =5;
-	//double avg_obj_size_=30.0;
-	//	bool size_dependent_detection_prob_ = true;
 
 	if(not use_classifier_prior_ and use_size_dependent_detection_){
 	        LOG(logDEBUG3) << "creating detProb feature in traxel store!!";
@@ -330,8 +325,8 @@ shared_ptr<HypothesesGraph> ConsTracking::build_hypo_graph(TraxelStore& ts) {
 	SingleTimestepTraxel_HypothesesBuilder hyp_builder(traxel_store_, builder_opts);
 	hypotheses_graph_ = boost::shared_ptr<HypothesesGraph>(hyp_builder.build());
 
-	LOG(logDEBUG1) << "ConsTracking(): adding distance property to edges";
-	(hypotheses_graph_)->add(arc_distance()).add(tracklet_intern_dist()).add(node_tracklet()).add(tracklet_intern_arc_ids()).add(traxel_arc_id());
+	hypotheses_graph_->add(arc_distance()).add(tracklet_intern_dist()).add(node_tracklet()).add(tracklet_intern_arc_ids()).add(traxel_arc_id());
+ 	
 	property_map<arc_distance, HypothesesGraph::base_graph>::type& arc_distances = (hypotheses_graph_)->get(arc_distance());
 	property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = (hypotheses_graph_)->get(node_traxel());
 	bool with_optical_correction = false;
@@ -370,7 +365,6 @@ shared_ptr<HypothesesGraph> ConsTracking::build_hypo_graph(TraxelStore& ts) {
 						      bool with_tracklets,
 						      double division_weight,
 						      double transition_weight,
-						      bool with_divisions,
 						      double disappearance_cost,
 						      double appearance_cost,
 						      bool with_merger_resolution,
@@ -389,7 +383,7 @@ shared_ptr<HypothesesGraph> ConsTracking::build_hypo_graph(TraxelStore& ts) {
     LOG(logDEBUG1) <<"with_tracklets\t"<<      with_tracklets; 
     LOG(logDEBUG1) <<"division_weight\t"<<      division_weight; 
     LOG(logDEBUG1) <<"transition_weight\t"<<      transition_weight; 
-    LOG(logDEBUG1) <<"with_divisions\t"<<      with_divisions; 
+    LOG(logDEBUG1) <<"with_divisions\t"<<      with_divisions_; 
     LOG(logDEBUG1) <<"disappearance_cost\t"<<      disappearance_cost; 
     LOG(logDEBUG1) <<"appearance_cost\t"<<      appearance_cost; 
     LOG(logDEBUG1) <<"with_merger_resolution\t"<<      with_merger_resolution; 
@@ -458,7 +452,7 @@ shared_ptr<HypothesesGraph> ConsTracking::build_hypo_graph(TraxelStore& ts) {
 			forbidden_cost,
 			ep_gap,
 			with_tracklets,
-			with_divisions,
+			with_divisions_,
 			disappearance_cost_fn,
 			appearance_cost_fn,
 			true, // with_misdetections_allowed

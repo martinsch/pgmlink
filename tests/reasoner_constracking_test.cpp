@@ -76,6 +76,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Merger ) {
 					     false, // detection_by_volume
 					     double(1.1), // avg_obj_size
 					     20, // max_neighbor_distance
+					     true, //with_divisions
 					     0.3, // division_threshold
 					     "none", // random_forest_filename
 					     fov
@@ -90,7 +91,6 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Merger ) {
 							    false, // with_tracklets
 							    10.0, //division_weight
 							    10.0, //transition_weight
-							    true, //with_divisions
 							    1500., // disappearance_cost,
 							    1500., // appearance_cost
 							    false, //with_merger_resolution
@@ -173,6 +173,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Division ) {
 					     false, // detection_by_volume
 					     double(1.1), // avg_obj_size
 					     20, // max_neighbor_distance
+					     true, //with_divisions
 					     0.3, // division_threshold
 					     "none", // random_forest_filename
 					     fov
@@ -187,7 +188,6 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Division ) {
 							    false, // with_tracklets
 							    10.0, //division_weight
 							    10.0, //transition_weight
-							    true, //with_divisions
 							    1500., // disappearance_cost,
 							    1500., // appearance_cost
 							    false, //with_merger_resolution
@@ -255,6 +255,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_SimpleMove ) {
 					     false, // detection_by_volume
 					     double(1.1), // avg_obj_size
 					     20, // max_neighbor_distance
+					     true, //with_divisions
 					     0.3, // division_threshold
 					     "none", // random_forest_filename
 					     fov
@@ -268,7 +269,6 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_SimpleMove ) {
 							    false, // with_tracklets
 							    10.0, //division_weight
 							    10.0, //transition_weight
-							    true, //with_divisions
 							    1500., // disappearance_cost,
 							    1500., // appearance_cost
 							    false, //with_merger_resolution
@@ -341,6 +341,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Merger_Volume ) {
 					     true, // detection_by_volume
 					     double(99), // avg_obj_size
 					     20, // max_neighbor_distance
+					     true, //with_divisions
 					     0.3, // division_threshold
 					     "none", // random_forest_filename
 					     fov
@@ -354,7 +355,6 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Merger_Volume ) {
 							    false, // with_tracklets
 							    10.0, //division_weight
 							    10.0, //transition_weight
-							    true, //with_divisions
 							    1500., // disappearance_cost,
 							    1500., // appearance_cost
 							    false, //with_merger_resolution
@@ -432,6 +432,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Disappearance ) {
 					     true, // detection_by_volume
 					     double(1), // avg_obj_size
 					     20, // max_neighbor_distance
+					     true, //with_divisions
 					     0.3, // division_threshold
 					     "none", // random_forest_filename
 					     fov
@@ -445,7 +446,6 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Disappearance ) {
 							    false, // with_tracklets
 							    10.0, //division_weight
 							    10.0, //transition_weight
-							    true, //with_divisions
 							    1500., // disappearance_cost,
 							    1500., // appearance_cost
 							    false, //with_merger_resolution
@@ -525,6 +525,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_AppearanceAndDisappearance )
 					     true, // detection_by_volume
 					     double(1.), // avg_obj_size
 					     20, // max_neighbor_distance
+					     true, //with_divisions
 					     0.3, // division_threshold
 					     "none", // random_forest_filename
 					     fov
@@ -538,7 +539,6 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_AppearanceAndDisappearance )
 							    false, // with_tracklets
 							    10.0, //division_weight
 							    10.0, //transition_weight
-							    true, //with_divisions
 							    1500., // disappearance_cost,
 							    1500., // appearance_cost
 							    false, //with_merger_resolution
@@ -651,6 +651,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Appearance ) {
 					     true, // detection_by_volume
 					     double(1), // avg_obj_size
 					     2, // max_neighbor_distance
+					     true, //with_divisions
 					     0.3, // division_threshold
 					     "none", // random_forest_filename
 					     fov
@@ -664,7 +665,6 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Appearance ) {
 							    false, // with_tracklets
 							    10.0, //division_weight
 							    10.0, //transition_weight
-							    true, //with_divisions
 							    10., // disappearance_cost,
 							    10., // appearance_cost
 							    false, //with_merger_resolution
@@ -758,6 +758,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_AppearanceSimple ) {
 					     true, // detection_by_volume
 					     double(1), // avg_obj_size
 					     100, // max_neighbor_distance
+					     true, //with_divisions
 					     0.3, // division_threshold
 					     "none", // random_forest_filename
 					     fov
@@ -771,7 +772,6 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_AppearanceSimple ) {
 							    false, // with_tracklets
 							    10.0, //division_weight
 							    10.0, //transition_weight
-							    true, //with_divisions
 							    1500., // disappearance_cost,
 							    1500., // appearance_cost
 							    false, //with_merger_resolution
@@ -874,6 +874,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Tracklets ) {
 					     true, // detection_by_volume
 					     double(1.1), // avg_obj_size
 					     20, // max_neighbor_distance
+					     true, //with_divisions
 					     0.3, // division_threshold
 					     "none", // random_forest_filename
 					     fov
@@ -887,7 +888,6 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Tracklets ) {
 							    true, // with_tracklets
 							    10.0, //division_weight
 							    10.0, //transition_weight
-							    true, //with_divisions
 							    1500., // disappearance_cost,
 							    1500., // appearance_cost
 							    false, //with_merger_resolution
@@ -1028,6 +1028,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Merger3 ) {
 					 false, // detection_by_volume
 					 double(1.1), // avg_obj_size
 					 99999, // max_neighbor_distance
+					 true, //with_divisions
 					 0.1, // division_threshold
 					 "none", // random_forest_filename
 					 fov
@@ -1041,7 +1042,6 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Merger3 ) {
 							    true, // with_tracklets
 							    10.0, //division_weight
 							    10.0, //transition_weight
-							    true, //with_divisions
 							    500., // disappearance_cost,
 							    500., // appearance_cost
 							    true, //with_merger_resolution
@@ -1205,6 +1205,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_TranslationVector_Traxels ) 
 					 false, // detection_by_volume
 					 double(1.1), // avg_obj_size
 					 301, // max_neighbor_distance
+					 false, //with_divisions
 					 0.5, // division_threshold
 					 "none", // random_forest_filename
 					 fov
@@ -1218,7 +1219,6 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_TranslationVector_Traxels ) 
 							    false, // with_tracklets
 							    10.0, //division_weight
 							    10.0, //transition_weight
-							    false, //with_divisions
 							    10., // disappearance_cost,
 							    10., // appearance_cost
 							    false, //with_merger_resolution
@@ -1351,6 +1351,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_TranslationVector_Tracklets 
 					 false, // detection_by_volume
 					 double(1.1), // avg_obj_size
 					 301, // max_neighbor_distance
+					 false, //with_divisions
 					 0.5, // division_threshold
 					 "none", // random_forest_filename
 					 fov
@@ -1364,7 +1365,6 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_TranslationVector_Tracklets 
 							    true, // with_tracklets
 							    10.0, //division_weight
 							    10.0, //transition_weight
-							    false, //with_divisions
 							    10., // disappearance_cost,
 							    10., // appearance_cost
 							    false, //with_merger_resolution
@@ -1475,6 +1475,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Merger4 ) {
 					 false, // detection_by_volume
 					 double(1.1), // avg_obj_size
 					 99999, // max_neighbor_distance
+					 true, //with_divisions
 					 0.1, // division_threshold
 					 "none", // random_forest_filename
 					 fov
@@ -1488,7 +1489,6 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Merger4 ) {
 							    true, // with_tracklets
 							    10.0, //division_weight
 							    10.0, //transition_weight
-							    true, //with_divisions
 							    1500., // disappearance_cost,
 							    1500., // appearance_cost
 							    true, //with_merger_resolution
@@ -1612,6 +1612,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_MergerResolvingDivision ) {
 					 false, // detection_by_volume
 					 double(1.1), // avg_obj_size
 					 99999, // max_neighbor_distance
+					 true, //with_divisions
 					 0.1, // division_threshold
 					 "none", // random_forest_filename
 					 fov,
@@ -1626,7 +1627,6 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_MergerResolvingDivision ) {
 							    true, // with_tracklets
 							    10.0, //division_weight
 							    10.0, //transition_weight
-							    true, //with_divisions
 							    1500., // disappearance_cost,
 							    1500., // appearance_cost
 							    true, //with_merger_resolution
@@ -1753,6 +1753,7 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_TranslationVector2 ) {
 					 false, // detection_by_volume
 					 double(1.1), // avg_obj_size
 					 301, // max_neighbor_distance
+					 false, //with_divisions
 					 0.5, // division_threshold
 					 "none", // random_forest_filename
 					 fov
@@ -1766,7 +1767,6 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_TranslationVector2 ) {
 							    true, // with_tracklets
 							    10.0, //division_weight
 							    10.0, //transition_weight
-							    false, //with_divisions
 							    10., // disappearance_cost,
 							    10., // appearance_cost
 							    false, //with_merger_resolution

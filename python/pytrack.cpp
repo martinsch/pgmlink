@@ -37,7 +37,6 @@ vector<vector<Event> > pythonConsTracking(ConsTracking& tr, TraxelStore& ts, Tim
 					  bool   with_tracklets,
 					  double division_weight,
 					  double transition_weight,
-					  bool   with_divisions,
 					  double disappearance_cost,
 					  double appearance_cost,
 					  bool   with_merger_resolution,
@@ -56,7 +55,6 @@ vector<vector<Event> > pythonConsTracking(ConsTracking& tr, TraxelStore& ts, Tim
 			    with_tracklets,
 			    division_weight,
 			    transition_weight,
-			    with_divisions,
 			    disappearance_cost,
 			    appearance_cost,
 			    with_merger_resolution,
@@ -106,8 +104,8 @@ void export_track() {
     ;
 
     class_<ConsTracking>("ConsTracking",
-                         init<int,bool,double,double,double,string,FieldOfView, string>(
-						args("max_number_objects","size_dependent_detection_prob","avg_obj_size","max_neighbor_distance", "division_threshold","detection_rf_filename", "fov", "event_vector_dump_filename")))
+                         init<int,bool,double,double,bool,double,string,FieldOfView, string>(
+											args("max_number_objects","size_dependent_detection_prob","avg_obj_size","max_neighbor_distance", "with_division", "division_threshold","detection_rf_filename", "fov", "event_vector_dump_filename")))
       .def("__call__", &pythonConsTracking)
           .def("buildGraph", &ConsTracking::build_hypo_graph)
           .def("track", &ConsTracking::track)
