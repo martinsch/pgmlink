@@ -237,7 +237,40 @@ bool all_true (InputIterator first, InputIterator last, UnaryPredicate pred) {
 						  double cplex_timeout,
 						  TimestepIdCoordinateMapPtr coordinates) {
     build_hypo_graph(ts);
-    return track(forbidden_cost,ep_gap,with_tracklets,division_weight,transition_weight,disappearance_cost,appearance_cost,with_merger_resolution,n_dim,transition_parameter,border_width,with_constraints,cplex_timeout,coordinates);
+		// TODO need solution without copying the event vector
+		boost::shared_ptr<std::vector<std::vector<Event> > > event_ptr(
+			new std::vector<std::vector<Event> >(
+				track(
+					forbidden_cost,
+					ep_gap,
+					with_tracklets,
+					division_weight,
+					transition_weight,
+					disappearance_cost,
+					appearance_cost,
+					with_merger_resolution,
+					n_dim,
+					transition_parameter,
+					border_width,
+					with_constraints,
+					cplex_timeout
+				)
+			)
+		);
+		if (with_merger_resolution) {
+			return resolve_mergers(
+				event_ptr,
+				coordinates,
+				ep_gap=0.01,
+				transition_weight=10.0,
+				with_tracklets=true,
+				n_dim = 3,
+				transition_parameter = 5.,
+				with_constraints = true
+			);
+		} else {
+			return *event_ptr;
+		}
 }
 
 shared_ptr<HypothesesGraph> ConsTracking::build_hypo_graph(TraxelStore& ts) {
@@ -372,8 +405,7 @@ shared_ptr<HypothesesGraph> ConsTracking::build_hypo_graph(TraxelStore& ts) {
 						      double transition_parameter,
 						      double border_width,
 						      bool with_constraints,
-						      double cplex_timeout,
-						      TimestepIdCoordinateMapPtr coordinates){
+						      double cplex_timeout){
     
     LOG(logDEBUG1) <<"max_number_objects  \t"<< max_number_objects_  ; 
     LOG(logDEBUG1) <<"size_dependent_detection_prob\t"<<  use_size_dependent_detection_ ; 
@@ -481,34 +513,6 @@ shared_ptr<HypothesesGraph> ConsTracking::build_hypo_graph(TraxelStore& ts) {
 	cout << "-> constructing unresolved events" << endl;
 	boost::shared_ptr<std::vector< std::vector<Event> > > ev = events(*hypotheses_graph_);
 
-
-	if (max_number_objects_ > 1 && with_merger_resolution && all_true(ev->begin()+1, ev->end(), has_data<Event>)) {
-	  cout << "-> resolving mergers" << endl;
-	  MergerResolver m(hypotheses_graph_.get());
-	  FeatureExtractorBase* extractor;
-	  DistanceFromCOMs distance;
-	  if (coordinates) {
-	    extractor = new FeatureExtractorArmadillo(coordinates);
-	  } else {
-	    calculate_gmm_beforehand(*hypotheses_graph_, 1, n_dim);
-	    extractor = new FeatureExtractorMCOMsFromMCOMs;
-	  }
-	  FeatureHandlerFromTraxels handler(*extractor, distance);
-      
-	  m.resolve_mergers(handler);
-	  
-	  HypothesesGraph g_res;
-	  resolve_graph(*hypotheses_graph_, g_res, transition, ep_gap, with_tracklets, transition_parameter, with_constraints);
-	  prune_inactive(*hypotheses_graph_);
-
-	  cout << "-> constructing resolved events" << endl;
-	  boost::shared_ptr<std::vector< std::vector<Event> > > multi_frame_moves = multi_frame_move_events(*hypotheses_graph_);
-
-	  cout << "-> merging unresolved and resolved events" << endl;
-	  // delete extractor; // TO DELETE FIRST CREATE VIRTUAL DTORS
-	  ev = merge_event_vectors(*ev, *multi_frame_moves);
-	}
-
 	if(event_vector_dump_filename_ != "none")
 	  {
 	    // store the traxel store and the resulting event vector
@@ -519,6 +523,66 @@ shared_ptr<HypothesesGraph> ConsTracking::build_hypo_graph(TraxelStore& ts) {
 
 	return *ev;
 
+  }
+
+	std::vector<std::vector<Event> > ConsTracking::resolve_mergers(
+		boost::shared_ptr<std::vector<std::vector<Event> > > events_ptr,
+		TimestepIdCoordinateMapPtr coordinates,
+		double ep_gap,
+		double transition_weight,
+		bool with_tracklets,
+		int n_dim,
+		double transition_parameter,
+		bool with_constraints
+  ) {
+		// TODO Redundancy to track(). -> Problem?
+		boost::function<double(const double)> transition;
+		transition = NegLnTransition(transition_weight);
+
+		cout << "-> resolving mergers" << endl;
+		// TODO why doesn't it check for empty vectors in the event vector from the
+		// first element on?
+		if ( not all_true(events_ptr->begin()+1, events_ptr->end(), has_data<Event>)) {
+			LOG(logDEBUG3) << "Nothing to be done in ConstTracking::resolve_mergers:";
+			LOG(logDEBUG3) << "Empty vector in event vector";
+		} else if (max_number_objects_ == 1) {
+			LOG(logDEBUG3) << "Nothing to resolve in ConstTracking::resolve_mergers:";
+			LOG(logDEBUG3) << "max_number_objects = 1";
+		} else {
+			MergerResolver m(hypotheses_graph_.get());
+			FeatureExtractorBase* extractor;
+			DistanceFromCOMs distance;
+			if (coordinates) {
+				extractor = new FeatureExtractorArmadillo(coordinates);
+			} else {
+				calculate_gmm_beforehand(*hypotheses_graph_, 1, n_dim);
+				extractor = new FeatureExtractorMCOMsFromMCOMs;
+			}
+			FeatureHandlerFromTraxels handler(*extractor, distance);
+
+			m.resolve_mergers(handler);
+
+			HypothesesGraph g_res;
+			resolve_graph(*hypotheses_graph_, g_res, transition, ep_gap, with_tracklets, transition_parameter, with_constraints);
+			prune_inactive(*hypotheses_graph_);
+
+			cout << "-> constructing resolved events" << endl;
+			boost::shared_ptr<std::vector< std::vector<Event> > > multi_frame_moves = multi_frame_move_events(*hypotheses_graph_);
+
+			cout << "-> merging unresolved and resolved events" << endl;
+			// delete extractor; // TO DELETE FIRST CREATE VIRTUAL DTORS
+			events_ptr = merge_event_vectors(*events_ptr, *multi_frame_moves);
+
+			// TODO The in serialized event vector written in the track() function
+			// will be overwritten. Is this the desired behaviour?
+			if(event_vector_dump_filename_ != "none") {
+				// store the traxel store and the resulting event vector
+				std::ofstream ofs(event_vector_dump_filename_.c_str());
+				boost::archive::text_oarchive out_archive(ofs);
+				out_archive << *events_ptr;
+			}
+		}
+		return *events_ptr;
   }
 
 

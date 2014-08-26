@@ -109,6 +109,7 @@ void export_track() {
       .def("__call__", &pythonConsTracking)
           .def("buildGraph", &ConsTracking::build_hypo_graph)
           .def("track", &ConsTracking::track)
+          .def("resolve_mergers", &ConsTracking::resolve_mergers)
 	  .def("detections", &ConsTracking::detections)
 	;
 

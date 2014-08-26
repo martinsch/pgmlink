@@ -207,9 +207,17 @@ namespace pgmlink {
 							    double transition_parameter = 5.,
 							    double border_width = 0,
 							    bool with_constraints = true,
-							    double cplex_timeout = 1e+75,
-							    TimestepIdCoordinateMapPtr coordinates = TimestepIdCoordinateMapPtr());
+							    double cplex_timeout = 1e+75);
 
+      PGMLINK_EXPORT std::vector<std::vector<Event> > resolve_mergers(
+								boost::shared_ptr<std::vector<std::vector<Event> > > events_ptr,
+								TimestepIdCoordinateMapPtr coordinates = TimestepIdCoordinateMapPtr(),
+								double ep_gap=0.01,
+								double transition_weight=10.0,
+								bool with_tracklets=true,
+								int n_dim = 3,
+								double transition_parameter = 5.,
+								bool with_constraints = true);
 
 
       /**
