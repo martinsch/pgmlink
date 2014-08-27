@@ -1897,9 +1897,12 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Faktorize ) {
         tracking.build_hypo_graph(ts);
 
 	std::vector< std::vector<Event> > events;
-	for(int i = 0; i < 10 ; i++)
-	  events = tracking.track(0,0.0,   true,  1,  1,  1., 1., false, 3,5,0 );
-
+	std::vector<double> para;
+	for(int i = 0; i < 4 ; i++){
+	  para = std::vector<double>(4,1.);
+	  para[i] = 10;
+	  events = tracking.track(0,0.0,   true,  para[0], para[1] , para[2] ,para[3] , true, 3,5,0 );
+	}
 
 	size_t moves = 0;
 	size_t t = 1;
