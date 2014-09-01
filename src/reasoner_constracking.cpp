@@ -586,7 +586,7 @@ void ConservationTracking::add_constraints(const HypothesesGraph& g) {
                     cplex_idxs.clear();
                     coeffs.clear();
                     coeffs.push_back(1);
-                    cplex_idxs2.push_back(cplex_id(app_node_map_[n], nu));
+                    cplex_idxs.push_back(cplex_id(app_node_map_[n], nu));
                     coeffs.push_back(1);
                     cplex_idxs.push_back(cplex_id(arc_map_[a], mu));
                     // 0 <= App_i[nu] + Y_ij[mu] <= 1  forall mu>nu
