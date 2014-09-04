@@ -543,11 +543,11 @@ shared_ptr<HypothesesGraph> ConsTracking::build_hypo_graph(TraxelStore& ts) {
 		// TODO why doesn't it check for empty vectors in the event vector from the
 		// first element on?
 		if ( not all_true(events_ptr->begin()+1, events_ptr->end(), has_data<Event>)) {
-			LOG(logDEBUG3) << "Nothing to be done in ConstTracking::resolve_mergers:";
-			LOG(logDEBUG3) << "Empty vector in event vector";
+			LOG(logDEBUG) << "Nothing to be done in ConstTracking::resolve_mergers:";
+			LOG(logDEBUG) << "Empty vector in event vector";
 		} else if (max_number_objects_ == 1) {
-			LOG(logDEBUG3) << "Nothing to resolve in ConstTracking::resolve_mergers:";
-			LOG(logDEBUG3) << "max_number_objects = 1";
+			LOG(logDEBUG) << "Nothing to resolve in ConstTracking::resolve_mergers:";
+			LOG(logDEBUG) << "max_number_objects = 1";
 		} else {
 			MergerResolver m(hypotheses_graph_.get());
 			FeatureExtractorBase* extractor;
@@ -582,6 +582,7 @@ shared_ptr<HypothesesGraph> ConsTracking::build_hypo_graph(TraxelStore& ts) {
 				out_archive << *events_ptr;
 			}
 		}
+		cout << "-> done resolving mergers" << endl;
 		return *events_ptr;
   }
 
