@@ -578,15 +578,6 @@ void extract_coord_by_timestep_id(TimestepIdCoordinateMapPtr coordinates,
                                   const size_t traxel_id,
                                   const size_t traxel_size);
 
-// extract coordinates of merger in arma::mat
-template<int N, typename T>
-void extract_merger_coordinates(TimestepIdCoordinateMapPtr coordinates,
-                                const vigra::MultiArrayView<N, T>& image,
-                                const vigra::TinyVector<long int, N>& offsets,
-                                const std::vector<Event>& event_vector,
-                                const size_t timestep);
-
-
 
 ////
 //// IMPLEMENTATIONS ////
@@ -863,84 +854,6 @@ void extract_coord_by_timestep_id(TimestepIdCoordinateMapPtr coordinates,
   LOG(logDEBUG3) << "extract_coordinates -- done";
 }
 
-template<int N, typename T>
-void extract_merger_coordinates(TimestepIdCoordinateMapPtr coordinate_map,
-                                const vigra::MultiArrayView<N, T>& image,
-                                const vigra::TinyVector<long int, N>& offsets,
-                                const std::vector<Event>& event_vector,
-                                const size_t timestep) {
-  LOG(logDEBUG3) << "extract_merger_coordinates -- entered for timestep " << timestep;
-  LOG(logDEBUG3) << "get the traxel ids of all merger events";
-  typedef typename std::vector<std::vector<double> > CoordinateList;
-  typedef typename std::map<size_t, CoordinateList> CoordinateMap;
-  typedef typename CoordinateMap::iterator CoordinateMapIt;
-
-  CoordinateMap coord_map;
-  CoordinateMapIt coord_map_it;
-  // iterate over all events in the event vector and check if it's a merger
-  for (
-    std::vector<Event>::const_iterator event_it = event_vector.begin();
-    event_it != event_vector.end();
-    event_it++
-  ) {
-    if (event_it->type == Event::Merger) {
-      const std::vector<size_t>& traxel_ids = event_it->traxel_ids;
-      LOG(logDEBUG3) << "merger event for traxel " << traxel_ids[0];
-      // call operator to create empty value for this key if this key doesn't
-      // exist already
-      coord_map[traxel_ids[0]];
-    }
-  }
-
-
-  // initialize the iterator over the image
-  typedef typename vigra::CoupledIteratorType<N, T>::type CoupledIterator;
-  CoupledIterator image_it = createCoupledIterator(image);
-  CoupledIterator image_it_end = image_it.getEndIterator();
-  // iterator over all pixels
-  for (; image_it != image_it_end; image_it++){
-    // check if the traxel id exists as a key in coord_map
-    coord_map_it = coord_map.find(image_it.template get<1>());
-    if (coord_map_it != coord_map.end()) {
-      // get the existing list of coordinates of this traxel and resize it
-      CoordinateList& coord_list = coord_map_it->second;
-      coord_list.resize(coord_list.size()+1);
-      // get the inserted empty vector from the back and write the pixel's
-      // coordinates into it
-      std::vector<double>& merger_coord = coord_list.back();
-      const vigra::TinyVector<long int, N>& coord = image_it.template get<0>();
-      for (int n = 0; n < N; n++) {
-        merger_coord.push_back(coord[n] + offsets[n]);
-      }
-    }
-  }
-
-  // convert the coordinate lists into arma matrices and append them to the
-  // coordinate map
-  for (
-    coord_map_it = coord_map.begin();
-    coord_map_it != coord_map.end();
-    coord_map_it++
-  ) {
-    const CoordinateList& coord_list = coord_map_it->second;
-    arma::mat& coord_mat = (*coordinate_map)[
-      std::make_pair(timestep, coord_map_it->first)
-    ];
-    // resize the matrix
-    coord_mat.set_size(N, coord_list.size());
-    // copy the pixel coordinates into this matrix
-    // each row is a spatial dimension, each column a pixel
-    for(size_t j = 0; j < coord_list.size(); j++) {
-      for(size_t i = 0; i < N; i++) {
-        coord_mat(i, j) = coord_list[j][i];
-      }
-    }
-  }
-}
-
-
-
-  
 /* template <typename ClusteringAlg>
    void MergerResolver::calculate_centers(HypothesesGraph::Node node,					 
    int nMergers) {
