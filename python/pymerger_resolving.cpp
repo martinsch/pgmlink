@@ -56,6 +56,28 @@ void py_extract_coordinates(PyTimestepIdCoordinateMap coordinates,
   extract_coordinates<N, T>(coordinates.get(), image, offsets_tv, trax);
 }
 
+template <int N, typename T>
+void py_extract_coord_by_timestep_id(PyTimestepIdCoordinateMap coordinates,
+                            const vigra::NumpyArray<N, T>& image,
+                            const vigra::NumpyArray<1, vigra::Int64>& offsets,
+                            const size_t timestep,
+                            const size_t traxel_id,
+                            const size_t traxel_size) {
+  if (offsets.shape()[0] != N) {
+    throw std::runtime_error("py_extract_coord_by_timestep_id() -- Number of offsets and image dimensions disagree!");
+  }
+  vigra::TinyVector<long int, N> offsets_tv;
+  for (size_t idx = 0; idx < N; ++idx) {
+    offsets_tv[idx] = offsets[idx];
+  }
+  extract_coord_by_timestep_id<N, T>(coordinates.get(),
+                                     image,
+                                     offsets_tv,
+                                     timestep,
+                                     traxel_id,
+                                     traxel_size);
+}
+
 
 void export_gmm() {
   def("gmm_priors_and_centers", gmm_priors_and_centers);
@@ -80,4 +102,13 @@ void export_gmm() {
 
   def("extract_coordinates", vigra::registerConverters(&py_extract_coordinates<2, vigra::UInt32>));
   def("extract_coordinates", vigra::registerConverters(&py_extract_coordinates<3, vigra::UInt32>));
+
+  def("extract_coord_by_timestep_id", vigra::registerConverters(&py_extract_coord_by_timestep_id<2, vigra::UInt8>));
+  def("extract_coord_by_timestep_id", vigra::registerConverters(&py_extract_coord_by_timestep_id<3, vigra::UInt8>));
+
+  def("extract_coord_by_timestep_id", vigra::registerConverters(&py_extract_coord_by_timestep_id<2, vigra::UInt16>));
+  def("extract_coord_by_timestep_id", vigra::registerConverters(&py_extract_coord_by_timestep_id<3, vigra::UInt16>));
+
+  def("extract_coord_by_timestep_id", vigra::registerConverters(&py_extract_coord_by_timestep_id<2, vigra::UInt32>));
+  def("extract_coord_by_timestep_id", vigra::registerConverters(&py_extract_coord_by_timestep_id<3, vigra::UInt32>));
 }
