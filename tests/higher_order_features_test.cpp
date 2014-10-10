@@ -10,6 +10,8 @@
 #include "pgmlink/classifier_auxiliary.h"
 
 using namespace pgmlink;
+using namespace pgmlink::features;
+
 // using namespace boost;
 typedef typename
   property_map<node_timestep, HypothesesGraph::base_graph>::type

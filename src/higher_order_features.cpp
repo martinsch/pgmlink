@@ -12,7 +12,7 @@
 #include <algorithm> /* for std::copy */
 
 namespace pgmlink {
-
+namespace features {
 ////
 //// Some useful typedefinitions
 ////
@@ -1558,4 +1558,5 @@ void MVNOutlierCalculator::calculate(
   calculate(feature_matrix, return_matrix, 3.0);
 }
 
-} // namespace pgmlink
+} // end namespace features
+} // end namespace pgmlink

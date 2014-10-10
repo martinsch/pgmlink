@@ -62,6 +62,7 @@ diffusion_calculator.calculate(positions, return_value);
 #include <vigra/multi_array.hxx> /* for the feature extractors */
 
 namespace pgmlink {
+namespace features {
 
 /*=============================================================================
  type definitions
@@ -941,6 +942,7 @@ class MVNOutlierCalculator : public TraxelsFeatureCalculator {
   static const std::string name_;
 };
 
-} // namespace pgmlink
+} // end namespace features
+} // end namespace pgmlink
 
 #endif // PGMLINK_HIGHER_ORDER_FEATURES_H
