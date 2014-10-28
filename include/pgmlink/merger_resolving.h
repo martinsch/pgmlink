@@ -584,6 +584,11 @@ void extract_coord_by_timestep_id(TimestepIdCoordinateMapPtr coordinates,
                                   const size_t traxel_id,
                                   const size_t traxel_size);
 
+template<int N, typename T>
+void update_labelimage(const TimestepIdCoordinateMapPtr& coordinates,
+                       vigra::MultiArrayView<N, T>& image,
+                       const size_t timestep,
+                       const size_t traxel_id);
 
 ////
 //// IMPLEMENTATIONS ////
@@ -858,6 +863,28 @@ void extract_coord_by_timestep_id(TimestepIdCoordinateMapPtr coordinates,
     assert(index == coord.n_cols);
   }
   LOG(logDEBUG3) << "extract_coordinates -- done";
+}
+
+template<int N, typename T>
+void update_labelimage(const TimestepIdCoordinateMapPtr& coordinates,
+                       vigra::MultiArrayView<N, T>& image,
+                       const size_t timestep,
+                       const size_t traxel_id) {
+  typedef typename vigra::MultiArrayView<N, T>::key_type KeyType;
+  TimestepIdCoordinateMap::const_iterator it = coordinates->find(
+    std::make_pair(timestep, traxel_id)
+  );
+  if (it == coordinates->end()) {
+    throw std::runtime_error("Traxel not found in coordinates.");
+  }
+  const arma::mat& traxel_coord = it->second;
+  for (size_t index = 0; index < traxel_coord.n_cols; index++){
+    KeyType pixel_key;
+    for (size_t dim = 0; dim < N; dim++) {
+      pixel_key[dim] = traxel_coord(dim, index);
+    }
+    image[pixel_key] = traxel_id;
+  }
 }
 
 /* template <typename ClusteringAlg>

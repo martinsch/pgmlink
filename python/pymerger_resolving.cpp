@@ -78,6 +78,14 @@ void py_extract_coord_by_timestep_id(PyTimestepIdCoordinateMap coordinates,
                                      traxel_size);
 }
 
+template <int N, typename T>
+void py_update_labelimage(PyTimestepIdCoordinateMap coordinates,
+                          vigra::NumpyArray<N, T>& image,
+                          const size_t timestep,
+                          const size_t traxel_id) {
+  update_labelimage<N, T>(coordinates.get(), image, timestep, traxel_id);
+}
+
 
 void export_gmm() {
   def("gmm_priors_and_centers", gmm_priors_and_centers);
@@ -111,4 +119,13 @@ void export_gmm() {
 
   def("extract_coord_by_timestep_id", vigra::registerConverters(&py_extract_coord_by_timestep_id<2, vigra::UInt32>));
   def("extract_coord_by_timestep_id", vigra::registerConverters(&py_extract_coord_by_timestep_id<3, vigra::UInt32>));
+
+  def("update_labelimage", vigra::registerConverters(&py_update_labelimage<2, vigra::UInt8>));
+  def("update_labelimage", vigra::registerConverters(&py_update_labelimage<3, vigra::UInt8>));
+
+  def("update_labelimage", vigra::registerConverters(&py_update_labelimage<2, vigra::UInt16>));
+  def("update_labelimage", vigra::registerConverters(&py_update_labelimage<3, vigra::UInt16>));
+
+  def("update_labelimage", vigra::registerConverters(&py_update_labelimage<2, vigra::UInt32>));
+  def("update_labelimage", vigra::registerConverters(&py_update_labelimage<3, vigra::UInt32>));
 }
