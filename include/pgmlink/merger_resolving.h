@@ -170,12 +170,14 @@ class GMMInitializeArma
 
   PGMLINK_EXPORT virtual feature_array operator()();
   PGMLINK_EXPORT double score() const;
+  PGMLINK_EXPORT arma::Col<size_t> labels() const;
 
  private:
   GMMInitializeArma();
   int k_;
   const arma::mat& data_;
   double score_;
+  arma::Col<size_t> labels_;
   int n_trials_;
   int n_iterations_;
   double threshold_;
@@ -292,6 +294,10 @@ class FeatureExtractorArmadillo
   PGMLINK_EXPORT FeatureExtractorArmadillo(TimestepIdCoordinateMapPtr coordinates);
   PGMLINK_EXPORT virtual std::vector<Traxel> operator()(Traxel& trax, size_t nMergers, unsigned int max_id);
  private:
+  void update_coordinates(Traxel& trax,
+                          size_t nMergers,
+                          unsigned int max_id,
+                          arma::Col<size_t> labels);
   FeatureExtractorArmadillo();
   TimestepIdCoordinateMapPtr coordinates_;
 };

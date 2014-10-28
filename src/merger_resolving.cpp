@@ -156,6 +156,7 @@ feature_array GMMInitializeArma::operator()() {
   gmm.Fitter().MaxIterations() = n_iterations_;
   gmm.Fitter().Tolerance() = threshold_;
   score_ = gmm.Estimate(data_, n_trials_);
+  gmm.Classify(data_, labels_);
   // TRANSPOSE NECCESSARY FOR GMM?
   const std::vector<arma::vec>& centers = gmm.Means();
   LOG(logDEBUG4) << "GMMInitializeArma::operator() -- ret has size " << ret.size()
@@ -176,6 +177,10 @@ feature_array GMMInitializeArma::operator()() {
   
 double GMMInitializeArma::score() const {
   return score_;
+}
+
+arma::Col<size_t> GMMInitializeArma::labels() const {
+  return labels_;
 }
 
 
@@ -308,10 +313,33 @@ std::vector<Traxel> FeatureExtractorArmadillo::operator() (Traxel& trax,
                  << it->second.n_rows << " points.";
   GMMInitializeArma gmm(nMergers, it->second);
   feature_array merger_coms = gmm();
+  update_coordinates(trax, nMergers, max_id, gmm.labels());
   trax.features["mergerCOMs"] = feature_array(merger_coms.begin(), merger_coms.end());
   FeatureExtractorMCOMsFromMCOMs extractor;
   LOG(logDEBUG3) << "FeatureExtractorArmadillo::operator() -- exit";
   return extractor(trax, nMergers, max_id);
+}
+
+void FeatureExtractorArmadillo::update_coordinates(Traxel& trax,
+                                                   size_t nMergers,
+                                                   unsigned int max_id,
+                                                   arma::Col<size_t> labels
+                                                   ) {
+  LOG(logDEBUG3) << "in FeatureExtractorArmadillo::update_coordinates";
+  TimestepIdCoordinateMap::const_iterator it = coordinates_->find(std::make_pair(trax.Timestep, trax.Id));
+  const arma::mat& coordinate_mat = it->second;
+  LOG(logDEBUG3) << "old coordinates:\n" << coordinate_mat;
+  LOG(logDEBUG3) << "new labels:\n" << labels;
+  for (size_t label = 0; label < nMergers; label++) {
+    arma::uvec label_ids = arma::find(labels == label);
+    arma::mat coordinates_n = coordinate_mat.cols(label_ids);
+    LOG(logDEBUG3) << "new coordinate matrix for label " << label << ":\n" << coordinates_n;
+    std::pair<int, unsigned int> new_key(trax.Timestep, max_id + label);
+    coordinates_->insert(
+      std::pair<std::pair<int, unsigned int>, arma::mat>(new_key, coordinates_n)
+    );
+  }
+  coordinates_->erase(it);
 }
 
 
