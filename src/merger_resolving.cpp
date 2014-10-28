@@ -325,15 +325,15 @@ void FeatureExtractorArmadillo::update_coordinates(Traxel& trax,
                                                    unsigned int max_id,
                                                    arma::Col<size_t> labels
                                                    ) {
-  LOG(logDEBUG3) << "in FeatureExtractorArmadillo::update_coordinates";
-  TimestepIdCoordinateMap::const_iterator it = coordinates_->find(std::make_pair(trax.Timestep, trax.Id));
+  LOG(logDEBUG4) << "in FeatureExtractorArmadillo::update_coordinates";
+  TimestepIdCoordinateMap::iterator it = coordinates_->find(std::make_pair(trax.Timestep, trax.Id));
   const arma::mat& coordinate_mat = it->second;
-  LOG(logDEBUG3) << "old coordinates:\n" << coordinate_mat;
-  LOG(logDEBUG3) << "new labels:\n" << labels;
+  LOG(logDEBUG4) << "old coordinates:\n" << coordinate_mat;
+  LOG(logDEBUG4) << "new labels:\n" << labels;
   for (size_t label = 0; label < nMergers; label++) {
     arma::uvec label_ids = arma::find(labels == label);
     arma::mat coordinates_n = coordinate_mat.cols(label_ids);
-    LOG(logDEBUG3) << "new coordinate matrix for label " << label << ":\n" << coordinates_n;
+    LOG(logDEBUG4) << "new coordinate matrix for label " << label << ":\n" << coordinates_n;
     std::pair<int, unsigned int> new_key(trax.Timestep, max_id + label);
     coordinates_->insert(
       std::pair<std::pair<int, unsigned int>, arma::mat>(new_key, coordinates_n)
