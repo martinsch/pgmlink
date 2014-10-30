@@ -956,4 +956,142 @@ HypothesesGraph* SingleTimestepTraxel_HypothesesBuilder::add_edges_at(Hypotheses
     return graph;
 }
 
+// graph copy methods
+template<class Graph>
+void PropertyGraph<Graph>::copy(PropertyGraph<Graph>& src, PropertyGraph<Graph>& dest)
+{
+    throw std::runtime_error("Can only copy lemon::ListDigraph");
+}
+
+template<>
+void PropertyGraph<lemon::ListDigraph>::copy(PropertyGraph<lemon::ListDigraph>& src, PropertyGraph<lemon::ListDigraph>& dest)
+{
+    lemon::DigraphCopy<PropertyGraph<lemon::ListDigraph>, PropertyGraph<lemon::ListDigraph> > graph_copy(src, dest);
+
+    // create copies of all property maps
+    if(src.has_property(node_timestep()))
+    {
+        dest.add(node_timestep());
+        graph_copy.nodeMap(src.get(node_timestep()), dest.get(node_timestep()));
+    }
+
+    if(src.has_property(node_active()))
+    {
+        dest.add(node_active());
+        graph_copy.nodeMap(src.get(node_active()), dest.get(node_active()));
+    }
+
+    if(src.has_property(node_active2()))
+    {
+        dest.add(node_active2());
+        graph_copy.nodeMap(src.get(node_active2()), dest.get(node_active2()));
+    }
+
+    if(src.has_property(node_offered()))
+    {
+        dest.add(node_offered());
+        graph_copy.nodeMap(src.get(node_offered()), dest.get(node_offered()));
+    }
+
+    if(src.has_property(split_from()))
+    {
+        dest.add(split_from());
+        graph_copy.nodeMap(src.get(split_from()), dest.get(split_from()));
+    }
+
+    if(src.has_property(division_active()))
+    {
+        dest.add(division_active());
+        graph_copy.nodeMap(src.get(division_active()), dest.get(division_active()));
+    }
+
+    if(src.has_property(merger_resolved_to()))
+    {
+        dest.add(merger_resolved_to());
+        graph_copy.nodeMap(src.get(merger_resolved_to()), dest.get(merger_resolved_to()));
+    }
+
+    if(src.has_property(node_originated_from()))
+    {
+        dest.add(node_originated_from());
+        graph_copy.nodeMap(src.get(node_originated_from()), dest.get(node_originated_from()));
+    }
+
+    if(src.has_property(node_resolution_candidate()))
+    {
+        dest.add(node_resolution_candidate());
+        graph_copy.nodeMap(src.get(node_resolution_candidate()), dest.get(node_resolution_candidate()));
+    }
+
+    if(src.has_property(arc_distance()))
+    {
+        dest.add(arc_distance());
+        graph_copy.arcMap(src.get(arc_distance()), dest.get(arc_distance()));
+    }
+
+    if(src.has_property(traxel_arc_id()))
+    {
+        dest.add(traxel_arc_id());
+        graph_copy.arcMap(src.get(traxel_arc_id()), dest.get(traxel_arc_id()));
+    }
+
+    if(src.has_property(arc_vol_ratio()))
+    {
+        dest.add(arc_vol_ratio());
+        graph_copy.arcMap(src.get(arc_vol_ratio()), dest.get(arc_vol_ratio()));
+    }
+
+    if(src.has_property(arc_from_timestep()))
+    {
+        dest.add(arc_from_timestep());
+        graph_copy.arcMap(src.get(arc_from_timestep()), dest.get(arc_from_timestep()));
+    }
+
+    if(src.has_property(arc_to_timestep()))
+    {
+        dest.add(arc_to_timestep());
+        graph_copy.arcMap(src.get(arc_to_timestep()), dest.get(arc_to_timestep()));
+    }
+
+    if(src.has_property(arc_active()))
+    {
+        dest.add(arc_active());
+        graph_copy.arcMap(src.get(arc_active()), dest.get(arc_active()));
+    }
+
+    if(src.has_property(arc_resolution_candidate()))
+    {
+        dest.add(arc_resolution_candidate());
+        graph_copy.arcMap(src.get(arc_resolution_candidate()), dest.get(arc_resolution_candidate()));
+    }
+
+    if(src.has_property(tracklet_intern_dist()))
+    {
+        dest.add(tracklet_intern_dist());
+        graph_copy.nodeMap(src.get(tracklet_intern_dist()), dest.get(tracklet_intern_dist()));
+    }
+
+    if(src.has_property(tracklet_intern_arc_ids()))
+    {
+        dest.add(tracklet_intern_arc_ids());
+        graph_copy.nodeMap(src.get(tracklet_intern_arc_ids()), dest.get(tracklet_intern_arc_ids()));
+    }
+
+    if(src.has_property(node_traxel()))
+    {
+        dest.add(node_traxel());
+        graph_copy.nodeMap(src.get(node_traxel()), dest.get(node_traxel()));
+    }
+
+    graph_copy.run();
+}
+
+void HypothesesGraph::copy(HypothesesGraph &src, HypothesesGraph &dest)
+{
+    // copy "parents"
+    PropertyGraph<lemon::ListDigraph>::copy(src, dest);
+
+    dest.timesteps_ = src.timesteps_;
+}
+
 } /* namespace pgmlink */

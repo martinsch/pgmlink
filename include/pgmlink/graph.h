@@ -64,6 +64,8 @@ namespace pgmlink {
     template<typename PropertyTag>
       PropertyGraph&
       insert(PropertyTag, typename property_map<PropertyTag, Graph>::type*);
+
+    static void copy(PropertyGraph<Graph> &src, PropertyGraph<Graph> &dest);
     
   private:
     typedef std::map<std::string, boost::any> properties_map;  

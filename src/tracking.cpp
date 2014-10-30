@@ -549,13 +549,17 @@ shared_ptr<HypothesesGraph> ConsTracking::build_hypo_graph(TraxelStore& ts) {
 			LOG(logDEBUG) << "Nothing to resolve in ConstTracking::resolve_mergers:";
 			LOG(logDEBUG) << "max_number_objects = 1";
 		} else {
-			MergerResolver m(hypotheses_graph_.get());
+            // create a copy of the hypotheses graph to perform merger resolution without destroying the old graph
+            HypothesesGraph resolved_graph;
+            HypothesesGraph::copy(*hypotheses_graph_, resolved_graph);
+
+            MergerResolver m(&resolved_graph);
 			FeatureExtractorBase* extractor;
 			DistanceFromCOMs distance;
 			if (coordinates) {
 				extractor = new FeatureExtractorArmadillo(coordinates);
 			} else {
-				calculate_gmm_beforehand(*hypotheses_graph_, 1, n_dim);
+                calculate_gmm_beforehand(resolved_graph, 1, n_dim);
 				extractor = new FeatureExtractorMCOMsFromMCOMs;
 			}
 			FeatureHandlerFromTraxels handler(*extractor, distance);
@@ -563,11 +567,11 @@ shared_ptr<HypothesesGraph> ConsTracking::build_hypo_graph(TraxelStore& ts) {
 			m.resolve_mergers(handler);
 
 			HypothesesGraph g_res;
-			resolve_graph(*hypotheses_graph_, g_res, transition, ep_gap, with_tracklets, transition_parameter, with_constraints);
-			prune_inactive(*hypotheses_graph_);
+            resolve_graph(resolved_graph, g_res, transition, ep_gap, with_tracklets, transition_parameter, with_constraints);
+//            prune_inactive(resolved_graph);
 
 			cout << "-> constructing resolved events" << endl;
-			boost::shared_ptr<std::vector< std::vector<Event> > > multi_frame_moves = multi_frame_move_events(*hypotheses_graph_);
+            boost::shared_ptr<std::vector< std::vector<Event> > > multi_frame_moves = multi_frame_move_events(resolved_graph);
 
 			cout << "-> merging unresolved and resolved events" << endl;
 			// delete extractor; // TO DELETE FIRST CREATE VIRTUAL DTORS
