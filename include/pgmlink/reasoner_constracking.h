@@ -4,7 +4,12 @@
 #include <map>
 #include <boost/function.hpp>
 #include <opengm/inference/inference.hxx>
+
+#ifdef WITH_GUROBI
+#include <opengm/inference/lpgurobi.hxx>
+#else
 #include <opengm/inference/lpcplex.hxx>
+#endif
 
 #include "pgmlink/pgm.h"
 #include "pgmlink/hypotheses.h"
@@ -114,7 +119,11 @@ class ConservationTracking : public Reasoner {
     double forbidden_cost_;
     
     shared_ptr<pgm::OpengmModelDeprecated> pgm_;
+#ifdef WITH_GUROBI
+    opengm::LPGurobi<pgm::OpengmModelDeprecated::ogmGraphicalModel, pgm::OpengmModelDeprecated::ogmAccumulator>* optimizer_;
+#else
     opengm::LPCplex<pgm::OpengmModelDeprecated::ogmGraphicalModel, pgm::OpengmModelDeprecated::ogmAccumulator>* optimizer_;
+#endif
 
     std::map<HypothesesGraph::Node, size_t> div_node_map_;
     std::map<HypothesesGraph::Node, size_t> app_node_map_;

@@ -60,8 +60,14 @@ void ConservationTracking::formulate(const HypothesesGraph& hypotheses) {
     LOG(logDEBUG) << "ConservationTracking::formulate: add_finite_factors";
     add_finite_factors(*graph);
     LOG(logDEBUG) << "ConservationTracking::formulate: finished add_finite_factors";
+
+#ifdef WITH_GUROBI
+    typedef opengm::LPGurobi<pgm::OpengmModelDeprecated::ogmGraphicalModel,
+            pgm::OpengmModelDeprecated::ogmAccumulator> cplex_optimizer;
+#else
     typedef opengm::LPCplex<pgm::OpengmModelDeprecated::ogmGraphicalModel,
             pgm::OpengmModelDeprecated::ogmAccumulator> cplex_optimizer;
+#endif
     cplex_optimizer::Parameter param;
     param.verbose_ = true;
     param.integerConstraint_ = true;
