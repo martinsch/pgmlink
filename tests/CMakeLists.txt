@@ -3,10 +3,11 @@ message( "\nConfiguring tests:" )
 
 # dependencies
 find_package( Boost REQUIRED COMPONENTS unit_test_framework )
-find_package( Cplex REQUIRED )
+#find_package( Cplex REQUIRED )
 
 include_directories(
   ${Boost_INCLUDE_DIRS}
+  ${OPTIMIZER_INCLUDE_DIRS}
   ${PROJECT_SOURCE_DIR}/include/
 )
 
@@ -48,6 +49,6 @@ foreach(test_src ${OGM_TEST_SRCS})
   get_filename_component(test_name ${test_src} NAME_WE)
   set(test_name ext_opengm_${test_name})
   add_executable( ${test_name} ${test_src} )
-  target_link_libraries( ${test_name} ${CPLEX_LIBRARIES} )
+  target_link_libraries( ${test_name} ${OPTIMIZER_LIBRARIES} )
   add_test( ${test_name} ${test_name} )
 endforeach(test_src)

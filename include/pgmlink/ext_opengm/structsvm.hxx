@@ -13,7 +13,13 @@
 #include "opengm/opengm.hxx"
 #include "pgmlink/ext_opengm/loss_hamming.hxx"
 #include "pgmlink/ext_opengm/loglinearmodel.hxx"
+
+#ifdef WITH_GUROBI
+#include "opengm/inference/lpgurobi.hxx"
+#else
 #include "opengm/inference/lpcplex.hxx"
+#endif
+
 #include "opengm/operations/minimizer.hxx"
 
 
@@ -126,7 +132,11 @@ void StructSvmDlib<LLM>::separation_oracle(const long idx,
   samples_and_loss_[idx].setWeights(weights);
   samples_[idx].setWeights(weights);
 
+#ifdef WITH_GUROBI
+  typedef opengm::LPGurobi<LLM, opengm::Minimizer> optimizer_type;
+#else
   typedef opengm::LPCplex<LLM, opengm::Minimizer> optimizer_type;
+#endif
   typename optimizer_type::Parameter params;
   params.verbose_ = true;
   params.integerConstraint_ = true;

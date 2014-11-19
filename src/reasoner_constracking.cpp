@@ -3,7 +3,6 @@
 #include <stdexcept>
 #include <string.h>
 #include <memory.h>
-#include <opengm/inference/lpcplex.hxx>
 #include <opengm/datastructures/marray/marray.hxx>
 #include <opengm/graphicalmodel/graphicalmodel_hdf5.hxx>
 
