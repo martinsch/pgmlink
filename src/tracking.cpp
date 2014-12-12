@@ -248,7 +248,6 @@ bool all_true (InputIterator first, InputIterator last, UnaryPredicate pred) {
 					transition_weight,
 					disappearance_cost,
 					appearance_cost,
-					with_merger_resolution,
 					n_dim,
 					transition_parameter,
 					border_width,
@@ -400,29 +399,27 @@ shared_ptr<HypothesesGraph> ConsTracking::build_hypo_graph(TraxelStore& ts) {
 						      double transition_weight,
 						      double disappearance_cost,
 						      double appearance_cost,
-						      bool with_merger_resolution,
 						      int n_dim,
 						      double transition_parameter,
 						      double border_width,
 						      bool with_constraints,
 						      double cplex_timeout){
     
-    LOG(logDEBUG1) <<"max_number_objects  \t"<< max_number_objects_  ; 
-    LOG(logDEBUG1) <<"size_dependent_detection_prob\t"<<  use_size_dependent_detection_ ; 
-    LOG(logDEBUG1) <<"forbidden_cost\t"<<      forbidden_cost; 
-    LOG(logDEBUG1) <<"ep_gap\t"<<      ep_gap; 
-    LOG(logDEBUG1) <<"avg_obj_size\t"<<      avg_obj_size_; 
-    LOG(logDEBUG1) <<"with_tracklets\t"<<      with_tracklets; 
-    LOG(logDEBUG1) <<"division_weight\t"<<      division_weight; 
-    LOG(logDEBUG1) <<"transition_weight\t"<<      transition_weight; 
-    LOG(logDEBUG1) <<"with_divisions\t"<<      with_divisions_; 
-    LOG(logDEBUG1) <<"disappearance_cost\t"<<      disappearance_cost; 
-    LOG(logDEBUG1) <<"appearance_cost\t"<<      appearance_cost; 
-    LOG(logDEBUG1) <<"with_merger_resolution\t"<<      with_merger_resolution; 
-    LOG(logDEBUG1) <<"n_dim\t"<<      n_dim; 
-    LOG(logDEBUG1) <<"transition_parameter\t"<<      transition_parameter; 
-    LOG(logDEBUG1) <<"border_width\t"<<      border_width; 
-    LOG(logDEBUG1) <<"with_constraints\t"<<      with_constraints; 
+    LOG(logDEBUG1) <<"max_number_objects  \t"<< max_number_objects_  ;
+    LOG(logDEBUG1) <<"size_dependent_detection_prob\t"<<  use_size_dependent_detection_ ;
+    LOG(logDEBUG1) <<"forbidden_cost\t"<<      forbidden_cost;
+    LOG(logDEBUG1) <<"ep_gap\t"<<      ep_gap;
+    LOG(logDEBUG1) <<"avg_obj_size\t"<<      avg_obj_size_;
+    LOG(logDEBUG1) <<"with_tracklets\t"<<      with_tracklets;
+    LOG(logDEBUG1) <<"division_weight\t"<<      division_weight;
+    LOG(logDEBUG1) <<"transition_weight\t"<<      transition_weight;
+    LOG(logDEBUG1) <<"with_divisions\t"<<      with_divisions_;
+    LOG(logDEBUG1) <<"disappearance_cost\t"<<      disappearance_cost;
+    LOG(logDEBUG1) <<"appearance_cost\t"<<      appearance_cost;
+    LOG(logDEBUG1) <<"n_dim\t"<<      n_dim;
+    LOG(logDEBUG1) <<"transition_parameter\t"<<      transition_parameter;
+    LOG(logDEBUG1) <<"border_width\t"<<      border_width;
+    LOG(logDEBUG1) <<"with_constraints\t"<<      with_constraints;
     LOG(logDEBUG1) <<"cplex_timeout\t"<<      cplex_timeout;
     
     

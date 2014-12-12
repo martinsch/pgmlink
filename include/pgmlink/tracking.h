@@ -202,7 +202,6 @@ namespace pgmlink {
 							    double transition_weight=10.0,
 							    double disappearance_cost = 0,
 							    double appearance_cost = 0,
-							    bool with_merger_resolution = true,
 							    int n_dim = 3,
 							    double transition_parameter = 5.,
 							    double border_width = 0,

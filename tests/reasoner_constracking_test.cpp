@@ -1901,7 +1901,18 @@ BOOST_AUTO_TEST_CASE( Tracking_ConservationTracking_Faktorize ) {
 	for(int i = 0; i < 4 ; i++){
 	  para = std::vector<double>(4,1.);
 	  para[i] = 10;
-	  events = tracking.track(0,0.0,   true,  para[0], para[1] , para[2] ,para[3] , true, 3,5,0 );
+	  events = tracking.track(
+			0,        // forbidden cost
+			0.0,      // ep_gap
+			true,     // with_tracklets
+			para[0],  // division_weight
+			para[1],  // transition_weight
+			para[2],  // disappearance_weigth
+			para[3],  // appearance_cost
+			3,        // n_dim
+			5,        // transition_parameter
+			0         // border_width
+			);
 	}
 
 	size_t moves = 0;
