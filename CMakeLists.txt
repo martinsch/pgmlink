@@ -179,6 +179,17 @@ install(TARGETS pgmlink
         LIBRARY DESTINATION lib
         RUNTIME DESTINATION bin)
 
+# install headers
+install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/"
+        DESTINATION include
+        PATTERN ".h"
+        PATTERN ".hxx"
+        PATTERN ".git" EXCLUDE)
+install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/include/"
+        DESTINATION include
+        PATTERN ".h"
+        PATTERN ".git" EXCLUDE)
+
 # API documentation with Doxygen
 find_package(Doxygen)
 if(DOXYGEN_FOUND)
