@@ -13,7 +13,7 @@
 #include "pgmlink/feature_calculator/ratio.h"
 #include "pgmlink/feature_calculator/squared_difference.h"
 #include "pgmlink/feature_calculator/square_root_squared_difference.h"
-
+#include "pgmlink/feature_calculator/pairwise_operation.h"
 
 
 
