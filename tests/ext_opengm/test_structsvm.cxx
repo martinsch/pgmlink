@@ -3,7 +3,7 @@
 
 #include <opengm/unittests/test.hxx>
 #include <pgmlink/ext_opengm/loglinearmodel.hxx>
-#include <pgmlink/ext_opengm/structsvm.hxx>
+// #include <pgmlink/ext_opengm/structsvm.hxx>
 #include <pgmlink/ext_opengm/loss_hamming.hxx>
 #include "opengm/utilities/metaprogramming.hxx"
 
