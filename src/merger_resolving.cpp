@@ -228,7 +228,7 @@ std::vector<Traxel> FeatureExtractorMCOMsFromGMM::operator() (Traxel& trax,
                                                               size_t nMergers,
                                                               unsigned int max_id
                                                               ){
-  std::map<std::string, feature_array>::iterator it = trax.features.find("coordinates");
+  std::map<std::string, feature_array>::const_iterator it = trax.features.find("coordinates");
   assert(it != trax.features.end());
   std::vector<Traxel> res;
   GMM gmm(nMergers, n_dim_, it->second);
@@ -247,7 +247,7 @@ std::vector<Traxel> FeatureExtractorMCOMsFromPCOMs::operator()(
     size_t nMerger,
     unsigned int start_id
                                                                ) {
-  std::map<std::string, feature_array>::iterator it = trax.features.find("possibleCOMs");
+  std::map<std::string, feature_array>::const_iterator it = trax.features.find("possibleCOMs");
   assert(it != trax.features.end());
   LOG(logINFO) << "FeatureExtractorMCOMsFromPCOMs::operator()() possible coms size: " << it->second.size()
                << " and objects in merger: " << nMerger;
@@ -256,10 +256,11 @@ std::vector<Traxel> FeatureExtractorMCOMsFromPCOMs::operator()(
   unsigned int index2 = 3*(nMerger*(nMerger+1))/2;
   feature_array range(it->second.begin()+index1, it->second.begin()+index2);
   for (unsigned int n = 0; n < nMerger; ++n, ++start_id) {
-    trax.Id = start_id;
-    trax.features["com"] = feature_array(range.begin()+(3*n), range.begin()+(3*(n+1)));
     res.push_back(trax);
-    LOG(logINFO) << "FeatureExtractorMCOMsFromPCOMs::operator()(): Appended traxel with com (" << trax.features["com"][0] << "," << trax.features["com"][1] << "," << trax.features["com"][2] << ") and id " << trax.Id;
+    Traxel& new_trax = res.back();
+    new_trax.Id = start_id;
+    new_trax.features["com"] = feature_array(range.begin()+(3*n), range.begin()+(3*(n+1)));
+    LOG(logINFO) << "FeatureExtractorMCOMsFromPCOMs::operator()(): Appended traxel with com (" << new_trax.features["com"][0] << "," << new_trax.features["com"][1] << "," << new_trax.features["com"][2] << ") and id " << new_trax.Id;
   }
   return res;
 }
@@ -274,16 +275,18 @@ std::vector<Traxel> FeatureExtractorMCOMsFromMCOMs::operator()(
     unsigned int start_id
                                                                ) {
   LOG(logDEBUG3) << "FeatureExtractorMCOMsFromMCOMs::operator() -- entered";
-  std::map<std::string, feature_array>::iterator it = trax.features.find("mergerCOMs");
+  std::map<std::string, feature_array>::const_iterator it = trax.features.find("mergerCOMs");
   assert(it != trax.features.end());
   LOG(logDEBUG3) << "FeatureExtractorMCOMsFromMCOMs::operator()() possible coms size: " << it->second.size()
                << " and objects in merger: " << nMerger;
   std::vector<Traxel> res;
   for (unsigned int n = 0; n < nMerger; ++n, ++start_id) {
-    trax.Id = start_id;
-    trax.features["com"] = feature_array(it->second.begin()+(3*n), it->second.begin()+(3*(n+1)));
-    res.push_back(trax);
-    LOG(logDEBUG3) << "FeatureExtractorMCOMsFromMCOMs::operator()(): Appended traxel with com (" << trax.features["com"][0] << "," << trax.features["com"][1] << "," << trax.features["com"][2] << ") and id " << trax.Id;
+    // copy such that we won't modify the original traxel
+    Traxel new_trax = trax;
+    new_trax.Id = start_id;
+    new_trax.features["com"] = feature_array(it->second.begin()+(3*n), it->second.begin()+(3*(n+1)));
+    res.push_back(new_trax);
+    LOG(logDEBUG3) << "FeatureExtractorMCOMsFromMCOMs::operator()(): Appended traxel with com (" << new_trax.features["com"][0] << "," << new_trax.features["com"][1] << "," << new_trax.features["com"][2] << ") and id " << new_trax.Id;
   }
   LOG(logDEBUG3) << std::endl;
   return res;
@@ -320,7 +323,7 @@ std::vector<Traxel> FeatureExtractorArmadillo::operator() (Traxel& trax,
   return extractor(trax, nMergers, max_id);
 }
 
-void FeatureExtractorArmadillo::update_coordinates(Traxel& trax,
+void FeatureExtractorArmadillo::update_coordinates(const Traxel& trax,
                                                    size_t nMergers,
                                                    unsigned int max_id,
                                                    arma::Col<size_t> labels

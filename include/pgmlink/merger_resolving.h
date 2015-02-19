@@ -294,7 +294,7 @@ class FeatureExtractorArmadillo
   PGMLINK_EXPORT FeatureExtractorArmadillo(TimestepIdCoordinateMapPtr coordinates);
   PGMLINK_EXPORT virtual std::vector<Traxel> operator()(Traxel& trax, size_t nMergers, unsigned int max_id);
  private:
-  void update_coordinates(Traxel& trax,
+  void update_coordinates(const Traxel& trax,
                           size_t nMergers,
                           unsigned int max_id,
                           arma::Col<size_t> labels);
@@ -452,7 +452,7 @@ class MergerResolver
 
   // Add arcs to nodes created to replace merger node.
   void add_arcs_for_replacement_node(HypothesesGraph::Node node,
-                                     Traxel& trax,
+                                     const Traxel& trax,
                                      std::vector<HypothesesGraph::base_graph::Arc> src,
                                      std::vector<HypothesesGraph::base_graph::Arc> dest,
                                      DistanceBase& distance);
