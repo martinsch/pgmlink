@@ -2,12 +2,9 @@ import pgmlink
 import vigra
 import numpy as np
 import h5py
-from classifierTraining import trainClassifiers as classify
-
 
 # for debugging
 import inspect
-
 
 def readHdf5dataset(fn, internal_path, t, ch, t_axis, ch_axis):
     with h5py.File(fn, 'r') as f:
@@ -39,7 +36,7 @@ def getVigraFeatures(ds_raw, ds, t_axis, ch_axis, features=['Count','RegionCente
         if ff not in available_feats_formatted:
             raise Exception, 'this feature is not available for this dataset!'
         
-      f = classify.getVigraFeaturesFromIlastik(ds_raw.astype(np.float32), ds.astype(np.uint32), features=available_feats, margin=margin)
+      f = getVigraFeaturesFromIlastik(ds_raw.astype(np.float32), ds.astype(np.uint32), features=available_feats, margin=margin)
       import sys; sys.exit(0)
 
       res = {}
@@ -83,7 +80,7 @@ def getVigraFeatures(ds_raw, ds, t_axis, ch_axis, features=['Count','RegionCente
       for l in uniqueLabels:
           relabelDict[l] = count
           count += 1
-      ds_5d = classify.relabel(ds_5d, relabelDict)
+      ds_5d = relabel(ds_5d, relabelDict)
 
       # parse available vigra features and get them from ilastik
       available_feats = vigra.analysis.supportedRegionFeatures(ds_raw_5d.astype(np.float32).squeeze(), ds_5d.astype(np.uint32).squeeze())
@@ -96,7 +93,7 @@ def getVigraFeatures(ds_raw, ds, t_axis, ch_axis, features=['Count','RegionCente
             raise Exception, 'this feature is not available for this dataset: ' + str(ff)
         if 'in neighborhood' in ff:
             available_feats.append(ff)
-      f = classify.getVigraFeaturesFromIlastik(ds_raw_5d.astype(np.float32), ds_5d.astype(np.uint32), features=available_feats, margin=margin)
+      f = getVigraFeaturesFromIlastik(ds_raw_5d.astype(np.float32), ds_5d.astype(np.uint32), features=available_feats, margin=margin)
       assert f['Count'][0] == 0., ' the feature array must contain background'
 
       res = {}
@@ -260,6 +257,69 @@ def generateTraxelStore_at(ts, timestep, conflictsMap, regionToConnectedCompMap,
 
    return ts
 
+
+def getVigraFeaturesFromIlastik(ds_raw, ds, features, ndim=None, margin=(2,2,2)):
+    r = ds_raw.squeeze()
+    l = ds.squeeze()    
+    if ndim!=None:
+        if len(r.shape) != ndim:
+            print 'WARNING: this image does not have the right shape, adding newaxis'
+        for i in range(ndim-len(r.shape)):
+            r = r[...,np.newaxis]
+            l = l[...,np.newaxis]
+    from lazyflow.graph import Graph
+    from lazyflow.operators import OpLabelImage
+    from ilastik.applets.objectExtraction.opObjectExtraction import OpAdaptTimeListRoi, OpRegionFeatures
+    from ilastik.plugins import pluginManager
+
+    r = r.view(vigra.VigraArray)
+    l = l.view(vigra.VigraArray)
+    def setupDataset(img):
+        # squeeze the channel
+        img = img.squeeze()
+        if len(img.shape) == 2:
+            img = img[np.newaxis,...,np.newaxis,np.newaxis]
+            img.axistags = vigra.defaultAxistags('txyzc')
+        elif len(img.shape) == 3:
+            img = img[np.newaxis,...,np.newaxis]
+            img.axistags = vigra.defaultAxistags('txyzc')
+        else:
+            raise NotImplementedError
+        return img
+    r = setupDataset(r)
+    l = setupDataset(l)
+    g = Graph()
+    op = OpRegionFeatures(graph=g)
+    op.LabelImage.setValue(l)
+    op.RawImage.setValue(r)
+    vigra_name = "Standard Object Features"
+    feat_names = { vigra_name: {} }
+    for fname in features:
+        #fname = fname.replace('>>>','> > >').replace('>>', '> >')
+        fname = fname.replace(' >','>')
+        fname_split = fname.split(',')
+        assert len(fname_split) <= 2
+        for ff in fname_split:
+            ff = ff.replace('object and ', '')    
+            if "neighborhood" in ff and margin != None:
+                feat_names[vigra_name][ff] = {"margin": margin}        
+            else:
+                feat_names[vigra_name][ff] = {}
+    op.Features.setValue(feat_names)
+    op.Output.fixed = False
+    #opAdapt = OpAdaptTimeListRoi(graph=op.graph)
+    #opAdapt.Input.connect(op.Output)
+    #feats = opAdapt.Output([0]).wait()
+    feats = op.Output([]).wait()
+    result = feats[0][vigra_name]
+    assert len(np.unique(l)) == len(result.values()[0])
+    return result
+
+def relabel( volume, replace, defaultValue = 0 ):
+   mp = np.arange(0,np.amax(volume)+1, dtype=volume.dtype)
+   mp[1:] = defaultValue
+   mp[replace.keys()] = replace.values()
+   return mp[volume.astype(np.uint32)]
 
 if __name__ == "__main__":
    import os
