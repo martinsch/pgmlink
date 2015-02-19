@@ -24,8 +24,8 @@ pgmlink provides an implementation of
 
 3. **Joint segmentation and tracking**, as it is described in 
 
-    M. Schiegg*, P. Hanslovsky*, C. Haubold, U. Koethe, L. Hufnagel, F. A. Hamprecht. 
-    [**Graphical Model for Joint Segmentation and Tracking of Multiple Dividing Cells**](http://bioinformatics.oxfordjournals.org/cgi/reprint/btu764?ijkey=mTXWsiFrci7R8tc&keytype=ref). Bioinformatics, in press, 2014. [* contributed equally]
+    M. Schiegg&#42;, P. Hanslovsky&#42;, C. Haubold, U. Koethe, L. Hufnagel, F. A. Hamprecht. 
+    [**Graphical Model for Joint Segmentation and Tracking of Multiple Dividing Cells**](http://bioinformatics.oxfordjournals.org/cgi/reprint/btu764?ijkey=mTXWsiFrci7R8tc&keytype=ref). Bioinformatics, in press, 2014. [&#42; contributed equally]
 
     Note that the research code for this method can be found in the [joint-segmentation-and-tracking](../../tree/joint-segmentation-and-tracking) branch.
 
