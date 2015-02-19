@@ -530,7 +530,8 @@ shared_ptr<HypothesesGraph> ConsTracking::build_hypo_graph(TraxelStore& ts) {
 		bool with_tracklets,
 		int n_dim,
 		double transition_parameter,
-		bool with_constraints
+		bool with_constraints,
+		bool return_multi_frame_moves
   ) {
 		// TODO Redundancy to track(). -> Problem?
 		boost::function<double(const double)> transition;
@@ -565,14 +566,17 @@ shared_ptr<HypothesesGraph> ConsTracking::build_hypo_graph(TraxelStore& ts) {
 
 			HypothesesGraph g_res;
             resolve_graph(resolved_graph, g_res, transition, ep_gap, with_tracklets, transition_parameter, with_constraints);
-//            prune_inactive(resolved_graph);
-
-			cout << "-> constructing resolved events" << endl;
-            boost::shared_ptr<std::vector< std::vector<Event> > > multi_frame_moves = multi_frame_move_events(resolved_graph);
-
-			cout << "-> merging unresolved and resolved events" << endl;
-			// delete extractor; // TO DELETE FIRST CREATE VIRTUAL DTORS
-			events_ptr = merge_event_vectors(*events_ptr, *multi_frame_moves);
+			if (return_multi_frame_moves) {
+				cout << "-> constructing multi frame moves" << endl;
+				boost::shared_ptr<std::vector<std::vector<Event> > > multi_frame_moves
+					= multi_frame_move_events(resolved_graph);
+				cout << "-> merging unresolved and resolved events" << endl;
+				events_ptr = merge_event_vectors(*events_ptr, *multi_frame_moves);
+			} else {
+				cout << "-> get events of the resolved graph" << endl;
+				prune_inactive(resolved_graph);
+				events_ptr = events(resolved_graph);
+			}
 
 			// TODO The in serialized event vector written in the track() function
 			// will be overwritten. Is this the desired behaviour?

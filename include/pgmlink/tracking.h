@@ -216,7 +216,8 @@ namespace pgmlink {
 								bool with_tracklets=true,
 								int n_dim = 3,
 								double transition_parameter = 5.,
-								bool with_constraints = true);
+								bool with_constraints = true,
+								bool with_multi_frame_moves = true);
 
 
       /**
