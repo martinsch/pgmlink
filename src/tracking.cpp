@@ -392,6 +392,24 @@ shared_ptr<HypothesesGraph> ConsTracking::build_hypo_graph(TraxelStore& ts) {
     
   }
 
+
+shared_ptr<HypothesesGraph> ConsTracking::prune_to_traxel_descendants(
+	const std::vector<Traxel>& traxels)
+{
+	std::vector<HypothesesGraph::Node> nodes;
+	// convert traxels to nodes
+	property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = (hypotheses_graph_)->get(node_traxel());
+	typedef property_map<node_traxel, HypothesesGraph::base_graph>::type::ItemIt ItemItType;
+	for(std::vector<Traxel>::const_iterator t_it = traxels.begin(); t_it != traxels.end(); t_it++) {
+		for(ItemItType n(traxel_map, *t_it); n != lemon::INVALID; ++n) {
+			nodes.push_back(n);
+		}
+	}
+	prune_to_node_descendants(*hypotheses_graph_, nodes);
+	return hypotheses_graph_;
+}
+
+
   std::vector<std::vector<Event> >ConsTracking::track(double forbidden_cost,
 						      double ep_gap,
 						      bool with_tracklets,
