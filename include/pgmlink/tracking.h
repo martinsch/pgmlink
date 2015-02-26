@@ -167,7 +167,9 @@ namespace pgmlink {
       means_(std::vector<double>()),
       sigmas_(std::vector<double>()),
       fov_(fov),
-      event_vector_dump_filename_(event_vector_dump_filename)
+      event_vector_dump_filename_(event_vector_dump_filename),
+      enable_appearance_(true),
+      enable_disappearance_(true)
       {}
 
 
@@ -227,7 +229,12 @@ namespace pgmlink {
        */
       PGMLINK_EXPORT std::vector< std::map<unsigned int, bool> > detections();
 
+      PGMLINK_EXPORT void enable_appearance(bool b) { enable_appearance_ = b; }
+      PGMLINK_EXPORT void enable_disappearance(bool b) { enable_disappearance_ = b; }
+
     private:
+      bool enable_appearance_;
+      bool enable_disappearance_;
       int max_number_objects_;
       double max_dist_;
       bool with_divisions_;

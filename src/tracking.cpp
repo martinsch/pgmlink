@@ -396,6 +396,7 @@ shared_ptr<HypothesesGraph> ConsTracking::build_hypo_graph(TraxelStore& ts) {
 shared_ptr<HypothesesGraph> ConsTracking::prune_to_traxel_descendants(
 	const std::vector<Traxel>& traxels)
 {
+    LOG(logINFO) << "Pruning unselected nodes and their descendants from hypotheses graph...";
 	std::vector<HypothesesGraph::Node> nodes;
 	// convert traxels to nodes
 	property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = (hypotheses_graph_)->get(node_traxel());
@@ -406,6 +407,7 @@ shared_ptr<HypothesesGraph> ConsTracking::prune_to_traxel_descendants(
 		}
 	}
 	prune_to_node_descendants(*hypotheses_graph_, nodes);
+    LOG(logINFO) << "Done pruning hypotheses graph.";
 	return hypotheses_graph_;
 }
 
@@ -503,8 +505,8 @@ shared_ptr<HypothesesGraph> ConsTracking::prune_to_traxel_descendants(
 			disappearance_cost_fn,
 			appearance_cost_fn,
 			true, // with_misdetections_allowed
-			true, // with_appearance
-			true, // with_disappearance
+            enable_appearance_, // with_appearance
+            enable_disappearance_, // with_disappearance
 			transition_parameter,
             with_constraints,
             cplex_timeout

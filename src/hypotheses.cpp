@@ -167,6 +167,11 @@ HypothesesGraph& prune_to_node_descendants(HypothesesGraph& graph, const std::ve
 HypothesesGraph& set_descendants_active(HypothesesGraph& graph, const HypothesesGraph::Node& start_node) {
     property_map<node_active2, HypothesesGraph::base_graph>::type& node_active_map = graph.get(node_active2());
     property_map<arc_active, HypothesesGraph::base_graph>::type& arc_active_map = graph.get(arc_active());
+
+    // only recurse if this node was not yet active
+    if(node_active_map[start_node])
+        return graph;
+
     node_active_map.set(start_node, 1);
     for(HypothesesGraph::OutArcIt a(graph, start_node); a != lemon::INVALID; ++a) {
         arc_active_map.set(a, 1);
