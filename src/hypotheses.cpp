@@ -325,6 +325,8 @@ boost::shared_ptr<std::vector< std::vector<Event> > > events(const HypothesesGra
     }
 
     LOG(logDEBUG2) << "events(): last timestep: " << g.latest_timestep();
+    map<unsigned int, vector<unsigned int> > resolver_map;
+    int t = g.latest_timestep();
     for(node_timestep_map_t::ItemIt node_at(node_timestep_map, g.latest_timestep()); node_at!=lemon::INVALID; ++node_at) {
         if(with_mergers && (*node_number_of_objects)[node_at] > 1) {
             Event e;
@@ -334,6 +336,25 @@ boost::shared_ptr<std::vector< std::vector<Event> > > events(const HypothesesGra
             (*ret)[g.latest_timestep()-g.earliest_timestep()].push_back(e);
             LOG(logDEBUG3) << e;
         }
+
+        if (with_origin && (*origin_map)[node_at].size() > 0 && t > g.earliest_timestep()) {
+            const unsigned int& origin_traxel_id = (*origin_map)[node_at][0];
+            const unsigned int& resolved_traxel_id = node_traxel_map[node_at].Id;
+
+            LOG(logINFO) << "events(): collecting resolver node ids for all merger nodes " << t << ", " << origin_traxel_id;
+            resolver_map[origin_traxel_id].push_back(resolved_traxel_id);
+        }
+    }
+
+    for (map<unsigned int, vector<unsigned int> >::iterator map_it = resolver_map.begin(); map_it != resolver_map.end(); ++map_it) {
+        Event e;
+        e.type = Event::ResolvedTo;
+        e.traxel_ids.push_back(map_it->first);
+        for (std::vector<unsigned int>::iterator it = map_it->second.begin(); it != map_it->second.end(); ++it) {
+            e.traxel_ids.push_back(*it);
+        }
+        (*ret)[t-g.earliest_timestep()].push_back(e);
+        LOG(logDEBUG1) << e;
     }
     LOG(logDEBUG2) << "events(): done.";
     return ret;
