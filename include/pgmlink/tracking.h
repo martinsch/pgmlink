@@ -210,7 +210,8 @@ namespace pgmlink {
 							    double transition_parameter = 5.,
 							    double border_width = 0,
 							    bool with_constraints = true,
-							    double cplex_timeout = 1e+75);
+                                double cplex_timeout = 1e+75,
+                                double detection_weight = 10);
 
       PGMLINK_EXPORT std::vector<std::vector<Event> > resolve_mergers(
 								boost::shared_ptr<std::vector<std::vector<Event> > > events_ptr,

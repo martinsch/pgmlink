@@ -423,7 +423,8 @@ shared_ptr<HypothesesGraph> ConsTracking::prune_to_traxel_descendants(
 						      double transition_parameter,
 						      double border_width,
 						      bool with_constraints,
-						      double cplex_timeout){
+                              double cplex_timeout,
+                              double detection_weight){
     
     LOG(logDEBUG1) <<"max_number_objects  \t"<< max_number_objects_  ;
     LOG(logDEBUG1) <<"size_dependent_detection_prob\t"<<  use_size_dependent_detection_ ;
@@ -442,9 +443,6 @@ shared_ptr<HypothesesGraph> ConsTracking::prune_to_traxel_descendants(
     LOG(logDEBUG1) <<"with_constraints\t"<<      with_constraints;
     LOG(logDEBUG1) <<"cplex_timeout\t"<<      cplex_timeout;
     
-    
-
-	double detection_weight = 10;
 	Traxels empty;
 	boost::function<double(const Traxel&, const size_t)> detection, division;
 	boost::function<double(const double)> transition;
