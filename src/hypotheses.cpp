@@ -229,7 +229,7 @@ boost::shared_ptr<std::vector< std::vector<Event> > > events(const HypothesesGra
         for(node_timestep_map_t::ItemIt node_at(node_timestep_map, t); node_at!=lemon::INVALID; ++node_at) {
             assert(node_traxel_map[node_at].Timestep == t);
 
-            if (with_origin && (*origin_map)[node_at].size() > 0 && t > g.earliest_timestep()) {
+            if (with_origin && (*origin_map)[node_at].size() > 0) { // && t > g.earliest_timestep()) {
                 const unsigned int& origin_traxel_id = (*origin_map)[node_at][0];
                 const unsigned int& resolved_traxel_id = node_traxel_map[node_at].Id;
                 LOG(logINFO) << "events(): collecting resolver node ids for all merger nodes " << t << ", " << origin_traxel_id;
