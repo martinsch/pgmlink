@@ -670,7 +670,7 @@ void copy_hypotheses_graph_subset(const HypothesesGraph& src,
                                   std::map<HypothesesGraph::Node, HypothesesGraph::Node>& ncr,
                                   std::map<HypothesesGraph::Arc, HypothesesGraph::Arc>& acr
                                   ) {
-  LOG(logDEBUG) << "copy_hypotheses_graph_subset(): entered";
+  // LOG(logDEBUG) << "copy_hypotheses_graph_subset(): entered";
   property_map<node_traxel, HypothesesGraph::base_graph>::type& traxel_map = src.get(node_traxel());
 
   dest.add(node_originated_from());
@@ -701,23 +701,23 @@ void copy_hypotheses_graph_subset(const HypothesesGraph& src,
       nr[from] = node;
       ncr[node] = from;
       origin_map_dest.set(node, origin_map_src[from]);
-      LOG(logDEBUG3) << "copy_hypotheses_graph_subset(): copied node: " << traxel_map[from];
+      // LOG(logDEBUG3) << "copy_hypotheses_graph_subset(): copied node: " << traxel_map[from];
     }
     if (nr.count(to) == 0) {
       HypothesesGraph::Node node = dest.add_node(time_map[to]);
       nr[to] = node;
       ncr[node] = to;
       origin_map_dest.set(node, origin_map_src[to]);
-      LOG(logDEBUG3) << "copy_hypotheses_graph_subset(): copied node: " << traxel_map[to];
+      // LOG(logDEBUG3) << "copy_hypotheses_graph_subset(): copied node: " << traxel_map[to];
     }
     HypothesesGraph::Arc arc = dest.addArc(nr[from], nr[to]);
     ar[arcIt] = arc;
     acr[arc] = arcIt;
-    LOG(logDEBUG3) << "copy_hypotheses_graph_subset(): copied arc " << src.id(arcIt) << ": ("
-                   << traxel_map[src.source(arcIt)] << ','
-                   << traxel_map[src.target(arcIt)] << ')';
+    // LOG(logDEBUG3) << "copy_hypotheses_graph_subset(): copied arc " << src.id(arcIt) << ": ("
+                   // << traxel_map[src.source(arcIt)] << ','
+                   // << traxel_map[src.target(arcIt)] << ')';
   }
-  LOG(logDEBUG) << "copy_hypotheses_graph_subset(): done";
+  // LOG(logDEBUG) << "copy_hypotheses_graph_subset(): done";
 }
 
   
@@ -755,7 +755,7 @@ void translate_property_bool_map(const HypothesesGraph& src,
 
   // C++11 !!!
 
-  LOG(logDEBUG) << "translate_property_bool_map(): entering";
+  // LOG(logDEBUG) << "translate_property_bool_map(): entering";
     
   bool const bools[] = {false, true};
   typedef typename property_map<PropertyTag, HypothesesGraph::base_graph>::type IterableMap;
@@ -798,17 +798,17 @@ void extract_coordinates(TimestepIdCoordinateMapPtr coordinates,
                          const vigra::MultiArrayView<N, T>& image,
                          const vigra::TinyVector<long int, N>& offsets,
                          const Traxel& trax) {
-  LOG(logDEBUG3) << "extract_coordinates -- entered for " << trax;
+  // LOG(logDEBUG3) << "extract_coordinates -- entered for " << trax;
   typedef typename vigra::CoupledIteratorType<N, T>::type Iterator;
   Iterator start = createCoupledIterator(image);
   Iterator end = start.getEndIterator();
   arma::mat& coord = (*coordinates)[std::make_pair(trax.Timestep, trax.Id)];
   coord = arma::mat(N, trax.features.find("count")->second[0]);
   // coord stores coordinates: each row is a spatial dimension and each column is a pixel
-  LOG(logDEBUG4) << "extract_coordinates -- coordinate matrix has "
-                 << coord.n_rows << " rows and "
-                 << coord.n_cols << " cols. The traxel size is "
-                 << trax.features.find("count")->second[0] << ".";
+  // LOG(logDEBUG4) << "extract_coordinates -- coordinate matrix has "
+                 // << coord.n_rows << " rows and "
+                 // << coord.n_cols << " cols. The traxel size is "
+                 // << trax.features.find("count")->second[0] << ".";
   {
     size_t index = 0;
     for (; start != end; ++start) {
@@ -824,7 +824,7 @@ void extract_coordinates(TimestepIdCoordinateMapPtr coordinates,
     }
     assert(index == coord.n_cols);
   }
-  LOG(logDEBUG3) << "extract_coordinates -- done";
+  // LOG(logDEBUG3) << "extract_coordinates -- done";
 }
 
 template<int N, typename T>
@@ -834,17 +834,17 @@ void extract_coord_by_timestep_id(TimestepIdCoordinateMapPtr coordinates,
                                   const size_t timestep,
                                   const size_t traxel_id,
                                   const size_t traxel_size) {
-  LOG(logDEBUG3) << "extract_coordinates -- entered for " << traxel_id;
+  // LOG(logDEBUG3) << "extract_coordinates -- entered for " << traxel_id;
   typedef typename vigra::CoupledIteratorType<N, T>::type Iterator;
   Iterator start = createCoupledIterator(image);
   Iterator end = start.getEndIterator();
   arma::mat& coord = (*coordinates)[std::make_pair(timestep, traxel_id)];
   coord = arma::mat(N, traxel_size);
   // coord stores coordinates: each row is a spatial dimension and each column is a pixel
-  LOG(logDEBUG4) << "extract_coordinates -- coordinate matrix has "
-                 << coord.n_rows << " rows and "
-                 << coord.n_cols << " cols. The traxel size is "
-                 << traxel_size << ".";
+  // LOG(logDEBUG4) << "extract_coordinates -- coordinate matrix has "
+                 // << coord.n_rows << " rows and "
+                 // << coord.n_cols << " cols. The traxel size is "
+                 // << traxel_size << ".";
   {
     size_t index = 0;
     for (; start != end; ++start) {
@@ -858,11 +858,11 @@ void extract_coord_by_timestep_id(TimestepIdCoordinateMapPtr coordinates,
         continue;
       }
     }
-    LOG(logDEBUG4) << "matrix has " << index << " columns while there should be "
-                  << coord.n_cols << " columns";
+    // LOG(logDEBUG4) << "matrix has " << index << " columns while there should be "
+                  // << coord.n_cols << " columns";
     assert(index == coord.n_cols);
   }
-  LOG(logDEBUG3) << "extract_coordinates -- done";
+  // LOG(logDEBUG3) << "extract_coordinates -- done";
 }
 
 template<int N, typename T>
