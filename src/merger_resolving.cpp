@@ -309,7 +309,7 @@ std::vector<Traxel> FeatureExtractorArmadillo::operator() (Traxel& trax,
   LOG(logDEBUG3) << "FeatureExtractorArmadillo::operator() -- entered for " << trax;
   TimestepIdCoordinateMap::const_iterator it = coordinates_->find(std::make_pair(trax.Timestep, trax.Id));
   if (it == coordinates_->end()) {
-    throw std::runtime_error("Traxel not found in coordinates.");
+    throw std::runtime_error("In FeatureExtractorArmadillo: Traxel not found in coordinates.");
   }
   LOG(logDEBUG4) << "FeatureExtractorArmadillo::operator() -- coordinate list for " << trax
                  << " has " << it->second.n_cols << " dimensions and "

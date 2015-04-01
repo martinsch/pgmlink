@@ -875,7 +875,9 @@ void update_labelimage(const TimestepIdCoordinateMapPtr& coordinates,
     std::make_pair(timestep, traxel_id)
   );
   if (it == coordinates->end()) {
-    throw std::runtime_error("Traxel not found in coordinates.");
+    throw std::runtime_error(
+      "in update_labelimage(): Traxel not found in coordinates."
+    );
   }
   const arma::mat& traxel_coord = it->second;
   for (size_t index = 0; index < traxel_coord.n_cols; index++){
