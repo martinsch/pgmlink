@@ -320,22 +320,20 @@ class FeatureExtractorMCOMsFromGMM
 ////
 //// FeatureExtractorArmadillo
 ////
-class FeatureExtractorArmadillo 
-: public FeatureExtractorBase 
+class FeatureExtractorArmadillo
+    : public FeatureExtractorBase
 {
- public:
-  PGMLINK_EXPORT FeatureExtractorArmadillo(TimestepIdCoordinateMapPtr coordinates);
-  PGMLINK_EXPORT virtual std::vector<Traxel> operator()(Traxel& trax, size_t nMergers, unsigned int max_id);
- private:
-  void update_coordinates(const Traxel& trax,
-                          size_t nMergers,
-                          unsigned int max_id,
-                          arma::Col<size_t> labels);
-  FeatureExtractorArmadillo();
-  TimestepIdCoordinateMapPtr coordinates_;
+public:
+    PGMLINK_EXPORT FeatureExtractorArmadillo(TimestepIdCoordinateMapPtr coordinates);
+    PGMLINK_EXPORT virtual std::vector<Traxel> operator()(Traxel& trax, size_t nMergers, unsigned int max_id);
+private:
+    void update_coordinates(const Traxel& trax,
+                            size_t nMergers,
+                            unsigned int max_id,
+                            arma::Col<size_t>& labels);
+    FeatureExtractorArmadillo();
+    TimestepIdCoordinateMapPtr coordinates_;
 };
-  
-
 
 ////
 //// DistanceBase

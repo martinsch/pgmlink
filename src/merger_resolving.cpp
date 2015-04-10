@@ -303,29 +303,61 @@ FeatureExtractorArmadillo::FeatureExtractorArmadillo(TimestepIdCoordinateMapPtr 
 
 std::vector<Traxel> FeatureExtractorArmadillo::operator() (Traxel& trax,
                                                            size_t nMergers,
-                                                           unsigned int max_id
-                                                           ){
-  LOG(logDEBUG3) << "FeatureExtractorArmadillo::operator() -- entered for " << trax;
-  TimestepIdCoordinateMap::const_iterator it = coordinates_->find(std::make_pair(trax.Timestep, trax.Id));
-  if (it == coordinates_->end()) {
-    throw std::runtime_error("In FeatureExtractorArmadillo: Traxel not found in coordinates.");
-  }
-  LOG(logDEBUG4) << "FeatureExtractorArmadillo::operator() -- coordinate list for " << trax
-                 << " has " << it->second.n_cols << " dimensions and "
-                 << it->second.n_rows << " points.";
-  GMMInitializeArma gmm(nMergers, it->second);
-  feature_array merger_coms = gmm();
-  update_coordinates(trax, nMergers, max_id, gmm.labels());
-  trax.features["mergerCOMs"] = feature_array(merger_coms.begin(), merger_coms.end());
-  FeatureExtractorMCOMsFromMCOMs extractor;
-  LOG(logDEBUG3) << "FeatureExtractorArmadillo::operator() -- exit";
-  return extractor(trax, nMergers, max_id);
+                                                           unsigned int max_id)
+{
+    LOG(logDEBUG3) << "FeatureExtractorArmadillo::operator() -- entered for " << trax;
+    TimestepIdCoordinateMap::const_iterator it = coordinates_->find(std::make_pair(trax.Timestep, trax.Id));
+    if (it == coordinates_->end())
+    {
+        std::stringstream msg;
+        msg << "Traxel not found in coordinates: Timestep=" << trax.Timestep << " Id=" << trax.Id;
+        throw std::runtime_error(msg.str());
+    }
+    LOG(logDEBUG4) << "FeatureExtractorArmadillo::operator() -- coordinate list for " << trax
+                   << " has " << it->second.n_cols << " dimensions and "
+                   << it->second.n_rows << " points.";
+    GMMInitializeArma gmm(nMergers, it->second);
+    feature_array merger_coms;
+    arma::Col<size_t> labels;
+    try
+    {
+         merger_coms = gmm();
+         labels = gmm.labels();
+    }
+    catch(std::exception& e)
+    {
+        LOG(logWARNING) << "GMM fitting failed for " << trax << ", reverting to KMeans: " << e.what();
+    }
+
+    // get pixel labels, and if one label did not get assigned to any pixels, run kmeans and use its assignments as labels
+    arma::Col<size_t> unique_labels = arma::unique(labels);
+    if(unique_labels.n_elem != nMergers)
+    {
+        LOG(logINFO) << "Falling back to kmeans pixel labeling for " << trax << ", as GMMs did not assign each label to at least one pixel";
+        arma::mat centers(3, nMergers);
+        mlpack::kmeans::KMeans<> kMeans;
+        kMeans.Cluster(it->second, nMergers, labels, centers);
+        merger_coms.clear();
+        for (size_t c = 0; c < nMergers; c++)
+        {
+            merger_coms.push_back(centers(0,c));
+            merger_coms.push_back(centers(1,c));
+            merger_coms.push_back(centers(2,c));
+        }
+    }
+
+    // update coordinates and traxels based on this information
+    update_coordinates(trax, nMergers, max_id, labels);
+    trax.features["mergerCOMs"] = merger_coms;
+    FeatureExtractorMCOMsFromMCOMs extractor;
+    LOG(logDEBUG3) << "FeatureExtractorArmadillo::operator() -- exit";
+    return extractor(trax, nMergers, max_id);
 }
 
 void FeatureExtractorArmadillo::update_coordinates(const Traxel& trax,
                                                    size_t nMergers,
                                                    unsigned int max_id,
-                                                   arma::Col<size_t> labels
+                                                   arma::Col<size_t>& labels
                                                    ) {
   LOG(logDEBUG4) << "in FeatureExtractorArmadillo::update_coordinates";
   TimestepIdCoordinateMap::iterator it = coordinates_->find(std::make_pair(trax.Timestep, trax.Id));
@@ -343,7 +375,6 @@ void FeatureExtractorArmadillo::update_coordinates(const Traxel& trax,
   }
   coordinates_->erase(it);
 }
-
 
 ////
 //// FeatureHandlerBase
