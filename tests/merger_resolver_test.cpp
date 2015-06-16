@@ -1221,4 +1221,28 @@ BOOST_AUTO_TEST_CASE( MergerResolver_extract_coordinates ) {
   BOOST_CHECK_EQUAL_COLLECTIONS(centers.begin(), centers.end(), arr_res, arr_res+sizeof(arr_res)/sizeof(arr_res[0]));
 } */
 
+BOOST_AUTO_TEST_CASE( arma_mat_serialization ) {
+    arma::mat orig(3,3);
+    orig.randn();
+
+    // save to string
+    string s;
+    {
+      stringstream ss;
+      boost::archive::text_oarchive oa(ss);
+      oa & orig;
+      s = ss.str();
+    }
+
+    // load from string and compare
+    arma::mat loaded;
+    {
+      stringstream ss(s);
+      boost::archive::text_iarchive ia(ss);
+      ia & loaded;
+    }
+
+    BOOST_CHECK(arma::sum(arma::sum(loaded - orig)) < 0.0001);
+}
+
 // EOF

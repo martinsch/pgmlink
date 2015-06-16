@@ -23,7 +23,6 @@
 #include "pgmlink/event.h"
 #include "pgmlink/traxels.h"
 
-
 namespace pgmlink {
 ////
 //// ClusteringMlpackBase

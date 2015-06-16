@@ -29,6 +29,39 @@
 #include "pgmlink/feature.h"
 #include "pgmlink/pgmlink_export.h"
 
+
+// boost serialization for arma::mat
+namespace boost {
+namespace serialization {
+
+template<class Archive>
+void save(Archive & ar, const arma::Mat<double> &g, const unsigned int)
+{
+    std::stringstream ss;
+    g.save(ss);
+    std::string s = ss.str();
+    ar & s;
+}
+
+template<class Archive>
+void load(Archive & ar, arma::mat & g, const unsigned int)
+{
+    std::string s;
+    ar & s;
+    std::stringstream ss(s);
+    g.load(ss);
+}
+
+template<class Archive>
+void serialize(Archive & ar, arma::Mat<double> & g, const unsigned int version)
+{
+    split_free(ar, g, version);
+}
+
+} // namespace serialization
+} // namespace boost
+
+
 /**
  * @brief Implementation of ideas for merger resolution in the HypothesesGraph environment.
  * @file
