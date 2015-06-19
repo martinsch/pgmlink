@@ -2,8 +2,9 @@
 pgmLink is about *tracking by assignment with probabilistic graphical models and other approaches*. 
 It is written in C++ (core) and Python (high level, optional). 
 
-A graphical user interace (GUI) for our methods is freely available on github [martinsch/ilastik](http://github.com/martinsch/ilastik)
-and binaries for Windows/Mac/Linux are provided upon request.
+A graphical user interace (GUI) for methods (1) and (2) is freely available on 
+[ilastik.org](http://www.ilastik.org), with binaries
+for Windows/Mac/Linux.
 
 
 pgmlink provides an implementation of
@@ -21,8 +22,12 @@ pgmlink provides an implementation of
    Tracking with High Misdetection Robustness**](http://hci.iwr.uni-heidelberg.de//Staff/bkausler/kausler_12_discrete.pdf). Proceedings of the European 
    Conference on Computer Vision (ECCV 2012), 2012.
 
+3. **Joint segmentation and tracking**, as it is described in 
 
+    M. Schiegg&#42;, P. Hanslovsky&#42;, C. Haubold, U. Koethe, L. Hufnagel, F. A. Hamprecht. 
+    [**Graphical Model for Joint Segmentation and Tracking of Multiple Dividing Cells**](http://bioinformatics.oxfordjournals.org/cgi/reprint/btu764?ijkey=mTXWsiFrci7R8tc&keytype=ref). Bioinformatics, in press, 2014. [&#42; contributed equally]
 
+    Note that the research code for this method can be found in the [joint-segmentation-and-tracking](../../tree/joint-segmentation-and-tracking) branch.
 
 Please cite the appropriate paper if you use this software.
 Feel free to contact us if you have any questions or suggestions.
@@ -139,8 +144,8 @@ sudo ln -s /usr/include/libxml2/libxml /usr/include/
 
 # Build GUI
 
-Pgmlink has been integrated into a [fork of ilastik](https://github.com/martinsch/ilastik). In particular, for both Chaingraph tracking and Conservation tracking, ilastik workflows have been implemented to ease use of these algorithms in a user-friendly software. For user documentation, please see the [official ilastik homepage](http://www.ilastik.org).
+Pgmlink has been integrated into a [ilastik](https://github.com/ilastik/ilastik). In particular, for both Chaingraph tracking and Conservation tracking, ilastik workflows have been implemented to ease use of these algorithms in a user-friendly software. For user documentation, please see the [official ilastik homepage](http://www.ilastik.org).
 
-Binaries for an ilastik copy where Conservation tracking is integrated, are available on request. However, with the tools provided here, it is easy to automatically build ilastik-for-conservation-tracking yourself:
+Binaries for ilastik are available on [ilastik.org](http://www.ilastik.org) or you can build them yourself:
 
-For this, it is enough to clone the [(modified) ilastik build repository](https://github.com/martinsch/ilastik-build-Linux.git) and follow the instructions in the readme there. It is essential to install CPLEX before building the binaries and to specify the CPLEX location as a build macro, as described in the said readme.
+For this, it is enough to clone the [ilastik build repository](https://github.com/ilastik/ilastik-build-Linux.git) and follow the instructions in the readme there. It is essential to install CPLEX before building the binaries and to specify the CPLEX location as a build macro, as described in the said readme.

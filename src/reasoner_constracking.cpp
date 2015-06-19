@@ -3,7 +3,6 @@
 #include <stdexcept>
 #include <string.h>
 #include <memory.h>
-#include <opengm/inference/lpcplex.hxx>
 #include <opengm/datastructures/marray/marray.hxx>
 #include <opengm/graphicalmodel/graphicalmodel_hdf5.hxx>
 
@@ -60,8 +59,14 @@ void ConservationTracking::formulate(const HypothesesGraph& hypotheses) {
     LOG(logDEBUG) << "ConservationTracking::formulate: add_finite_factors";
     add_finite_factors(*graph);
     LOG(logDEBUG) << "ConservationTracking::formulate: finished add_finite_factors";
+
+#ifdef WITH_GUROBI
+    typedef opengm::LPGurobi<pgm::OpengmModelDeprecated::ogmGraphicalModel,
+            pgm::OpengmModelDeprecated::ogmAccumulator> cplex_optimizer;
+#else
     typedef opengm::LPCplex<pgm::OpengmModelDeprecated::ogmGraphicalModel,
             pgm::OpengmModelDeprecated::ogmAccumulator> cplex_optimizer;
+#endif
     cplex_optimizer::Parameter param;
     param.verbose_ = true;
     param.integerConstraint_ = true;
@@ -586,7 +591,7 @@ void ConservationTracking::add_constraints(const HypothesesGraph& g) {
                     cplex_idxs.clear();
                     coeffs.clear();
                     coeffs.push_back(1);
-                    cplex_idxs2.push_back(cplex_id(app_node_map_[n], nu));
+                    cplex_idxs.push_back(cplex_id(app_node_map_[n], nu));
                     coeffs.push_back(1);
                     cplex_idxs.push_back(cplex_id(arc_map_[a], mu));
                     // 0 <= App_i[nu] + Y_ij[mu] <= 1  forall mu>nu

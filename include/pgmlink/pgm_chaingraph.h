@@ -16,7 +16,12 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/bimap.hpp>
 #include <opengm/inference/inference.hxx>
+
+#ifdef WITH_GUROBI
+#include <opengm/inference/lpgurobi.hxx>
+#else
 #include <opengm/inference/lpcplex.hxx>
+#endif
 
 #include "pgmlink/pgm.h"
 #include "pgmlink/hypotheses.h"
@@ -38,7 +43,11 @@ namespace boost {
 namespace pgmlink {
   namespace pgm {
   namespace chaingraph {
-    typedef opengm::LPCplex<OpengmModel, opengm::Minimizer> OpengmLPCplex;
+#ifdef WITH_GUROBI
+  typedef opengm::LPGurobi<OpengmModel, opengm::Minimizer> OpengmLPCplex;
+#else
+  typedef opengm::LPCplex<OpengmModel, opengm::Minimizer> OpengmLPCplex;
+#endif
     using boost::function;
     using std::map;
     using std::vector;

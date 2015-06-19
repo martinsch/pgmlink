@@ -7,7 +7,13 @@
 #include <boost/scoped_ptr.hpp>
 #include <string.h>
 #include <memory.h>
+
+#ifdef WITH_GUROBI
+#include <opengm/inference/lpgurobi.hxx>
+#else
 #include <opengm/inference/lpcplex.hxx>
+#endif
+
 #include <opengm/datastructures/marray/marray.hxx>
 
 #include "pgmlink/pgm.h"
