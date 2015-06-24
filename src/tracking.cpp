@@ -7,6 +7,13 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/shared_array.hpp>
 
+// #include <boost/archive/text_iarchive.hpp>
+// #include <boost/archive/text_oarchive.hpp>
+
+// include the LPDef symbols only once!
+#undef OPENGM_LPDEF_NO_SYMBOLS
+#include <opengm/inference/auxiliary/lpdef.hxx>
+
 #include "pgmlink/feature.h"
 #include "pgmlink/pgm.h"
 #include "pgmlink/hypotheses.h"
