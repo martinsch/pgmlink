@@ -95,9 +95,14 @@ void py_extract_coord_by_timestep_id(PyTimestepIdCoordinateMap coordinates,
 template <int N, typename T>
 void py_update_labelimage(PyTimestepIdCoordinateMap coordinates,
                           vigra::NumpyArray<N, T> image,
+                          vigra::NumpyArray<1, vigra::Int64> offsets,
                           const size_t timestep,
                           const size_t traxel_id) {
-  update_labelimage<N, T>(coordinates.get(), image, timestep, traxel_id);
+  vigra::TinyVector<long int, N> offsets_tv;
+  for (size_t idx = 0; idx < N; ++idx) {
+    offsets_tv[idx] = offsets[idx];
+  }
+  update_labelimage<N, T>(coordinates.get(), image, offsets_tv, timestep, traxel_id);
 }
 
 class CoordinateMapPickleSuite : public boost::python::pickle_suite
