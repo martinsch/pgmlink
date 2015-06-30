@@ -295,7 +295,7 @@ BOOST_AUTO_TEST_CASE( MergerResolver_resolve_mergers_3 ) {
       if (e_it->type == Event::ResolvedTo) ++resolve_count;
     }
   }
-  BOOST_CHECK_EQUAL(resolve_count, 0);
+  BOOST_CHECK_EQUAL(resolve_count, 2);
 
 }
 
