@@ -160,8 +160,7 @@ else(WIN32)
     COPYONLY)
 endif(WIN32)
 
-
-include_directories( ${CMAKE_CURRENT_BINARY_DIR}/include )
+include_directories( ${CMAKE_CURRENT_BINARY_DIR}/include ${Xml2_INCLUDE_DIR} ${Opengm_INCLUDE_DIR} ${HDF5_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} ${LEMON_INCLUDE_DIR} ${VIGRA_INCLUDE_DIR} ${ANN_INCLUDE_DIR})
 target_link_libraries(pgmlink ${ANN_LIBRARIES} ${Boost_LIBRARIES} ${CPLEX_LIBRARIES} ${VIGRA_IMPEX_LIBRARY} ${LEMON_LIBRARIES} ${HDF5_LIBRARIES} ${Mlpack_LIBRARIES} ${Armadillo_LIBRARIES} fftw3 fftw3f)
 
 # Install target pgmlink
