@@ -12,7 +12,7 @@ else()
   find_package( PythonInterp REQUIRED )
 endif()
 
-include_directories( ${Boost_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS}/python2.7 )
+include_directories( ${Boost_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS}/python2.7 ${PYPGMLINK_INSTALL_DIR}/numpy/core/include )
 
 # pypgmlink
 set(PYPGMLINK_SRCS
