@@ -275,7 +275,7 @@ bool all_true (InputIterator first, InputIterator last, UnaryPredicate pred) {
 		}
 }
 
-shared_ptr<HypothesesGraph> ConsTracking::build_hypo_graph(TraxelStore& ts) {
+boost::shared_ptr<HypothesesGraph> ConsTracking::build_hypo_graph(TraxelStore& ts) {
 
   
   LOG(logDEBUG3) << "enering build_hypo_graph"<< endl;;
@@ -292,7 +292,7 @@ shared_ptr<HypothesesGraph> ConsTracking::build_hypo_graph(TraxelStore& ts) {
 	        LOG(logDEBUG3) << "COULD find detProb!!";
 	}
 
-	if(not use_classifier_prior_ and use_size_dependent_detection_){
+	if(! use_classifier_prior_ && use_size_dependent_detection_){
 	        LOG(logDEBUG3) << "creating detProb feature in traxel store!!";
 		vector<double> means;
 		if (means_.size() == 0 ) {
@@ -543,7 +543,7 @@ shared_ptr<HypothesesGraph> ConsTracking::build_hypo_graph(TraxelStore& ts) {
 		cout << "-> resolving mergers" << endl;
 		// TODO why doesn't it check for empty vectors in the event vector from the
 		// first element on?
-		if ( not all_true(events_ptr->begin()+1, events_ptr->end(), has_data<Event>)) {
+		if ( ! all_true(events_ptr->begin()+1, events_ptr->end(), has_data<Event>)) {
 			LOG(logDEBUG) << "Nothing to be done in ConstTracking::resolve_mergers:";
 			LOG(logDEBUG) << "Empty vector in event vector";
 		} else if (max_number_objects_ == 1) {

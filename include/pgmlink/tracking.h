@@ -193,7 +193,7 @@ namespace pgmlink {
        * refactoring of operator().
        */
 
-      PGMLINK_EXPORT shared_ptr<HypothesesGraph> build_hypo_graph(TraxelStore& ts);
+      PGMLINK_EXPORT boost::shared_ptr<HypothesesGraph> build_hypo_graph(TraxelStore& ts);
 
       PGMLINK_EXPORT std::vector<std::vector<Event> > track(double forbidden_cost = 0,
 							    double ep_gap=0.01,
