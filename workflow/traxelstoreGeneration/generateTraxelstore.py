@@ -290,8 +290,8 @@ def getVigraFeaturesFromIlastik(ds_raw, ds, features, ndim=None, margin=(2,2,2))
     l = setupDataset(l)
     g = Graph()
     op = OpRegionFeatures(graph=g)
-    op.LabelVolume.setValue(l)
-    op.RawVolume.setValue(r)
+    op.LabelImage.setValue(l)
+    op.RawImage.setValue(r)
     vigra_name = "Standard Object Features"
     feat_names = { vigra_name: {} }
     for fname in features:
