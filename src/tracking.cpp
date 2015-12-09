@@ -554,7 +554,7 @@ boost::shared_ptr<HypothesesGraph> ConsTracking::build_hypo_graph(TraxelStore& t
             HypothesesGraph resolved_graph;
             HypothesesGraph::copy(*hypotheses_graph_, resolved_graph);
 
-            MergerResolver m(&resolved_graph);
+            MergerResolver m(&resolved_graph, n_dim);
 			FeatureExtractorBase* extractor;
 			DistanceFromCOMs distance;
 			if (coordinates) {

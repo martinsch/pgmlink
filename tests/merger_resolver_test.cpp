@@ -31,7 +31,7 @@ using namespace std;
 using namespace boost;
 
 
-BOOST_AUTO_TEST_CASE( MergerResolver_no_mergers ) {
+BOOST_AUTO_TEST_CASE( MergerResolver_no_mergers) {
   HypothesesGraph src;
   HypothesesGraph dest;
 
@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE( MergerResolver_no_mergers ) {
     .add(arc_resolution_candidate())
     .add(arc_distance());
 
-  MergerResolver m(&src);
+  MergerResolver m(&src, 2);
   FeatureExtractorMCOMsFromGMM extractor(2);
   DistanceFromCOMs distance;
   FeatureHandlerFromTraxels handler(extractor, distance);
@@ -117,13 +117,13 @@ BOOST_AUTO_TEST_CASE( MergerResolver_subgraph ) {
 
 BOOST_AUTO_TEST_CASE( MergerResolver_constructor ) {
   HypothesesGraph g;
-  BOOST_CHECK_THROW(MergerResolver m(&g), std::runtime_error);
+  BOOST_CHECK_THROW(MergerResolver m(&g, 2), std::runtime_error);
   g.add(node_active2());
-  BOOST_CHECK_THROW(MergerResolver m(&g), std::runtime_error);
+  BOOST_CHECK_THROW(MergerResolver m(&g, 2), std::runtime_error);
   g.add(arc_active());
-  BOOST_CHECK_THROW(MergerResolver m(&g), std::runtime_error);
+  BOOST_CHECK_THROW(MergerResolver m(&g, 2), std::runtime_error);
   g.add(arc_distance());
-  MergerResolver m(&g);
+  MergerResolver m(&g, 2);
   BOOST_CHECK_EQUAL(m.g_, &g);
   // check that merger_resolved_to property has been added
   BOOST_CHECK(m.g_->has_property(merger_resolved_to()));
@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE( MergerResolver_constructor ) {
 
   // check exception on intialization with null pointer
   HypothesesGraph* G = 0; // = hyp_builder.build();
-  BOOST_CHECK_THROW(MergerResolver M(G), std::runtime_error);
+  BOOST_CHECK_THROW(MergerResolver M(G, 2), std::runtime_error);
 }
 
 
@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE( MergerResolver_resolve_mergers_3 ) {
 
   property_map<arc_distance, HypothesesGraph::base_graph>::type& dist_map = g.get(arc_distance());
 
-  MergerResolver m(&g);
+  MergerResolver m(&g, 2);
   FeatureExtractorMCOMsFromPCOMs extractor;
   DistanceFromCOMs distance;
   FeatureHandlerFromTraxels handler(extractor, distance);
@@ -388,7 +388,7 @@ BOOST_AUTO_TEST_CASE( MergerResolver_resolve_mergers_2 ) {
   active_map.set(n31, 1);
   active_map.set(n32, 1);
 
-  MergerResolver m(&g);
+  MergerResolver m(&g, 2);
   FeatureExtractorMCOMsFromPCOMs extractor;
   DistanceFromCOMs distance;
   FeatureHandlerFromTraxels handler(extractor, distance);
@@ -508,7 +508,7 @@ BOOST_AUTO_TEST_CASE( MergerResolver_resolve_mergers ) {
   active_map.set(n12, 1);
   active_map.set(n21, 2);
 
-  MergerResolver m(&g);
+  MergerResolver m(&g, 2);
   FeatureExtractorMCOMsFromPCOMs extractor;
   DistanceFromCOMs distance;
   FeatureHandlerFromTraxels handler(extractor, distance);
@@ -675,7 +675,7 @@ BOOST_AUTO_TEST_CASE( MergerResolver_refine_node ) {
   property_map<arc_distance, HypothesesGraph::base_graph>::type& distance_map = g.get(arc_distance());
   
 
-  MergerResolver m(&g);
+  MergerResolver m(&g, 2);
   FeatureExtractorMCOMsFromMCOMs extractor;
   DistanceFromCOMs distance;
   FeatureHandlerFromTraxels handler(extractor, distance);
@@ -766,7 +766,7 @@ BOOST_AUTO_TEST_CASE( MergerResolver_deactivate_arcs ) {
   std::vector<HypothesesGraph::base_graph::Arc> arcs;
   arcs.push_back(a12);
   arcs.push_back(a23);
-  MergerResolver m(&g);
+  MergerResolver m(&g, 2);
   m.deactivate_arcs(arcs);
   for (std::vector<HypothesesGraph::base_graph::Arc>::iterator it = arcs.begin(); it != arcs.end(); ++it) {
     // arc is deactivated
@@ -795,7 +795,7 @@ BOOST_AUTO_TEST_CASE( MergerResolver_deactivate_nodes ) {
 
   std::vector<HypothesesGraph::Node> nodes;
   nodes.push_back(n);
-  MergerResolver m(&g);
+  MergerResolver m(&g, 2);
   m.deactivate_nodes(nodes);
   property_map<node_active2, HypothesesGraph::base_graph>::type& active_map = g.get(node_active2());
   property_map<node_active2, HypothesesGraph::base_graph>::type::ValueIt active_It=active_map.beginValue();
@@ -838,7 +838,7 @@ BOOST_AUTO_TEST_CASE( MergerResolver_get_max_id ) {
   traxel_map.set(n12, t12);
   traxel_map.set(n21, t21);
 
-  MergerResolver m(&g);
+  MergerResolver m(&g, 2);
   BOOST_CHECK_EQUAL(m.get_max_id(1), 2);
   BOOST_CHECK_EQUAL(m.get_max_id(2), 2);  
 }
@@ -967,7 +967,7 @@ BOOST_AUTO_TEST_CASE( MergerResolver_collect_arcs ) {
   SingleTimestepTraxel_HypothesesBuilder hyp_builder(&ts, builder_opts);
   HypothesesGraph* g = hyp_builder.build();
   g->add(node_active2()).add(arc_active()).add(arc_distance());
-  MergerResolver m(g);
+  MergerResolver m(g, 2);
   
   std::vector<HypothesesGraph::base_graph::Arc> sources;
   std::vector<HypothesesGraph::base_graph::Arc> targets;

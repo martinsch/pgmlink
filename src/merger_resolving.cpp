@@ -102,27 +102,48 @@ double GMM::score() const {
 ////
 feature_array GMMWithInitialized::operator()() {
   mlpack::gmm::GMM<> gmm(means_, covs_, weights_);
-  int n_samples = data_.size()/3;
-  arma::mat data(n_,n_samples);
-  arma::Col<size_t> labels;
-  LOG(logDEBUG1) << "GMMWithInitialized::operator(): n_=" << n_;
-  if (n_ == 2) {
-    feature_array_to_arma_mat_skip_last_dimension(data_, data, 3);
-  } else if(n_ == 3) {
-    feature_array_to_arma_mat(data_, data);
-  } else {
-    throw std::runtime_error("Number of spatial dimensions other than 2 or 3 would not make sense!");
-  }
-  score_ = gmm.Estimate(data, n_trials_);
-  std::vector<arma::vec> centers = gmm.Means();
-  feature_array fa_centers;
-  for (std::vector<arma::vec>::iterator it = centers.begin(); it != centers.end(); ++it) {
-    std::copy(it->begin(), it->end(), std::back_insert_iterator<feature_array >(fa_centers));
+
+  const arma::mat* data = arma_data_;
+  arma::mat* localData = NULL;
+
+  if(data == NULL)
+  {
+    assert(data_ != NULL);
+    int n_samples = data_->size()/3;
+    localData = new arma::mat(n_,n_samples);
     if (n_ == 2) {
-      fa_centers.push_back(0);
+      feature_array_to_arma_mat_skip_last_dimension(*data_, *localData, 3);
+    } else if(n_ == 3) {
+      feature_array_to_arma_mat(*data_, *localData);
+    } else {
+      throw std::runtime_error("Number of spatial dimensions other than 2 or 3 would not make sense!");
     }
+    data = localData;
   }
-  return fa_centers;
+  else
+    assert(data_ == NULL);
+  
+  LOG(logDEBUG1) << "GMMWithInitialized::operator(): n_=" << n_;
+  gmm.Fitter().MaxIterations() = n_iterations_;
+  gmm.Fitter().Tolerance() = threshold_;
+  score_ = gmm.Estimate(*data, n_trials_, true);
+  gmm.Classify(*data, labels_);
+  std::vector<arma::vec> centers = gmm.Means();
+  
+  // copy found cluster centers to stl vector
+  feature_array ret(3*k_, 0);
+  std::vector<arma::vec>::const_iterator it = centers.begin();
+  for (size_t cluster = 0; cluster < centers.size(); ++cluster, ++it) {
+    LOG(logDEBUG4) << "GMMInitializeArma::operator() -- copying cluster " << cluster
+                   << " to feature array ret with size " << ret.size();
+    std::copy(it->begin(), it->end(), ret.begin() + 3*cluster);
+  }
+
+  // clean up temporary arma matrix if we had to create it ourselves
+  if(localData != NULL)
+    delete localData;
+
+  return ret;
 }
 
 
@@ -133,6 +154,9 @@ double GMMWithInitialized::score() const {
   return score_;
 }
 
+arma::Col<size_t> GMMWithInitialized::labels() const {
+  return labels_;
+}
 
 ////
 //// GMMInitializeArma
@@ -300,32 +324,116 @@ FeatureExtractorArmadillo::FeatureExtractorArmadillo(TimestepIdCoordinateMapPtr 
 
 }
 
+void FeatureExtractorArmadillo::kmeansFallback(size_t nMergers, arma::Col<size_t>& labels, feature_array& merger_coms, const arma::mat& coords)
+{
+    // get pixel labels, and if one label did not get assigned to any pixels, run kmeans and use its assignments as labels
+    arma::Col<size_t> unique_labels = arma::unique(labels);
+    if(unique_labels.n_elem != nMergers)
+    {
+        LOG(logDEBUG1) << "Falling back to kmeans pixel labeling, as GMMs did not assign each label to at least one pixel";
+        arma::mat centers(3, nMergers);
+        mlpack::kmeans::KMeans<> kMeans;
+        kMeans.Cluster(coords, nMergers, labels, centers);
+        merger_coms.clear();
+        for (size_t c = 0; c < nMergers; c++)
+        {
+            for(size_t r = 0; r < centers.n_rows; r++)
+                merger_coms.push_back(centers(0,c));
+            for(size_t r = centers.n_rows; r < 3; r++)
+                merger_coms.push_back(0.0);
+        }
+    }
+}
 
 std::vector<Traxel> FeatureExtractorArmadillo::operator() (Traxel& trax,
                                                            size_t nMergers,
-                                                           unsigned int max_id
-                                                           ){
-  LOG(logDEBUG3) << "FeatureExtractorArmadillo::operator() -- entered for " << trax;
-  TimestepIdCoordinateMap::const_iterator it = coordinates_->find(std::make_pair(trax.Timestep, trax.Id));
-  if (it == coordinates_->end()) {
-    throw std::runtime_error("In FeatureExtractorArmadillo: Traxel not found in coordinates.");
-  }
-  LOG(logDEBUG4) << "FeatureExtractorArmadillo::operator() -- coordinate list for " << trax
-                 << " has " << it->second.n_cols << " dimensions and "
-                 << it->second.n_rows << " points.";
-  GMMInitializeArma gmm(nMergers, it->second);
-  feature_array merger_coms = gmm();
-  update_coordinates(trax, nMergers, max_id, gmm.labels());
-  trax.features["mergerCOMs"] = feature_array(merger_coms.begin(), merger_coms.end());
-  FeatureExtractorMCOMsFromMCOMs extractor;
-  LOG(logDEBUG3) << "FeatureExtractorArmadillo::operator() -- exit";
-  return extractor(trax, nMergers, max_id);
+                                                           unsigned int max_id,
+                                                           const std::vector<arma::vec>& means, 
+                                                           const std::vector<arma::mat>& covs, 
+                                                           const arma::vec& weights
+                                                           )
+{
+    LOG(logDEBUG3) << "FeatureExtractorArmadillo::operator() with initialization -- entered for " << trax;
+    TimestepIdCoordinateMap::const_iterator it = coordinates_->find(std::make_pair(trax.Timestep, trax.Id));
+    if (it == coordinates_->end())
+    {
+        std::stringstream msg;
+        msg << "Traxel not found in coordinates: Timestep=" << trax.Timestep << " Id=" << trax.Id;
+        throw std::runtime_error(msg.str());
+    }
+    LOG(logDEBUG4) << "FeatureExtractorArmadillo::operator() -- coordinate list for " << trax
+                   << " has " << it->second.n_cols << " dimensions and "
+                   << it->second.n_rows << " points.";
+    size_t nTrials = 1;
+    // GMMInitializeArma gmm(nMergers, it->second);
+    GMMWithInitialized gmm(nMergers, it->second.n_cols, it->second, nTrials, means, covs, weights);
+    feature_array merger_coms;
+    arma::Col<size_t> labels;
+    try
+    {
+         merger_coms = gmm();
+         labels = gmm.labels();
+    }
+    catch(std::exception& e)
+    {
+        LOG(logWARNING) << "GMM fitting failed for " << trax << ", reverting to KMeans: " << e.what();
+    }
+
+    // if GMM failed, use KMeans
+    kmeansFallback(nMergers, labels, merger_coms, it->second);
+
+    // update coordinates and traxels based on this information
+    update_coordinates(trax, nMergers, max_id, labels);
+    trax.features["mergerCOMs"] = merger_coms;
+    FeatureExtractorMCOMsFromMCOMs extractor;
+    LOG(logDEBUG3) << "FeatureExtractorArmadillo::operator() -- exit";
+    return extractor(trax, nMergers, max_id);
+}
+
+
+std::vector<Traxel> FeatureExtractorArmadillo::operator() (Traxel& trax,
+                                                           size_t nMergers,
+                                                           unsigned int max_id)
+{
+    LOG(logDEBUG3) << "FeatureExtractorArmadillo::operator() -- entered for " << trax;
+    TimestepIdCoordinateMap::const_iterator it = coordinates_->find(std::make_pair(trax.Timestep, trax.Id));
+    if (it == coordinates_->end())
+    {
+        std::stringstream msg;
+        msg << "Traxel not found in coordinates: Timestep=" << trax.Timestep << " Id=" << trax.Id;
+        throw std::runtime_error(msg.str());
+    }
+    LOG(logDEBUG4) << "FeatureExtractorArmadillo::operator() -- coordinate list for " << trax
+                   << " has " << it->second.n_cols << " dimensions and "
+                   << it->second.n_rows << " points.";
+    GMMInitializeArma gmm(nMergers, it->second);
+    feature_array merger_coms;
+    arma::Col<size_t> labels;
+    try
+    {
+         merger_coms = gmm();
+         labels = gmm.labels();
+    }
+    catch(std::exception& e)
+    {
+        LOG(logWARNING) << "GMM fitting failed for " << trax << ", reverting to KMeans: " << e.what();
+    }
+
+    // if GMM failed, use KMeans
+    kmeansFallback(nMergers, labels, merger_coms, it->second);
+
+    // update coordinates and traxels based on this information
+    update_coordinates(trax, nMergers, max_id, labels);
+    trax.features["mergerCOMs"] = merger_coms;
+    FeatureExtractorMCOMsFromMCOMs extractor;
+    LOG(logDEBUG3) << "FeatureExtractorArmadillo::operator() -- exit";
+    return extractor(trax, nMergers, max_id);
 }
 
 void FeatureExtractorArmadillo::update_coordinates(const Traxel& trax,
                                                    size_t nMergers,
                                                    unsigned int max_id,
-                                                   arma::Col<size_t> labels
+                                                   arma::Col<size_t>& labels
                                                    ) {
   LOG(logDEBUG4) << "in FeatureExtractorArmadillo::update_coordinates";
   TimestepIdCoordinateMap::iterator it = coordinates_->find(std::make_pair(trax.Timestep, trax.Id));
@@ -343,7 +451,6 @@ void FeatureExtractorArmadillo::update_coordinates(const Traxel& trax,
   }
   coordinates_->erase(it);
 }
-
 
 ////
 //// FeatureHandlerBase
@@ -406,8 +513,9 @@ void FeatureHandlerFromTraxels::operator()(
     int timestep,
     const std::vector<HypothesesGraph::base_graph::Arc>& sources,
     const std::vector<HypothesesGraph::base_graph::Arc>& targets,
-    std::vector<unsigned int>& new_ids
-                                           ) {
+    std::vector<unsigned int>& new_ids,
+    size_t n_dimensions
+) {
   
   // property maps
   property_map<node_active2, HypothesesGraph::base_graph>::type& active_map = g.get(node_active2());
@@ -417,17 +525,45 @@ void FeatureHandlerFromTraxels::operator()(
   property_map<node_resolution_candidate, HypothesesGraph::base_graph>::type& node_resolution_map = g.get(node_resolution_candidate());
 
   // traxel and vector of replacement traxels
+  std::vector<Traxel> ft;
   Traxel trax = traxel_map[n];
-  LOG(logDEBUG3) << "FeatureHandlerFromTraxel::operator() -- entered for " << trax;
-  std::vector<Traxel> ft = extractor_(trax, n_merger, max_id);
-  LOG(logDEBUG3) << "FeatureHandlerFromTraxel::operator() -- got " << ft.size() << " new traxels";
-  // MAYBE LOG
+    
+  // get initialization for GMM fitting from incoming arcs
+  if(sources.size() == n_merger)
+  {
+    std::vector<arma::vec> initial_centers;
+    std::vector<arma::mat> initial_covs;
+    arma::vec initial_weights(n_merger);
+    
+    // fit GMM to each incoming detection? (must have been a non-merger if num active in arcs = num objects)
+    // or simply use center as a first try...
+    
+    for(size_t curr_idx = 0; curr_idx < sources.size(); ++curr_idx)
+    {
+      const feature_array& com = traxel_map[g.source(sources[curr_idx])].features.find("com")->second;
+      initial_centers.push_back(arma::vec(n_dimensions));
+      std::copy(com.begin(), com.begin()+n_dimensions, initial_centers.rbegin()->begin());
+      initial_covs.push_back(arma::eye(n_dimensions, n_dimensions));
+      initial_weights[curr_idx] = 1.0/n_merger;
+    }
+
+    // refine segmentation using the GMMs of the previous frame as initialization
+    ft = extractor_(trax, n_merger, max_id, initial_centers, initial_covs, initial_weights);
+  }
+  else
+  {
+    // run as before
+    LOG(logDEBUG3) << "FeatureHandlerFromTraxel::operator() -- entered for " << trax;
+    ft = extractor_(trax, n_merger, max_id);
+    LOG(logDEBUG3) << "FeatureHandlerFromTraxel::operator() -- got " << ft.size() << " new traxels";
+  }
+  
+
   for (std::vector<Traxel>::iterator it = ft.begin(); it != ft.end(); ++it) {
     // set traxel features, most of which can be copied from the merger node
     // set new center of mass as calculated from GMM
     // add node to graph and activate it
     HypothesesGraph::Node new_node = g.add_node(timestep);
-    // MAYBE LOG
     traxel_map.set(new_node, *it);
     active_map.set(new_node, 1);
     time_map.set(new_node, timestep);
@@ -456,14 +592,6 @@ double DistanceFromCOMs::operator()(const HypothesesGraph& g, HypothesesGraph::N
 
 double DistanceFromCOMs::operator()(Traxel from, Traxel to) {
   return from.distance_to(to);
-}
-
-////
-//// ResolveAmbiguousArcsGreedy
-////
-HypothesesGraph& ResolveAmbiguousArcsGreedy::operator()(HypothesesGraph* g) {
-    
-  return *g;
 }
 
 
@@ -516,20 +644,15 @@ void MergerResolver::refine_node(HypothesesGraph::Node node,
   int timestep = time_map[node];
   unsigned int max_id = get_max_id(timestep)+1;
 
-  // get incoming and outgoing arcs for reorganizing arcs
+  // get active incoming and outgoing arcs for reorganizing arcs
   std::vector<HypothesesGraph::base_graph::Arc> sources;
   std::vector<HypothesesGraph::base_graph::Arc> targets;
   collect_arcs(HypothesesGraph::base_graph::InArcIt(*g_, node), sources);
   collect_arcs(HypothesesGraph::base_graph::OutArcIt(*g_, node), targets);
 
-  // instead of calling everything with traxels:
-  // write functor for extracting and setting features:
-  // FeatureHandlerBase ft_handler_(*g, node, nMerger, max_id, sources, targets, vector<unsigned int>& new_ids);
-
-
   // create new node for each of the objects merged into node
   std::vector<unsigned int> new_ids;
-  handler(*g_, node, nMerger, max_id, timestep, sources, targets, new_ids);
+  handler(*g_, node, nMerger, max_id, timestep, sources, targets, new_ids, n_dimensions_);
 
   // deactivate incoming and outgoing arcs of merger node
   // merger node will be deactivated after pruning
@@ -594,29 +717,23 @@ HypothesesGraph* MergerResolver::resolve_mergers(FeatureHandlerBase& handler) {
   LOG(logDEBUG) << "resolve_mergers() entered";
   property_map<node_active2, HypothesesGraph::base_graph>::type& active_map = g_->get(node_active2());
   property_map<node_active2, HypothesesGraph::base_graph>::type::ValueIt active_valueIt = active_map.beginValue();
-  // HypothesesGraph::node_timestep_map& timestep_map = g_->get(node_timestep());
-  // HypothesesGraph::node_timestep_map::ValueIt timestep_it = timestep_map.beginValue();
+  
+  HypothesesGraph::node_timestep_map& timestep_map = g_->get(node_timestep());
+  HypothesesGraph::node_timestep_map::ValueIt timestep_it = timestep_map.beginValue();
 
-  // std::vector<HypothesesGraph::Node> nodes_to_deactivate;
-  // for (; timestep_it != timestep_map.endValue(); ++timestep_it) {
-  //   std::cout << *timestep_it << '\n';
-  //   HypothesesGraph::node_timestep_map::ItemIt node_it(timestep_map, *timestep_it);
-  //   for (; node_it != lemon::INVALID; ++node_it) {
-  //     int count = active_map[node_it];
-  //     if (count > 1) {
-  //       std::cout << g_->id(node_it) << ' ' << count << " arcs: ";
-  //       for (HypothesesGraph::OutArcIt oa_it(*g_, node_it); oa_it != lemon::INVALID; ++oa_it) {
-  //         std::cout << g_->id(oa_it)<< ',';
-  //       }
-  //       std::cout << "\b \n";
-  //       // calculate_centers<ClusteringAlg>(active_itemIt, *active_valueIt);
-  //       // for each object create new node and set arcs to old merger node inactive (neccessary for pruning)
-  //       refine_node(node_it, count, handler);
-  //       nodes_to_deactivate.push_back(node_it);
-  //     }
-  //     std::cout << '\n' << std::endl;
-  //   }
-  // }
+  std::vector<HypothesesGraph::Node> nodes_to_deactivate;
+  for (; timestep_it != timestep_map.endValue(); ++timestep_it) {
+    HypothesesGraph::node_timestep_map::ItemIt node_it(timestep_map, *timestep_it);
+    for (; node_it != lemon::INVALID; ++node_it) {
+      int count = active_map[node_it];
+      if (count > 1) {
+        // calculate_centers<ClusteringAlg>(active_itemIt, *active_valueIt);
+        // for each object create new node and set arcs to old merger node inactive (neccessary for pruning)
+        refine_node(node_it, count, handler);
+        nodes_to_deactivate.push_back(node_it);
+      }
+    }
+  }
 
   // std::vector<HypothesesGraph::Node> nodes_to_deactivate;
   // for (; active_valueIt != active_map.endValue(); ++active_valueIt) {
@@ -632,21 +749,23 @@ HypothesesGraph* MergerResolver::resolve_mergers(FeatureHandlerBase& handler) {
   //   }
   // }
     
-  // iterate over mergers and replace merger nodes
-  // keep track of merger nodes to deactivate them later
-  std::vector<HypothesesGraph::Node> nodes_to_deactivate;
-  for (; active_valueIt != active_map.endValue(); ++active_valueIt) {
-    if (*active_valueIt > 1) {
-      property_map<node_active2, HypothesesGraph::base_graph>::type::ItemIt active_itemIt(active_map, *active_valueIt);
+  // // iterate over mergers and replace merger nodes
+  // // keep track of merger nodes to deactivate them later
+  // std::vector<HypothesesGraph::Node> nodes_to_deactivate;
+  // for (; active_valueIt != active_map.endValue(); ++active_valueIt) {
+  //   if (*active_valueIt > 1) {
+  //     property_map<node_active2, HypothesesGraph::base_graph>::type::ItemIt active_itemIt(active_map, *active_valueIt);
 	
-      for (; active_itemIt != lemon::INVALID; ++active_itemIt) {
-        // calculate_centers<ClusteringAlg>(active_itemIt, *active_valueIt);
-        // for each object create new node and set arcs to old merger node inactive (neccessary for pruning)
-        refine_node(active_itemIt, *active_valueIt, handler);
-        nodes_to_deactivate.push_back(active_itemIt);
-      }
-    }
-  }
+  //     for (; active_itemIt != lemon::INVALID; ++active_itemIt) {
+  //       // calculate_centers<ClusteringAlg>(active_itemIt, *active_valueIt);
+  //       // for each object create new node and set arcs to old merger node inactive (neccessary for pruning)
+  //       refine_node(active_itemIt, *active_valueIt, handler);
+  //       nodes_to_deactivate.push_back(active_itemIt);
+  //     }
+  //   }
+  // }
+
+
   // maybe keep merger nodes active for event extraction
   deactivate_nodes(nodes_to_deactivate);
 

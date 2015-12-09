@@ -161,7 +161,9 @@ class GMM
     
 };
 
-
+/**
+ * @brief GMM that can be initialized with means, covariances and weights
+ */
 class GMMWithInitialized 
 : public ClusteringMlpackBase 
 {
@@ -169,29 +171,44 @@ class GMMWithInitialized
   GMMWithInitialized();
   int k_;
   int n_;
-  const feature_array& data_;
+  int n_iterations_;
+  double threshold_;
+
+  // store pointer to data, which could be either given as feature array or armadillo matrix
+  const feature_array* data_;
+  const arma::mat* arma_data_;
+
   double score_;
   int n_trials_;
   const std::vector<arma::vec>& means_;
   const std::vector<arma::mat>& covs_;
   const arma::vec& weights_;
+  arma::Col<size_t> labels_;
  public:
   // constructor needs to specify number of dimensions
   // for 2D data, ilastik provides coordinates with 3rd dimension 0
   // which will cause singular covariance matrix
   // therefore add option for dimensionality
+  PGMLINK_EXPORT GMMWithInitialized(int k, int n, const arma::mat& data, int n_trials,
+                                    const std::vector<arma::vec>& means, 
+                                    const std::vector<arma::mat>& covs, const arma::vec& weights)
+  : k_(k), n_(n), data_(NULL), arma_data_(&data), score_(0.0), n_trials_(n_trials), means_(means), covs_(covs), weights_(weights), n_iterations_(30), threshold_(0.000001)
+  {}
+
   PGMLINK_EXPORT GMMWithInitialized(int k, int n, const feature_array& data, int n_trials,
                                     const std::vector<arma::vec>& means, 
                                     const std::vector<arma::mat>& covs, const arma::vec& weights)
-  : k_(k), n_(n), data_(data), score_(0.0), n_trials_(n_trials), means_(means), covs_(covs), weights_(weights) 
+  : k_(k), n_(n), data_(&data), arma_data_(NULL), score_(0.0), n_trials_(n_trials), means_(means), covs_(covs), weights_(weights) , n_iterations_(30), threshold_(0.000001)
   {}
 
   PGMLINK_EXPORT virtual feature_array operator()();
   PGMLINK_EXPORT double score() const;
-    
+  PGMLINK_EXPORT arma::Col<size_t> labels() const;  
 };
 
-
+/**
+ * @brief GMM that uses armadillo matrices as input data
+ */
 class GMMInitializeArma 
 : public ClusteringMlpackBase 
 {
@@ -264,6 +281,18 @@ void get_centers(const arma::Mat<T>& data, const arma::Col<size_t> labels, arma:
 class FeatureExtractorBase {
  public:
   virtual std::vector<Traxel> operator()(Traxel& trax, size_t nMergers, unsigned int max_id) = 0;
+
+  // add version that also takes an initialization - but ignores it by default
+  virtual std::vector<Traxel> operator()(Traxel& trax,
+                                         size_t nMergers,
+                                         unsigned int max_id,
+                                         const std::vector<arma::vec>& means, 
+                                         const std::vector<arma::mat>& covs, 
+                                         const arma::vec& weights)
+  {
+    return operator()(trax, nMergers, max_id);
+  }
+
  protected:
 };
 
@@ -320,22 +349,30 @@ class FeatureExtractorMCOMsFromGMM
 ////
 //// FeatureExtractorArmadillo
 ////
-class FeatureExtractorArmadillo 
-: public FeatureExtractorBase 
+class FeatureExtractorArmadillo
+    : public FeatureExtractorBase
 {
- public:
-  PGMLINK_EXPORT FeatureExtractorArmadillo(TimestepIdCoordinateMapPtr coordinates);
-  PGMLINK_EXPORT virtual std::vector<Traxel> operator()(Traxel& trax, size_t nMergers, unsigned int max_id);
- private:
-  void update_coordinates(const Traxel& trax,
-                          size_t nMergers,
-                          unsigned int max_id,
-                          arma::Col<size_t> labels);
-  FeatureExtractorArmadillo();
-  TimestepIdCoordinateMapPtr coordinates_;
+public:
+    PGMLINK_EXPORT FeatureExtractorArmadillo(TimestepIdCoordinateMapPtr coordinates);
+    PGMLINK_EXPORT virtual std::vector<Traxel> operator()(Traxel& trax, size_t nMergers, unsigned int max_id);
+    PGMLINK_EXPORT virtual std::vector<Traxel> operator() (Traxel& trax,
+                                                   size_t nMergers,
+                                                   unsigned int max_id,
+                                                   const std::vector<arma::vec>& means, 
+                                                   const std::vector<arma::mat>& covs, 
+                                                   const arma::vec& weights);
+private:
+    void update_coordinates(const Traxel& trax,
+                            size_t nMergers,
+                            unsigned int max_id,
+                            arma::Col<size_t>& labels);
+    void kmeansFallback(size_t nMergers, 
+                        arma::Col<size_t>& labels, 
+                        feature_array& merger_coms, 
+                        const arma::mat& coords);
+    FeatureExtractorArmadillo();
+    TimestepIdCoordinateMapPtr coordinates_;
 };
-  
-
 
 ////
 //// DistanceBase
@@ -380,7 +417,8 @@ class FeatureHandlerBase
                           int timestep,
                           const std::vector<HypothesesGraph::base_graph::Arc>& sources,
                           const std::vector<HypothesesGraph::base_graph::Arc>& targets,
-                          std::vector<unsigned int>& new_ids
+                          std::vector<unsigned int>& new_ids,
+                          size_t n_dimensions
                           ) = 0;
 };
 
@@ -410,42 +448,9 @@ class FeatureHandlerFromTraxels
                           int timestep,
                           const std::vector<HypothesesGraph::base_graph::Arc>& sources,
                           const std::vector<HypothesesGraph::base_graph::Arc>& targets,
-                          std::vector<unsigned int>& new_ids
+                          std::vector<unsigned int>& new_ids,
+                          size_t n_dimensions
                           );
-};
-
-
-////
-//// ResolveAmbiguousArcsBase
-////
-class ResolveAmbiguousArcsBase {
- public:
-  virtual HypothesesGraph& operator()(HypothesesGraph* g) = 0;
-};
-  
-
-////
-//// ResolveAmbiguousArcsGreedy
-////
-class ResolveAmbiguousArcsGreedy 
-: public ResolveAmbiguousArcsBase 
-{
- public:
-  PGMLINK_EXPORT virtual HypothesesGraph& operator()(HypothesesGraph* g);
-};
-
-
-////
-//// ReasonerMaxOneArc
-////
-class ReasonerMaxOneArc : public Reasoner {
-};
-  
-
-////
-//// ResolveAmbiguousArcsPgm
-////
-class ResolveAmbiguousArcsPgm : public ReasonerMaxOneArc, private ResolveAmbiguousArcsBase {
 };
 
 
@@ -468,7 +473,8 @@ class MergerResolver
 {
  private:
   HypothesesGraph* g_;
-    
+  size_t n_dimensions_;
+
   // default constructor should be private (no object without specified graph allowed)
   MergerResolver();
     
@@ -505,8 +511,8 @@ class MergerResolver
                    FeatureHandlerBase& handler);
 
  public:
-  PGMLINK_EXPORT MergerResolver(HypothesesGraph* g) 
-  : g_(g)
+  PGMLINK_EXPORT MergerResolver(HypothesesGraph* g, size_t num_dimensions) 
+  : g_(g), n_dimensions_(num_dimensions)
   {
     if (!g_)
       throw std::runtime_error("HypotesesGraph* g_ is a null pointer!");
@@ -957,7 +963,25 @@ void update_labelimage(const TimestepIdCoordinateMapPtr& coordinates,
    traxel_map.set(node, trax);
    } */
 
-  
+/**
+ * @brief Output std vectors of stuff
+ * 
+ * @param stream output stream
+ * @param feats the vector of stuff
+ */
+template<class T>
+std::ostream& operator<<(std::ostream& stream, const std::vector<T>& feats)
+{
+  stream << "(";
+  for(typename std::vector<T>::const_iterator f_it = feats.begin(); f_it != feats.end(); ++f_it)
+  {
+    if(f_it != feats.begin())
+      stream << ", ";
+    stream << *f_it;
+  }
+  stream << ")";
+  return stream;
+}
   
 }
 
