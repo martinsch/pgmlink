@@ -414,40 +414,6 @@ class FeatureHandlerFromTraxels
 
 
 ////
-//// ResolveAmbiguousArcsBase
-////
-class ResolveAmbiguousArcsBase {
- public:
-  virtual HypothesesGraph& operator()(HypothesesGraph* g) = 0;
-};
-  
-
-////
-//// ResolveAmbiguousArcsGreedy
-////
-class ResolveAmbiguousArcsGreedy 
-: public ResolveAmbiguousArcsBase 
-{
- public:
-  PGMLINK_EXPORT virtual HypothesesGraph& operator()(HypothesesGraph* g);
-};
-
-
-////
-//// ReasonerMaxOneArc
-////
-class ReasonerMaxOneArc : public Reasoner {
-};
-  
-
-////
-//// ResolveAmbiguousArcsPgm
-////
-class ResolveAmbiguousArcsPgm : public ReasonerMaxOneArc, private ResolveAmbiguousArcsBase {
-};
-
-
-////
 //// MergerResolver
 ////
 /**
@@ -955,7 +921,25 @@ void update_labelimage(const TimestepIdCoordinateMapPtr& coordinates,
    traxel_map.set(node, trax);
    } */
 
-  
+/**
+ * @brief Output std vectors of stuff
+ * 
+ * @param stream output stream
+ * @param feats the vector of stuff
+ */
+template<class T>
+std::ostream& operator<<(std::ostream& stream, const std::vector<T>& feats)
+{
+  stream << "(";
+  for(typename std::vector<T>::const_iterator f_it = feats.begin(); f_it != feats.end(); ++f_it)
+  {
+    if(f_it != feats.begin())
+      stream << ", ";
+    stream << *f_it;
+  }
+  stream << ")";
+  return stream;
+}
   
 }
 

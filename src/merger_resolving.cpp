@@ -458,7 +458,6 @@ void FeatureHandlerFromTraxels::operator()(
     // set new center of mass as calculated from GMM
     // add node to graph and activate it
     HypothesesGraph::Node new_node = g.add_node(timestep);
-    // MAYBE LOG
     traxel_map.set(new_node, *it);
     active_map.set(new_node, 1);
     time_map.set(new_node, timestep);
@@ -487,14 +486,6 @@ double DistanceFromCOMs::operator()(const HypothesesGraph& g, HypothesesGraph::N
 
 double DistanceFromCOMs::operator()(Traxel from, Traxel to) {
   return from.distance_to(to);
-}
-
-////
-//// ResolveAmbiguousArcsGreedy
-////
-HypothesesGraph& ResolveAmbiguousArcsGreedy::operator()(HypothesesGraph* g) {
-    
-  return *g;
 }
 
 

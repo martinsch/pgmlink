@@ -59,14 +59,6 @@ namespace pgmlink {
 
   class DistanceFromCOMs;
 
-  class ResolveAmbiguousArcsBase;
-
-  class ResolveAmbiguousArcsGreedy;
-
-  class ResolveAmbiguousArcsPgm;
-
-  class ReasonerMaxOneArc;
-
   class MergerResolver;
 
 }
